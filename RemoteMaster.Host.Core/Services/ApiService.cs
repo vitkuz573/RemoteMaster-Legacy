@@ -147,13 +147,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-        var request = new HostUnregisterRequest
-        {
-            MacAddress = hostConfiguration.Host.MacAddress,
-            Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
-            Name = hostConfiguration.Host.Name
-        };
+        var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit], hostConfiguration.Host.Name);
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/Host/unregister");
         httpRequest.Content = JsonContent.Create(request);
@@ -169,14 +163,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-        var request = new HostUpdateRequest
-        {
-            MacAddress = hostConfiguration.Host.MacAddress,
-            Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
-            IpAddress = hostConfiguration.Host.IpAddress,
-            Name = hostConfiguration.Host.Name
-        };
+        var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit], hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);;
 
         var response = await _client.PutAsJsonAsync("/api/Host/update", request);
 

@@ -4,11 +4,11 @@
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class FileUploadDto
+public class FileUploadDto(string name, byte[] data, string destinationPath)
 {
-    public string Name { get; init; }
+    public string Name { get; } = name;
 
-    public byte[] Data { get; init; }
+    public byte[] Data { get; } = data;
 
-    public string DestinationPath { get; init; }
+    public string DestinationPath { get; } = destinationPath;
 }

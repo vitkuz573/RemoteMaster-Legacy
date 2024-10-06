@@ -9,19 +9,17 @@ using RemoteMaster.Shared.Converters;
 
 namespace RemoteMaster.Shared.Models;
 
-public class HostUpdateRequest
+public class HostUpdateRequest(PhysicalAddress macAddress, string organization, List<string> organizationalUnit, IPAddress ipAddress, string name)
 {
     [JsonConverter(typeof(PhysicalAddressConverter))]
-    public PhysicalAddress MacAddress { get; set; }
+    public PhysicalAddress MacAddress { get; } = macAddress;
 
-    public string Organization { get; set; }
+    public string Organization { get; } = organization;
 
-#pragma warning disable CA2227
-    public List<string> OrganizationalUnit { get; set; }
-#pragma warning restore CA2227
+    public List<string> OrganizationalUnit { get; } = organizationalUnit;
 
     [JsonConverter(typeof(IPAddressConverter))]
-    public IPAddress IpAddress { get; set; }
+    public IPAddress IpAddress { get; } = ipAddress;
 
-    public string Name { get; set; }
+    public string Name { get; } = name;
 }

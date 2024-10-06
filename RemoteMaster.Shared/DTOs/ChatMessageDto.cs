@@ -4,13 +4,13 @@
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class ChatMessageDto
+public class ChatMessageDto(string user, string message)
 {
     public string? Id { get; set; }
 
-    public string User { get; set; }
+    public string User { get; } = user;
 
-    public string Message { get; set; }
+    public string Message { get; } = message;
 
     public DateTimeOffset? Timestamp { get; set; }
 

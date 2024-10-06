@@ -68,19 +68,12 @@ public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
     {
         foreach (var message in Messages)
         {
-            var chatMessageDto = new ChatMessageDto
+            var chatMessageDto = new ChatMessageDto(message.User, message.Message)
             {
                 Id = message.Id,
-                User = message.User,
-                Message = message.Message,
                 Timestamp = message.Timestamp,
                 ReplyToId = message.ReplyToId,
-                Attachments = message.Attachments?.Select(a => new AttachmentDto
-                {
-                    FileName = a.FileName,
-                    Data = a.Data,
-                    MimeType = a.MimeType
-                }).ToList()
+                Attachments = message.Attachments?.Select(a => new AttachmentDto(a.FileName, a.Data, a.MimeType)).ToList()
             };
 
             await Clients.Caller.ReceiveMessage(chatMessageDto);

@@ -4,11 +4,11 @@
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class AttachmentDto
+public class AttachmentDto(string fileName, byte[] data, string mimeType)
 {
-    public string FileName { get; set; }
+    public string FileName { get; } = fileName;
 
-    public byte[] Data { get; set; }
+    public byte[] Data { get; } = data;
 
-    public string MimeType { get; set; }
+    public string MimeType { get; } = mimeType;
 }
