@@ -124,7 +124,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
             {
                 new KeyValuePair<string, string>("Mode", "newreq"),
                 new KeyValuePair<string, string>("CertRequest", $"{Convert.ToBase64String(csrBytes)}"),
-                new KeyValuePair<string, string>("CertAttrib", "CertificateTemplate:WebServer"),
+                new KeyValuePair<string, string>("CertAttrib", $"CertificateTemplate:{_options.TemplateName}"),
                 new KeyValuePair<string, string>("TargetStoreFlags", "0"),
                 new KeyValuePair<string, string>("SaveCert", "yes")
             });
