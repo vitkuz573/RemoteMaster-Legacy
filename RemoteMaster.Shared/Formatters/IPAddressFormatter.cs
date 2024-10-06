@@ -21,6 +21,8 @@ public class IPAddressFormatter : IMessagePackFormatter<IPAddress>
     {
         var ipString = reader.ReadString();
 
-        return IPAddress.Parse(ipString);
+        return ipString is null
+            ? throw new InvalidOperationException("IP address cannot be null during deserialization.")
+            : IPAddress.Parse(ipString);
     }
 }

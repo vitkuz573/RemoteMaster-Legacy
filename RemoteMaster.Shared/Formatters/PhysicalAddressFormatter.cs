@@ -19,8 +19,10 @@ public class PhysicalAddressFormatter : IMessagePackFormatter<PhysicalAddress>
 
     public PhysicalAddress Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
-        var addressString = reader.ReadString();
+        var macString = reader.ReadString();
 
-        return PhysicalAddress.Parse(addressString);
+        return macString is null
+            ? throw new InvalidOperationException("PhysicalAddress cannot be null during deserialization.")
+            : PhysicalAddress.Parse(macString);
     }
 }
