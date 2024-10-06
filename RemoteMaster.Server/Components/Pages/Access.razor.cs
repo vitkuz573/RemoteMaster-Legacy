@@ -319,7 +319,7 @@ public partial class Access : IAsyncDisposable
         var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
         var result = await dialog.Result;
 
-        return !result.Canceled;
+        return result == null ? throw new InvalidOperationException("Result not found.") : !result.Canceled;
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -354,44 +354,49 @@ public partial class Access : IAsyncDisposable
 
                                 int keySize;
 
-                                switch (cert.PublicKey.Oid.Value)
+                                if (cert != null)
                                 {
-                                    case "1.2.840.113549.1.1.1":
+                                    switch (cert.PublicKey.Oid.Value)
                                     {
-                                        using var rsa = cert.GetRSAPublicKey();
-                                        keySize = rsa?.KeySize ?? 0;
-                                        break;
+                                        case "1.2.840.113549.1.1.1":
+                                            {
+                                                using var rsa = cert.GetRSAPublicKey();
+                                                keySize = rsa?.KeySize ?? 0;
+                                                break;
+                                            }
+                                        case "1.2.840.10040.4.1":
+                                            {
+                                                using var dsa = cert.GetDSAPublicKey();
+                                                keySize = dsa?.KeySize ?? 0;
+                                                break;
+                                            }
+                                        case "1.2.840.10045.2.1":
+                                            {
+                                                using var ecdsa = cert.GetECDsaPublicKey();
+                                                keySize = ecdsa?.KeySize ?? 0;
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                keySize = 0;
+                                                break;
+                                            }
                                     }
-                                    case "1.2.840.10040.4.1":
-                                    {
-                                        using var dsa = cert.GetDSAPublicKey();
-                                        keySize = dsa?.KeySize ?? 0;
-                                        break;
-                                    }
-                                    case "1.2.840.10045.2.1":
-                                    {
-                                        using var ecdsa = cert.GetECDsaPublicKey();
-                                        keySize = ecdsa?.KeySize ?? 0;
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        keySize = 0;
-                                        break;
-                                    }
+
+                                    var certificateInfo = new CertificateInfo(
+                                        cert.Issuer,
+                                        cert.Subject,
+                                        cert.GetExpirationDateString(),
+                                        cert.GetEffectiveDateString(),
+                                        cert.SignatureAlgorithm.FriendlyName ?? "Unknown",
+                                        keySize.ToString(),
+                                        chain?.ChainElements.Select(e => e.Certificate.Subject).ToList() ?? []
+                                    );
+
+                                    return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors, certificateInfo)).Result;
                                 }
 
-                                var certificateInfo = new CertificateInfo(
-                                    cert.Issuer,
-                                    cert.Subject,
-                                    cert.GetExpirationDateString(),
-                                    cert.GetEffectiveDateString(),
-                                    cert.SignatureAlgorithm.FriendlyName,
-                                    keySize.ToString(),
-                                    chain?.ChainElements.Select(e => e.Certificate.Subject).ToList() ?? []
-                                );
-
-                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors, certificateInfo)).Result;
+                                return false;
                             };
                         }
 
@@ -623,7 +628,12 @@ public partial class Access : IAsyncDisposable
 
     private async Task DisconnectViewer(string connectionId)
     {
-        var viewer = _viewers.FirstOrDefault(v => v.ConnectionId == connectionId);
+        var viewer = _viewers.FirstOrDefault(v => v.ConnectionId == connectionId) ?? throw new InvalidOperationException($"Viewer with Connection ID {connectionId} not found.");
+        
+        if (_user == null)
+        {
+            throw new InvalidOperationException("User not initialized.");
+        }
 
         if (viewer.UserName == _user.FindFirstValue(ClaimTypes.Name))
         {
