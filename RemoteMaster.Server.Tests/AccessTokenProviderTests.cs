@@ -47,7 +47,7 @@ public class AccessTokenProviderTests
         const string invalidAccessToken = "invalidAccessToken";
         const string validRefreshToken = "validRefreshToken";
         const string newAccessToken = "newAccessToken";
-        var tokenData = new TokenData { AccessToken = newAccessToken };
+        var tokenData = new TokenData(newAccessToken, It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>());
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
             .ReturnsAsync(Result.Ok<string?>(invalidAccessToken));
