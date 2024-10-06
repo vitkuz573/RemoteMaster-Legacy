@@ -131,10 +131,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             var match = Regex.Match(responseBody, @"ReqID=(\d+)");
 
-            var reqId = match.Groups[1].Value;
-
-            var certResponse = await client.GetAsync($"{baseUrl}certnew.cer?ReqID={reqId}&Enc=b64");
-
+            var certResponse = await client.GetAsync($"{baseUrl}certnew.cer?ReqID={match.Groups[1].Value}&Enc=b64");
             var certBytes = await certResponse.Content.ReadAsByteArrayAsync();
 
             return new X509Certificate2(certBytes);
