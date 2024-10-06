@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using Moq;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
@@ -26,17 +27,20 @@ public class CertificateServiceTests
         _certificateAuthorityServiceMock = new Mock<ICertificateAuthorityService>();
         _hostInformationServiceMock = new Mock<IHostInformationService>();
 
+        var activeDirectoryOptions = Microsoft.Extensions.Options.Options.Create(new ActiveDirectoryOptions());
+
         _certificateService = new CertificateService(
             _hostInformationServiceMock.Object,
-            _certificateAuthorityServiceMock.Object
+            _certificateAuthorityServiceMock.Object,
+            activeDirectoryOptions
         );
     }
 
     [Fact]
-    public void IssueCertificate_WithNullCsrBytes_ReturnsArgumentNullExceptionResult()
+    public async Task IssueCertificate_WithNullCsrBytes_ReturnsArgumentNullExceptionResult()
     {
         // Act
-        var result = _certificateService.IssueCertificate(null!);
+        var result = await _certificateService.IssueCertificate(null!);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -46,7 +50,7 @@ public class CertificateServiceTests
     }
 
     [Fact]
-    public void IssueCertificate_WithCaCsr_ReturnsInvalidOperationExceptionResult()
+    public async Task IssueCertificate_WithCaCsr_ReturnsInvalidOperationExceptionResult()
     {
         // Arrange
         var csrBytes = GenerateCsrBytes(true);
@@ -55,7 +59,7 @@ public class CertificateServiceTests
         _certificateAuthorityServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
 
         // Act
-        var result = _certificateService.IssueCertificate(csrBytes);
+        var result = await _certificateService.IssueCertificate(csrBytes);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -65,7 +69,7 @@ public class CertificateServiceTests
     }
 
     [Fact]
-    public void IssueCertificate_WithValidCsr_ReturnsSuccessResult()
+    public async Task IssueCertificate_WithValidCsr_ReturnsSuccessResult()
     {
         // Arrange
         var csrBytes = GenerateCsrBytes(false);
@@ -80,7 +84,7 @@ public class CertificateServiceTests
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
-        var result = _certificateService.IssueCertificate(csrBytes);
+        var result = await _certificateService.IssueCertificate(csrBytes);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -89,7 +93,7 @@ public class CertificateServiceTests
     }
 
     [Fact]
-    public void IssueCertificate_WithMinimalValidCsr_ReturnsSuccessResult()
+    public async Task IssueCertificate_WithMinimalValidCsr_ReturnsSuccessResult()
     {
         // Arrange
         var csrBytes = GenerateMinimalValidCsrBytes();
@@ -104,7 +108,7 @@ public class CertificateServiceTests
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
-        var result = _certificateService.IssueCertificate(csrBytes);
+        var result = await _certificateService.IssueCertificate(csrBytes);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -113,7 +117,7 @@ public class CertificateServiceTests
     }
 
     [Fact]
-    public void IssueCertificate_WithCsrContainingExtensions_ReturnsSuccessResult()
+    public async Task IssueCertificate_WithCsrContainingExtensions_ReturnsSuccessResult()
     {
         // Arrange
         var csrBytes = GenerateCsrBytesWithExtensions();
@@ -128,7 +132,7 @@ public class CertificateServiceTests
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
-        var result = _certificateService.IssueCertificate(csrBytes);
+        var result = await _certificateService.IssueCertificate(csrBytes);
 
         // Assert
         Assert.True(result.IsSuccess);
