@@ -70,7 +70,7 @@ public partial class ManageRoles
 
         var parameters = new Dictionary<string, string>
         {
-            { "Role", role.Name }
+            { "Role", role.Name! }
         };
 
         _confirmationDialog?.Show(parameters);
