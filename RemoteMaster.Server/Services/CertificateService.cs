@@ -118,7 +118,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         }
     }
 
-    public async Task<Result<X509Certificate2>> IssueCertificateUsingWebEnrollment(byte[] csrBytes)
+    private async Task<Result<X509Certificate2>> IssueCertificateUsingWebEnrollment(byte[] csrBytes)
     {
         var baseUrl = $"http://{_options.Server}/certsrv/";
 
@@ -150,7 +150,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         }
     }
 
-    public Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
+    private Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
     {
         try
         {
