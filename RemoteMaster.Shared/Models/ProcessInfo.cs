@@ -4,11 +4,11 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class ProcessInfo
+public class ProcessInfo(int id, string name)
 {
-    public int Id { get; init; }
+    public int Id { get; } = id;
 
-    public string Name { get; init; }
+    public string Name { get; } = name;
 
     public long MemoryUsage { get; init; }
 

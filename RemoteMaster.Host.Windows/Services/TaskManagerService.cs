@@ -27,10 +27,8 @@ public class TaskManagerService : ITaskManagerService
                 var processPath = process.MainModule?.FileName ?? "N/A";
                 var icon = GetProcessIcon(processPath);
 
-                processList.Add(new ProcessInfo
+                processList.Add(new ProcessInfo(process.Id, process.ProcessName)
                 {
-                    Id = process.Id,
-                    Name = process.ProcessName,
                     MemoryUsage = process.WorkingSet64,
                     Icon = icon
                 });

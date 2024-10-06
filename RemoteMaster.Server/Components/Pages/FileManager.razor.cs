@@ -89,12 +89,7 @@ public partial class FileManager : IAsyncDisposable
                 Log.Warning("Fewer bytes were read than requested.");
             }
 
-            var fileDto = new FileUploadDto
-            {
-                Name = _selectedFile.Name,
-                Data = data,
-                DestinationPath = _currentPath
-            };
+            var fileDto = new FileUploadDto(_selectedFile.Name, data, _currentPath);
 
             await SafeInvokeAsync(() => _connection!.InvokeAsync("UploadFile", fileDto));
         }

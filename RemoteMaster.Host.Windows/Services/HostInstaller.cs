@@ -90,14 +90,14 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                 hostService.Create();
             }
 
-            var hostConfiguration = new HostConfiguration
+            var subject = new SubjectDto
             {
-                Server = installRequest.Server,
-                Subject = new SubjectDto
-                {
-                    Organization = installRequest.Organization,
-                    OrganizationalUnit = [installRequest.OrganizationalUnit]
-                },
+                Organization = installRequest.Organization,
+                OrganizationalUnit = [installRequest.OrganizationalUnit]
+            };
+
+            var hostConfiguration = new HostConfiguration(installRequest.Server, subject)
+            {
                 Host = hostInformation
             };
 
@@ -175,7 +175,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
     {
         Log.Information($"Attempting to map network drive with remote path: {folderPath}");
 
-        var isMapped = networkDriveService.MapNetworkDrive(folderPath, userCredentials.UserName, userCredentials.Password);
+        var isMapped = networkDriveService.MapNetworkDrive(folderPath, userCredentials?.UserName, userCredentials?.Password);
 
         if (!isMapped)
         {

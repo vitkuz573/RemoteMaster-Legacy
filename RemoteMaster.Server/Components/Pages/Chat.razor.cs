@@ -108,23 +108,18 @@ public partial class Chat : IAsyncDisposable
             var totalBytesRead = 0;
             int bytesRead;
 
-            while (totalBytesRead < file.Size && (bytesRead = await stream.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead)) > 0)
+            while (totalBytesRead < file.Size && (bytesRead = await stream.ReadAsync(buffer.AsMemory(totalBytesRead, buffer.Length - totalBytesRead))) > 0)
             {
                 totalBytesRead += bytesRead;
             }
 
-            attachments.Add(new AttachmentDto
-            {
-                FileName = file.Name,
-                Data = buffer,
-                MimeType = file.ContentType
-            });
+            attachments.Add(new AttachmentDto(file.Name, buffer, file.ContentType));
         }
 
-        var chatMessageDto = new ChatMessageDto
+        var user = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
+
+        var chatMessageDto = new ChatMessageDto(user, _message)
         {
-            User = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found."),
-            Message = _message,
             ReplyToId = _replyToMessage,
             Attachments = attachments
         };

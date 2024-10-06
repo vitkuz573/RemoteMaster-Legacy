@@ -26,6 +26,11 @@ public partial class Access
 
     private async Task OnMouseEvent(MouseEventArgs e)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         var position = await GetRelativeMousePositionPercentAsync(e);
 
         var mouseInputDto = new MouseInputDto
@@ -55,6 +60,11 @@ public partial class Access
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         await SafeInvokeAsync(() => _connection.InvokeAsync("HandleMouseInput", new MouseInputDto
         {
             DeltaY = e.DeltaY
@@ -63,11 +73,12 @@ public partial class Access
 
     private async Task HandleKeyboardInput(string code, bool isPressed)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("HandleKeyboardInput", new KeyboardInputDto
+        if (_connection == null)
         {
-            Code = code,
-            IsPressed = isPressed
-        }), true);
+            return;
+        }
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("HandleKeyboardInput", new KeyboardInputDto(code, isPressed)), true);
     }
 
     [JSInvokable]

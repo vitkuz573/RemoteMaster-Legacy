@@ -39,12 +39,7 @@ public partial class FileUploadDialog
             var data = new byte[file.Size];
             await file.OpenReadStream(file.Size).ReadAsync(data);
 
-            fileDto = new FileUploadDto
-            {
-                Name = file.Name,
-                Data = data,
-                DestinationPath = _destinationPath
-            };
+            fileDto = new FileUploadDto(file.Name, data, _destinationPath);
 
             await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("UploadFile", fileDto));
         }
