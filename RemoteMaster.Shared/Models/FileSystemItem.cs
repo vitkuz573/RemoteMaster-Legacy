@@ -2,15 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using static RemoteMaster.Shared.Models.FileSystemItem;
+
 namespace RemoteMaster.Shared.Models;
 
-public class FileSystemItem
+public class FileSystemItem(string name, FileSystemItemType type, long size)
 {
-    public string Name { get; init; }
+    public string Name { get; } = name;
 
-    public FileSystemItemType Type { get; init; }
+    public FileSystemItemType Type { get; } = type;
 
-    public long Size { get; init; }
+    public long Size { get; } = size;
 
     public enum FileSystemItemType
     {
