@@ -23,7 +23,7 @@ public partial class Chat : IAsyncDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
-    private InputFile _fileInput;
+    private InputFile? _fileInput;
     private HubConnection? _connection;
     private string _message = string.Empty;
     private string _replyToMessage = string.Empty;
@@ -188,7 +188,7 @@ public partial class Chat : IAsyncDisposable
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/commonUtils.js");
 
-        await module.InvokeVoidAsync("triggerClick", _fileInput.Element);
+        await module.InvokeVoidAsync("triggerClick", _fileInput!.Element);
     }
 
     private void HandleFileChange(InputFileChangeEventArgs e)
