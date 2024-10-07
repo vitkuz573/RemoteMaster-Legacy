@@ -122,7 +122,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var organizations = await organizationRepository.GetAllAsync();
+        var organizations = (await organizationRepository.GetAllAsync()).ToList();
 
         foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
         {
