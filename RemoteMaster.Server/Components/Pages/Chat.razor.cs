@@ -218,11 +218,6 @@ public partial class Chat : IAsyncDisposable
         }, null, 1000, Timeout.Infinite);
     }
 
-    private async void OpenFileDialog()
-    {
-        await JsRuntime.InvokeVoidAsync("document.getElementById('fileInput').click");
-    }
-
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
