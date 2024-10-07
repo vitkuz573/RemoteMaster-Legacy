@@ -20,8 +20,6 @@ using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-#pragma warning disable
-
 public class CommonDialogBase : ComponentBase
 {
     [CascadingParameter]
@@ -81,7 +79,7 @@ public class CommonDialogBase : ComponentBase
         {
             try
             {
-                await connection.StopAsync();
+                await connection!.StopAsync();
                 await connection.DisposeAsync();
             }
             catch (Exception ex)

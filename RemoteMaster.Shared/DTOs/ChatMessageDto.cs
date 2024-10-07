@@ -14,9 +14,7 @@ public class ChatMessageDto(string user, string message)
 
     public DateTimeOffset? Timestamp { get; set; }
 
-    public string? ReplyToId { get; set; }
+    public string? ReplyToId { get; init; }
 
-#pragma warning disable CA2227
-    public List<AttachmentDto>? Attachments { get; set; }
-#pragma warning restore CA2227
+    public List<AttachmentDto> Attachments { get; } = [];
 }

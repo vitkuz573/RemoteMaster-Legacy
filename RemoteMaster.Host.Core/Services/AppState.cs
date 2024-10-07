@@ -72,6 +72,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
             if (!result)
             {
                 Log.Error("Failed to remove viewer with connection ID {ConnectionId}.", connectionId);
+
                 return result;
             }
 

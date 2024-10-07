@@ -28,9 +28,9 @@ public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
         var id = Guid.NewGuid().ToString();
         var timestamp = DateTimeOffset.Now;
 
-        var attachments = chatMessageDto.Attachments?.Select(a => new Attachment(a.FileName, a.Data, a.MimeType)).ToList();
+        var attachments = chatMessageDto.Attachments.Select(a => new Attachment(a.FileName, a.Data, a.MimeType)).ToList();
 
-        var chatMessage = new ChatMessage(id, chatMessageDto.User, chatMessageDto.Message, timestamp, chatMessageDto.ReplyToId, attachments);
+        var chatMessage = new ChatMessage(id, chatMessageDto.User, chatMessageDto.Message, timestamp, attachments, chatMessageDto.ReplyToId);
 
         Messages.Enqueue(chatMessage);
 
@@ -73,8 +73,9 @@ public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
                 Id = message.Id,
                 Timestamp = message.Timestamp,
                 ReplyToId = message.ReplyToId,
-                Attachments = message.Attachments?.Select(a => new AttachmentDto(a.FileName, a.Data, a.MimeType)).ToList()
             };
+
+            chatMessageDto.Attachments.AddRange(message.Attachments.Select(a => new AttachmentDto(a.FileName, a.Data, a.MimeType)));
 
             await Clients.Caller.ReceiveMessage(chatMessageDto);
         }

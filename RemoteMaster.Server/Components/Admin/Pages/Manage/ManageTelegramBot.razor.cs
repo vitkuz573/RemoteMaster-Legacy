@@ -22,13 +22,16 @@ public partial class ManageTelegramBot
 
         if (_botSettings != null)
         {
+            var chatIds = _botSettings.ChatIds.Select(c => c.ChatId);
+
             Input = new InputModel
             {
                 Id = _botSettings.Id,
                 IsEnabled = _botSettings.IsEnabled,
                 BotToken = _botSettings.BotToken,
-                ChatIds = _botSettings.ChatIds.Select(c => c.ChatId).ToList()
             };
+
+            Input.ChatIds.AddRange(chatIds);
         }
 
         foreach (var chatId in Input.ChatIds)
@@ -41,16 +44,17 @@ public partial class ManageTelegramBot
 
     private async Task<string?> ResolveChatIdToUserNameAsync(int chatId)
     {
-        if (_botSettings != null)
+        if (_botSettings == null)
         {
-            var botClient = new TelegramBotClient(_botSettings.BotToken);
-            var chat = await botClient.GetChatAsync(chatId);
-            var userName = $"{chat.FirstName} {chat.LastName}";
-
-            return userName;
+            return string.Empty;
         }
 
-        return string.Empty;
+        var botClient = new TelegramBotClient(_botSettings.BotToken);
+        var chat = await botClient.GetChatAsync(chatId);
+        var userName = $"{chat.FirstName} {chat.LastName}";
+
+        return userName;
+
     }
 
     private async Task AddChatId()
@@ -132,8 +136,6 @@ public partial class ManageTelegramBot
 
         public string BotToken { get; set; } = string.Empty;
 
-#pragma warning disable CA2227
-        public List<int> ChatIds { get; set; } = [];
-#pragma warning restore CA2227
+        public List<int> ChatIds { get; } = [];
     }
 }

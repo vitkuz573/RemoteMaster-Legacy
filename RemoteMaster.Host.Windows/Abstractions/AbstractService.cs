@@ -125,18 +125,17 @@ public abstract class AbstractService : IRunnable
 
     protected virtual void ExecuteServiceCommand(string arguments)
     {
-        using var process = new Process
+        using var process = new Process();
+
+        process.StartInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "sc",
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                Verb = "runas"
-            }
+            FileName = "sc",
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            Verb = "runas"
         };
 
         process.Start();
