@@ -47,7 +47,8 @@ public partial class ManageRoles
         if (result.Succeeded)
         {
             _message = "Role created successfully.";
-            Input.Name = string.Empty;
+
+            Input = new InputModel();
 
             await LoadRolesAsync();
         }
