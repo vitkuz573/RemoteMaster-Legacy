@@ -73,8 +73,8 @@ public partial class LoginWith2fa
         else if (result.IsLockedOut)
         {
             Log.Warning("User with ID '{UserId}' account locked out.", userId);
+            _message = "Error: Your account has been locked out.";
             await ApplicationUserService.AddSignInEntry(_user, false);
-            RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
