@@ -138,7 +138,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
             parentUnit.AddHost(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
 
-            await organizationRepository.UpdateAsync(organizationResult.Value);
+            organizationRepository.Update(organizationResult.Value);
             await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
@@ -169,7 +169,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         var organization = host.Parent.Organization;
 
-        await organizationRepository.UpdateAsync(organization);
+        organizationRepository.Update(organization);
         await organizationRepository.SaveChangesAsync();
 
         return Result.Ok();
@@ -277,7 +277,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             host.SetName(request.Name);
             host.SetIpAddress(request.IpAddress);
 
-            await organizationRepository.UpdateAsync(organizationResult.Value);
+            organizationRepository.Update(organizationResult.Value);
             await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"Host information updated: {host.Name} (`{host.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";

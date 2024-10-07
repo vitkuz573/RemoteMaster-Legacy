@@ -35,7 +35,7 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
 
             if (crl.Id > 0)
             {
-                await crlRepository.UpdateAsync(crl);
+                crlRepository.Update(crl);
             }
             else
             {
@@ -91,7 +91,7 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
 
             if (crl.Id > 0)
             {
-                await crlRepository.UpdateAsync(crl);
+                crlRepository.Update(crl);
             }
             else
             {

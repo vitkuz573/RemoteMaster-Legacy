@@ -78,7 +78,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             organization.AddOrganizationalUnit(dto.Name);
         }
 
-        await organizationRepository.UpdateAsync(organization);
+        organizationRepository.Update(organization);
         await organizationRepository.SaveChangesAsync();
 
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
@@ -100,7 +100,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         {
             organization.RemoveOrganizationalUnit(organizationalUnit.Id);
 
-            await organizationRepository.UpdateAsync(organization);
+            organizationRepository.Update(organization);
             await organizationRepository.SaveChangesAsync();
 
             return "Organizational unit deleted successfully.";

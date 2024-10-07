@@ -38,7 +38,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
             organization.SetName(dto.Name);
             organization.SetAddress(address);
 
-            await organizationRepository.UpdateAsync(organization);
+            organizationRepository.Update(organization);
 
             if (addressChanged)
             {
@@ -66,7 +66,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
     {
         ArgumentNullException.ThrowIfNull(organization);
 
-        await organizationRepository.DeleteAsync(organization);
+        organizationRepository.Delete(organization);
         await organizationRepository.SaveChangesAsync();
 
         return "Organization deleted successfully.";
@@ -113,7 +113,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
         }
 
         await organizationRepository.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
-        await organizationRepository.UpdateAsync(organization);
+        organizationRepository.Update(organization);
         await organizationRepository.SaveChangesAsync();
     }
 }

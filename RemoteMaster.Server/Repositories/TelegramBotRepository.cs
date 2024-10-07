@@ -46,12 +46,12 @@ public class TelegramBotRepository(TelegramBotDbContext context) : ITelegramBotR
         await context.TelegramBots.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(TelegramBot entity)
+    public void Update(TelegramBot entity)
     {
         context.TelegramBots.Update(entity);
     }
 
-    public async Task DeleteAsync(TelegramBot entity)
+    public void Delete(TelegramBot entity)
     {
         context.TelegramBots.Remove(entity);
     }

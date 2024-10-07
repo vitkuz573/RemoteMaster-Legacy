@@ -69,14 +69,14 @@ public class OrganizationServiceTests
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
         var dto = new OrganizationDto(organization.Id, "Updated Org", new AddressDto("City", "State", "US"));
         _organizationRepositoryMock.Setup(repo => repo.GetByIdAsync(organization.Id)).ReturnsAsync(organization);
-        _organizationRepositoryMock.Setup(repo => repo.UpdateAsync(organization)).Returns(Task.CompletedTask);
+        _organizationRepositoryMock.Setup(repo => repo.Update(organization));
 
         // Act
         var result = await _organizationService.AddOrUpdateOrganizationAsync(dto);
 
         // Assert
         Assert.Equal("Organization updated successfully.", result);
-        _organizationRepositoryMock.Verify(repo => repo.UpdateAsync(organization), Times.Once);
+        _organizationRepositoryMock.Verify(repo => repo.Update(organization), Times.Once);
         _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
     }
 
@@ -92,7 +92,7 @@ public class OrganizationServiceTests
 
         // Assert
         Assert.Equal("Error: Organization not found.", result);
-        _organizationRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Organization>()), Times.Never);
+        _organizationRepositoryMock.Verify(repo => repo.Update(It.IsAny<Organization>()), Times.Never);
         _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
     }
 
@@ -101,14 +101,14 @@ public class OrganizationServiceTests
     {
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
-        _organizationRepositoryMock.Setup(repo => repo.DeleteAsync(organization)).Returns(Task.CompletedTask);
+        _organizationRepositoryMock.Setup(repo => repo.Delete(organization));
 
         // Act
         var result = await _organizationService.DeleteOrganizationAsync(organization);
 
         // Assert
         Assert.Equal("Organization deleted successfully.", result);
-        _organizationRepositoryMock.Verify(repo => repo.DeleteAsync(organization), Times.Once);
+        _organizationRepositoryMock.Verify(repo => repo.Delete(organization), Times.Once);
         _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
     }
 

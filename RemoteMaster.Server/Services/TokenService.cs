@@ -55,7 +55,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
             return Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray());
         }
 
-        await applicationUserRepository.UpdateAsync(user);
+        applicationUserRepository.Update(user);
         await applicationUserRepository.SaveChangesAsync();
 
         return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
@@ -93,7 +93,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
             user.RevokeRefreshToken(token.TokenValue.Value, revocationReason, ipAddress);
         }
 
-        await applicationUserRepository.UpdateAsync(user);
+        applicationUserRepository.Update(user);
         await applicationUserRepository.SaveChangesAsync();
 
         Log.Information($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
@@ -128,7 +128,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
                 Log.Debug($"Removed token: {token.TokenValue.Value}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
             }
 
-            await applicationUserRepository.UpdateAsync(user);
+            applicationUserRepository.Update(user);
         }
 
         await applicationUserRepository.SaveChangesAsync();

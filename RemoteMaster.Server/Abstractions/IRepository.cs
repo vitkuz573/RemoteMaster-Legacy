@@ -18,9 +18,9 @@ public interface IRepository<TEntity, in TId> where TEntity : class, IAggregateR
 
     Task AddAsync(TEntity entity);
 
-    Task UpdateAsync(TEntity entity);
+    void Update(TEntity entity);
 
-    Task DeleteAsync(TEntity entity);
+    void Delete(TEntity entity);
 
     Task SaveChangesAsync();
 }

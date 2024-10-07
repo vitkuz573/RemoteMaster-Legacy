@@ -52,12 +52,12 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         await context.Organizations.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(Organization entity)
+    public void Update(Organization entity)
     {
         context.Organizations.Update(entity);
     }
 
-    public async Task DeleteAsync(Organization entity)
+    public void Delete(Organization entity)
     {
         context.Organizations.Remove(entity);
     }

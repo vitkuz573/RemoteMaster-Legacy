@@ -23,7 +23,7 @@ public class TelegramBotService(ITelegramBotRepository telegramBotRepository) : 
 
     public async Task UpdateBotSettingsAsync(TelegramBot telegramBot)
     {
-        await telegramBotRepository.UpdateAsync(telegramBot);
+        telegramBotRepository.Update(telegramBot);
         await telegramBotRepository.SaveChangesAsync();
     }
 

@@ -47,12 +47,12 @@ public class CrlRepository(CertificateDbContext context) : ICrlRepository
         await context.CertificateRevocationLists.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(Crl entity)
+    public void Update(Crl entity)
     {
         context.CertificateRevocationLists.Update(entity);
     }
 
-    public async Task DeleteAsync(Crl entity)
+    public void Delete(Crl entity)
     {
         context.CertificateRevocationLists.Remove(entity);
     }

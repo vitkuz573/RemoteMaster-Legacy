@@ -85,7 +85,7 @@ public class OrganizationRepositoryTests
     }
 
     [Fact]
-    public async Task UpdateAsync_UpdatesOrganizationInContext()
+    public async Task Update_UpdatesOrganizationInContext()
     {
         // Arrange
         var organization = new Organization("Old Org", new Address("City", "State", new CountryCode("US")));
@@ -94,7 +94,7 @@ public class OrganizationRepositoryTests
 
         // Act
         organization.SetName("Updated Org");
-        await _repository.UpdateAsync(organization);
+        _repository.Update(organization);
         await _repository.SaveChangesAsync();
 
         // Assert
@@ -103,7 +103,7 @@ public class OrganizationRepositoryTests
     }
 
     [Fact]
-    public async Task DeleteAsync_RemovesOrganizationFromContext()
+    public async Task Delete_RemovesOrganizationFromContext()
     {
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
@@ -111,7 +111,7 @@ public class OrganizationRepositoryTests
         await _context.SaveChangesAsync();
 
         // Act
-        await _repository.DeleteAsync(organization);
+        _repository.Delete(organization);
         await _repository.SaveChangesAsync();
 
         // Assert

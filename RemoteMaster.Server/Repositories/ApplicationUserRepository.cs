@@ -45,12 +45,12 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
         await context.Users.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(ApplicationUser entity)
+    public void Update(ApplicationUser entity)
     {
         context.Users.Update(entity);
     }
 
-    public async Task DeleteAsync(ApplicationUser entity)
+    public void Delete(ApplicationUser entity)
     {
         context.Users.Remove(entity);
     }

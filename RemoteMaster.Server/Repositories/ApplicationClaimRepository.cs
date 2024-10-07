@@ -43,12 +43,12 @@ public class ApplicationClaimRepository(ApplicationDbContext context) : IApplica
         await context.ApplicationClaims.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(ApplicationClaim entity)
+    public void Update(ApplicationClaim entity)
     {
         context.ApplicationClaims.Update(entity);
     }
 
-    public async Task DeleteAsync(ApplicationClaim entity)
+    public void Delete(ApplicationClaim entity)
     {
         context.ApplicationClaims.Remove(entity);
     }
