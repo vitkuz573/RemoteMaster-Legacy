@@ -55,29 +55,35 @@
                     {
                         <li class="flex items-start space-x-2 rounded-lg bg-gray-50 p-3 shadow-sm">
                             <div class="flex-shrink-0">
-                                <span class="inline-block flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-lg text-white">@chatMessage.User[0]</span>
+                                <span class="inline-block flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-lg text-white">
+                                    @chatMessage.User[0]
+                                </span>
                             </div>
                             <div class="flex-1">
                                 <div class="text-sm font-semibold text-gray-800">@chatMessage.User</div>
-                                @if (!string.IsNullOrEmpty(chatMessage.ReplyToId))
+
+                                @if (!string.IsNullOrEmpty(chatMessage.Message))
                                 {
-                                    <div class="text-sm text-gray-500">Replying to: @GetReplyToMessage(chatMessage.ReplyToId)</div>
+                                    <div class="text-sm text-gray-700">@chatMessage.Message</div>
                                 }
-                                <div class="text-sm text-gray-700">@chatMessage.Message</div>
+
                                 @if (chatMessage.Attachments.Any())
                                 {
                                     @foreach (var attachment in chatMessage.Attachments)
                                     {
                                         @if (attachment.MimeType.StartsWith("image/"))
                                         {
-                                            <img src="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" class="mt-2 max-h-40 rounded-lg" />
+                                            <img src="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" class="mt-2 max-h-40 rounded-lg" alt="@attachment.FileName" />
                                         }
                                         else
                                         {
-                                            <a href="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" download="@attachment.FileName" class="mt-2 text-blue-500 hover:underline">Download @attachment.FileName</a>
+                                            <a href="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" download="@attachment.FileName" class="mt-2 text-blue-500 hover:underline">
+                                                Download @attachment.FileName
+                                            </a>
                                         }
                                     }
                                 }
+
                                 <div class="text-xs text-gray-500">@chatMessage.Timestamp</div>
                             </div>
                             <div class="flex space-x-2">
@@ -95,6 +101,7 @@
                     }
                 </ul>
             </div>
+
             <div class="mt-2 text-gray-500" id="typing-indicator">@_typingMessage</div>
         </div>
     </div>
