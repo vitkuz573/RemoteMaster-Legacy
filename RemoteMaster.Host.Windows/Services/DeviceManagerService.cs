@@ -236,7 +236,7 @@ public class DeviceManagerService : IDeviceManagerService
 
         unsafe
         {
-            return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? BitConverter.ToUInt32(buffer, 0) : (uint)0;
+            return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? BitConverter.ToUInt32(buffer, 0) : 0;
         }
     }
 
