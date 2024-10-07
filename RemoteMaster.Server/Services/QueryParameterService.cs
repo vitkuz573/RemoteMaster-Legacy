@@ -21,7 +21,7 @@ public class QueryParameterService(NavigationManager navigationManager) : IQuery
 
             if (queryParameters.TryGetValue(key, out var valueString) && TryConvertValue(valueString, out T? value))
             {
-                return Result.Ok(value);
+                return Result.Ok(value!);
             }
 
             return Result.Ok(defaultValue);

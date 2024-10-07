@@ -18,9 +18,9 @@ public class UserOrganization
 
     public Guid OrganizationId { get; private set; }
 
-    public Organization? Organization { get; private set; }
+    public Organization Organization { get; private set; } = null!;
 
     public string UserId { get; private set; } = null!;
 
-    public ApplicationUser? ApplicationUser { get; private set; }
+    public ApplicationUser ApplicationUser { get; private set; } = null!;
 }

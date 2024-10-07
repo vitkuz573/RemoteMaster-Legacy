@@ -18,9 +18,9 @@ public partial class DomainMembershipDialog
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private string? _domain;
-    private string? _username;
-    private string? _password;
+    private string _domain = string.Empty;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
 
     private async Task JoinDomain()
     {
@@ -29,7 +29,7 @@ public partial class DomainMembershipDialog
         var credential = new Credentials(_username, _password);
         var domainJoinRequest = new DomainJoinRequest(_domain, credential);
 
-        await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendJoinToDomain", domainJoinRequest));
+        await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("SendJoinToDomain", domainJoinRequest));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
@@ -39,7 +39,7 @@ public partial class DomainMembershipDialog
         var credential = new Credentials(_username, _password);
         var domainUnjoinRequest = new DomainUnjoinRequest(credential);
 
-        await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));
+        await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
@@ -82,7 +82,7 @@ public partial class DomainMembershipDialog
     {
         if (!string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_domain) && !_username.Contains("@"))
         {
-            _username += "@" + _domain;
+            _username += $"@{_domain}";
         }
     }
 }

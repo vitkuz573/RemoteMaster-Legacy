@@ -16,7 +16,7 @@ public partial class HostDialog
     [Parameter]
     public HostDto HostDto { get; set; } = default!;
 
-    private async void Cancel()
+    private void Cancel()
     {
         MudDialog.Cancel();
     }
