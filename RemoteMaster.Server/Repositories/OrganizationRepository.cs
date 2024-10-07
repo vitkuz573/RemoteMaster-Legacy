@@ -146,7 +146,14 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
 
         var certificateRenewalTask = organization?.CreateCertificateRenewalTask(hostId, plannedDate);
 
-        await context.CertificateRenewalTasks.AddAsync(certificateRenewalTask);
+        if (certificateRenewalTask != null)
+        {
+            await context.CertificateRenewalTasks.AddAsync(certificateRenewalTask);
+        }
+        else
+        {
+            throw new InvalidOperationException("Certificate renewal task could not be created.");
+        }
     }
 
     public async Task DeleteCertificateRenewalTaskAsync(Guid taskId)

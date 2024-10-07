@@ -16,13 +16,6 @@ public partial class FileUploadDialog
     private List<IBrowserFile> _files = [];
     private string _destinationPath = string.Empty;
 
-    private async Task Clear()
-    {
-        _files.Clear();
-        ClearDragClass();
-        await Task.Delay(100);
-    }
-
     private void OnInputFileChanged(InputFileChangeEventArgs e)
     {
         ClearDragClass();
@@ -36,12 +29,25 @@ public partial class FileUploadDialog
 
         foreach (var file in _files)
         {
+            await using var stream = file.OpenReadStream(file.Size);
+            
             var data = new byte[file.Size];
-            await file.OpenReadStream(file.Size).ReadAsync(data);
+            int bytesRead;
+            var totalBytesRead = 0;
+
+            while ((bytesRead = await stream.ReadAsync(data, totalBytesRead, data.Length - totalBytesRead)) > 0)
+            {
+                totalBytesRead += bytesRead;
+            }
+
+            if (totalBytesRead != data.Length)
+            {
+                throw new InvalidOperationException("Could not read the entire file.");
+            }
 
             fileDto = new FileUploadDto(file.Name, data, _destinationPath);
 
-            await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("UploadFile", fileDto));
+            await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("UploadFile", fileDto));
         }
 
         MudDialog.Close(DialogResult.Ok(true));

@@ -24,7 +24,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
     {
         var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
 
-        if (hostMoveRequestResult.IsSuccess)
+        if (hostMoveRequestResult is { IsSuccess: true, Value: not null })
         {
             var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequestResult.Value, "Host move request retrieved successfully.");
             
@@ -39,7 +39,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
         };
 
         var errorResponseWithDetails = ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure);
-        
+
         return BadRequest(errorResponseWithDetails);
     }
 

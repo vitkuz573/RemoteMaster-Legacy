@@ -25,17 +25,17 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
         {
             var result = await jwtSecurityService.GetPublicKeyAsync();
 
-            if (result.IsSuccess)
+            if (result is { IsSuccess: true, Value.Length: > 0 })
             {
                 var response = ApiResponse<byte[]>.Success(result.Value, "Public key retrieved successfully.");
-                
+
                 return Ok(response);
             }
 
             var failureProblemDetails = new ProblemDetails
             {
                 Title = "Failed to retrieve public key",
-                Detail = "The public key could not be retrieved.",
+                Detail = "The public key could not be retrieved or is empty.",
                 Status = StatusCodes.Status400BadRequest
             };
 

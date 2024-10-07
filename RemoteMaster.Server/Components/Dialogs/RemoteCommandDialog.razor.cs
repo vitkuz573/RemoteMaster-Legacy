@@ -10,13 +10,13 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class RemoteCommandDialog
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; }
+    private MudDialogInstance MudDialog { get; set; } = default!;
 
-    private string _localFilePath;
-    private string _remoteFilePath;
-    private string _host;
-    private string _username;
-    private string _password;
+    private string _localFilePath = string.Empty;
+    private string _remoteFilePath = string.Empty;
+    private string _host = string.Empty;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
     private string _launchMode = "install";
 
     private bool _isShowPassword;

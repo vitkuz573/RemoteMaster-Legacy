@@ -40,7 +40,7 @@ public partial class MoveHostsDialog
 
             var currentOrganizationalUnit = organization?.OrganizationalUnits.FirstOrDefault(ou => ou.Id == firstHostParentId);
 
-            if (currentOrganizationalUnit != null)
+            if (currentOrganizationalUnit != null && organization != null)
             {
                 _selectedOrganizationalUnitId = currentOrganizationalUnit.Id;
                 _currentOrganizationalUnitName = currentOrganizationalUnit.Name;

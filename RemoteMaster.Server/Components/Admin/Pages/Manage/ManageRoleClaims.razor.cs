@@ -65,19 +65,22 @@ public partial class ManageRoleClaims
         if (SelectedRoleId != null)
         {
             var role = await RoleManager.FindByIdAsync(SelectedRoleId);
-            var roleClaims = await RoleManager.GetClaimsAsync(role);
 
-            _roleClaims = [.. roleClaims];
-
-            foreach (var claimType in _claimTypes)
+            if (role != null)
             {
-                foreach (var value in claimType.Values)
-                {
-                    value.IsSelected = _roleClaims.Any(rc => rc.Type == claimType.Type && rc.Value == value.Value);
-                }
-            }
+                var roleClaims = await RoleManager.GetClaimsAsync(role);
+                _roleClaims = [.. roleClaims];
 
-            _initialRoleClaims = [.._roleClaims];
+                foreach (var claimType in _claimTypes)
+                {
+                    foreach (var value in claimType.Values)
+                    {
+                        value.IsSelected = _roleClaims.Any(rc => rc.Type == claimType.Type && rc.Value == value.Value);
+                    }
+                }
+
+                _initialRoleClaims = [.. _roleClaims];
+            }
 
             StateHasChanged();
         }
@@ -88,11 +91,19 @@ public partial class ManageRoleClaims
         if (string.IsNullOrEmpty(SelectedRoleId))
         {
             _message = "Error: No role selected.";
-
+            
             return;
         }
 
         var role = await RoleManager.FindByIdAsync(SelectedRoleId);
+
+        if (role == null)
+        {
+            _message = "Error: Role not found.";
+            
+            return;
+        }
+
         var existingRoleClaims = await RoleManager.GetClaimsAsync(role);
 
         var selectedClaims = _claimTypes
@@ -117,7 +128,7 @@ public partial class ManageRoleClaims
             }
 
             _message = $"Error: Failed to remove claim {claim.Type}:{claim.Value} from role {role.Name}.";
-                
+            
             return;
         }
 
@@ -131,12 +142,12 @@ public partial class ManageRoleClaims
             }
 
             _message = $"Error: Failed to add claim {claim.Type}:{claim.Value} to role {role.Name}.";
-
+            
             return;
         }
 
         _message = "Role claims updated successfully.";
-
+        
         _initialRoleClaims = selectedClaims;
 
         StateHasChanged();

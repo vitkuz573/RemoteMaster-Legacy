@@ -32,7 +32,7 @@
             </div>
             @if (_messages != null)
             {
-                @foreach (var (message, isRead) in _messages.Take(5))
+                @foreach (var (message, _) in _messages.Take(5))
                 {
                     <MudMenuItem Class="rounded px-2 py-0">
                         <MudText Typo="Typo.subtitle2">@message.Title</MudText>
@@ -51,7 +51,7 @@
         </MudMenu>
         <AuthorizeView>
             <Authorized>
-                <MudText>@context.User.Identity.Name (@context.User.FindFirstValue(ClaimTypes.Role))</MudText>
+                <MudText>@context.User.Identity!.Name (@context.User.FindFirstValue(ClaimTypes.Role))</MudText>
             </Authorized>
         </AuthorizeView>
     </MudAppBar>
@@ -230,8 +230,8 @@
                                 }
                             </MudTabPanel>
 
-                            @*<MudTabPanel Text="@Localizer["ExtraTab"]" Icon="@Icons.Material.Filled.Settings">
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoteExecutor" Class="mr-2">@Localizer["RemoteExecutor"]</MudButton>
+                            @*<MudTabPanel Text="Extra" Icon="@Icons.Material.Filled.Settings">
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoteExecutor" Class="mr-2">Remote Executor</MudButton>
                             </MudTabPanel>*@
                         </Authorized>
                     </AuthorizeView>

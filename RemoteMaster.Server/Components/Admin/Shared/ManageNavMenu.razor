@@ -6,7 +6,7 @@
         <Authorized>
             <div class="flex items-center justify-between bg-gradient-to-r from-indigo-500 to-indigo-700 px-6 py-4 text-white">
                 <div>
-                    <div class="text-2xl font-bold">@context.User.Identity.Name</div>
+                    <div class="text-2xl font-bold">@context.User.Identity!.Name</div>
                     <div class="text-sm">@context.User.FindFirstValue(ClaimTypes.Role)</div>
                 </div>
                 <NavLink class="flex items-center gap-2 text-white transition-opacity duration-300 hover:opacity-75"

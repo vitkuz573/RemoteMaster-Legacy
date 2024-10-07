@@ -66,7 +66,14 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
 
         var signInEntry = user?.AddSignInEntry(isSuccessful, ipAddress);
 
-        await context.SignInEntries.AddAsync(signInEntry);
+        if (signInEntry != null)
+        {
+            await context.SignInEntries.AddAsync(signInEntry);
+        }
+        else
+        {
+            throw new InvalidOperationException("Sign-in entry could not be created.");
+        }
     }
 
     public async Task<IEnumerable<SignInEntry>> GetAllSignInEntriesAsync()
@@ -77,7 +84,7 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
             .ToListAsync();
     }
 
-    public async Task ClearSignInEntriesAsync()
+    public void ClearSignInEntries()
     {
         var allEntries = context.SignInEntries;
 

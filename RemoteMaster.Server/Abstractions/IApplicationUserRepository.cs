@@ -13,5 +13,5 @@ public interface IApplicationUserRepository : IRepository<ApplicationUser, strin
 
     Task<IEnumerable<SignInEntry>> GetAllSignInEntriesAsync();
 
-    Task ClearSignInEntriesAsync();
+    void ClearSignInEntries();
 }

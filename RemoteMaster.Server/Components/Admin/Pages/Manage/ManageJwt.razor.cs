@@ -11,7 +11,7 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageJwt
 {
-    private string _keysDirectory;
+    private string _keysDirectory = string.Empty;
     private int _keySize;
     private string? _newKeyPassword;
 

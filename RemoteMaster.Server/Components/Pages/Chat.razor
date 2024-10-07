@@ -81,12 +81,12 @@
                                 <div class="text-xs text-gray-500">@chatMessage.Timestamp</div>
                             </div>
                             <div class="flex space-x-2">
-                                <button @onclick="@(() => SetReplyToMessage(chatMessage.Id))" class="text-blue-500 hover:text-blue-700">
+                                <button @onclick="@(() => SetReplyToMessage(chatMessage.Id!))" class="text-blue-500 hover:text-blue-700">
                                     <span class="material-icons">reply</span>
                                 </button>
                                 @if (chatMessage.User == _user?.FindFirstValue(ClaimTypes.Name))
                                 {
-                                    <button @onclick="@(() => Delete(chatMessage.Id))" class="text-red-500 hover:text-red-700">
+                                    <button @onclick="@(() => Delete(chatMessage.Id!))" class="text-red-500 hover:text-red-700">
                                         <span class="material-icons">delete</span>
                                     </button>
                                 }
