@@ -122,8 +122,8 @@ public partial class Login
         else if (result.IsLockedOut)
         {
             Log.Warning("User account locked out.");
+            _errorMessage = "Error: Your account has been locked out.";
             await ApplicationUserService.AddSignInEntry(user, false);
-            RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
