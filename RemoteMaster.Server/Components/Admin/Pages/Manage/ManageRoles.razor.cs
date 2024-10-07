@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
@@ -10,12 +12,10 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageRoles
 {
-    private List<IdentityRole> _roles = [];
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
 
-    private readonly IdentityRole _newRole = new()
-    {
-        Name = string.Empty
-    };
+    private List<IdentityRole> _roles = [];
 
     private IdentityRole? _roleToDelete;
     private ConfirmationDialog? _confirmationDialog;
@@ -42,19 +42,12 @@ public partial class ManageRoles
 
     private async Task CreateRole()
     {
-        if (string.IsNullOrWhiteSpace(_newRole.Name))
-        {
-            _message = "Role name cannot be empty.";
-
-            return;
-        }
-
-        var result = await RoleManager.CreateAsync(new IdentityRole(_newRole.Name));
+        var result = await RoleManager.CreateAsync(new IdentityRole(Input.Name));
 
         if (result.Succeeded)
         {
             _message = "Role created successfully.";
-            _newRole.Name = string.Empty;
+            Input.Name = string.Empty;
 
             await LoadRolesAsync();
         }
@@ -100,5 +93,13 @@ public partial class ManageRoles
         {
             _identityErrors = result.Errors;
         }
+    }
+
+    public class InputModel
+    {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Name")]
+        public string Name { get; set; } = string.Empty;
     }
 }

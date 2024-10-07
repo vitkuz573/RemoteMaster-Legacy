@@ -117,12 +117,12 @@ public partial class ManageOrganizationalUnits
 
     public sealed class InputModel
     {
-        public Guid? Id { get; set; }
+        public Guid? Id { get; init; }
 
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "Name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Organization")]

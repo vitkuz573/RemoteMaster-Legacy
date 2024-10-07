@@ -109,26 +109,26 @@ public partial class ManageOrganizations
 
     private sealed class InputModel
     {
-        public Guid? Id { get; set; }
+        public Guid? Id { get; init; }
 
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "Name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "Locality")]
-        public string Locality { get; set; }
+        public string Locality { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "State")]
-        public string State { get; set; }
+        public string State { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "Country")]
-        public string Country { get; set; }
+        public string Country { get; set; } = string.Empty;
     }
 }

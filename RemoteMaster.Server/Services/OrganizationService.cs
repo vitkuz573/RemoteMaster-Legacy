@@ -93,12 +93,13 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
 
     public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(string userId)
     {
-        var user = await applicationUserRepository.GetByIdAsync(userId);
-
+        var user = await applicationUserRepository.GetByIdAsync(userId) ?? throw new InvalidOperationException($"User with ID '{userId}' not found.");
+        
         var accessibleOrganizationIds = user.UserOrganizations.Select(uo => uo.OrganizationId);
         var accessibleOrganizationalUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId);
 
         return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
+
     }
 
     public async Task RemoveHostAsync(Guid organizationId, Guid organizationalUnitId, Guid hostId)

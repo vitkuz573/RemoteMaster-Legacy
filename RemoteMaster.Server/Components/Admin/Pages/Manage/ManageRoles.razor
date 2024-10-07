@@ -15,14 +15,14 @@
 <div class="space-y-6">
     <!-- Form -->
     <div class="w-full">
-        <EditForm Model="_newRole" OnValidSubmit="CreateRole" class="space-y-6">
+        <EditForm Model="Input" OnValidSubmit="CreateRole" class="space-y-6">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-red-500" role="alert" />
 
             <div>
                 <label for="roleName" class="block text-sm font-medium text-gray-700">Role Name</label>
-                <InputText @bind-Value="_newRole.Name" id="roleName" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
-                <ValidationMessage For="() => _newRole.Name" class="text-red-500 mt-1" />
+                <InputText @bind-Value="Input.Name" id="roleName" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
+                <ValidationMessage For="() => Input.Name" class="text-red-500 mt-1" />
             </div>
 
             <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">

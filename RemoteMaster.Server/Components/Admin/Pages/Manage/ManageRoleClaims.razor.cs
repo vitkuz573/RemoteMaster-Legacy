@@ -181,7 +181,7 @@ public partial class ManageRoleClaims
 
     public class ClaimTypeViewModel(string type, List<ClaimValueViewModel> values)
     {
-        public string Type { get; set; } = type;
+        public string Type { get; } = type;
 
         public bool IsExpanded { get; set; }
 
@@ -190,11 +190,11 @@ public partial class ManageRoleClaims
 
     public class ClaimValueViewModel
     {
-        public string Value { get; set; } = string.Empty;
+        public string Value { get; init; } = string.Empty;
 
-        public string DisplayName { get; set; } = string.Empty;
+        public string DisplayName { get; init; } = string.Empty;
 
-        public string Description { get; set; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
 
         public bool IsSelected { get; set; }
     }
