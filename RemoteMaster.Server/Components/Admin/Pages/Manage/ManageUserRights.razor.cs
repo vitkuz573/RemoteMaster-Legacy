@@ -58,8 +58,7 @@ public partial class ManageUserRights
                 _users.Add(new UserViewModel
                 {
                     Id = user.Id,
-                    UserName = user.UserName!,
-                    IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow
+                    UserName = user.UserName!
                 });
             }
         }
@@ -165,7 +164,7 @@ public partial class ManageUserRights
         if (SelectedUserModel.IsLockedOut)
         {
             user.LockoutEnd = SelectedUserModel.IsPermanentLockout
-                ? DateTimeOffset.MaxValue
+                ? DateTime.MaxValue
                 : SelectedUserModel.LockoutEndDateTime.ToUniversalTime();
         }
         else
@@ -204,8 +203,8 @@ public partial class ManageUserRights
         {
             Role = userRole,
             IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow,
-            IsPermanentLockout = user.LockoutEnd == DateTimeOffset.MaxValue,
-            LockoutEndDateTime = user.LockoutEnd != null && user.LockoutEnd < DateTimeOffset.MaxValue ? user.LockoutEnd.Value.DateTime : DateTime.Now,
+            IsPermanentLockout = user.LockoutEnd == DateTime.MaxValue,
+            LockoutEndDateTime = user.LockoutEnd != null && user.LockoutEnd < DateTime.MaxValue ? user.LockoutEnd.Value.DateTime : DateTime.Now,
             CanAccessUnregisteredHosts = user.CanAccessUnregisteredHosts
         };
 
@@ -222,19 +221,9 @@ public partial class ManageUserRights
         {
             organization.IsSelected = _initialSelectedOrganizationIds.Contains(organization.Id);
 
-            if (organization.IsSelected)
-            {
-                SelectedUserModel.SelectedOrganizations.Add(organization.Id);
-            }
-
             foreach (var unit in organization.OrganizationalUnits)
             {
                 unit.IsSelected = _initialSelectedUnitIds.Contains(unit.Id);
-
-                if (unit.IsSelected)
-                {
-                    SelectedUserModel.SelectedOrganizationalUnits.Add(unit.Id);
-                }
             }
         }
 
@@ -334,18 +323,16 @@ public partial class ManageUserRights
 
     public class UserViewModel
     {
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; init; } = string.Empty;
 
-        public string UserName { get; set; } = string.Empty;
-
-        public bool IsLockedOut { get; set; }
+        public string UserName { get; init; } = string.Empty;
     }
 
     public class OrganizationViewModel(Guid id, string name, List<OrganizationalUnitViewModel> organizationalUnits)
     {
-        public Guid Id { get; set; } = id;
+        public Guid Id { get; } = id;
 
-        public string Name { get; set; } = name;
+        public string Name { get; } = name;
 
         private bool _isSelected;
 
@@ -375,9 +362,9 @@ public partial class ManageUserRights
 
     public class OrganizationalUnitViewModel
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
 
         public bool IsSelected { get; set; }
     }
@@ -396,10 +383,6 @@ public partial class ManageUserRights
         public DateTime LockoutEndDateTime { get; set; } = DateTime.Now;
 
         public bool CanAccessUnregisteredHosts { get; set; }
-
-        public List<Guid> SelectedOrganizations { get; } = [];
-
-        public List<Guid> SelectedOrganizationalUnits { get; } = [];
     }
 
     private string? _initialSelectedRole;
