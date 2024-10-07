@@ -11,8 +11,8 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageJwt
 {
-    private string? _keysDirectory;
-    private int? _keySize;
+    private string _keysDirectory;
+    private int _keySize;
     private string? _newKeyPassword;
 
     protected override void OnInitialized()
@@ -29,7 +29,7 @@ public partial class ManageJwt
 
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
-            var files = new string[] { "private_key.der", "public_key.der" };
+            var files = new[] { "private_key.der", "public_key.der" };
 
             foreach (var file in files)
             {

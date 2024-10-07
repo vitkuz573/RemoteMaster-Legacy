@@ -27,10 +27,14 @@ public partial class ManageCertificateAuthority
             var caCertificate = caCertificateResult.Value;
             var caPrivateKey = caCertificate.GetRSAPrivateKey();
 
+            if (caPrivateKey != null)
+            {
+                _keySize = caPrivateKey.KeySize;
+            }
+
             _subject = caCertificate.Subject;
-            _keySize = caPrivateKey.KeySize;
             _serialNumber = caCertificate.SerialNumber;
-            _signatureAlgorithm = caCertificate.SignatureAlgorithm.FriendlyName;
+            _signatureAlgorithm = caCertificate.SignatureAlgorithm.FriendlyName ?? "Unknown";
             _issueDate = caCertificate.NotBefore;
             _expiryDate = caCertificate.NotAfter;
         }

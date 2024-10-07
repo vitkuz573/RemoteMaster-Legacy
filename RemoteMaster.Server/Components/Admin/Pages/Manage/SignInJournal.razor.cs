@@ -91,7 +91,7 @@ public partial class SignInJournal
     {
         return _sortColumn switch
         {
-            "User" => entry.User!.UserName!,
+            "User" => entry.User.UserName!,
             "SignInTime" => entry.SignInTime,
             "Success" => entry.IsSuccessful,
             "IpAddress" => entry.IpAddress,
@@ -158,8 +158,8 @@ public partial class SignInJournal
                 filteredEntries = column switch
                 {
                     "user" => caseSensitive
-                        ? filteredEntries.Where(e => e.User!.UserName!.Contains(value))
-                        : filteredEntries.Where(e => e.User!.UserName!.Contains(value, StringComparison.OrdinalIgnoreCase)),
+                        ? filteredEntries.Where(e => e.User.UserName!.Contains(value))
+                        : filteredEntries.Where(e => e.User.UserName!.Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => string.Equals(e.IpAddress.ToString(), value, StringComparison.OrdinalIgnoreCase)),
@@ -172,8 +172,8 @@ public partial class SignInJournal
                 filteredEntries = column switch
                 {
                     "user" => caseSensitive
-                        ? filteredEntries.Where(e => e.User!.UserName!.Equals(value))
-                        : filteredEntries.Where(e => e.User!.UserName!.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                        ? filteredEntries.Where(e => e.User.UserName!.Equals(value))
+                        : filteredEntries.Where(e => e.User.UserName!.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => string.Equals(e.IpAddress.ToString(), value, StringComparison.OrdinalIgnoreCase)),
@@ -186,8 +186,8 @@ public partial class SignInJournal
                 filteredEntries = column switch
                 {
                     "user" => caseSensitive
-                        ? filteredEntries.Where(e => !e.User!.UserName!.Equals(value))
-                        : filteredEntries.Where(e => !e.User!.UserName!.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                        ? filteredEntries.Where(e => !e.User.UserName!.Equals(value))
+                        : filteredEntries.Where(e => !e.User.UserName!.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => !e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => !(e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => !string.Equals(e.IpAddress.ToString(), value, StringComparison.OrdinalIgnoreCase)),
