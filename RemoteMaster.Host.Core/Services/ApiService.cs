@@ -93,11 +93,13 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         try
         {
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+
             return apiResponse?.IsSuccess == true ? apiResponse.Data : null;
         }
         catch (Exception ex)
         {
             Log.Error("Failed to read response as JSON: {Message}", ex.Message);
+
             return null;
         }
     }

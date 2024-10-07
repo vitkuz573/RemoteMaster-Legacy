@@ -317,7 +317,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             {
                 var directoryName = file.DirectoryName;
 
-                if (directoryName == null || excludedFolders.Any(folder => directoryName.Contains(folder)))
+                if (directoryName == null || excludedFolders.Any(directoryName.Contains))
                 {
                     continue;
                 }
@@ -337,7 +337,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
-    private async Task EnsureServicesRunning(IEnumerable<IRunnable> services, int delayInSeconds, int attempts)
+    private async Task EnsureServicesRunning(List<IRunnable> services, int delayInSeconds, int attempts)
     {
         var allServicesRunning = false;
 
