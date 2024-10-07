@@ -121,8 +121,9 @@ public partial class Chat : IAsyncDisposable
         var chatMessageDto = new ChatMessageDto(user, _message)
         {
             ReplyToId = _replyToMessage,
-            Attachments = attachments
         };
+
+        chatMessageDto.Attachments.AddRange(attachments);
 
         await _connection.SendAsync("SendMessage", chatMessageDto);
 

@@ -40,8 +40,10 @@ public class CommonDialogBase : ComponentBase
     [Inject]
     private IDialogService DialogService { get; set; } = default!;
 
+#pragma warning disable CA2227
     [CascadingParameter]
     public ConcurrentDictionary<HostDto, HubConnection?> Hosts { get; set; } = default!;
+#pragma warning restore CA2227
 
     [Parameter]
     public string ContentStyle { get; set; } = default!;
