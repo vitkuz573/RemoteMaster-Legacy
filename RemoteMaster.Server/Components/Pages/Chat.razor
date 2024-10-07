@@ -12,7 +12,10 @@
         <div class="flex flex-col space-y-4">
             <div class="flex items-center space-x-2">
                 <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded-full border p-3 text-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500" @oninput="HandleInput" />
-                <InputFile OnChange="HandleFileChange" multiple />
+                <InputFile @ref="_fileInput" OnChange="HandleFileChange" style="display: none;" multiple />
+                <button @onclick="TriggerFileUpload" class="rounded-full bg-blue-500 p-3 text-white transition duration-200 hover:bg-blue-700">
+                    <span class="material-icons">attach_file</span>
+                </button>
                 <button @onclick="Send" class="rounded-full bg-blue-500 p-3 text-white transition duration-200 hover:bg-blue-700">
                     <span class="material-icons">send</span>
                 </button>
@@ -61,7 +64,7 @@
                                     <div class="text-sm text-gray-500">Replying to: @GetReplyToMessage(chatMessage.ReplyToId)</div>
                                 }
                                 <div class="text-sm text-gray-700">@chatMessage.Message</div>
-                                @if (chatMessage.Attachments != null && chatMessage.Attachments.Any())
+                                @if (chatMessage.Attachments.Any())
                                 {
                                     @foreach (var attachment in chatMessage.Attachments)
                                     {
