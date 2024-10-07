@@ -76,7 +76,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
         return ipv4Addrs;
     }
 
-    private static bool IsValidIpAddress(string address, out IPAddress ipAddress)
+    private static bool IsValidIpAddress(string address, out IPAddress? ipAddress)
     {
         return IPAddress.TryParse(address, out ipAddress);
     }
@@ -86,12 +86,15 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
         return Uri.CheckHostName(domainName) == UriHostNameType.Dns;
     }
 
-    private static string ConvertToCidrNotation(IPAddress ipAddress)
+    private static string ConvertToCidrNotation(IPAddress? ipAddress)
     {
-        ArgumentNullException.ThrowIfNull(ipAddress);
+        if (ipAddress == null)
+        {
+            throw new ArgumentNullException(nameof(ipAddress));
+        }
 
         var prefixLength = ipAddress.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
-        
+
         return $"{ipAddress}/{prefixLength}";
     }
 }
