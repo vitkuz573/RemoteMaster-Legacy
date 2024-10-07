@@ -58,7 +58,7 @@ public partial class MoveHostsDialog
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity!.IsAuthenticated)
         {
             var username = user.Identity.Name;
             var appUser = await UserManager.Users
@@ -80,7 +80,7 @@ public partial class MoveHostsDialog
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity!.IsAuthenticated)
         {
             var username = user.Identity.Name;
             var appUser = await UserManager.Users

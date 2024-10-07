@@ -33,7 +33,7 @@ public partial class ScreenRecorderDialog
                 VideoQuality = _videoQuality
             };
 
-            await connection.InvokeAsync("SendStartScreenRecording", screenRecordingRequest);
+            await connection!.InvokeAsync("SendStartScreenRecording", screenRecordingRequest);
         });
 
         MudDialog.Close(DialogResult.Ok(true));
@@ -43,7 +43,7 @@ public partial class ScreenRecorderDialog
     {
         await HostCommandService.Execute(Hosts, async (_, connection) =>
         {
-            await connection.InvokeAsync("SendStopScreenRecording");
+            await connection!.InvokeAsync("SendStopScreenRecording");
         });
 
         MudDialog.Close(DialogResult.Ok(true));

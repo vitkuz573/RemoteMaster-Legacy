@@ -33,15 +33,15 @@ public class RefreshToken
 
     public string UserId { get; private set; } = null!;
 
-    public Token? TokenValue { get; private set; }
+    public Token TokenValue { get; private set; } = null!;
 
     public TokenRevocationInfo? RevocationInfo { get; private set; }
 
     public RefreshToken? ReplacedByToken { get; private set; }
 
-    public ApplicationUser? User { get; private set; }
+    public ApplicationUser User { get; private set; } = null!;
 
-    public bool IsActive => RevocationInfo == null && !TokenValue!.IsExpired;
+    public bool IsActive => RevocationInfo == null && !TokenValue.IsExpired;
 
     public static RefreshToken Create(string userId, DateTime expires, IPAddress ipAddress)
     {
@@ -66,7 +66,7 @@ public class RefreshToken
     {
         ArgumentNullException.ThrowIfNull(tokenFactory);
 
-        var newToken = tokenFactory(UserId, TokenValue!.Expires, ipAddress);
+        var newToken = tokenFactory(UserId, TokenValue.Expires, ipAddress);
 
         Revoke(TokenRevocationReason.Replaced, ipAddress);
         ReplacedByToken = newToken;
@@ -76,6 +76,6 @@ public class RefreshToken
 
     public bool IsValid()
     {
-        return RevocationInfo == null && !TokenValue!.IsExpired;
+        return RevocationInfo == null && !TokenValue.IsExpired;
     }
 }

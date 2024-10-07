@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Compression;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -38,7 +38,7 @@ public partial class UpdateDialog
     private async Task Confirm()
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext.User);
+        var userId = UserManager.GetUserId(httpContext!.User);
 
         var updateTasks = new List<Task>();
 
@@ -51,7 +51,8 @@ public partial class UpdateDialog
                 {
                     options.AccessTokenProvider = async () =>
                     {
-                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId!);
+
                         return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                     };
                 })
@@ -70,17 +71,17 @@ public partial class UpdateDialog
                     AllowDowngrade = _allowDowngrade
                 };
 
-                await connection.InvokeAsync("SendStartUpdater", updateRequest);
+                await connection!.InvokeAsync("SendStartUpdater", updateRequest);
 
-                if (!_subscribedConnections.Contains(connection))
+                if (!_subscribedConnections.Contains(connection!))
                 {
-                    connection.On<Message>("ReceiveMessage", async message =>
+                    connection!.On<Message>("ReceiveMessage", async message =>
                     {
                         UpdateResultsForHost(host, message);
                         await InvokeAsync(StateHasChanged);
                     });
 
-                    _subscribedConnections.Add(connection);
+                    _subscribedConnections.Add(connection!);
                 }
 
                 await updaterConnection.StartAsync();

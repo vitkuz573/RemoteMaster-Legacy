@@ -23,7 +23,7 @@ public class OrganizationalUnit
 
     public Guid OrganizationId { get; private set; }
 
-    public Organization? Organization { get; private set; }
+    public Organization Organization { get; private set; } = null!;
 
     public IReadOnlyCollection<OrganizationalUnit> Children => _children.AsReadOnly();
 

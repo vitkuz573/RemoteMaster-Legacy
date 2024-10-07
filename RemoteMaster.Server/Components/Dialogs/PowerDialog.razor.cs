@@ -14,7 +14,7 @@ public partial class PowerDialog
 
     private async Task Confirm()
     {
-        var powerActionRequest = new PowerActionRequest()
+        var powerActionRequest = new PowerActionRequest
         {
             Message = string.Empty,
             Timeout = 0,
@@ -24,10 +24,10 @@ public partial class PowerDialog
         switch (_selectedOption)
         {
             case "shutdown":
-                await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("ShutdownHost", powerActionRequest));
+                await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("ShutdownHost", powerActionRequest));
                 break;
             case "reboot":
-                await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("RebootHost", powerActionRequest));
+                await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("RebootHost", powerActionRequest));
                 break;
         }
 

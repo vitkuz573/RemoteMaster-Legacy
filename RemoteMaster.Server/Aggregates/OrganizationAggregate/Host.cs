@@ -28,7 +28,7 @@ public class Host
 
     public Guid ParentId { get; private set; }
 
-    public OrganizationalUnit? Parent { get; private set; }
+    public OrganizationalUnit Parent { get; private set; } = null!;
 
     internal void SetOrganizationalUnit(Guid organizationalUnitId)
     {

@@ -28,5 +28,5 @@ public class SignInEntry
 
     public IPAddress IpAddress { get; private set; } = null!;
 
-    public ApplicationUser? User { get; private set; }
+    public ApplicationUser User { get; private set; } = null!;
 }
