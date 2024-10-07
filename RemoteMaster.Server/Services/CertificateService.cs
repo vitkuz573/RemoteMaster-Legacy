@@ -48,22 +48,17 @@ public class CertificateService(IHostInformationService hostInformationService, 
             {
                 Log.Information("Using Active Directory CA to issue the certificate.");
 
-                switch (_options.Method)
+                return _options.Method switch
                 {
-                    case ActiveDirectoryMethod.WebEnrollment:
-                        return await IssueCertificateUsingWebEnrollment(csrBytes);
-                    case ActiveDirectoryMethod.CertEnroll:
-                        return IssueCertificateUsingCertEnroll(csrBytes);
-                    default:
-                        throw new InvalidOperationException("Unknown method.");
-                }
+                    ActiveDirectoryMethod.WebEnrollment => await IssueCertificateUsingWebEnrollment(csrBytes),
+                    ActiveDirectoryMethod.CertEnroll => IssueCertificateUsingCertEnroll(csrBytes),
+                    _ => throw new InvalidOperationException("Unknown method.")
+                };
             }
-            else
-            {
-                Log.Information("Using Internal CA to issue the certificate.");
 
-                return IssueCertificateUsingInternal(csrBytes, caCertificate);
-            }
+            Log.Information("Using Internal CA to issue the certificate.");
+
+            return IssueCertificateUsingInternal(csrBytes, caCertificate);
         }
         catch (Exception ex)
         {
@@ -127,27 +122,25 @@ public class CertificateService(IHostInformationService hostInformationService, 
             Credentials = new NetworkCredential(_options.Username, _options.Password),
         };
 
-        using (var client = new HttpClient(handler))
+        using var client = new HttpClient(handler);
+        var requestBody = new FormUrlEncodedContent(new[]
         {
-            var requestBody = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("Mode", "newreq"),
-                new KeyValuePair<string, string>("CertRequest", $"{Convert.ToBase64String(csrBytes)}"),
-                new KeyValuePair<string, string>("CertAttrib", $"CertificateTemplate:{_options.TemplateName}"),
-                new KeyValuePair<string, string>("TargetStoreFlags", "0"),
-                new KeyValuePair<string, string>("SaveCert", "yes")
-            });
+            new KeyValuePair<string, string>("Mode", "newreq"),
+            new KeyValuePair<string, string>("CertRequest", $"{Convert.ToBase64String(csrBytes)}"),
+            new KeyValuePair<string, string>("CertAttrib", $"CertificateTemplate:{_options.TemplateName}"),
+            new KeyValuePair<string, string>("TargetStoreFlags", "0"),
+            new KeyValuePair<string, string>("SaveCert", "yes")
+        });
 
-            var response = await client.PostAsync($"{baseUrl}certfnsh.asp", requestBody);
-            var responseBody = await response.Content.ReadAsStringAsync();
+        var response = await client.PostAsync($"{baseUrl}certfnsh.asp", requestBody);
+        var responseBody = await response.Content.ReadAsStringAsync();
 
-            var match = Regex.Match(responseBody, @"ReqID=(\d+)");
+        var match = Regex.Match(responseBody, @"ReqID=(\d+)");
 
-            var certResponse = await client.GetAsync($"{baseUrl}certnew.cer?ReqID={match.Groups[1].Value}&Enc=b64");
-            var certBytes = await certResponse.Content.ReadAsByteArrayAsync();
+        var certResponse = await client.GetAsync($"{baseUrl}certnew.cer?ReqID={match.Groups[1].Value}&Enc=b64");
+        var certBytes = await certResponse.Content.ReadAsByteArrayAsync();
 
-            return new X509Certificate2(certBytes);
-        }
+        return new X509Certificate2(certBytes);
     }
 
     private Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
