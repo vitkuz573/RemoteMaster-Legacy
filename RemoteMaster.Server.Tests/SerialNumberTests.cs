@@ -54,10 +54,10 @@ public class SerialNumberTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void FromExistingValue_ThrowsArgumentException_WhenValueIsNullOrWhiteSpace(string value)
+    public void FromExistingValue_ThrowsArgumentException_WhenValueIsNullOrWhiteSpace(string? value)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => SerialNumber.FromExistingValue(value));
+        Assert.Throws<ArgumentException>(() => SerialNumber.FromExistingValue(value!));
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class SerialNumberTests
         var serialNumbers = new ConcurrentBag<string>();
 
         // Act
-        Parallel.For(0, 10000, i =>
+        Parallel.For(0, 10000, _ =>
         {
             var serialNumber = SerialNumber.Generate();
             serialNumbers.Add(serialNumber.Value);
@@ -147,10 +147,10 @@ public class SerialNumberTests
     [InlineData(null)] // Null value
     [InlineData("")]   // Empty value
     [InlineData("   ")] // Whitespaces
-    public void FromExistingValue_ThrowsArgumentException_WhenValueIsTooShortOrInvalid(string value)
+    public void FromExistingValue_ThrowsArgumentException_WhenValueIsTooShortOrInvalid(string? value)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => SerialNumber.FromExistingValue(value));
+        Assert.Throws<ArgumentException>(() => SerialNumber.FromExistingValue(value!));
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class SerialNumberTests
     public void FromExistingValue_HandlesSpecialCharactersCorrectly()
     {
         // Arrange
-        var specialCharValue = "A1B2C3-!@#";
+        const string specialCharValue = "A1B2C3-!@#";
 
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() => SerialNumber.FromExistingValue(specialCharValue));

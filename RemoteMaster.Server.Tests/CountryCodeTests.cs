@@ -34,7 +34,7 @@ public class CountryCodeTests
     public void CountryCode_ThrowsArgumentNullException_WithNullCode()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new CountryCode(null));
+        Assert.Throws<ArgumentNullException>(() => new CountryCode(null!));
     }
 
     [Theory]

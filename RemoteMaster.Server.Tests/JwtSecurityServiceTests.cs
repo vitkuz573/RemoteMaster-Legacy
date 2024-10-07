@@ -78,7 +78,7 @@ public class JwtSecurityServiceTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("publickey", Encoding.UTF8.GetString(result.Value));
+        Assert.Equal("publickey", Encoding.UTF8.GetString(result.Value!));
     }
 
     [Fact]

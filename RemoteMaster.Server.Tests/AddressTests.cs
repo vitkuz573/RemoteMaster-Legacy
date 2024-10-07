@@ -29,10 +29,10 @@ public class AddressTests
     [InlineData(null, "NY", "US")]
     [InlineData("New York", null, "US")]
     [InlineData("New York", "NY", null)]
-    public void Address_ThrowsArgumentNullException_WhenAnyArgumentIsNull(string locality, string state, string countryCode)
+    public void Address_ThrowsArgumentNullException_WhenAnyArgumentIsNull(string? locality, string? state, string? countryCode)
     {
         // Arrange & Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new Address(locality, state, new CountryCode(countryCode)));
+        Assert.Throws<ArgumentNullException>(() => new Address(locality!, state!, new CountryCode(countryCode!)));
     }
 
     [Theory]
@@ -75,10 +75,9 @@ public class AddressTests
     {
         // Arrange
         var address = new Address("New York", "NY", new CountryCode("US"));
-        Address updatedAddress;
 
         // Act
-        updatedAddress = propertyName switch
+        var updatedAddress = propertyName switch
         {
             nameof(Address.Locality) => address with { Locality = (string)newValue },
             nameof(Address.State) => address with { State = (string)newValue },
@@ -89,21 +88,23 @@ public class AddressTests
         // Assert
         Assert.NotEqual(address, updatedAddress);
 
-        if (propertyName == nameof(Address.Locality))
+        switch (propertyName)
         {
-            Assert.Equal(newValue, updatedAddress.Locality);
-            Assert.NotEqual(newValue, address.Locality);
-        }
-        else if (propertyName == nameof(Address.State))
-        {
-            Assert.Equal(newValue, updatedAddress.State);
-            Assert.NotEqual(newValue, address.State);
-        }
-        else if (propertyName == nameof(Address.Country))
-        {
-            var expectedCountry = new CountryCode((string)newValue);
-            Assert.Equal(expectedCountry, updatedAddress.Country);
-            Assert.NotEqual(expectedCountry, address.Country);
+            case nameof(Address.Locality):
+                Assert.Equal(newValue, updatedAddress.Locality);
+                Assert.NotEqual(newValue, address.Locality);
+                break;
+            case nameof(Address.State):
+                Assert.Equal(newValue, updatedAddress.State);
+                Assert.NotEqual(newValue, address.State);
+                break;
+            case nameof(Address.Country):
+            {
+                var expectedCountry = new CountryCode((string)newValue);
+                Assert.Equal(expectedCountry, updatedAddress.Country);
+                Assert.NotEqual(expectedCountry, address.Country);
+                break;
+            }
         }
     }
 }

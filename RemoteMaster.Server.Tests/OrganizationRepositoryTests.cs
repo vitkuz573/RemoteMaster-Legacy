@@ -99,7 +99,7 @@ public class OrganizationRepositoryTests
 
         // Assert
         var updatedOrganization = await _repository.GetByIdAsync(organization.Id);
-        Assert.Equal("Updated Org", updatedOrganization.Name);
+        Assert.Equal("Updated Org", updatedOrganization!.Name);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class OrganizationRepositoryTests
 
         // Assert
         var updatedOrganization = await _repository.GetByIdAsync(organization.Id);
-        Assert.Empty(updatedOrganization.OrganizationalUnits.First().Hosts);
+        Assert.Empty(updatedOrganization!.OrganizationalUnits.First().Hosts);
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class OrganizationRepositoryTests
         Expression<Func<Organization, bool>> predicate = o => o.Name.Contains("Test1");
 
         // Act
-        var result = await _repository.FindAsync(predicate);
+        var result = (await _repository.FindAsync(predicate)).ToList();
 
         // Assert
         Assert.Single(result);
@@ -176,10 +176,10 @@ public class OrganizationRepositoryTests
         var ids = new List<Guid> { org1.Id, org2.Id };
 
         // Act
-        var result = await _repository.GetByIdsAsync(ids);
+        var result = (await _repository.GetByIdsAsync(ids)).ToList();
 
         // Assert
-        Assert.Equal(2, result.Count());
+        Assert.Equal(2, result.Count);
         Assert.Contains(result, o => o.Id == org1.Id);
         Assert.Contains(result, o => o.Id == org2.Id);
     }
@@ -206,7 +206,7 @@ public class OrganizationRepositoryTests
 
         // Act
         var macAddress = PhysicalAddress.Parse("00-11-22-33-44-66");
-        var result = await _repository.FindHostsAsync(c => c.MacAddress.Equals(macAddress));
+        var result = (await _repository.FindHostsAsync(c => c.MacAddress.Equals(macAddress))).ToList();
 
         // Assert
         Assert.Single(result);
@@ -260,8 +260,8 @@ public class OrganizationRepositoryTests
         // Assert
         var updatedOrg1 = await _repository.GetByIdAsync(org1.Id);
         var updatedOrg2 = await _repository.GetByIdAsync(org2.Id);
-        Assert.Empty(updatedOrg1.OrganizationalUnits.First().Hosts);
-        Assert.Single(updatedOrg2.OrganizationalUnits.First().Hosts);
+        Assert.Empty(updatedOrg1!.OrganizationalUnits.First().Hosts);
+        Assert.Single(updatedOrg2!.OrganizationalUnits.First().Hosts);
     }
 
     [Fact]
@@ -287,7 +287,7 @@ public class OrganizationRepositoryTests
         await _repository.SaveChangesAsync();
 
         // Assert
-        var tasks = await _repository.GetAllCertificateRenewalTasksAsync();
+        var tasks = (await _repository.GetAllCertificateRenewalTasksAsync()).ToList();
         Assert.Single(tasks);
         Assert.Equal(plannedDate, tasks.First().PlannedDate);
     }

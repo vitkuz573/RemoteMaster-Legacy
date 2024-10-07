@@ -17,14 +17,13 @@ namespace RemoteMaster.Server.Tests;
 public class OrganizationServiceTests
 {
     private readonly Mock<IOrganizationRepository> _organizationRepositoryMock;
-    private readonly Mock<IApplicationUserRepository> _applicationUserRepositoryMock;
     private readonly OrganizationService _organizationService;
 
     public OrganizationServiceTests()
     {
         _organizationRepositoryMock = new Mock<IOrganizationRepository>();
-        _applicationUserRepositoryMock = new Mock<IApplicationUserRepository>();
-        _organizationService = new OrganizationService(_organizationRepositoryMock.Object, _applicationUserRepositoryMock.Object);
+        Mock<IApplicationUserRepository> applicationUserRepositoryMock = new();
+        _organizationService = new OrganizationService(_organizationRepositoryMock.Object, applicationUserRepositoryMock.Object);
     }
 
     [Fact]
@@ -85,7 +84,7 @@ public class OrganizationServiceTests
     {
         // Arrange
         var dto = new OrganizationDto(Guid.NewGuid(), "Nonexistent Org", new AddressDto("City", "State", "US"));
-        _organizationRepositoryMock.Setup(repo => repo.GetByIdAsync(dto.Id.Value)).ReturnsAsync((Organization)null);
+        _organizationRepositoryMock.Setup(repo => repo.GetByIdAsync(dto.Id!.Value)).ReturnsAsync((Organization)null!);
 
         // Act
         var result = await _organizationService.AddOrUpdateOrganizationAsync(dto);
