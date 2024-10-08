@@ -212,6 +212,7 @@ public class AppStateTests : IDisposable
         {
             var mockViewer = new Mock<IViewer>();
             mockViewer.Setup(v => v.ConnectionId).Returns($"ConnectionId_{i}");
+
             return mockViewer;
         }).ToArray();
 
@@ -287,7 +288,7 @@ public class AppStateTests : IDisposable
 
         // Act
         _appState.TryRemoveViewer("testConnectionId");
-        var exception = Record.Exception(() => _viewerMock.Object.Dispose());
+        var exception = Record.Exception(_viewerMock.Object.Dispose);
 
         // Assert
         Assert.Null(exception);
