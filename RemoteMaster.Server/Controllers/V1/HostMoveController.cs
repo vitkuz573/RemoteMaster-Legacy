@@ -19,16 +19,29 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
 {
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 404)]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 400)]
     public async Task<IActionResult> GetHostMoveRequest([FromQuery] PhysicalAddress macAddress)
     {
         var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
 
-        if (hostMoveRequestResult is { IsSuccess: true, Value: not null })
+        if (hostMoveRequestResult.IsSuccess)
         {
-            var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequestResult.Value, "Host move request retrieved successfully.");
-            
-            return Ok(response);
+            if (hostMoveRequestResult.Value is not null)
+            {
+                var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequestResult.Value, "Host move request retrieved successfully.");
+                
+                return Ok(response);
+            }
+
+            var notFoundProblemDetails = new ProblemDetails
+            {
+                Title = "Host move request not found",
+                Detail = "The specified MAC address does not have any pending move requests.",
+                Status = StatusCodes.Status404NotFound
+            };
+
+            return NotFound(ApiResponse<HostMoveRequest>.Failure(notFoundProblemDetails, StatusCodes.Status404NotFound));
         }
 
         var problemDetailsForFailure = new ProblemDetails
@@ -38,9 +51,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
             Status = StatusCodes.Status400BadRequest
         };
 
-        var errorResponseWithDetails = ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure);
-
-        return BadRequest(errorResponseWithDetails);
+        return BadRequest(ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure));
     }
 
     [HttpPost("acknowledge")]

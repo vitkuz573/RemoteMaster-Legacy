@@ -176,7 +176,7 @@ public static class Program
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
         services.AddScoped<IEventNotificationService, TelegramEventNotificationService>();
-        services.AddScoped<IHostMoveRequestService, HostMoveService>();
+        services.AddScoped<IHostMoveRequestService, HostMoveRequestService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();

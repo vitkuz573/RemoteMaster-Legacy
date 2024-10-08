@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Net.Http.Json;
 using System.Net.NetworkInformation;
 using System.Text.Json;
@@ -215,6 +216,11 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         await EnsureClientInitializedAsync();
 
         var response = await _client.GetAsync($"/api/HostMove?macAddress={macAddress}");
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
 
         return await ProcessResponse<HostMoveRequest>(response);
     }

@@ -10,7 +10,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostMoveService(IEventNotificationService eventNotificationService) : IHostMoveRequestService
+public class HostMoveRequestService(IEventNotificationService eventNotificationService) : IHostMoveRequestService
 {
     private static readonly string ProgramDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
     private static readonly string HostMoveRequestsFilePath = Path.Combine(ProgramDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");

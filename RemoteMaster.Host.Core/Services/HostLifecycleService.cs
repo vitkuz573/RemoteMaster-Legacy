@@ -107,7 +107,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             var ipAddresses = new List<IPAddress>
             {
-                hostConfiguration.Host!.IpAddress
+                hostConfiguration.Host.IpAddress
             };
 
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
