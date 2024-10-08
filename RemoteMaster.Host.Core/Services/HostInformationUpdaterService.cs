@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
@@ -33,9 +31,9 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
         var hostInformation = hostInformationService.GetHostInformation();
 
-        if (hostConfiguration.Host == null || !hostConfiguration.Host.Equals(hostInformation))
+        if (!hostConfiguration.Host.Equals(hostInformation))
         {
-            if (hostConfiguration.Host != null && !hostConfiguration.Host.MacAddress.Equals(hostInformation.MacAddress))
+            if (!hostConfiguration.Host.MacAddress.Equals(hostInformation.MacAddress))
             {
                 Log.Information("MAC address has changed, which might indicate restoration from backup.");
             }
@@ -76,9 +74,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-                    Log.Information(
-                        "HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.",
-                        hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
+                    Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
 
                     var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
@@ -101,25 +97,5 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
         }
 
         return hasChanges;
-    }
-
-    public bool CheckCertificateExpiration()
-    {
-        X509Certificate2? certificate = null;
-
-        using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
-        {
-            store.Open(OpenFlags.ReadOnly);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
-
-            foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
-            {
-                certificate = cert;
-                break;
-            }
-        }
-
-        return certificate == null || DateTime.Now > certificate.NotAfter;
     }
 }
