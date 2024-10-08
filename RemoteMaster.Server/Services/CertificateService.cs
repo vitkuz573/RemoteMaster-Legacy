@@ -143,7 +143,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         return new X509Certificate2(certBytes);
     }
 
-    private Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
+    private static Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
     {
         try
         {
@@ -174,21 +174,25 @@ public class CertificateService(IHostInformationService hostInformationService, 
             }
 
             enrollment.InitializeFromRequest(certRequestPkcs10);
+            enrollment.Enroll();
 
-            var response = SendCertEnrollRequestToCA(enrollment);
+            BSTR responseBstr;
 
-            var bstrResponse = Marshal.StringToBSTR(response);
+            unsafe
+            {
+                enrollment.get_Response(EncodingType.XCN_CRYPT_STRING_BASE64, &responseBstr);
+            }
 
             try
             {
-                var certBytes = Convert.FromBase64String(response);
+                var certBytes = Convert.FromBase64String(responseBstr.ToString());
                 var certificate = new X509Certificate2(certBytes);
 
                 return Result.Ok(certificate);
             }
             finally
             {
-                Marshal.FreeBSTR(bstrResponse);
+                Marshal.FreeBSTR(responseBstr);
             }
         }
         catch (Exception ex)
@@ -196,19 +200,6 @@ public class CertificateService(IHostInformationService hostInformationService, 
             Log.Error(ex, "An error occurred while issuing a certificate using CertEnroll.");
 
             return Result.Fail<X509Certificate2>(new Error("An error occurred while issuing a certificate using CertEnroll.").CausedBy(ex));
-        }
-    }
-
-    private string SendCertEnrollRequestToCA(IX509Enrollment enrollment)
-    {
-        enrollment.Enroll();
-
-        unsafe
-        {
-            BSTR responseBstr;
-            enrollment.get_Response(EncodingType.XCN_CRYPT_STRING_BASE64, &responseBstr);
-
-            return responseBstr.ToString();
         }
     }
 
