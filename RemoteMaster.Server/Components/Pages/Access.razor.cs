@@ -44,7 +44,7 @@ public partial class Access : IAsyncDisposable
     private bool _drawerOpen;
     private HubConnection? _connection;
     private bool _isInputEnabled;
-    private bool _isUserInputBlocked;
+    private bool _isUserInputEnabled = true;
     private bool _drawCursor;
     private int _frameRate;
     private int _imageQuality;
@@ -552,16 +552,18 @@ public partial class Access : IAsyncDisposable
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
-    private async Task BlockUserInput(bool value)
+    private async Task ToggleUserInput(bool value)
     {
         if (_connection == null)
         {
             return;
         }
 
-        _isUserInputBlocked = value;
+        _isUserInputEnabled = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", value), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", !value));
+
+        QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
     private async Task ToggleDrawCursor(bool value)

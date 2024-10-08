@@ -71,7 +71,7 @@
 
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
                         <MudText>User Input</MudText>
-                        <MudSwitch T="bool" Value="@_isUserInputBlocked" ValueChanged="BlockUserInput" />
+                        <MudSwitch T="bool" Value="@_isUserInputEnabled" ValueChanged="ToggleUserInput" />
                     </MudNavLink>
 
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="TerminateHost">Terminate Host</MudNavLink>
