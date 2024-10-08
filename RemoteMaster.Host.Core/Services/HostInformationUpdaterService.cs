@@ -16,19 +16,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
     {
         var hasChanges = false;
 
-        HostConfiguration hostConfiguration;
-
-        try
-        {
-            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
-        {
-            Log.Error(ex, "Error loading configuration.");
-
-            return false;
-        }
-
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
         var hostInformation = hostInformationService.GetHostInformation();
 
         if (!hostConfiguration.Host.Equals(hostInformation))
