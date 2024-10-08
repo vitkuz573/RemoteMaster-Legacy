@@ -187,6 +187,113 @@ public class AppStateTests : IDisposable
         Assert.Null(exception);
     }
 
+    [Fact]
+    public void TryAddViewer_LogsInformationAndErrorMessages()
+    {
+        // Arrange
+        var viewerWithSameId = new Mock<IViewer>();
+        viewerWithSameId.Setup(v => v.ConnectionId).Returns("testConnectionId");
+
+        _appState.TryAddViewer(_viewerMock.Object);
+
+        // Act
+        var result = _appState.TryAddViewer(viewerWithSameId.Object);
+
+        // Assert
+        Assert.False(result);
+        _viewerMock.Verify(v => v.ConnectionId, Times.AtLeast(2));
+    }
+
+    [Fact]
+    public void TryAddViewer_ConcurrentAccess_WorksCorrectly()
+    {
+        // Arrange
+        var viewers = Enumerable.Range(0, 100).Select(i =>
+        {
+            var mockViewer = new Mock<IViewer>();
+            mockViewer.Setup(v => v.ConnectionId).Returns($"ConnectionId_{i}");
+            return mockViewer;
+        }).ToArray();
+
+        // Act
+        Parallel.ForEach(viewers, viewer => _appState.TryAddViewer(viewer.Object));
+
+        // Assert
+        Assert.Equal(100, _appState.Viewers.Count);
+    }
+
+    [Fact]
+    public void TryAddViewer_DuplicateConnectionId_ReturnsFalse()
+    {
+        // Arrange
+        _appState.TryAddViewer(_viewerMock.Object);
+
+        var duplicateViewer = new Mock<IViewer>();
+        duplicateViewer.Setup(v => v.ConnectionId).Returns("testConnectionId");
+
+        // Act
+        var result = _appState.TryAddViewer(duplicateViewer.Object);
+
+        // Assert
+        Assert.False(result);
+        Assert.Single(_appState.Viewers);
+    }
+
+    [Fact]
+    public void TryRemoveViewer_DisposeCalled_CorrectlyHandlesDisposal()
+    {
+        // Arrange
+        _appState.TryAddViewer(_viewerMock.Object);
+        _viewerMock.Setup(v => v.Dispose()).Verifiable();
+
+        // Act
+        var result = _appState.TryRemoveViewer("testConnectionId");
+
+        // Assert
+        Assert.True(result);
+        _viewerMock.Verify(v => v.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void GetAllViewers_LargeNumberOfViewers_ReturnsCorrectCount()
+    {
+        // Arrange
+        var viewers = Enumerable.Range(0, 1000).Select(i =>
+        {
+            var mockViewer = new Mock<IViewer>();
+            mockViewer.Setup(v => v.ConnectionId).Returns($"ConnectionId_{i}");
+
+            return mockViewer.Object;
+        }).ToList();
+
+        foreach (var viewer in viewers)
+        {
+            _appState.TryAddViewer(viewer);
+        }
+
+        // Act
+        var result = _appState.GetAllViewers();
+
+        // Assert
+        Assert.Equal(1000, result.Count);
+    }
+
+    [Fact]
+    public void TryRemoveViewer_DisposeCalledMultipleTimes_NoExceptionThrown()
+    {
+        // Arrange
+        _appState.TryAddViewer(_viewerMock.Object);
+        _viewerMock.Setup(v => v.Dispose()).Verifiable();
+
+        // Act
+        _appState.TryRemoveViewer("testConnectionId");
+        var exception = Record.Exception(() => _viewerMock.Object.Dispose());
+
+        // Assert
+        Assert.Null(exception);
+        _viewerMock.Verify(v => v.Dispose(), Times.Exactly(2));
+    }
+
     public void Dispose()
     {
         _viewerMock.Object.Dispose();
