@@ -16,7 +16,7 @@ public class ActiveDirectoryOptions
     public string Server { get; set; } = string.Empty;
 
     [JsonPropertyName("port")]
-    public int Port { get; set; }
+    public int Port { get; set; } = 389;
 
     [JsonPropertyName("searchBase")]
     public string SearchBase { get; set; } = string.Empty;
