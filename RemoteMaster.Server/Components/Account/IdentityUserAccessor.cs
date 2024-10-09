@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Account;
 
