@@ -13,6 +13,11 @@ public class FileManagerService : IFileManagerService
     {
         var filePath = Path.Combine(path, fileName);
 
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+
         await File.WriteAllBytesAsync(filePath, fileData);
     }
 
