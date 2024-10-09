@@ -599,7 +599,7 @@ public partial class Home
 
     private async Task Update() => await ExecuteAction<UpdateDialog>("Update", hubPath: "hubs/updater");
 
-    private async Task FileUpload() => await ExecuteAction<FileUploadDialog>("Upload File");
+    private async Task FileUpload() => await ExecuteAction<FileUploadDialog>("Upload File", hubPath: "hubs/filemanager");
 
     private async Task MessageBox() => await ExecuteAction<MessageBoxDialog>("Message Box");
 

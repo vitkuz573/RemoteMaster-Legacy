@@ -120,6 +120,7 @@ public partial class FileManager : IAsyncDisposable
                 options.AccessTokenProvider = async () =>
                 {
                     var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
                     return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                 };
             })
