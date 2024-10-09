@@ -7,6 +7,7 @@ using System.Text;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
+using RemoteMaster.Shared.DTOs;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;

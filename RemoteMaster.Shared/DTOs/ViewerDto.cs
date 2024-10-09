@@ -4,7 +4,7 @@
 
 using System.Net;
 
-namespace RemoteMaster.Shared.Models;
+namespace RemoteMaster.Shared.DTOs;
 
 public class ViewerDto(string connectionId, string group, string userName, string role, DateTime connectedTime, IPAddress ipAddress, string authenticationType)
 {
