@@ -22,18 +22,22 @@ public class ApplicationClaimConfiguration : IEntityTypeConfiguration<Applicatio
 
         builder.Property(ac => ac.ClaimType)
             .IsRequired()
+            .HasMaxLength(30)
             .HasColumnOrder(1);
 
         builder.Property(ac => ac.ClaimValue)
             .IsRequired()
+            .HasMaxLength(30)
             .HasColumnOrder(2);
 
         builder.Property(ac => ac.DisplayName)
             .IsRequired()
+            .HasMaxLength(100)
             .HasColumnOrder(3);
 
         builder.Property(ac => ac.Description)
             .IsRequired()
+            .HasMaxLength(256)
             .HasColumnOrder(4);
     }
 }
