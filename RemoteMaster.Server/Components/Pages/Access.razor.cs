@@ -562,7 +562,6 @@ public partial class Access : IAsyncDisposable
         _isUserInputEnabled = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", !value));
-
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
