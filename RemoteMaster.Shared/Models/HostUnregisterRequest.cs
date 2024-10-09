@@ -8,7 +8,7 @@ using RemoteMaster.Shared.Converters;
 
 namespace RemoteMaster.Shared.Models;
 
-public class HostUnregisterRequest(PhysicalAddress macAddress, string organization, List<string> organizationalUnit, string name)
+public class HostUnregisterRequest(PhysicalAddress macAddress, string organization, List<string> organizationalUnit)
 {
     [JsonConverter(typeof(PhysicalAddressConverter))]
     public PhysicalAddress MacAddress { get; } = macAddress;
@@ -16,6 +16,4 @@ public class HostUnregisterRequest(PhysicalAddress macAddress, string organizati
     public string Organization { get; } = organization;
 
     public List<string> OrganizationalUnit { get; } = organizationalUnit;
-
-    public string Name { get; } = name;
 }

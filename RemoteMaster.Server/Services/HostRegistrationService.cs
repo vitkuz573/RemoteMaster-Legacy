@@ -183,7 +183,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         if (organizationResult.IsFailed)
         {
-            var errorMessage = $"Host unregister failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
+            var errorMessage = $"Host unregister failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host `{request.MacAddress}` in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
@@ -194,7 +194,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         if (parentOuResult.IsFailed)
         {
-            var errorMessage = $"Host unregister failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
+            var errorMessage = $"Host unregister failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host `{request.MacAddress}` in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
@@ -218,7 +218,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             await organizationRepository.RemoveHostAsync(organizationResult.Value.Id, parentUnit.Id, host.Id);
             await organizationRepository.SaveChangesAsync();
 
-            var successMessage = $"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
+            var successMessage = $"Host unregistered: `{request.MacAddress}` from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(successMessage);
 
@@ -226,7 +226,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         }
         catch (Exception ex)
         {
-            var errorMessage = $"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
+            var errorMessage = $"Host unregister failed: {ex.Message} for host `{request.MacAddress}` from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
