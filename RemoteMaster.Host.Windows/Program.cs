@@ -79,8 +79,11 @@ internal class Program
             app.UseExceptionHandler("/Error");
         }
 
-        app.UseAuthentication();
-        app.UseAuthorization();
+        if (launchModeInstance is not InstallMode)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+        }
 
         app.MapCoreHubs(launchModeInstance);
 
@@ -143,76 +146,79 @@ internal class Program
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
-
-        if (File.Exists(publicKeyPath))
+        if (launchModeInstance is not InstallMode)
         {
-            var publicKey = File.ReadAllBytesAsync(publicKeyPath).Result;
+            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+
+            if (File.Exists(publicKeyPath))
+            {
+                var publicKey = File.ReadAllBytesAsync(publicKeyPath).Result;
 
 #pragma warning disable CA2000
-            var rsa = RSA.Create();
+                var rsa = RSA.Create();
 #pragma warning restore CA2000
-            rsa.ImportRSAPublicKey(publicKey, out _);
+                rsa.ImportRSAPublicKey(publicKey, out _);
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(jwtBearerOptions =>
-                {
-                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(jwtBearerOptions =>
                     {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidateLifetime = true,
-                        ValidIssuer = "RemoteMaster Server",
-                        ValidAudience = "RMServiceAPI",
-                        IssuerSigningKey = new RsaSecurityKey(rsa),
-                        RoleClaimType = ClaimTypes.Role,
-                        AuthenticationType = "JWT Security"
-                    };
-                });
+                        jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidateLifetime = true,
+                            ValidIssuer = "RemoteMaster Server",
+                            ValidAudience = "RMServiceAPI",
+                            IssuerSigningKey = new RsaSecurityKey(rsa),
+                            RoleClaimType = ClaimTypes.Role,
+                            AuthenticationType = "JWT Security"
+                        };
+                    });
 
-            services.AddAuthorizationBuilder()
-                .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
-                    policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
-                .AddPolicy("ChangeSelectedScreenPolicy", policy =>
-                    policy.RequireClaim("Screen", "ChangeSelectedScreen"))
-                .AddPolicy("SetFrameRatePolicy", policy =>
-                    policy.RequireClaim("Screen", "SetFrameRate"))
-                .AddPolicy("SetImageQualityPolicy", policy =>
-                    policy.RequireClaim("Screen", "SetImageQuality"))
-                .AddPolicy("ToggleDrawCursorPolicy", policy =>
-                    policy.RequireClaim("Screen", "ToggleDrawCursor"))
-                .AddPolicy("SetCodecPolicy", policy =>
-                    policy.RequireClaim("Screen", "SetCodec"))
-                .AddPolicy("MouseInputPolicy", policy =>
-                    policy.RequireClaim("Input", "MouseInput"))
-                .AddPolicy("KeyboardInputPolicy", policy =>
-                    policy.RequireClaim("Input", "KeyboardInput"))
-                .AddPolicy("ToggleInputPolicy", policy =>
-                    policy.RequireClaim("Input", "ToggleInput"))
-                .AddPolicy("BlockUserInputPolicy", policy =>
-                    policy.RequireClaim("Input", "BlockUserInput"))
-                .AddPolicy("RebootHostPolicy", policy =>
-                    policy.RequireClaim("Power", "RebootHost"))
-                .AddPolicy("ShutdownHostPolicy", policy =>
-                    policy.RequireClaim("Power", "ShutdownHost"))
-                .AddPolicy("SetMonitorStatePolicy", policy =>
-                    policy.RequireClaim("Hardware", "SetMonitorState"))
-                .AddPolicy("ExecuteScriptPolicy", policy =>
-                    policy.RequireClaim("Execution", "Scripts"))
-                .AddPolicy("LockWorkStationPolicy", policy =>
-                    policy.RequireClaim("Security", "LockWorkStation"))
-                .AddPolicy("LogOffUserPolicy", policy =>
-                    policy.RequireClaim("Security", "LogOffUser"))
-                .AddPolicy("TerminateHostPolicy", policy =>
-                    policy.RequireClaim("HostManagement", "TerminateHost"))
-                .AddPolicy("MoveHostPolicy", policy =>
-                    policy.RequireClaim("HostManagement", "Move"))
-                .AddPolicy("RenewCertificatePolicy", policy =>
-                    policy.RequireClaim("HostManagement", "RenewCertificate"))
-                .AddPolicy("DisconnectClientPolicy", policy =>
-                    policy.RequireClaim("Service", "DisconnectClient"));
+                services.AddAuthorizationBuilder()
+                    .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
+                        policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
+                    .AddPolicy("ChangeSelectedScreenPolicy", policy =>
+                        policy.RequireClaim("Screen", "ChangeSelectedScreen"))
+                    .AddPolicy("SetFrameRatePolicy", policy =>
+                        policy.RequireClaim("Screen", "SetFrameRate"))
+                    .AddPolicy("SetImageQualityPolicy", policy =>
+                        policy.RequireClaim("Screen", "SetImageQuality"))
+                    .AddPolicy("ToggleDrawCursorPolicy", policy =>
+                        policy.RequireClaim("Screen", "ToggleDrawCursor"))
+                    .AddPolicy("SetCodecPolicy", policy =>
+                        policy.RequireClaim("Screen", "SetCodec"))
+                    .AddPolicy("MouseInputPolicy", policy =>
+                        policy.RequireClaim("Input", "MouseInput"))
+                    .AddPolicy("KeyboardInputPolicy", policy =>
+                        policy.RequireClaim("Input", "KeyboardInput"))
+                    .AddPolicy("ToggleInputPolicy", policy =>
+                        policy.RequireClaim("Input", "ToggleInput"))
+                    .AddPolicy("BlockUserInputPolicy", policy =>
+                        policy.RequireClaim("Input", "BlockUserInput"))
+                    .AddPolicy("RebootHostPolicy", policy =>
+                        policy.RequireClaim("Power", "RebootHost"))
+                    .AddPolicy("ShutdownHostPolicy", policy =>
+                        policy.RequireClaim("Power", "ShutdownHost"))
+                    .AddPolicy("SetMonitorStatePolicy", policy =>
+                        policy.RequireClaim("Hardware", "SetMonitorState"))
+                    .AddPolicy("ExecuteScriptPolicy", policy =>
+                        policy.RequireClaim("Execution", "Scripts"))
+                    .AddPolicy("LockWorkStationPolicy", policy =>
+                        policy.RequireClaim("Security", "LockWorkStation"))
+                    .AddPolicy("LogOffUserPolicy", policy =>
+                        policy.RequireClaim("Security", "LogOffUser"))
+                    .AddPolicy("TerminateHostPolicy", policy =>
+                        policy.RequireClaim("HostManagement", "TerminateHost"))
+                    .AddPolicy("MoveHostPolicy", policy =>
+                        policy.RequireClaim("HostManagement", "Move"))
+                    .AddPolicy("RenewCertificatePolicy", policy =>
+                        policy.RequireClaim("HostManagement", "RenewCertificate"))
+                    .AddPolicy("DisconnectClientPolicy", policy =>
+                        policy.RequireClaim("Service", "DisconnectClient"));
+            }
         }
 
         switch (launchModeInstance)

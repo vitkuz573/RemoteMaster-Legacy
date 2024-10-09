@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Shared.Enums
 @using RemoteMaster.Shared.Models
 
 @inject IJSRuntime JsRuntime
@@ -56,7 +57,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                 <div class="flex items-center space-x-2">
                                     <button @onclick="() => HandleClick(item)" class="flex items-center space-x-2 p-0 hover:underline focus:outline-none">
-                                        @if (item.Type == FileSystemItem.FileSystemItemType.Directory)
+                                        @if (item.Type == FileSystemItemType.Directory)
                                         {
                                             <span class="material-icons">folder</span>
                                         }

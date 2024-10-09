@@ -107,7 +107,7 @@ public partial class TaskManager : IAsyncDisposable
             await InvokeAsync(StateHasChanged);
         });
 
-        _connection.Closed += async (_) =>
+        _connection.Closed += async _ =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();

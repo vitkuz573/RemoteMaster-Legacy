@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -42,7 +43,7 @@ public class FileManagerService : IFileManagerService
 
         if (directoryInfo.Parent != null)
         {
-            items.Add(new FileSystemItem("..", FileSystemItem.FileSystemItemType.Directory, 0));
+            items.Add(new FileSystemItem("..", FileSystemItemType.Directory, 0));
         }
 
         var enumerationOptions = new EnumerationOptions
@@ -51,8 +52,8 @@ public class FileManagerService : IFileManagerService
             AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
         };
 
-        items.AddRange(directoryInfo.GetFiles("*", enumerationOptions).Select(file => new FileSystemItem(file.Name, FileSystemItem.FileSystemItemType.File, file.Length)));
-        items.AddRange(directoryInfo.GetDirectories("*", enumerationOptions).Select(directory => new FileSystemItem(directory.Name, FileSystemItem.FileSystemItemType.Directory, 0)));
+        items.AddRange(directoryInfo.GetFiles("*", enumerationOptions).Select(file => new FileSystemItem(file.Name, FileSystemItemType.File, file.Length)));
+        items.AddRange(directoryInfo.GetDirectories("*", enumerationOptions).Select(directory => new FileSystemItem(directory.Name, FileSystemItemType.Directory, 0)));
 
         return items;
     }

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -129,6 +130,8 @@ public partial class FileManager : IAsyncDisposable
 
         _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
         {
+            Log.Information("Received {Count} files and directories.", fileSystemItems.Count);
+
             _fileSystemItems = fileSystemItems;
             _allFileSystemItems = [.. _fileSystemItems];
 
@@ -214,7 +217,7 @@ public partial class FileManager : IAsyncDisposable
         {
             await NavigateUp();
         }
-        else if (item.Type == FileSystemItem.FileSystemItemType.Directory)
+        else if (item.Type == FileSystemItemType.Directory)
         {
             await ChangeDirectory(item.Name);
         }
