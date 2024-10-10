@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.JsonContexts;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
@@ -358,7 +359,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             await using var stream = entry.Open();
 
-            return await JsonSerializer.DeserializeAsync<ModuleInfo>(stream);
+            return await JsonSerializer.DeserializeAsync(stream, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
         }
         catch (Exception ex)
         {
@@ -379,6 +380,6 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
         var json = await File.ReadAllTextAsync(moduleInfoPath);
 
-        return JsonSerializer.Deserialize<ModuleInfo>(json);
+        return JsonSerializer.Deserialize(json, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
     }
 }

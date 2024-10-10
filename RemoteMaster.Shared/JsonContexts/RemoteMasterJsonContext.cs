@@ -3,11 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
+using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.JsonContexts;
 
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(IPAddressConverter), typeof(PhysicalAddressConverter)])]
 [JsonSerializable(typeof(HostConfiguration))]
 [JsonSerializable(typeof(SubjectDto))]
 [JsonSerializable(typeof(HostDto))]

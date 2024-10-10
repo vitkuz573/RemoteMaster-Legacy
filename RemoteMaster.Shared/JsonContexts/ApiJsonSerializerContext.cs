@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.JsonContexts;
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(PhysicalAddressConverter)])]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(IPAddressConverter), typeof(PhysicalAddressConverter)])]
 [JsonSerializable(typeof(ApiResponse))]
 [JsonSerializable(typeof(ApiResponse<byte[]>))]
 [JsonSerializable(typeof(ApiResponse<AddressDto>))]
