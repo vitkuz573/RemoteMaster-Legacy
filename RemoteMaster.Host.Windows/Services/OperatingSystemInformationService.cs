@@ -4,6 +4,7 @@
 
 using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
+using Windows.Win32.Foundation;
 using Windows.Win32.System.SystemInformation;
 using static Windows.Wdk.PInvoke;
 
@@ -20,14 +21,15 @@ public class OperatingSystemInformationService : IOperatingSystemInformationServ
 
         var status = RtlGetVersion(ref versionInfo);
 
-        if (status == 0)
+        if (status.SeverityCode != NTSTATUS.Severity.Success)
         {
-            var isWindows11 = versionInfo is { dwMajorVersion: 10, dwBuildNumber: >= 22000 };
-            var versionName = isWindows11 ? "Windows 11" : $"Windows {versionInfo.dwMajorVersion}.{versionInfo.dwMinorVersion}";
-
-            return $"{versionName} (Build {versionInfo.dwBuildNumber})";
+            throw new InvalidOperationException($"RtlGetVersion failed with status code: {status}");
         }
 
-        return $"Failed to get OS version. NTSTATUS: {status}";
+
+        var isWindows11 = versionInfo is { dwMajorVersion: 10, dwBuildNumber: >= 22000 };
+        var versionName = isWindows11 ? "Windows 11" : $"Windows {versionInfo.dwMajorVersion}.{versionInfo.dwMinorVersion}";
+
+        return $"{versionName} (Build {versionInfo.dwBuildNumber})";
     }
 }
