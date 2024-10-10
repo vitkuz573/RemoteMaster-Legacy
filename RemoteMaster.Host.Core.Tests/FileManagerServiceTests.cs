@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Services;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Enums;
 
 namespace RemoteMaster.Host.Core.Tests;
 
@@ -75,9 +75,9 @@ public class FileManagerServiceTests
         var result = _fileManagerService.GetFilesAndDirectories(tempDir);
 
         // Assert
-        Assert.Contains(result, item => item is { Name: "..", Type: FileSystemItem.FileSystemItemType.Directory });
-        Assert.Contains(result, item => item.Name == Path.GetFileName(tempFile) && item.Type == FileSystemItem.FileSystemItemType.File);
-        Assert.Contains(result, item => item.Name == Path.GetFileName(subDir) && item.Type == FileSystemItem.FileSystemItemType.Directory);
+        Assert.Contains(result, item => item is { Name: "..", Type: FileSystemItemType.Directory });
+        Assert.Contains(result, item => item.Name == Path.GetFileName(tempFile) && item.Type == FileSystemItemType.File);
+        Assert.Contains(result, item => item.Name == Path.GetFileName(subDir) && item.Type == FileSystemItemType.Directory);
 
         // Cleanup
         File.Delete(tempFile);
