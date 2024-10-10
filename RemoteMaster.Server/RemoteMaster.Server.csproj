@@ -23,7 +23,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore">
 		  <TreatAsUsed>true</TreatAsUsed>
 		</PackageReference>
