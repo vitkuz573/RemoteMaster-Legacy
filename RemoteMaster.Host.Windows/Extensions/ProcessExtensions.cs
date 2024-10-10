@@ -40,8 +40,7 @@ public static class ProcessExtensions
 
     private static string? GetCommandLineFromProcess(HANDLE processHandle)
     {
-        var bufferSize = 4096;
-        var buffer = new byte[bufferSize];
+        var buffer = new byte[4096];
         uint returnLength = 0;
 
         NTSTATUS status;
@@ -54,7 +53,7 @@ public static class ProcessExtensions
             }
         }
 
-        if (status != 0)
+        if (status.SeverityCode != NTSTATUS.Severity.Success)
         {
             throw new InvalidOperationException($"NtQueryInformationProcess failed with status code: {status}");
         }
