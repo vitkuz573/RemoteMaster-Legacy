@@ -64,7 +64,7 @@ SC_MONITORPOWER
 WNetAddConnection2W
 WNetCancelConnection2W
 
-// Miscellaneous
+// Miscellaneous System and Process Management
 CreatePipe
 WaitForSingleObject
 NetJoinDomain
@@ -77,66 +77,62 @@ WTS_SESSION_LOGOFF
 WTS_SESSION_LOCK
 WTS_SESSION_UNLOCK
 WTS_SESSION_REMOTE_CONTROL
-
 GetConsoleOutputCP
 GetConsoleCP
 DuplicateHandle
 GetStdHandle
+GetExitCodeProcess
+NtQueryInformationProcess
 
+// Input and Key Management
 VkKeyScan
 BlockInput
 
+// Firewall and Network Policy Management
 INetFwPolicy2
 NET_FW_IP_PROTOCOL
 
+// Session Locking and Shutdown
 LockWorkStation
 ExitWindowsEx
 
+// DirectX and Graphics Management
 IDXGIAdapter1
 ID3D11Device
 IDXGIOutputDuplication
 ID3D11Texture2D
-DXGI_ERROR_NOT_FOUND 
+DXGI_ERROR_NOT_FOUND
 IDXGIFactory1
 CreateDXGIFactory1
-D3D11CreateDevice 
+D3D11CreateDevice
 IDXGIOutput1
 D3D11_SDK_VERSION
 
+// Device and Hardware Management
 SetupDiGetClassDevs
 SetupDiEnumDeviceInfo
 SetupDiGetDeviceRegistryProperty
 SetupDiClassNameFromGuid
 SetupDiGetDeviceInstanceId
-
 CM_Get_DevNode_Status
 CM_Request_Device_Eject
 CM_Reenumerate_DevNode
 CM_Locate_DevNode
 CM_Disable_DevNode
 CM_Enable_DevNode
-
 CM_DISABLE_PERSIST
 
+// Window and UI Management
 CW_USEDEFAULT
-
 ShowWindow
-
 GetModuleHandle
-
 ES_MULTILINE
 ES_AUTOVSCROLL
 ES_AUTOHSCROLL
 ES_READONLY
-
 WM_SETFOCUS
-
 FindWindowEx
-
 SetFocus
 
-RtlGetVersion 
-
-GetExitCodeProcess
-
-NtQueryInformationProcess
+// System Information and Status
+RtlGetVersion
