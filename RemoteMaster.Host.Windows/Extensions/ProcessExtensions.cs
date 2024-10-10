@@ -3,7 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.Management;
+using System.Runtime.InteropServices;
+using System.Text;
+using Windows.Wdk.System.Threading;
+using Windows.Win32.Foundation;
+using Windows.Win32.System.Threading;
+using static Windows.Wdk.PInvoke;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Extensions;
 
@@ -13,11 +19,46 @@ public static class ProcessExtensions
     {
         ArgumentNullException.ThrowIfNull(process);
 
-        var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}";
+        var processHandle = OpenProcess(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION, false, (uint)process.Id);
 
-        using var searcher = new ManagementObjectSearcher(query);
-        using var objects = searcher.Get();
+        if (processHandle == HANDLE.Null)
+        {
+            throw new InvalidOperationException($"Unable to open process with ID {process.Id}. Error code: {Marshal.GetLastWin32Error()}");
+        }
 
-        return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString() ?? string.Empty;
+        try
+        {
+            var commandLine = GetCommandLineFromProcess(processHandle);
+
+            return commandLine ?? string.Empty;
+        }
+        finally
+        {
+            CloseHandle(processHandle);
+        }
+    }
+
+    private static string? GetCommandLineFromProcess(HANDLE processHandle)
+    {
+        var bufferSize = 4096;
+        var buffer = new byte[bufferSize];
+        uint returnLength = 0;
+
+        NTSTATUS status;
+
+        unsafe
+        {
+            fixed (byte* bufferPtr = buffer)
+            {
+                status = NtQueryInformationProcess(processHandle, PROCESSINFOCLASS.ProcessCommandLineInformation, bufferPtr, (uint)buffer.Length, ref returnLength);
+            }
+        }
+
+        if (status != 0)
+        {
+            throw new InvalidOperationException($"NtQueryInformationProcess failed with status code: {status}");
+        }
+
+        return Encoding.Unicode.GetString(buffer, 0, (int)returnLength);
     }
 }

@@ -138,3 +138,5 @@ SetFocus
 RtlGetVersion 
 
 GetExitCodeProcess
+
+NtQueryInformationProcess
