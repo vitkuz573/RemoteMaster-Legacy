@@ -37,6 +37,7 @@
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
+    <PackageReference Include="Microsoft.Windows.WDK.Win32Metadata" />
     <PackageReference Include="System.IO.Abstractions" />
   </ItemGroup>
 
