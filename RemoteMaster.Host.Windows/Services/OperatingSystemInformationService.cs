@@ -26,7 +26,6 @@ public class OperatingSystemInformationService : IOperatingSystemInformationServ
             throw new InvalidOperationException($"RtlGetVersion failed with status code: {status}");
         }
 
-
         var isWindows11 = versionInfo is { dwMajorVersion: 10, dwBuildNumber: >= 22000 };
         var versionName = isWindows11 ? "Windows 11" : $"Windows {versionInfo.dwMajorVersion}.{versionInfo.dwMinorVersion}";
 
