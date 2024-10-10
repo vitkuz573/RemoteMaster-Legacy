@@ -6,10 +6,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Net.NetworkInformation;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -67,21 +69,41 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
+    private static JsonTypeInfo GetTypeInfoForApiResponseOfT<T>()
+    {
+        if (typeof(T) == typeof(byte[]))
+        {
+            return ApiJsonSerializerContext.Default.ApiResponseByteArray;
+        }
+
+        if (typeof(T) == typeof(AddressDto))
+        {
+            return ApiJsonSerializerContext.Default.ApiResponseAddressDto;
+        }
+
+        if (typeof(T) == typeof(HostMoveRequest))
+        {
+            return ApiJsonSerializerContext.Default.ApiResponseHostMoveRequest;
+        }
+
+        throw new NotSupportedException($"Type {typeof(T)} is not supported for deserialization.");
+    }
+
     private async Task<T?> ProcessResponse<T>(HttpResponseMessage response) where T : class
     {
         await CheckDeprecatedVersionAsync(response);
 
-#if DEBUG
         var responseBody = await response.Content.ReadAsStringAsync();
 
-        Log.Information("Response Body: {ResponseBody}", responseBody);
+#if DEBUG
+    Log.Information("Response Body: {ResponseBody}", responseBody);
 #endif
 
         if (!response.IsSuccessStatusCode)
         {
             Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
 
-            var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            var errorResponse = JsonSerializer.Deserialize(responseBody, ApiJsonSerializerContext.Default.ApiResponse);
 
             if (errorResponse?.Error != null)
             {
@@ -93,9 +115,11 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         try
         {
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            var jsonTypeInfo = GetTypeInfoForApiResponseOfT<T>();
 
-            return apiResponse?.IsSuccess == true ? apiResponse.Data : null;
+            var apiResponse = (ApiResponse<T>)JsonSerializer.Deserialize(responseBody, jsonTypeInfo)!;
+
+            return apiResponse.IsSuccess ? apiResponse.Data : null;
         }
         catch (Exception ex)
         {
@@ -122,7 +146,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
 
-        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+        var errorResponse = await response.Content.ReadFromJsonAsync(ApiJsonSerializerContext.Default.ApiResponse);
 
         if (errorResponse?.Error != null)
         {
@@ -139,7 +163,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration);
+        var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration, ApiJsonSerializerContext.Default.HostConfiguration);
 
         return await ProcessSimpleResponse(response);
     }
@@ -153,7 +177,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit]);
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/Host/unregister");
-        httpRequest.Content = JsonContent.Create(request);
+        httpRequest.Content = JsonContent.Create(request, ApiJsonSerializerContext.Default.HostUnregisterRequest);
 
         var response = await _client.SendAsync(httpRequest);
 
@@ -168,7 +192,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit], hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
-        var response = await _client.PutAsJsonAsync("/api/Host/update", request);
+        var response = await _client.PutAsJsonAsync("/api/Host/update", request, ApiJsonSerializerContext.Default.HostUpdateRequest);
 
         return await ProcessSimpleResponse(response);
     }
@@ -206,7 +230,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/Certificate/issue", csrBytes);
+        var response = await _client.PostAsJsonAsync("/api/Certificate/issue", csrBytes, ApiJsonSerializerContext.Default.ByteArray);
 
         return await ProcessResponse<byte[]>(response);
     }
@@ -229,10 +253,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var options = new JsonSerializerOptions();
-        options.Converters.Add(new PhysicalAddressConverter());
-
-        var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress, options);
+        var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress, ApiJsonSerializerContext.Default.PhysicalAddress);
 
         return await ProcessSimpleResponse(response);
     }
@@ -241,7 +262,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/Notification", message);
+        var response = await _client.PostAsJsonAsync("/api/Notification", message, ApiJsonSerializerContext.Default.NotificationMessage);
 
         await ProcessSimpleResponse(response);
     }
