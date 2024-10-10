@@ -4,6 +4,7 @@
 
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.JsonContexts;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
@@ -47,7 +48,7 @@ public class ModuleService : IModuleService
             try
             {
                 var json = File.ReadAllText(moduleInfoPath);
-                var moduleInfo = JsonSerializer.Deserialize<ModuleInfo>(json);
+                var moduleInfo = JsonSerializer.Deserialize(json, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
 
                 if (moduleInfo != null)
                 {

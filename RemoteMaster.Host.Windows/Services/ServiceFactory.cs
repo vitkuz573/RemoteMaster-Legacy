@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
 using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -11,40 +10,15 @@ public class ServiceFactory : IServiceFactory
 {
     private readonly Dictionary<string, AbstractService> _serviceInstances;
 
-    public ServiceFactory() : this([]) { }
-
     public ServiceFactory(IEnumerable<AbstractService> services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        var serviceList = services.ToList();
+        _serviceInstances = new Dictionary<string, AbstractService>();
 
-        _serviceInstances = [];
-
-        if (serviceList.Count == 0)
+        foreach (var service in services)
         {
-            LoadAllServices();
-        }
-        else
-        {
-            foreach (var service in serviceList)
-            {
-                _serviceInstances[service.Name] = service;
-            }
-        }
-    }
-
-    private void LoadAllServices()
-    {
-        var serviceTypes = Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(AbstractService).IsAssignableFrom(t));
-
-        foreach (var type in serviceTypes)
-        {
-            if (Activator.CreateInstance(type) is AbstractService serviceInstance)
-            {
-                _serviceInstances[serviceInstance.Name] = serviceInstance;
-            }
+            _serviceInstances[service.Name] = service;
         }
     }
 

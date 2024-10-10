@@ -24,6 +24,7 @@ using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
+using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows;
@@ -106,6 +107,7 @@ internal class Program
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
+        services.AddSingleton<AbstractService, HostService>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
         services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
@@ -250,6 +252,8 @@ internal class Program
 
     private static LaunchModeBase ParseArguments(string[] args)
     {
+        LaunchModeBase? launchModeInstance = null!;
+
         var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
         var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode="))?.Split('=')[1];
 
@@ -259,14 +263,17 @@ internal class Program
             Environment.Exit(0);
         }
 
-        var assembly = Assembly.GetAssembly(typeof(LaunchModeBase)) ?? throw new InvalidOperationException("The assembly containing the type 'LaunchModeBase' could not be found.");
-        var launchModes = assembly.GetTypes()
-            .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(LaunchModeBase)))
-            .ToArray();
+        var availableModes = new Dictionary<string, LaunchModeBase>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "User", new UserMode() },
+            { "Service", new ServiceMode() },
+            { "Install", new InstallMode() },
+            { "Updater", new UpdaterMode() },
+            { "Uninstall", new UninstallMode() },
+            { "Chat", new ChatMode() }
+        };
 
-        var launchModeType = launchModes.FirstOrDefault(t => string.Equals(t.Name, $"{modeArgument}Mode", StringComparison.OrdinalIgnoreCase));
-
-        if (launchModeType == null)
+        if (string.IsNullOrEmpty(modeArgument) || !availableModes.TryGetValue(modeArgument, out launchModeInstance))
         {
             if (modeArgument is null)
             {
@@ -274,14 +281,12 @@ internal class Program
             }
             else
             {
-                SuggestSimilarModes(modeArgument, launchModes);
+                SuggestSimilarModes(modeArgument, availableModes.Keys.ToArray());
             }
 
             Environment.Exit(1);
         }
 
-        var launchModeInstance = (LaunchModeBase?)Activator.CreateInstance(launchModeType) ?? throw new InvalidOperationException("Failed to create an instance of the type 'LaunchModeBase'.");
-        
         foreach (var arg in args)
         {
             if (!arg.StartsWith("--"))
@@ -321,20 +326,20 @@ internal class Program
         return launchModeInstance;
     }
 
-    private static void SuggestSimilarModes(string inputMode, Type[] availableModes)
+    private static void SuggestSimilarModes(string inputMode, string[] availableModes)
     {
         if (string.IsNullOrEmpty(inputMode))
         {
             Console.WriteLine("No launch mode provided.");
+
             return;
         }
 
-        var modeNames = availableModes.Select(m => m.Name.Replace("Mode", "", StringComparison.OrdinalIgnoreCase));
-        var suggestions = modeNames.Select(name => new
-        {
-            Name = name,
-            Distance = LevenshteinDistanceUtility.ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower())
-        })
+        var suggestions = availableModes.Select(mode => new
+            {
+                Name = mode,
+                Distance = LevenshteinDistanceUtility.ComputeLevenshteinDistance(inputMode.ToLower(), mode.ToLower())
+            })
             .OrderBy(x => x.Distance)
             .Take(3);
 

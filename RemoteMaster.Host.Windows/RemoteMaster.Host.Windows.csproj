@@ -7,6 +7,9 @@
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>link</TrimMode>
   </PropertyGroup>
 
   <PropertyGroup>
