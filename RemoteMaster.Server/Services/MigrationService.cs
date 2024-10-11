@@ -4,11 +4,10 @@
 
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class MigrationService(IServiceScopeFactory serviceScopeFactory) : IHostedService
+public class MigrationService(IServiceScopeFactory serviceScopeFactory, ILogger<MigrationService> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -30,7 +29,7 @@ public class MigrationService(IServiceScopeFactory serviceScopeFactory) : IHoste
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while applying the database migrations.");
+            logger.LogError(ex, "An error occurred while applying the database migrations.");
         }
     }
 

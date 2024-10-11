@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -14,17 +14,19 @@ public class HostRegistrationMonitorService : IHostedService
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInformationUpdaterService _hostInformationMonitorService;
     private readonly IUserInstanceService _userInstanceService;
+    private readonly ILogger<HostRegistrationMonitorService> _logger;
 
     private readonly Timer _timer;
     private readonly string _syncIndicatorFilePath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
 
 
-    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService)
+    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, ILogger<HostRegistrationMonitorService> logger)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
         _hostInformationMonitorService = hostInformationUpdaterService;
         _userInstanceService = userInstanceService;
+        _logger = logger;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
     }
@@ -52,13 +54,13 @@ public class HostRegistrationMonitorService : IHostedService
                 {
                     if (isHostRegistered)
                     {
-                        Log.Information("Updating host information and renewing certificate due to configuration change.");
+                        _logger.LogInformation("Updating host information and renewing certificate due to configuration change.");
                         
                         await _hostLifecycleService.UpdateHostInformationAsync();
                     }
                     else
                     {
-                        Log.Warning("Host is not registered. Registering and issuing a new certificate...");
+                        _logger.LogWarning("Host is not registered. Registering and issuing a new certificate...");
 
                         await _hostLifecycleService.RegisterAsync();
                     }
@@ -71,7 +73,7 @@ public class HostRegistrationMonitorService : IHostedService
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Failed to update host information. Sync will be retried.");
+                    _logger.LogError(ex, "Failed to update host information. Sync will be retried.");
 
                     SetSyncRequired();
                 }
@@ -80,7 +82,7 @@ public class HostRegistrationMonitorService : IHostedService
             }
             else if (!isHostRegistered)
             {
-                Log.Warning("Host is not registered and configuration has not changed. Registering and issuing a new certificate...");
+                _logger.LogWarning("Host is not registered and configuration has not changed. Registering and issuing a new certificate...");
 
                 await _hostLifecycleService.RegisterAsync();
 
@@ -92,24 +94,24 @@ public class HostRegistrationMonitorService : IHostedService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error during host registration check.");
+            _logger.LogError(ex, "Error during host registration check.");
         }
     }
 
     private async Task RestartUserInstance()
     {
-        Log.Information("Stopping user instance...");
+        _logger.LogInformation("Stopping user instance...");
         _userInstanceService.Stop();
 
         while (_userInstanceService.IsRunning)
         {
-            Log.Information("Waiting for user instance to stop...");
+            _logger.LogInformation("Waiting for user instance to stop...");
             await Task.Delay(50);
         }
 
-        Log.Information("User instance stopped. Starting a new instance...");
+        _logger.LogInformation("User instance stopped. Starting a new instance...");
         _userInstanceService.Start();
-        Log.Information("New user instance started.");
+        _logger.LogInformation("New user instance started.");
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -132,7 +134,7 @@ public class HostRegistrationMonitorService : IHostedService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to create sync indicator file.");
+            _logger.LogError(ex, "Failed to create sync indicator file.");
         }
     }
 
@@ -147,7 +149,7 @@ public class HostRegistrationMonitorService : IHostedService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to delete sync indicator file.");
+            _logger.LogError(ex, "Failed to delete sync indicator file.");
         }
     }
 }

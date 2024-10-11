@@ -6,11 +6,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationClaimAggregate;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class RoleInitializationService(IServiceProvider serviceProvider) : IHostedService
+public class RoleInitializationService(IServiceProvider serviceProvider, ILogger<RoleInitializationService> logger) : IHostedService
 {
     private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer", "ServiceUser"];
 
@@ -127,7 +126,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         await AssignClaimsToRoles(roleManager);
     }
 
-    private static async Task EnsureRoleExists(RoleManager<IdentityRole> roleManager, string roleName)
+    private async Task EnsureRoleExists(RoleManager<IdentityRole> roleManager, string roleName)
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
@@ -135,16 +134,16 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
             if (result.Succeeded)
             {
-                Log.Information("Successfully created role {RoleName}", roleName);
+                logger.LogInformation("Successfully created role {RoleName}", roleName);
             }
             else
             {
-                Log.Error("Error creating role {RoleName}: {Errors}", roleName, string.Join(", ", result.Errors));
+                logger.LogError("Error creating role {RoleName}: {Errors}", roleName, string.Join(", ", result.Errors));
             }
         }
         else
         {
-            Log.Information("Role {RoleName} already exists.", roleName);
+            logger.LogInformation("Role {RoleName} already exists.", roleName);
         }
     }
 
@@ -177,7 +176,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
             if (roleIdentity == null)
             {
-                Log.Error("Role {RoleName} not found, skipping claim assignment.", roleName);
+                logger.LogError("Role {RoleName} not found, skipping claim assignment.", roleName);
 
                 continue;
             }
@@ -190,11 +189,11 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
                 if (result.Succeeded)
                 {
-                    Log.Information("Successfully added claim {ClaimType} with value {ClaimValue} to role {RoleName}", claim.Type, claim.Value, roleName);
+                    logger.LogInformation("Successfully added claim {ClaimType} with value {ClaimValue} to role {RoleName}", claim.Type, claim.Value, roleName);
                 }
                 else
                 {
-                    Log.Error("Error adding claim {ClaimType} with value {ClaimValue} to role {RoleName}: {Errors}", claim.Type, claim.Value, roleName, string.Join(", ", result.Errors));
+                    logger.LogError("Error adding claim {ClaimType} with value {ClaimValue} to role {RoleName}: {Errors}", claim.Type, claim.Value, roleName, string.Join(", ", result.Errors));
                 }
             }
         }

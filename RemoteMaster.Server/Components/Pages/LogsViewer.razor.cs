@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -138,7 +137,7 @@ public partial class LogsViewer : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Log.Error($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+                Logger.LogError($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
             }
         }
 

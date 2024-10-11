@@ -14,7 +14,6 @@ using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Abstractions;
-using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security.Cryptography.Certificates;
 
@@ -22,7 +21,7 @@ namespace RemoteMaster.Server.Services;
 
 #pragma warning disable
 
-public class CertificateService(IHostInformationService hostInformationService, ICertificateAuthorityService certificateAuthorityService, IOptions<ActiveDirectoryOptions> options) : ICertificateService
+public class CertificateService(IHostInformationService hostInformationService, ICertificateAuthorityService certificateAuthorityService, IOptions<ActiveDirectoryOptions> options, ILogger<CertificateService> logger) : ICertificateService
 {
     private readonly ActiveDirectoryOptions _options = options.Value;
 
@@ -37,7 +36,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             if (!caCertificateResult.IsSuccess)
             {
-                Log.Error("Failed to retrieve the CA certificate: {Message}", caCertificateResult.Errors.FirstOrDefault()?.Message);
+                logger.LogError("Failed to retrieve the CA certificate: {Message}", caCertificateResult.Errors.FirstOrDefault()?.Message);
                 
                 return Result.Fail<X509Certificate2>("Failed to retrieve the CA certificate.");
             }
@@ -46,7 +45,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             if (certificateAuthorityService is ActiveDirectoryCertificateAuthorityService)
             {
-                Log.Information("Using Active Directory CA to issue the certificate.");
+                logger.LogInformation("Using Active Directory CA to issue the certificate.");
 
                 return _options.Method switch
                 {
@@ -56,13 +55,13 @@ public class CertificateService(IHostInformationService hostInformationService, 
                 };
             }
 
-            Log.Information("Using Internal CA to issue the certificate.");
+            logger.LogInformation("Using Internal CA to issue the certificate.");
 
             return IssueCertificateUsingInternal(csrBytes, caCertificate);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while issuing a certificate.");
+            logger.LogError(ex, "An error occurred while issuing a certificate.");
 
             return Result.Fail(new Error("An error occurred while issuing a certificate.").CausedBy(ex));
         }
@@ -77,7 +76,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             if (basicConstraints?.CertificateAuthority == true)
             {
-                Log.Error("CSR for CA certificates are not allowed.");
+                logger.LogError("CSR for CA certificates are not allowed.");
                 
                 return Result.Fail<X509Certificate2>("CSR for CA certificates are not allowed.");
             }
@@ -86,7 +85,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             if (rsaPrivateKey == null)
             {
-                Log.Error("The RSA private key for the CA certificate could not be retrieved.");
+                logger.LogError("The RSA private key for the CA certificate could not be retrieved.");
                 
                 return Result.Fail<X509Certificate2>("The RSA private key for the CA certificate could not be retrieved.");
             }
@@ -107,7 +106,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while issuing a certificate using Internal CA.");
+            logger.LogError(ex, "An error occurred while issuing a certificate using Internal CA.");
             
             return Result.Fail<X509Certificate2>(new Error("An error occurred while issuing a certificate using Internal CA.").CausedBy(ex));
         }
@@ -143,7 +142,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         return new X509Certificate2(certBytes);
     }
 
-    private static Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
+    private Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
     {
         try
         {
@@ -197,7 +196,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while issuing a certificate using CertEnroll.");
+            logger.LogError(ex, "An error occurred while issuing a certificate using CertEnroll.");
 
             return Result.Fail<X509Certificate2>(new Error("An error occurred while issuing a certificate using CertEnroll.").CausedBy(ex));
         }

@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
@@ -35,6 +37,7 @@ public class CrlServiceTests
         serviceCollection.AddSingleton(_certificateProviderMock.Object);
         serviceCollection.AddSingleton(_crlRepositoryMock.Object);
         serviceCollection.AddSingleton<IFileSystem>(_mockFileSystem);
+        serviceCollection.AddSingleton<ILogger<CrlService>>(NullLogger<CrlService>.Instance);
         serviceCollection.AddScoped<ICrlService, CrlService>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider();

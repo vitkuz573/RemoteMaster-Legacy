@@ -7,17 +7,16 @@ using System.Net.Http.Json;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService) : IApiService
+public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, ILogger<ApiService> logger) : IApiService
 {
     private readonly HttpClient _client = httpClientFactory.CreateClient(nameof(ApiService));
 
@@ -31,7 +30,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
             if (hostConfiguration == null || string.IsNullOrEmpty(hostConfiguration.Server))
             {
-                Log.Error("Server configuration is required");
+                logger.LogError("Server configuration is required");
 
                 throw new ArgumentNullException(nameof(hostConfiguration.Server), "Server configuration is required");
             }
@@ -96,18 +95,18 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         var responseBody = await response.Content.ReadAsStringAsync();
 
 #if DEBUG
-    Log.Information("Response Body: {ResponseBody}", responseBody);
+    logger.LogInformation("Response Body: {ResponseBody}", responseBody);
 #endif
 
         if (!response.IsSuccessStatusCode)
         {
-            Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
+            logger.LogError("Request failed with status code {StatusCode}", response.StatusCode);
 
             var errorResponse = JsonSerializer.Deserialize(responseBody, ApiJsonSerializerContext.Default.ApiResponse);
 
             if (errorResponse?.Error != null)
             {
-                Log.Error("Error details: {Error}", errorResponse.Error.ToString());
+                logger.LogError("Error details: {Error}", errorResponse.Error.ToString());
             }
 
             return null;
@@ -123,7 +122,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to read response as JSON: {Message}", ex.Message);
+            logger.LogError("Failed to read response as JSON: {Message}", ex.Message);
 
             return null;
         }
@@ -136,7 +135,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 #if DEBUG
         var responseBody = await response.Content.ReadAsStringAsync();
 
-        Log.Information("Response Body: {ResponseBody}", responseBody);
+        logger.LogInformation("Response Body: {ResponseBody}", responseBody);
 #endif
 
         if (response.IsSuccessStatusCode)
@@ -144,13 +143,13 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             return true;
         }
 
-        Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
+        logger.LogError("Request failed with status code {StatusCode}", response.StatusCode);
 
         var errorResponse = await response.Content.ReadFromJsonAsync(ApiJsonSerializerContext.Default.ApiResponse);
 
         if (errorResponse?.Error != null)
         {
-            Log.Error("Error details: {Error}", errorResponse.Error.ToString());
+            logger.LogError("Error details: {Error}", errorResponse.Error.ToString());
         }
 
         return false;

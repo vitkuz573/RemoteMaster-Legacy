@@ -4,8 +4,6 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages.Manage;
 
@@ -36,6 +34,6 @@ public partial class GenerateRecoveryCodes
         _recoveryCodes = await UserManager.GenerateNewTwoFactorRecoveryCodesAsync(_user, 10);
         _message = "You have generated new recovery codes.";
 
-        Log.Information("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
+        Logger.LogInformation("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
     }
 }

@@ -4,12 +4,12 @@
 
 using System.Net;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Tests;
 
@@ -29,7 +29,10 @@ public class AppStateTests : IDisposable
         clientsMock.Setup(clients => clients.All).Returns(_controlClientMock.Object);
 
         hubContextMock.Setup(hub => hub.Clients).Returns(clientsMock.Object);
-        _appState = new AppState(hubContextMock.Object);
+
+        Mock<ILogger<AppState>> loggerMock = new();
+
+        _appState = new AppState(hubContextMock.Object, loggerMock.Object);
 
         Mock<HubCallerContext> contextMock = new();
 

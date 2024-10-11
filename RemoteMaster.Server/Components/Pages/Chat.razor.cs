@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -87,7 +86,7 @@ public partial class Chat : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to start connection.");
+            Logger.LogError(ex, "Failed to start connection.");
         }
     }
 
@@ -95,7 +94,7 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Log.Error("Connection is not established.");
+            Logger.LogError("Connection is not established.");
             
             return;
         }
@@ -138,7 +137,7 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Log.Error("Connection is not established.");
+            Logger.LogError("Connection is not established.");
             
             return;
         }
@@ -171,7 +170,7 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Log.Error("Connection is not established.");
+            Logger.LogError("Connection is not established.");
 
             return;
         }
@@ -205,7 +204,7 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Log.Error("Connection is not established.");
+            Logger.LogError("Connection is not established.");
 
             return;
         }
@@ -241,7 +240,7 @@ public partial class Chat : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
 

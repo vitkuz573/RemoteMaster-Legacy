@@ -10,11 +10,10 @@ using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
 using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(ICrlRepository crlRepository, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
+public class CrlService(ICrlRepository crlRepository, ICertificateProvider certificateProvider, IFileSystem fileSystem, ILogger<CrlService> logger) : ICrlService
 {
     public async Task<Result> RevokeCertificateAsync(SerialNumber serialNumber, X509RevocationReason reason)
     {
@@ -28,7 +27,7 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
             }
             catch (InvalidOperationException ex)
             {
-                Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
+                logger.LogInformation($"Certificate with serial number {serialNumber} has already been revoked.");
                 
                 return Result.Fail(ex.Message);
             }
@@ -44,13 +43,13 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
 
             await crlRepository.SaveChangesAsync();
 
-            Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
+            logger.LogInformation($"Certificate with serial number {serialNumber} has been successfully revoked.");
 
             return Result.Ok();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error revoking certificate with serial number {serialNumber}");
+            logger.LogError(ex, $"Error revoking certificate with serial number {serialNumber}");
             
             return Result.Fail($"Error revoking certificate with serial number {serialNumber}").WithError(ex.Message);
         }
@@ -104,7 +103,7 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error generating CRL");
+            logger.LogError(ex, "Error generating CRL");
 
             return Result.Fail<byte[]>("Error generating CRL").WithError(ex.Message);
         }
@@ -131,13 +130,13 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
 
             await fileSystem.File.WriteAllBytesAsync(crlFilePath, crlData);
 
-            Log.Information($"CRL published to {crlFilePath}");
+            logger.LogInformation($"CRL published to {crlFilePath}");
 
             return Result.Ok();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to publish CRL");
+            logger.LogError(ex, "Failed to publish CRL");
 
             return Result.Fail("Failed to publish CRL").WithError(ex.Message);
         }

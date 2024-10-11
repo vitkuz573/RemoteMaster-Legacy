@@ -6,7 +6,6 @@ using System.IO.Abstractions;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authorization;
@@ -40,7 +39,6 @@ using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
 using Serilog;
-using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace RemoteMaster.Server;
@@ -51,27 +49,13 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        var logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)
+            .CreateLogger();
+
+        builder.Host.UseSerilog(logger);
+
         ConfigureServices(builder.Services, builder.Configuration);
-
-        builder.Host.UseSerilog((_, configuration) =>
-        {
-            var minimumLevelOverrides = new Dictionary<string, LogEventLevel>
-            {
-                { "Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning },
-                { "Microsoft.AspNetCore", LogEventLevel.Warning },
-                { "Polly", LogEventLevel.Warning }
-            };
-
-            configuration.MinimumLevel.Information()
-                         .WriteTo.Console()
-                         .WriteTo.File(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day);
-
-            foreach (var minimumLevelOverride in minimumLevelOverrides)
-            {
-                configuration.MinimumLevel.Override(minimumLevelOverride.Key, minimumLevelOverride.Value);
-            }
-        });
-
 
         builder.WebHost.ConfigureKestrel(serverOptions =>
         {
@@ -115,11 +99,6 @@ public static class Program
                     return Outcome.FromResult("This function is not available in the current host version. Please update your host.");
                 }
             });
-        });
-
-        services.AddLogging(loggingBuilder =>
-        {
-            loggingBuilder.ClearProviders();
         });
 
         services.AddRazorComponents().AddInteractiveServerComponents();

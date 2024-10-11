@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Enums;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -34,7 +33,7 @@ public partial class Login
 
         if (HttpContext.User.Identity?.IsAuthenticated == true)
         {
-            Log.Information("User already logged in. Redirecting to the origin page or default page.");
+            Logger.LogInformation("User already logged in. Redirecting to the origin page or default page.");
             RedirectManager.RedirectTo(ReturnUrl ?? "/");
 
             return;
@@ -66,7 +65,7 @@ public partial class Login
 
         if (isRootAdmin && !isLocalhost)
         {
-            Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
+            Logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
             _errorMessage = "Error: RootAdministrator access is restricted to localhost.";
             await ApplicationUserService.AddSignInEntry(user, false);
             return;
@@ -78,7 +77,7 @@ public partial class Login
         {
             if (isRootAdmin && isLocalhost)
             {
-                Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
+                Logger.LogInformation("RootAdministrator logged in from localhost. Redirecting to Admin page.");
                 await ApplicationUserService.AddSignInEntry(user, true);
                 RedirectManager.RedirectTo("Admin");
                 return;
@@ -86,7 +85,7 @@ public partial class Login
 
             await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveRevocation);
 
-            Log.Information("User logged in. All previous refresh tokens revoked.");
+            Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
 
             var tokenDataResult = await TokenService.GenerateTokensAsync(user.Id);
 
@@ -96,7 +95,7 @@ public partial class Login
 
                 if (storeTokensResult.IsSuccess)
                 {
-                    Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
+                    Logger.LogInformation("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
                     await ApplicationUserService.AddSignInEntry(user, true);
                     RedirectManager.RedirectTo(ReturnUrl);
                 }
@@ -121,7 +120,7 @@ public partial class Login
         }
         else if (result.IsLockedOut)
         {
-            Log.Warning("User with ID '{UserId}' account locked out.", user.Id);
+            Logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
             _errorMessage = "Error: Your account has been locked out.";
             await ApplicationUserService.AddSignInEntry(user, false);
         }

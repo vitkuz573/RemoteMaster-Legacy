@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages.Manage;
 
@@ -21,7 +20,7 @@ public partial class ResetAuthenticator
 
         var userId = await UserManager.GetUserIdAsync(user);
 
-        Log.Information("User with ID '{UserId}' has reset their authentication app key.", userId);
+        Logger.LogInformation("User with ID '{UserId}' has reset their authentication app key.", userId);
 
         await SignInManager.RefreshSignInAsync(user);
 

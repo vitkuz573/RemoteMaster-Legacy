@@ -5,11 +5,10 @@
 using System.Net;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class UdpPacketSender(Func<IUdpClient> udpClientFactory) : IPacketSender
+public class UdpPacketSender(Func<IUdpClient> udpClientFactory, ILogger<UdpPacketSender> logger) : IPacketSender
 {
     /// <inheritdoc />
     public Result Send(byte[] packet, IPEndPoint endPoint)
@@ -27,7 +26,7 @@ public class UdpPacketSender(Func<IUdpClient> udpClientFactory) : IPacketSender
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while sending a UDP packet.");
+            logger.LogError(ex, "An error occurred while sending a UDP packet.");
 
             return Result.Fail("An error occurred while sending a UDP packet.").WithError(ex.Message);
         }

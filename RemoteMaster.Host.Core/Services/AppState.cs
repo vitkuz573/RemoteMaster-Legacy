@@ -4,15 +4,14 @@
 
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IAppState
+public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogger<AppState> logger) : IAppState
 {
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
     private static readonly object Lock = new();
@@ -49,14 +48,14 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
             if (!result)
             {
-                Log.Error("Failed to add viewer with connection ID {ConnectionId}.", viewer.ConnectionId);
+                logger.LogError("Failed to add viewer with connection ID {ConnectionId}.", viewer.ConnectionId);
                 return result;
             }
 
             ViewerAdded?.Invoke(this, viewer);
             NotifyViewersChanged();
 
-            Log.Information("Viewer with connection ID {ConnectionId} added successfully.", viewer.ConnectionId);
+            logger.LogInformation("Viewer with connection ID {ConnectionId} added successfully.", viewer.ConnectionId);
 
             return result;
         }
@@ -72,7 +71,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
             if (!result)
             {
-                Log.Error("Failed to remove viewer with connection ID {ConnectionId}.", connectionId);
+                logger.LogError("Failed to remove viewer with connection ID {ConnectionId}.", connectionId);
 
                 return result;
             }
@@ -88,7 +87,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
                 viewer?.Dispose();
             }
 
-            Log.Information("Viewer with connection ID {ConnectionId} removed successfully.", connectionId);
+            logger.LogInformation("Viewer with connection ID {ConnectionId} removed successfully.", connectionId);
 
             return result;
         }

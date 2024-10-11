@@ -4,6 +4,7 @@
 
 using System.IO.Abstractions.TestingHelpers;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Options;
@@ -29,9 +30,11 @@ public class JwtSecurityServiceTests
         Mock<IOptions<JwtOptions>> mockOptions = new();
         mockOptions.Setup(o => o.Value).Returns(_options);
 
+        Mock<ILogger<JwtSecurityService>> mockLogger = new();
+
         _mockFileSystem = new MockFileSystem();
 
-        _jwtSecurityService = new JwtSecurityService(mockOptions.Object, _mockFileSystem);
+        _jwtSecurityService = new JwtSecurityService(mockOptions.Object, _mockFileSystem, mockLogger.Object);
     }
 
     [Fact]

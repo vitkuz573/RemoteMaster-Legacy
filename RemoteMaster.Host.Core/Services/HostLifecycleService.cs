@@ -6,15 +6,15 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService) : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService, ILogger<HostLifecycleService> logger) : IHostLifecycleService
 {
     public async Task RegisterAsync()
     {
@@ -29,7 +29,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 Directory.CreateDirectory(jwtDirectory);
             }
 
-            Log.Information("Attempting to register host...");
+            logger.LogInformation("Attempting to register host...");
 
             var isRegistered = await apiService.RegisterHostAsync();
 
@@ -48,24 +48,24 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 {
                     await File.WriteAllBytesAsync(publicKeyPath, jwtPublicKey);
 
-                    Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
+                    logger.LogInformation("Public key saved successfully at {Path}.", publicKeyPath);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
+                    logger.LogError("Failed to save public key: {ErrorMessage}.", ex.Message);
                     throw;
                 }
 
-                Log.Information("Host registration successful with certificate received.");
+                logger.LogInformation("Host registration successful with certificate received.");
             }
             else
             {
-                Log.Warning("Host registration was not successful.");
+                logger.LogWarning("Host registration was not successful.");
             }
         }
         catch (Exception ex)
         {
-            Log.Error("Registering host failed: {Message}.", ex.Message);
+            logger.LogError("Registering host failed: {Message}.", ex.Message);
         }
         finally
         {
@@ -77,22 +77,22 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     {
         try
         {
-            Log.Information("Attempting to unregister host...");
+            logger.LogInformation("Attempting to unregister host...");
 
             var isUnregistered = await apiService.UnregisterHostAsync();
 
             if (isUnregistered)
             {
-                Log.Information("Host unregister successful.");
+                logger.LogInformation("Host unregister successful.");
             }
             else
             {
-                Log.Warning("Host unregister was not successful.");
+                logger.LogWarning("Host unregister was not successful.");
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Unregistering host failed: {Message}.", ex.Message);
+            logger.LogError(ex, "Unregistering host failed: {Message}.", ex.Message);
         }
     }
 
@@ -112,13 +112,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
 
-            Log.Information("Removing existing certificates...");
+            logger.LogInformation("Removing existing certificates...");
 
             RemoveExistingCertificate();
 
             var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
 
-            Log.Information("Attempting to issue certificate...");
+            logger.LogInformation("Attempting to issue certificate...");
 
             var certificate = await apiService.IssueCertificateAsync(signingRequest);
 
@@ -129,11 +129,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             ProcessCertificate(certificate, rsaKeyPair);
 
-            Log.Information("Certificate issued and processed successfully.");
+            logger.LogInformation("Certificate issued and processed successfully.");
         }
         catch (Exception ex)
         {
-            Log.Error("Issuing certificate failed: {Message}.", ex.Message);
+            logger.LogError("Issuing certificate failed: {Message}.", ex.Message);
         }
         finally
         {
@@ -154,11 +154,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             store.Remove(certificate);
 
-            Log.Information("Certificate with private key removed successfully from certificate store.");
+            logger.LogInformation("Certificate with private key removed successfully from certificate store.");
         }
         else
         {
-            Log.Warning("No certificate with a private key found in the certificate store.");
+            logger.LogWarning("No certificate with a private key found in the certificate store.");
         }
     }
 
@@ -170,16 +170,16 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             if (isUpdated)
             {
-                Log.Information("Host information updated successfully.");
+                logger.LogInformation("Host information updated successfully.");
             }
             else
             {
-                Log.Warning("Host information update was not successful.");
+                logger.LogWarning("Host information update was not successful.");
             }
         }
         catch (Exception ex)
         {
-            Log.Error("Update host information failed: {Message}.", ex.Message);
+            logger.LogError("Update host information failed: {Message}.", ex.Message);
         }
     }
 
@@ -197,7 +197,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (Exception ex)
         {
-            Log.Error("Error checking host registration status: {Message}", ex.Message);
+            logger.LogError("Error checking host registration status: {Message}", ex.Message);
 
             return true;
         }
@@ -211,15 +211,15 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             if (certificateBytes.Length == 0)
             {
-                Log.Error("Certificate bytes are empty.");
+                logger.LogError("Certificate bytes are empty.");
 
                 return;
             }
 
-            Log.Information("Received certificate bytes, starting processing...");
+            logger.LogInformation("Received certificate bytes, starting processing...");
 
             tempCertificate = new X509Certificate2(certificateBytes, (string?)null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
-            Log.Information("Temporary certificate created successfully.");
+            logger.LogInformation("Temporary certificate created successfully.");
 
             LogCertificateDetails(tempCertificate);
 
@@ -242,7 +242,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
                 certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
 
-                Log.Information("Certificate with private key prepared.");
+                logger.LogInformation("Certificate with private key prepared.");
             }
 
             if (certificateWithPrivateKey != null)
@@ -251,11 +251,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 store.Open(OpenFlags.ReadWrite);
                 store.Add(certificateWithPrivateKey);
 
-                Log.Information("Certificate with private key imported successfully into the certificate store.");
+                logger.LogInformation("Certificate with private key imported successfully into the certificate store.");
             }
             else
             {
-                Log.Error("Failed to create a certificate with private key.");
+                logger.LogError("Failed to create a certificate with private key.");
 
                 return;
             }
@@ -264,7 +264,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (Exception ex)
         {
-            Log.Error("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
+            logger.LogError("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
         }
         finally
         {
@@ -272,30 +272,30 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
-    private static void LogCertificateDetails(X509Certificate2 certificate)
+    private void LogCertificateDetails(X509Certificate2 certificate)
     {
-        Log.Information("Certificate Details:");
+        logger.LogInformation("Certificate Details:");
 
-        Log.Information("    Subject: {Subject}", certificate.Subject);
-        Log.Information("    Issuer: {Issuer}", certificate.Issuer);
-        Log.Information("    Valid From: {ValidFrom}", certificate.NotBefore);
-        Log.Information("    Valid To: {ValidTo}", certificate.NotAfter);
-        Log.Information("    Serial Number: {SerialNumber}", certificate.SerialNumber);
-        Log.Information("    Thumbprint: {Thumbprint}", certificate.Thumbprint);
-        Log.Information("    Version: {Version}", certificate.Version);
+        logger.LogInformation("    Subject: {Subject}", certificate.Subject);
+        logger.LogInformation("    Issuer: {Issuer}", certificate.Issuer);
+        logger.LogInformation("    Valid From: {ValidFrom}", certificate.NotBefore);
+        logger.LogInformation("    Valid To: {ValidTo}", certificate.NotAfter);
+        logger.LogInformation("    Serial Number: {SerialNumber}", certificate.SerialNumber);
+        logger.LogInformation("    Thumbprint: {Thumbprint}", certificate.Thumbprint);
+        logger.LogInformation("    Version: {Version}", certificate.Version);
     }
 
     public async Task GetCaCertificateAsync()
     {
         try
         {
-            Log.Information("Requesting CA certificate's public part...");
+            logger.LogInformation("Requesting CA certificate's public part...");
 
             var caCertificateData = await apiService.GetCaCertificateAsync();
 
             if (caCertificateData == null || caCertificateData.Length == 0)
             {
-                Log.Error("Received CA certificate is null or empty.");
+                logger.LogError("Received CA certificate is null or empty.");
                 throw new InvalidOperationException("Failed to request or process CA certificate.");
             }
 
@@ -310,25 +310,25 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 store.Add(caCertificate);
                 store.Close();
 
-                Log.Information("CA certificate imported successfully into the certificate store.");
+                logger.LogInformation("CA certificate imported successfully into the certificate store.");
             }
             catch (Exception ex)
             {
-                Log.Error("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
+                logger.LogError("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
                 throw;
             }
 
-            Log.Information("CA certificate's public part received and processed successfully.");
+            logger.LogInformation("CA certificate's public part received and processed successfully.");
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to get CA certificate: {Message}.", ex.Message);
+            logger.LogError("Failed to get CA certificate: {Message}.", ex.Message);
         }
     }
 
-    private static void RemoveExistingCertificate()
+    private void RemoveExistingCertificate()
     {
-        Log.Information("Starting the process of removing existing certificates...");
+        logger.LogInformation("Starting the process of removing existing certificates...");
 
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
@@ -337,45 +337,45 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         if (existingCertificates.Count > 0)
         {
-            Log.Information("Found {Count} certificates to remove.", existingCertificates.Count);
+            logger.LogInformation("Found {Count} certificates to remove.", existingCertificates.Count);
 
             foreach (var cert in existingCertificates)
             {
                 try
                 {
                     store.Remove(cert);
-                    Log.Information("Successfully removed certificate with serial number: {SerialNumber}.", cert.SerialNumber);
+                    logger.LogInformation("Successfully removed certificate with serial number: {SerialNumber}.", cert.SerialNumber);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("Failed to remove certificate with serial number: {SerialNumber}. Error: {Message}", cert.SerialNumber, ex.Message);
+                    logger.LogError("Failed to remove certificate with serial number: {SerialNumber}. Error: {Message}", cert.SerialNumber, ex.Message);
                 }
             }
         }
         else
         {
-            Log.Information("No certificates found to remove.");
+            logger.LogInformation("No certificates found to remove.");
         }
 
         store.Close();
 
-        Log.Information("Finished removing existing certificates.");
+        logger.LogInformation("Finished removing existing certificates.");
     }
 
     public async Task<AddressDto> GetOrganizationAddressAsync(string organization)
     {
         try
         {
-            Log.Information("Requesting organization address for organization: {Organization}", organization);
+            logger.LogInformation("Requesting organization address for organization: {Organization}", organization);
 
             var organizationAddress = await apiService.GetOrganizationAddressAsync(organization) ?? throw new InvalidOperationException($"Failed to retrieve address for organization: {organization}");
-            Log.Information("Successfully retrieved address for organization: {Organization}", organization);
+            logger.LogInformation("Successfully retrieved address for organization: {Organization}", organization);
 
             return organizationAddress;
         }
         catch (Exception ex)
         {
-            Log.Error("Error retrieving organization address: {Message}", ex.Message);
+            logger.LogError("Error retrieving organization address: {Message}", ex.Message);
             throw;
         }
     }

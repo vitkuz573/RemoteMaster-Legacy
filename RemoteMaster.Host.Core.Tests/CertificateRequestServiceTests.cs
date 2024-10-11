@@ -5,14 +5,23 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
+using Moq;
 using RemoteMaster.Host.Core.Services;
 
 namespace RemoteMaster.Host.Core.Tests;
 
 public class CertificateRequestServiceTests : IDisposable
 {
-    private readonly CertificateRequestService _certificateRequestService = new();
+    private readonly CertificateRequestService _certificateRequestService;
     private RSA? _rsaKeyPair;
+
+    public CertificateRequestServiceTests()
+    {
+        Mock<ILogger<CertificateRequestService>> certificateRequestServiceMock = new();
+
+        _certificateRequestService = new CertificateRequestService(certificateRequestServiceMock.Object);
+    }
 
     [Fact]
     public void GenerateSigningRequest_ValidParameters_ReturnsCsr()

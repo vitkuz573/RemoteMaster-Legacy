@@ -24,7 +24,6 @@ using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -64,7 +63,7 @@ public partial class Home
 
         if (_currentUser == null)
         {
-            Log.Warning("User not found in database.");
+            Logger.LogWarning("User not found in database.");
 
             return;
         }
@@ -76,7 +75,7 @@ public partial class Home
     {
         if (_currentUser == null)
         {
-            Log.Warning("Current user not found");
+            Logger.LogWarning("Current user not found");
             
             return;
         }
@@ -88,7 +87,7 @@ public partial class Home
         
         if (!accessTokenResult.IsSuccess)
         {
-            Log.Error("Failed to retrieve access token for user {UserId}", _currentUser.Id);
+            Logger.LogError("Failed to retrieve access token for user {UserId}", _currentUser.Id);
             
             return;
         }
@@ -121,7 +120,7 @@ public partial class Home
 
         if (!crlResult.IsSuccess)
         {
-            Log.Error("Failed to generate CRL: {Message}", crlResult.Errors.FirstOrDefault()?.Message);
+            Logger.LogError("Failed to generate CRL: {Message}", crlResult.Errors.FirstOrDefault()?.Message);
             SnackBar.Add("Failed to generate CRL", Severity.Error);
             
             return;
@@ -135,7 +134,7 @@ public partial class Home
         }
         else
         {
-            Log.Error("Failed to publish CRL: {Message}", publishResult.Errors.FirstOrDefault()?.Message);
+            Logger.LogError("Failed to publish CRL: {Message}", publishResult.Errors.FirstOrDefault()?.Message);
             SnackBar.Add("Failed to publish CRL", Severity.Error);
         }
     }
@@ -231,7 +230,7 @@ public partial class Home
 
             if (connection.State != HubConnectionState.Connected)
             {
-                Log.Warning("Failed to connect to host {IPAddress}", hostDto.IpAddress);
+                Logger.LogWarning("Failed to connect to host {IPAddress}", hostDto.IpAddress);
 
                 await MoveToUnavailable(hostDto);
                 await InvokeAsync(StateHasChanged);
@@ -261,7 +260,7 @@ public partial class Home
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
+            Logger.LogError("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
 
             await MoveToUnavailable(hostDto);
             await InvokeAsync(StateHasChanged);
@@ -300,7 +299,7 @@ public partial class Home
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in LogoffHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
+            Logger.LogError("Exception in LogoffHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
         }
     }
 
@@ -466,7 +465,7 @@ public partial class Home
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error during connection start");
+            Logger.LogError(ex, "Error during connection start");
         }
 
         return connection;

@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Options;
@@ -29,10 +30,13 @@ public class CertificateServiceTests
 
         var activeDirectoryOptions = Microsoft.Extensions.Options.Options.Create(new ActiveDirectoryOptions());
 
+        Mock<ILogger<CertificateService>> loggerMock = new();
+
         _certificateService = new CertificateService(
             _hostInformationServiceMock.Object,
             _certificateAuthorityServiceMock.Object,
-            activeDirectoryOptions
+            activeDirectoryOptions,
+            loggerMock.Object
         );
     }
 

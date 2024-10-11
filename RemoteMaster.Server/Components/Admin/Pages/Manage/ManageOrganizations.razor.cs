@@ -9,7 +9,6 @@ using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -36,7 +35,7 @@ public partial class ManageOrganizations
         }
         else
         {
-            Log.Error("Failed to load countries: {Message}", countriesResult.Errors.FirstOrDefault()?.Message);
+            Logger.LogError("Failed to load countries: {Message}", countriesResult.Errors.FirstOrDefault()?.Message);
         }
     }
 

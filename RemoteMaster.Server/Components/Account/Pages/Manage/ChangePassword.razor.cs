@@ -5,16 +5,14 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages.Manage;
 
 public partial class ChangePassword
 {
-    private string? message;
-    private ApplicationUser user = default!;
-    private bool hasPassword;
+    private string? _message;
+    private ApplicationUser _user = default!;
+    private bool _hasPassword;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -24,10 +22,10 @@ public partial class ChangePassword
 
     protected async override Task OnInitializedAsync()
     {
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        hasPassword = await UserManager.HasPasswordAsync(user);
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        _hasPassword = await UserManager.HasPasswordAsync(_user);
 
-        if (!hasPassword)
+        if (!_hasPassword)
         {
             RedirectManager.RedirectTo("Account/Manage/SetPassword");
         }
@@ -35,17 +33,17 @@ public partial class ChangePassword
 
     private async Task OnValidSubmitAsync()
     {
-        var changePasswordResult = await UserManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+        var changePasswordResult = await UserManager.ChangePasswordAsync(_user, Input.OldPassword, Input.NewPassword);
         
         if (!changePasswordResult.Succeeded)
         {
-            message = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
+            _message = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
             return;
         }
 
-        await SignInManager.RefreshSignInAsync(user);
-        
-        Log.Information("User changed their password successfully.");
+        await SignInManager.RefreshSignInAsync(_user);
+
+        Logger.LogInformation("User changed their password successfully.");
 
         RedirectManager.RedirectToCurrentPageWithStatus("Your password has been changed", HttpContext);
     }

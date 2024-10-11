@@ -10,17 +10,17 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Claims;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -58,11 +58,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                     
                     if (appState.TryAddViewer(viewer))
                     {
-                        Log.Information("User {UserName} with role {Role} from IP {IpAddress} added to viewers.", userName, role, ipAddress);
+                        logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} added to viewers.", userName, role, ipAddress);
                     }
                     else
                     {
-                        Log.Error("Failed to add viewer for user {UserName} with role {Role} from IP {IpAddress}.", userName, role, ipAddress);
+                        logger.LogError("Failed to add viewer for user {UserName} with role {Role} from IP {IpAddress}.", userName, role, ipAddress);
                     }
 
                     await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
@@ -152,13 +152,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
         {
-            Log.Information("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
+            logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             screenCastingService.StopStreaming(viewer);
             appState.TryRemoveViewer(Context.ConnectionId);
         }
         else
         {
-            Log.Error("Failed to find a viewer for connection ID {ConnectionId} during disconnection.", Context.ConnectionId);
+            logger.LogError("Failed to find a viewer for connection ID {ConnectionId} during disconnection.", Context.ConnectionId);
         }
 
         await base.OnDisconnectedAsync(exception);
@@ -177,7 +177,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
         else
         {
-            Log.Error("Failed to find a viewer for connection ID {ConnectionId}", disconnectRequest.ConnectionId);
+            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", disconnectRequest.ConnectionId);
         }
     }
 
@@ -202,7 +202,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
         else
         {
-            Log.Error("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
+            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
         }
     }
 
@@ -271,7 +271,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
         else
         {
-            Log.Error("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
+            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
         }
     }
 
@@ -301,7 +301,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task SendCommandToService(string command)
     {
-        Log.Information("Received command: {Command}", command);
+        logger.LogInformation("Received command: {Command}", command);
 
         await Clients.Group("Services").ReceiveCommand(command);
     }

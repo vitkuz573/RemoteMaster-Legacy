@@ -4,6 +4,7 @@
 
 using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
@@ -42,6 +43,7 @@ public class ControlHubTests
         Mock<IWorkStationSecurityService> mockWorkStationSecurityService = new();
         Mock<IScreenCastingService> mockScreenCastingService = new();
         Mock<IOperatingSystemInformationService> mockOperatingSystemInformationService = new();
+        Mock<ILogger<ControlHub>> mockLogger = new();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         Mock<IGroupManager> mockGroups = new();
         Mock<IControlClient> mockClientProxy = new();
@@ -62,7 +64,8 @@ public class ControlHubTests
             _mockHostLifecycleService.Object,
             mockWorkStationSecurityService.Object,
             mockScreenCastingService.Object,
-            mockOperatingSystemInformationService.Object)
+            mockOperatingSystemInformationService.Object,
+            mockLogger.Object)
         {
             Clients = _mockClients.Object,
             Groups = mockGroups.Object,

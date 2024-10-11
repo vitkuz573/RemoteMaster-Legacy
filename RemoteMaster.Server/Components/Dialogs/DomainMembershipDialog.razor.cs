@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -74,7 +73,7 @@ public partial class DomainMembershipDialog
         {
             Snackbar.Add($"Error during domain discovery: {ex.Message}", Severity.Error);
 
-            Log.Error(ex, "Error during domain discovery.");
+            Logger.LogError(ex, "Error during domain discovery.");
         }
     }
 

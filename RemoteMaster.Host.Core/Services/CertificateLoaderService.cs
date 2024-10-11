@@ -4,17 +4,21 @@
 
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateLoaderService : ICertificateLoaderService
 {
+    private readonly ILogger<CertificateLoaderService> _logger;
+
     private X509Certificate2? _currentCertificate;
 
-    public CertificateLoaderService()
+    public CertificateLoaderService(ILogger<CertificateLoaderService> logger)
     {
+        _logger = logger;
+
         LoadCertificate();
     }
 
@@ -30,10 +34,10 @@ public class CertificateLoaderService : ICertificateLoaderService
             using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.ReadOnly);
 
-            Log.Information("Attempting to load certificates from store {StoreName} in {StoreLocation}.", store.Name, store.Location);
+            _logger.LogInformation("Attempting to load certificates from store {StoreName} in {StoreLocation}.", store.Name, store.Location);
 
             var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), validOnly: false);
-            Log.Information("Found {Count} certificates with hostname {Hostname}.", certificates.Count, Dns.GetHostName());
+            _logger.LogInformation("Found {Count} certificates with hostname {Hostname}.", certificates.Count, Dns.GetHostName());
 
             var newCertificate = certificates
                 .FirstOrDefault(cert => cert.HasPrivateKey);
@@ -44,21 +48,21 @@ public class CertificateLoaderService : ICertificateLoaderService
                 {
                     _currentCertificate = newCertificate;
 
-                    Log.Information("New certificate loaded successfully with subject: {Subject}.", _currentCertificate.Subject);
+                    _logger.LogInformation("New certificate loaded successfully with subject: {Subject}.", _currentCertificate.Subject);
                 }
                 else
                 {
-                    Log.Information("Loaded certificate is the same as the current one. No update necessary.");
+                    _logger.LogInformation("Loaded certificate is the same as the current one. No update necessary.");
                 }
             }
             else
             {
-                Log.Warning("No valid certificates with private key were found.");
+                _logger.LogWarning("No valid certificates with private key were found.");
             }
         }
         catch (Exception ex)
         {
-            Log.Error("An error occurred while loading the certificate: {ExceptionMessage}", ex.Message);
+            _logger.LogError("An error occurred while loading the certificate: {ExceptionMessage}", ex.Message);
         }
     }
 }

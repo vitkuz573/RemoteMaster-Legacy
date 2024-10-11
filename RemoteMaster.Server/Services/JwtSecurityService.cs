@@ -9,7 +9,6 @@ using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Options;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -17,17 +16,19 @@ public class JwtSecurityService : IJwtSecurityService
 {
     private readonly JwtOptions _options;
     private readonly IFileSystem _fileSystem;
+    private readonly ILogger<JwtSecurityService> _logger;
 
     private readonly string _privateKeyPath;
     private readonly string _publicKeyPath;
 
-    public JwtSecurityService(IOptions<JwtOptions> options, IFileSystem fileSystem)
+    public JwtSecurityService(IOptions<JwtOptions> options, IFileSystem fileSystem, ILogger<JwtSecurityService> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(fileSystem);
 
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         _fileSystem = fileSystem;
+        _logger = logger;
 
         _privateKeyPath = _fileSystem.Path.Combine(_options.KeysDirectory, "private_key.der");
         _publicKeyPath = _fileSystem.Path.Combine(_options.KeysDirectory, "public_key.der");
@@ -53,7 +54,7 @@ public class JwtSecurityService : IJwtSecurityService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error while reading public key file.");
+            _logger.LogError(ex, "Error while reading public key file.");
 
             return Result.Fail<byte[]?>("Error while reading public key file.").WithError(ex.Message);
         }
@@ -61,11 +62,11 @@ public class JwtSecurityService : IJwtSecurityService
 
     public async Task<Result> EnsureKeysExistAsync()
     {
-        Log.Debug("Checking existence of JWT keys.");
+        _logger.LogDebug("Checking existence of JWT keys.");
 
         if (!_fileSystem.File.Exists(_privateKeyPath) || !_fileSystem.File.Exists(_publicKeyPath))
         {
-            Log.Information("JWT keys not found. Generating new keys.");
+            _logger.LogInformation("JWT keys not found. Generating new keys.");
 
             try
             {
@@ -76,19 +77,19 @@ public class JwtSecurityService : IJwtSecurityService
                 await _fileSystem.File.WriteAllBytesAsync(_privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(passwordBytes, encryptionAlgorithm));
                 await _fileSystem.File.WriteAllBytesAsync(_publicKeyPath, rsa.ExportRSAPublicKey());
 
-                Log.Information("JWT keys generated and saved successfully.");
+                _logger.LogInformation("JWT keys generated and saved successfully.");
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to generate JWT keys.");
+                _logger.LogError(ex, "Failed to generate JWT keys.");
 
                 return Result.Fail("Failed to generate JWT keys.").WithError(ex.Message);
             }
         }
 
-        Log.Information("JWT keys already exist.");
+        _logger.LogInformation("JWT keys already exist.");
 
         return Result.Ok();
     }

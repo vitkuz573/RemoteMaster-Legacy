@@ -5,7 +5,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -45,7 +44,7 @@ public partial class LoginWith2fa
 
         if (result.Succeeded)
         {
-            Log.Information("User with ID '{UserId}' logged in with 2fa.", userId);
+            Logger.LogInformation("User with ID '{UserId}' logged in with 2fa.", userId);
 
             var tokenDataResult = await TokenService.GenerateTokensAsync(userId);
 
@@ -72,13 +71,13 @@ public partial class LoginWith2fa
         }
         else if (result.IsLockedOut)
         {
-            Log.Warning("User with ID '{UserId}' account locked out.", userId);
+            Logger.LogWarning("User with ID '{UserId}' account locked out.", userId);
             _message = "Error: Your account has been locked out.";
             await ApplicationUserService.AddSignInEntry(_user, false);
         }
         else
         {
-            Log.Warning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
+            Logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
             _message = "Error: Invalid authenticator code.";
             await ApplicationUserService.AddSignInEntry(_user, false);
         }

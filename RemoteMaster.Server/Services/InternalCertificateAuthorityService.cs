@@ -9,17 +9,16 @@ using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService) : ICertificateAuthorityService
+public class InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService, ILogger<InternalCertificateAuthorityService> logger) : ICertificateAuthorityService
 {
     private readonly InternalCertificateOptions _options = options.Value;
 
     public Result EnsureCaCertificateExists()
     {
-        Log.Debug("Starting CA certificate check.");
+        logger.LogDebug("Starting CA certificate check.");
 
         try
         {
@@ -31,11 +30,11 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
                 if (existingCert.NotAfter > DateTime.Now)
                 {
-                    Log.Information("Existing CA certificate for '{Name}' is valid.", _options.CommonName);
+                    logger.LogInformation("Existing CA certificate for '{Name}' is valid.", _options.CommonName);
                     return Result.Ok();
                 }
 
-                Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _options.CommonName);
+                logger.LogWarning("CA certificate for '{Name}' has expired. Reissuing.", _options.CommonName);
                 var generateResult = GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
 
                 return generateResult.IsFailed
@@ -43,7 +42,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
                     : Result.Ok();
             }
 
-            Log.Warning("No valid CA certificate found. Generating new certificate for '{Name}'.", _options.CommonName);
+            logger.LogWarning("No valid CA certificate found. Generating new certificate for '{Name}'.", _options.CommonName);
             var generateNewResult = GenerateCertificate(null, false);
 
             return generateNewResult.IsFailed
@@ -52,7 +51,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An unexpected error occurred during CA certificate check.");
+            logger.LogError(ex, "An unexpected error occurred during CA certificate check.");
             
             return Result.Fail("An unexpected error occurred during CA certificate check.").WithError(ex.Message);
         }
@@ -60,7 +59,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
     private Result GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
     {
-        Log.Debug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
+        logger.LogDebug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
 
         RSA? rsaProvider = null;
 
@@ -86,7 +85,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
             if (rsaProvider == null)
             {
-                Log.Error("RSA provider is null.");
+                logger.LogError("RSA provider is null.");
                 
                 return Result.Fail("RSA provider is null.");
             }
@@ -122,7 +121,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to generate CA certificate.");
+            logger.LogError(ex, "Failed to generate CA certificate.");
             
             return Result.Fail("Failed to generate CA certificate.").WithError(ex.Message);
         }
@@ -135,7 +134,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
         }
     }
 
-    private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
+    private void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
     {
         try
         {
@@ -148,7 +147,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
             if (isCertificateAlreadyAdded)
             {
-                Log.Information("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
+                logger.LogInformation("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
 
                 return;
             }
@@ -157,11 +156,11 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
             store.Open(OpenFlags.ReadWrite);
             store.Add(cert);
 
-            Log.Information("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
+            logger.LogInformation("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to add certificate to store.");
+            logger.LogError(ex, "Failed to add certificate to store.");
         }
     }
 
@@ -187,7 +186,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to retrieve CA certificate.");
+            logger.LogError(ex, "Failed to retrieve CA certificate.");
             
             return Result.Fail<X509Certificate2>("Failed to retrieve CA certificate.").WithError(ex.Message);
         }

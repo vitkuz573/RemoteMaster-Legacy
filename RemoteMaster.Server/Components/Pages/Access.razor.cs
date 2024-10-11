@@ -22,7 +22,6 @@ using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -123,7 +122,7 @@ public partial class Access : IAsyncDisposable
         }
         else
         {
-            Log.Error("Error getting frame rate parameter: {Error}", frameRateResult.Errors.First().Message);
+            Logger.LogError("Error getting frame rate parameter: {Error}", frameRateResult.Errors.First().Message);
         }
 
         if (imageQualityResult.IsSuccess)
@@ -132,7 +131,7 @@ public partial class Access : IAsyncDisposable
         }
         else
         {
-            Log.Error("Error getting image quality parameter: {Error}", imageQualityResult.Errors.First().Message);
+            Logger.LogError("Error getting image quality parameter: {Error}", imageQualityResult.Errors.First().Message);
         }
 
         if (drawCursorResult.IsSuccess)
@@ -141,7 +140,7 @@ public partial class Access : IAsyncDisposable
         }
         else
         {
-            Log.Error("Error getting draw cursor parameter: {Error}", drawCursorResult.Errors.First().Message);
+            Logger.LogError("Error getting draw cursor parameter: {Error}", drawCursorResult.Errors.First().Message);
         }
 
         if (inputEnabledResult.IsSuccess)
@@ -150,7 +149,7 @@ public partial class Access : IAsyncDisposable
         }
         else
         {
-            Log.Error("Error getting input enabled parameter: {Error}", inputEnabledResult.Errors.First().Message);
+            Logger.LogError("Error getting input enabled parameter: {Error}", inputEnabledResult.Errors.First().Message);
         }
 
         if (newUri != uri.ToString())
@@ -469,7 +468,7 @@ public partial class Access : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred during host connection initialization for host {Host}", Host);
+            Logger.LogError(ex, "An error occurred during host connection initialization for host {Host}", Host);
             SnackBar.Add("An error occurred while initializing the connection. Please try again later.", Severity.Error);
         }
         finally
@@ -491,22 +490,22 @@ public partial class Access : IAsyncDisposable
         }
         catch (HttpRequestException ex)
         {
-            Log.Error(ex, "HTTP request error during connection to host {Host}", Host);
+            Logger.LogError(ex, "HTTP request error during connection to host {Host}", Host);
             SnackBar.Add("Unable to connect to the host. Please check the host status and try again later.", Severity.Error);
         }
         catch (TimeoutException ex)
         {
-            Log.Error(ex, "Timeout error during connection to host {Host}", Host);
+            Logger.LogError(ex, "Timeout error during connection to host {Host}", Host);
             SnackBar.Add("Connection to the host timed out. Please try again later.", Severity.Error);
         }
         catch (TaskCanceledException ex)
         {
-            Log.Error(ex, "Task was canceled during connection to host {Host}", Host);
+            Logger.LogError(ex, "Task was canceled during connection to host {Host}", Host);
             SnackBar.Add("Connection to the host was canceled. Please try again later.", Severity.Error);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred during connection to host {Host}", Host);
+            Logger.LogError(ex, "An error occurred during connection to host {Host}", Host);
             SnackBar.Add("An error occurred while connecting to the host. Please try again later.", Severity.Error);
         }
         finally
@@ -704,7 +703,7 @@ public partial class Access : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
 

@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -196,7 +195,7 @@ public partial class TaskManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Log.Error($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+                Logger.LogError($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
             }
         }
 

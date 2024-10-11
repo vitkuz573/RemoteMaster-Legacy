@@ -12,7 +12,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Options;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -20,14 +19,17 @@ public class RsaTokenSigningService : ITokenSigningService
 {
     private readonly IFileSystem _fileSystem;
     private readonly JwtOptions _options;
+    private readonly ILogger<RsaTokenSigningService> _logger;
+
     private readonly RSA _signingRsa;
 
-    public RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions> options)
+    public RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions> options, ILogger<RsaTokenSigningService> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
 
         _fileSystem = fileSystem;
         _options = options.Value;
+        _logger = logger;
 
         _signingRsa = RSA.Create();
 
@@ -45,7 +47,7 @@ public class RsaTokenSigningService : ITokenSigningService
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to load the private key for signing: {Message}", ex.Message);
+            _logger.LogError("Failed to load the private key for signing: {Message}", ex.Message);
             throw;
         }
     }
@@ -70,13 +72,13 @@ public class RsaTokenSigningService : ITokenSigningService
         }
         catch (CryptographicException ex)
         {
-            Log.Error("Failed to sign the token: {Message}.", ex.Message);
+            _logger.LogError("Failed to sign the token: {Message}.", ex.Message);
 
             return Result.Fail<string>("Failed to sign the token.");
         }
         catch (Exception ex)
         {
-            Log.Error("Unknown error occurred during token generation: {Message}.", ex.Message);
+            _logger.LogError("Unknown error occurred during token generation: {Message}.", ex.Message);
 
             return Result.Fail<string>("Unknown error occurred during token generation.");
         }

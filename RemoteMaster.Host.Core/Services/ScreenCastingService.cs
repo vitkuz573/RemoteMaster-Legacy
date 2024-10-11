@@ -5,13 +5,13 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext) : IScreenCastingService
+public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScreenCastingService> logger) : IScreenCastingService
 {
     public void StartStreaming(IViewer viewer, int frameRate)
     {
@@ -20,7 +20,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         viewer.FrameRate = frameRate;
         viewer.ScreenCapturing.ScreenChanged += async (_, bounds) => await SendScreenSize(viewer, bounds.Width, bounds.Height);
 
-        Log.Information("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName, frameRate);
+        logger.LogInformation("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName, frameRate);
 
         Task.Run(async () => await StreamScreenDataAsync(viewer, viewer.CancellationTokenSource.Token), viewer.CancellationTokenSource.Token);
     }
@@ -73,11 +73,11 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         }
         catch (OperationCanceledException)
         {
-            Log.Information("Screen streaming was canceled for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
+            logger.LogInformation("Screen streaming was canceled for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
         }
         catch (Exception ex)
         {
-            Log.Error("An error occurred during streaming: {Message}", ex.Message);
+            logger.LogError("An error occurred during streaming: {Message}", ex.Message);
         }
     }
 }

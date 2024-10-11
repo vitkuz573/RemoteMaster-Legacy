@@ -5,11 +5,10 @@
 using System.Diagnostics;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class RemoteSchtasksService(INetworkDriveService networkDriveService) : IRemoteSchtasksService
+public class RemoteSchtasksService(INetworkDriveService networkDriveService, ILogger<RemoteSchtasksService> logger) : IRemoteSchtasksService
 {
     public Result CopyAndExecuteRemoteFile(string sourceFilePath, string remoteMachineName, string destinationFolderPath, string? username = null, string? password = null, string? arguments = null)
     {
@@ -51,7 +50,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error: {Message}", ex.Message);
+            logger.LogError(ex, "Error: {Message}", ex.Message);
 
             return Result.Fail($"Error: {ex.Message}").WithError(ex.Message);
         }

@@ -4,7 +4,6 @@
 
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.JSInterop;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -40,7 +39,7 @@ public partial class ManageCertificateAuthority
         }
         else
         {
-            Log.Error($"Error retrieving CA certificate: {caCertificateResult.Errors.First().Message}");
+            Logger.LogError($"Error retrieving CA certificate: {caCertificateResult.Errors.First().Message}");
         }
     }
 
@@ -70,12 +69,12 @@ public partial class ManageCertificateAuthority
             }
             else
             {
-                Log.Error($"Error retrieving CA certificate for export: {caCertificateResult.Errors.First().Message}");
+                Logger.LogError($"Error retrieving CA certificate for export: {caCertificateResult.Errors.First().Message}");
             }
         }
         catch (Exception ex)
         {
-            Log.Error($"Error exporting certificate: {ex.Message}");
+            Logger.LogError($"Error exporting certificate: {ex.Message}");
 
             throw;
         }

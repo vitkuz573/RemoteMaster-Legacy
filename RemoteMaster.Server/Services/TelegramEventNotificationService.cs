@@ -6,13 +6,12 @@ using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Options;
-using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
 namespace RemoteMaster.Server.Services;
 
-public class TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOptions> botOptionsSnapshot) : IEventNotificationService
+public class TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOptions> botOptionsSnapshot, ILogger<TelegramEventNotificationService> logger) : IEventNotificationService
 {
     public async Task<Result> SendNotificationAsync(string message)
     {
@@ -40,7 +39,7 @@ public class TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOption
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error sending Telegram message");
+            logger.LogError(ex, "Error sending Telegram message");
 
             return Result.Fail("Error sending Telegram message.").WithError(ex.Message);
         }

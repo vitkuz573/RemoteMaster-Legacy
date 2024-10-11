@@ -2,14 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInformationUpdaterService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IApiService apiService) : IHostInformationUpdaterService
+public class HostInformationUpdaterService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IApiService apiService, ILogger<HostInformationUpdaterService> logger) : IHostInformationUpdaterService
 {
     public async Task<bool> UpdateHostConfigurationAsync()
     {
@@ -22,12 +22,12 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
         {
             if (!hostConfiguration.Host.MacAddress.Equals(hostInformation.MacAddress))
             {
-                Log.Information("MAC address has changed, which might indicate restoration from backup.");
+                logger.LogInformation("MAC address has changed, which might indicate restoration from backup.");
             }
 
             hostConfiguration.Host = hostInformation;
 
-            Log.Information("Host details were either missing or have been updated.");
+            logger.LogInformation("Host details were either missing or have been updated.");
 
             hasChanges = true;
         }
@@ -40,7 +40,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error saving updated configuration.");
+                logger.LogError(ex, "Error saving updated configuration.");
 
                 return false;
             }
@@ -61,17 +61,17 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-                    Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
+                    logger.LogInformation("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
 
                     var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
                     if (acknowledgeResult)
                     {
-                        Log.Information("Host move request acknowledged");
+                        logger.LogInformation("Host move request acknowledged");
                     }
                     else
                     {
-                        Log.Warning("Failed to acknowledge host move request");
+                        logger.LogWarning("Failed to acknowledge host move request");
                     }
 
                     hasChanges = true;

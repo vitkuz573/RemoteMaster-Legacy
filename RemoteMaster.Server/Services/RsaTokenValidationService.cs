@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Options;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -18,14 +17,17 @@ public class RsaTokenValidationService : ITokenValidationService
 {
     private readonly IFileSystem _fileSystem;
     private readonly JwtOptions _options;
+    private readonly ILogger<RsaTokenValidationService> _logger;
+    
     private readonly RSA _validationRsa;
 
-    public RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptions> options)
+    public RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptions> options, ILogger<RsaTokenValidationService> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
 
         _fileSystem = fileSystem;
         _options = options.Value;
+        _logger = logger;
 
         _validationRsa = RSA.Create();
 
@@ -43,7 +45,7 @@ public class RsaTokenValidationService : ITokenValidationService
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to load the public key for validation: {Message}", ex.Message);
+            _logger.LogError("Failed to load the public key for validation: {Message}", ex.Message);
             throw;
         }
     }
@@ -76,13 +78,13 @@ public class RsaTokenValidationService : ITokenValidationService
         }
         catch (SecurityTokenException ex)
         {
-            Log.Error("Token validation failed: {Message}.", ex.Message);
+            _logger.LogError("Token validation failed: {Message}.", ex.Message);
 
             return Result.Fail("Token validation failed.").WithError(ex.Message);
         }
         catch (Exception ex)
         {
-            Log.Error("Unknown error occurred during token validation: {Message}.", ex.Message);
+            _logger.LogError("Unknown error occurred during token validation: {Message}.", ex.Message);
 
             return Result.Fail("Unknown error occurred during token validation.");
         }

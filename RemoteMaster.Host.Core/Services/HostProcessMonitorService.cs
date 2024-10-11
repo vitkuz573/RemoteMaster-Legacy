@@ -3,19 +3,23 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class HostProcessMonitorService : IHostedService
 {
     private readonly IUserInstanceService _userInstanceService;
+    private readonly ILogger<HostProcessMonitorService> _logger;
+
     private readonly Timer _timer;
 
-    public HostProcessMonitorService(IUserInstanceService userInstanceService)
+    public HostProcessMonitorService(IUserInstanceService userInstanceService, ILogger<HostProcessMonitorService> logger)
     {
         _userInstanceService = userInstanceService;
+        _logger = logger;
+
         _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);
     }
 
@@ -33,7 +37,7 @@ public class HostProcessMonitorService : IHostedService
             return;
         }
 
-        Log.Information("Host instance is not running. Starting it...");
+        _logger.LogInformation("Host instance is not running. Starting it...");
 
         _userInstanceService.Start();
     }

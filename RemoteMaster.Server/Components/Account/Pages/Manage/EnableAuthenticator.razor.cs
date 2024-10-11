@@ -5,11 +5,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages.Manage;
 
@@ -51,8 +48,8 @@ public partial class EnableAuthenticator
 
         await UserManager.SetTwoFactorEnabledAsync(_user, true);
         var userId = await UserManager.GetUserIdAsync(_user);
-        
-        Log.Information("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
+
+        Logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
         _message = "Your authenticator app has been verified.";
 

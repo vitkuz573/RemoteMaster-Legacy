@@ -5,11 +5,10 @@
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class SecurityInitializationService(ICertificateAuthorityService certificateAuthorityService, IJwtSecurityService jwtSecurityService, IServiceScopeFactory serviceScopeFactory) : IHostedService
+public class SecurityInitializationService(ICertificateAuthorityService certificateAuthorityService, IJwtSecurityService jwtSecurityService, IServiceScopeFactory serviceScopeFactory, ILogger<SecurityInitializationService> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -47,13 +46,13 @@ public class SecurityInitializationService(ICertificateAuthorityService certific
             {
                 foreach (var error in result.Errors)
                 {
-                    Log.Error($"Error creating service user: {error.Description}");
+                    logger.LogError($"Error creating service user: {error.Description}");
                 }
             }
         }
         else
         {
-            Log.Information("Service user already exists.");
+            logger.LogInformation("Service user already exists.");
         }
     }
 

@@ -5,19 +5,19 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class CertificateRequestService : ICertificateRequestService
+public class CertificateRequestService(ILogger<CertificateRequestService> logger) : ICertificateRequestService
 {
     public byte[] GenerateSigningRequest(X500DistinguishedName subjectName, List<IPAddress> ipAddresses, out RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(subjectName);
         ArgumentNullException.ThrowIfNull(ipAddresses);
 
-        Log.Information("Starting CSR generation.");
+        logger.LogInformation("Starting CSR generation.");
 
         rsaKeyPair = RSA.Create(4096);
 
@@ -38,7 +38,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         certificateRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
 
-        Log.Debug("CSR with {SANCount} SAN entries and {OIDCount} OIDs generated.", ipAddresses.Count, enhancedKeyUsages.Count);
+        logger.LogDebug("CSR with {SANCount} SAN entries and {OIDCount} OIDs generated.", ipAddresses.Count, enhancedKeyUsages.Count);
 
         var signingRequest = certificateRequest.CreateSigningRequest();
 

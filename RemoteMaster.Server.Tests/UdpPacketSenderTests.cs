@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Services;
@@ -17,7 +18,9 @@ public class UdpPacketSenderTests
     public UdpPacketSenderTests()
     {
         _udpClientMock = new Mock<IUdpClient>();
-        _udpPacketSender = new UdpPacketSender(() => _udpClientMock.Object);
+        Mock<ILogger<UdpPacketSender>> loggerMock = new();
+
+        _udpPacketSender = new UdpPacketSender(() => _udpClientMock.Object, loggerMock.Object);
     }
 
     [Fact]

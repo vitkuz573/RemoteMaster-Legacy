@@ -6,17 +6,16 @@ using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Enums;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFactory) : IHostedService, IDisposable
+public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFactory, ILogger<CertificateRenewalTaskService> logger) : IHostedService, IDisposable
 {
     private Timer? _timer;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        Log.Information("Starting certificate renewal task service.");
+        logger.LogInformation("Starting certificate renewal task service.");
         
         _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         
@@ -38,7 +37,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         {
             try
             {
-                Log.Information($"Processing task for host: {task.Host!.Name}");
+                logger.LogInformation($"Processing task for host: {task.Host!.Name}");
 
                 await ProcessTaskAsync(task, tokenService);
 
@@ -47,7 +46,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Error processing task for host: {task.Host!.Name}");
+                logger.LogError(ex, $"Error processing task for host: {task.Host!.Name}");
 
                 await organizationRepository.MarkCertificateRenewalTaskFailed(task.Id);
                 await organizationRepository.SaveChangesAsync();
@@ -55,7 +54,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         }
     }
 
-    private static async Task ProcessTaskAsync(CertificateRenewalTask task, ITokenService tokenService)
+    private async Task ProcessTaskAsync(CertificateRenewalTask task, ITokenService tokenService)
     {
         await Task.Delay(1000);
 
@@ -77,12 +76,12 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
 
         await hubConnection.InvokeAsync("RenewCertificate");
 
-        Log.Information($"Certificate renewal completed for host: {task.Host.Name}");
+        logger.LogInformation($"Certificate renewal completed for host: {task.Host.Name}");
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        Log.Information("Stopping certificate renewal task service.");
+        logger.LogInformation("Stopping certificate renewal task service.");
 
         _timer?.Change(Timeout.Infinite, 0);
 

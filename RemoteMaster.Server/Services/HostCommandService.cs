@@ -9,11 +9,10 @@ using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline) : IHostCommandService
+public class HostCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline, ILogger<HostCommandService> logger) : IHostCommandService
 {
     /// <inheritdoc />
     public async Task<Result> Execute(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action)
@@ -56,7 +55,7 @@ public class HostCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resili
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while executing a command on hosts.");
+            logger.LogError(ex, "An error occurred while executing a command on hosts.");
 
             return Result.Fail("An error occurred while executing a command on hosts.").WithError(ex.Message);
         }

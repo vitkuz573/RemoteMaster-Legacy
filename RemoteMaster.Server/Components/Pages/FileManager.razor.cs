@@ -13,7 +13,6 @@ using Polly;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -87,7 +86,7 @@ public partial class FileManager : IAsyncDisposable
 
             if (totalBytesRead != data.Length)
             {
-                Log.Warning("Fewer bytes were read than requested.");
+                Logger.LogWarning("Fewer bytes were read than requested.");
             }
 
             var fileDto = new FileUploadDto(_selectedFile.Name, data, _currentPath);
@@ -130,7 +129,7 @@ public partial class FileManager : IAsyncDisposable
 
         _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
         {
-            Log.Information("Received {Count} files and directories.", fileSystemItems.Count);
+            Logger.LogInformation("Received {Count} files and directories.", fileSystemItems.Count);
 
             _fileSystemItems = fileSystemItems;
             _allFileSystemItems = [.. _fileSystemItems];
@@ -289,7 +288,7 @@ public partial class FileManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Log.Error($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+                Logger.LogError($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
             }
         }
 

@@ -1,11 +1,10 @@
-﻿// Copyright © 2023 Vitaly Kuzyaев. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -44,7 +43,7 @@ public partial class LoginWithRecoveryCode
 
         if (result.Succeeded)
         {
-            Log.Information("User with ID '{UserId}' logged in with a recovery code.", userId);
+            Logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", userId);
 
             var tokenDataResult = await TokenService.GenerateTokensAsync(userId);
 
@@ -71,13 +70,13 @@ public partial class LoginWithRecoveryCode
         }
         else if (result.IsLockedOut)
         {
-            Log.Warning("User with ID '{UserId}' account locked out.", userId);
+            Logger.LogWarning("User with ID '{UserId}' account locked out.", userId);
             _message = "Error: Your account has been locked out.";
             await ApplicationUserService.AddSignInEntry(_user, false);
         }
         else
         {
-            Log.Warning("Invalid recovery code entered for user with ID '{UserId}'.", userId);
+            Logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}'.", userId);
             _message = "Error: Invalid recovery code entered.";
             await ApplicationUserService.AddSignInEntry(_user, false);
         }
