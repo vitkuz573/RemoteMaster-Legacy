@@ -1,0 +1,14 @@
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
+@inject IHostCommandService HostCommandService
+
+<CommonDialog>
+    <Content>
+        <MudTextField T="string" Label="WIM File" @bind-Value="_wimFile" FullWidth />
+    </Content>
+    <Actions>
+        <MudButton Color="Color.Primary" OnClick="Boot">Boot</MudButton>
+    </Actions>
+</CommonDialog>

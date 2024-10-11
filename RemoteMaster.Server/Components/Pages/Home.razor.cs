@@ -654,6 +654,8 @@ public partial class Home
         }
     }
 
+    private async Task WimBoot() => await ExecuteAction<BootToWimDialog>("WIM Boot");
+
     private async Task OpenTaskManager() => await OpenHostWindow("taskmanager");
 
     private async Task OpenDeviceManager() => await OpenHostWindow("devicemanager");

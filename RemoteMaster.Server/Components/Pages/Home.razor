@@ -173,21 +173,26 @@
                             </MudTabPanel>
 
                             <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
+                                @if (context.User.HasClaim("HostManagement", "BootWim"))
+                                {
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WimBoot" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">WIM Boot</MudButton>
+                                }
+
                                 @if (context.User.HasClaim("Tasks", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Task Manager</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Devices", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenDeviceManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Device Manager</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Files", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">File Manager</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Files", "Upload"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Upload File</MudButton>
@@ -197,12 +202,12 @@
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Message Box</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Communication", "Chat"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenChat" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Chat</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Logs", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenLogsManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Logs Viewer</MudButton>
