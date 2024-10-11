@@ -1,8 +1,11 @@
 ﻿@inherits CommonDialogBase
 
+@using Microsoft.Extensions.Options
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Options
 
 @inject IHostCommandService HostCommandService
+@inject IOptions<WimBootOptions> Options
 
 <CommonDialog>
     <Content>

@@ -23,6 +23,15 @@ public partial class BootToWimDialog
     private string _tbwinpeFile = string.Empty;
     private string _wimFile = string.Empty;
 
+    protected override void OnInitialized()
+    {
+        _folderPath = Options.Value.FolderPath;
+        _tbwinpeFile = Options.Value.TbWinPeFile;
+        _wimFile = Options.Value.WimFile;
+        _username = Options.Value.Username;
+        _password = Options.Value.Password;
+    }
+
     private async Task Boot()
     {
         try

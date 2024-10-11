@@ -189,6 +189,7 @@ public static class Program
         services.Configure<InternalCertificateOptions>(configurationManager.GetSection("certificateAuthority:internalOptions"));
         services.Configure<ActiveDirectoryOptions>(configurationManager.GetSection("certificateAuthority:activeDirectoryOptions"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("certificateAuthority:internalOptions:subject"));
+        services.Configure<WimBootOptions>(configurationManager.GetSection("wimBoot"));
 
         services.AddMudServices();
 
