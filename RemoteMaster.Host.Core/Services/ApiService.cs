@@ -262,7 +262,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/Notification", message, NotificationJsonContext.Default.NotificationMessage);
+        var response = await _client.PostAsJsonAsync("/api/Notification", message, NotificationJsonSerializerContext.Default.NotificationMessage);
 
         await ProcessSimpleResponse(response);
     }

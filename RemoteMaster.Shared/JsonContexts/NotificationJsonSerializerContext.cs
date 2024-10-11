@@ -8,4 +8,4 @@ using RemoteMaster.Shared.Models;
 namespace RemoteMaster.Shared.JsonContexts;
 
 [JsonSerializable(typeof(NotificationMessage))]
-public partial class NotificationJsonContext : JsonSerializerContext;
+public partial class NotificationJsonSerializerContext : JsonSerializerContext;
