@@ -2,7 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Shared.Models;
 
 public class HealthCheck(string name, string status, int statusCode, string duration, string? description, string? exception, Dictionary<string, string?> data)
 {

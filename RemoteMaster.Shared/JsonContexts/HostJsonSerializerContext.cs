@@ -4,15 +4,13 @@
 
 using System.Text.Json.Serialization;
 using RemoteMaster.Shared.Converters;
-using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.JsonContexts;
 
 [JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(IPAddressConverter), typeof(PhysicalAddressConverter)])]
-[JsonSerializable(typeof(ApiResponse))]
-[JsonSerializable(typeof(ApiResponse<byte[]>))]
-[JsonSerializable(typeof(ApiResponse<AddressDto>))]
-[JsonSerializable(typeof(ApiResponse<HostMoveRequest>))]
-[JsonSerializable(typeof(ApiResponse<List<HealthCheck>>))]
-public partial class ApiJsonSerializerContext : JsonSerializerContext;
+[JsonSerializable(typeof(HostConfiguration))]
+[JsonSerializable(typeof(List<HostMoveRequest>))]
+[JsonSerializable(typeof(HostUnregisterRequest))]
+[JsonSerializable(typeof(HostUpdateRequest))]
+public partial class HostJsonSerializerContext : JsonSerializerContext;

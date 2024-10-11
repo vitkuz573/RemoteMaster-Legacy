@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Text.Json;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -25,7 +26,7 @@ public class HostMoveRequestService(IEventNotificationService eventNotificationS
             }
 
             var json = await File.ReadAllTextAsync(HostMoveRequestsFilePath);
-            var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
+            var hostMoveRequests = JsonSerializer.Deserialize(json, HostJsonSerializerContext.Default.ListHostMoveRequest) ?? [];
 
             return Result.Ok(hostMoveRequests);
         }
@@ -40,7 +41,7 @@ public class HostMoveRequestService(IEventNotificationService eventNotificationS
     {
         try
         {
-            var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
+            var updatedJson = JsonSerializer.Serialize(hostMoveRequests, HostJsonSerializerContext.Default.ListHostMoveRequest);
             await File.WriteAllTextAsync(HostMoveRequestsFilePath, updatedJson);
 
             return Result.Ok();

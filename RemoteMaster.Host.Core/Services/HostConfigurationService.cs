@@ -24,7 +24,7 @@ public class HostConfigurationService : IHostConfigurationService
 
         var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
 
-        var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, RemoteMasterJsonContext.Default.HostConfiguration);
+        var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, HostJsonSerializerContext.Default.HostConfiguration);
 
         return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{configFilePath}'.");
     }
@@ -33,14 +33,7 @@ public class HostConfigurationService : IHostConfigurationService
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var jsonSerializerOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-
-        var jsonContext = new RemoteMasterJsonContext(jsonSerializerOptions);
-
-        var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, jsonContext.HostConfiguration);
+        var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, HostJsonSerializerContext.Default.HostConfiguration);
 
         var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 

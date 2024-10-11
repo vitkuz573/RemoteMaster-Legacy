@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -183,7 +184,7 @@ public partial class MoveHostsDialog
         if (File.Exists(hostMoveRequestsFilePath))
         {
             var existingJson = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
-            hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(existingJson) ?? [];
+            hostMoveRequests = JsonSerializer.Deserialize(existingJson, HostJsonSerializerContext.Default.ListHostMoveRequest) ?? [];
         }
         else
         {
@@ -205,10 +206,7 @@ public partial class MoveHostsDialog
             }
         }
 
-        var json = JsonSerializer.Serialize(hostMoveRequests, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
+        var json = JsonSerializer.Serialize(hostMoveRequests, HostJsonSerializerContext.Default.ListHostMoveRequest);
 
         await File.WriteAllTextAsync(hostMoveRequestsFilePath, json);
     }

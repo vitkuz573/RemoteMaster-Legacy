@@ -163,7 +163,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration, ApiJsonSerializerContext.Default.HostConfiguration);
+        var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration, HostJsonSerializerContext.Default.HostConfiguration);
 
         return await ProcessSimpleResponse(response);
     }
@@ -177,7 +177,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit]);
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/Host/unregister");
-        httpRequest.Content = JsonContent.Create(request, ApiJsonSerializerContext.Default.HostUnregisterRequest);
+        httpRequest.Content = JsonContent.Create(request, HostJsonSerializerContext.Default.HostUnregisterRequest);
 
         var response = await _client.SendAsync(httpRequest);
 
@@ -192,7 +192,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit], hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
-        var response = await _client.PutAsJsonAsync("/api/Host/update", request, ApiJsonSerializerContext.Default.HostUpdateRequest);
+        var response = await _client.PutAsJsonAsync("/api/Host/update", request, HostJsonSerializerContext.Default.HostUpdateRequest);
 
         return await ProcessSimpleResponse(response);
     }
@@ -262,7 +262,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/Notification", message, ApiJsonSerializerContext.Default.NotificationMessage);
+        var response = await _client.PostAsJsonAsync("/api/Notification", message, NotificationJsonContext.Default.NotificationMessage);
 
         await ProcessSimpleResponse(response);
     }

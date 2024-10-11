@@ -38,14 +38,11 @@ public class ApiResponse<TData>
     /// Hypermedia links to support HATEOAS, allowing clients to navigate related resources dynamically.
     /// </summary>
     [JsonPropertyName("_links")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Dictionary<string, string>? Links { get; private set; }
 
     /// <summary>
     /// Includes a standardized error format for failure scenarios, facilitating error handling in client applications.
     /// </summary>
-    [JsonPropertyName("error")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ProblemDetails? Error { get; private set; }
 
     /// <summary>

@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,8 +31,6 @@ public class ApiResponse
     /// <summary>
     /// Includes a standardized error format for failure scenarios, facilitating error handling in client applications.
     /// </summary>
-    [JsonPropertyName("error")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ProblemDetails? Error { get; }
 
     /// <summary>

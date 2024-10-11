@@ -5,7 +5,6 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
-using RemoteMaster.Shared.Converters;
 
 namespace RemoteMaster.Shared.DTOs;
 
@@ -14,15 +13,10 @@ public class HostDto(string name, IPAddress ipAddress, PhysicalAddress macAddres
     [JsonIgnore]
     public Guid Id { get; init; }
 
-    [JsonPropertyName("name")]
     public string Name { get; } = name;
 
-    [JsonPropertyName("ipAddress")]
-    [JsonConverter(typeof(IPAddressConverter))]
     public IPAddress IpAddress { get; } = ipAddress;
 
-    [JsonPropertyName("macAddress")]
-    [JsonConverter(typeof(PhysicalAddressConverter))]
     public PhysicalAddress MacAddress { get; } = macAddress;
 
     [JsonIgnore]

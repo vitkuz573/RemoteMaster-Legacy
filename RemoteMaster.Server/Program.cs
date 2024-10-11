@@ -37,6 +37,7 @@ using RemoteMaster.Server.Services;
 using RemoteMaster.Server.Validators;
 using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.Extensions;
+using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using Serilog.Events;
@@ -197,13 +198,6 @@ public static class Program
         services.AddSingleton<ITokenValidationService, RsaTokenValidationService>();
         services.AddSingleton<ISslWarningService, SslWarningService>();
 
-        services.AddSingleton(new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
         services.AddHostedService<MigrationService>();
         services.AddHostedService<RoleInitializationService>();
         services.AddHostedService<SecurityInitializationService>();
@@ -330,10 +324,7 @@ public static class Program
                 var overallStatus = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;
                 var responseModel = new ApiResponse<List<HealthCheck>>(healthCheckResults, "Health checks completed", overallStatus);
 
-                var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
+                var jsonResponse = JsonSerializer.Serialize(responseModel, ApiJsonSerializerContext.Default.ApiResponseListHealthCheck);
 
                 await context.Response.WriteAsync(jsonResponse);
             }
