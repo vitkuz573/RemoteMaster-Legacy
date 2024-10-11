@@ -12,6 +12,15 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class BootToWimDialog
 {
+    private bool _isShowPassword;
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private string _folderPath = string.Empty;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+
+    private string _tbwinpeFile = string.Empty;
     private string _wimFile = string.Empty;
 
     private async Task Boot()
@@ -20,7 +29,22 @@ public partial class BootToWimDialog
         {
             var scriptBuilder = new StringBuilder();
 
-            var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd);
+            scriptBuilder.AppendLine("powershell Set-ExecutionPolicy Bypass");
+            scriptBuilder.AppendLine("net use * /delete /y");
+            scriptBuilder.AppendLine($"net use {_folderPath} /USER:{_username} {_password}");
+            scriptBuilder.AppendLine($@"copy {_folderPath}\{_wimFile} C:\ /Y");
+            scriptBuilder.AppendLine($@"del {_folderPath}\bcd_backup\BCD");
+            scriptBuilder.AppendLine($@"bcdedit /export {_folderPath}\bcd_backup\BCD");
+            scriptBuilder.AppendLine($@"attrib -s -h -r {_folderPath}\bcd_backup\BCD");
+
+            var wimFileName = Path.GetFileName(_wimFile);
+
+            scriptBuilder.AppendLine($@"{_folderPath}\{_tbwinpeFile} /bootwim C:\{wimFileName} /quiet /force /idt");
+
+            var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd)
+            {
+                AsSystem = true
+            };
 
             await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("ExecuteScript", scriptExecutionRequest));
         }
@@ -30,5 +54,21 @@ public partial class BootToWimDialog
         }
 
         MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (_isShowPassword)
+        {
+            _isShowPassword = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
+        }
+        else
+        {
+            _isShowPassword = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
+        }
     }
 }
