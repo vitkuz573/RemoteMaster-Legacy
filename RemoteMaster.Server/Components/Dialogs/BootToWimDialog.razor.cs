@@ -38,13 +38,9 @@ public partial class BootToWimDialog
         {
             var scriptBuilder = new StringBuilder();
 
-            scriptBuilder.AppendLine("powershell Set-ExecutionPolicy Bypass");
             scriptBuilder.AppendLine("net use * /delete /y");
             scriptBuilder.AppendLine($"net use {_folderPath} /USER:{_username} {_password}");
             scriptBuilder.AppendLine($@"copy {_folderPath}\{_wimFile} C:\ /Y");
-            scriptBuilder.AppendLine($@"del {_folderPath}\bcd_backup\BCD");
-            scriptBuilder.AppendLine($@"bcdedit /export {_folderPath}\bcd_backup\BCD");
-            scriptBuilder.AppendLine($@"attrib -s -h -r {_folderPath}\bcd_backup\BCD");
 
             var loaderCommand = _loaderCommand
                 .Replace("{folderPath}", _folderPath)
