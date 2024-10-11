@@ -20,13 +20,13 @@ public partial class BootToWimDialog
     private string _username = string.Empty;
     private string _password = string.Empty;
 
-    private string _tbwinpeFile = string.Empty;
+    private string _loaderCommand = string.Empty;
     private string _wimFile = string.Empty;
 
     protected override void OnInitialized()
     {
         _folderPath = Options.Value.FolderPath;
-        _tbwinpeFile = Options.Value.TbWinPeFile;
+        _loaderCommand = Options.Value.LoaderCommand;
         _wimFile = Options.Value.WimFile;
         _username = Options.Value.Username;
         _password = Options.Value.Password;
@@ -46,9 +46,11 @@ public partial class BootToWimDialog
             scriptBuilder.AppendLine($@"bcdedit /export {_folderPath}\bcd_backup\BCD");
             scriptBuilder.AppendLine($@"attrib -s -h -r {_folderPath}\bcd_backup\BCD");
 
-            var wimFileName = Path.GetFileName(_wimFile);
+            var loaderCommand = _loaderCommand
+                .Replace("{folderPath}", _folderPath)
+                .Replace("{wimFile}", Path.GetFileName(_wimFile));
 
-            scriptBuilder.AppendLine($@"{_folderPath}\{_tbwinpeFile} /bootwim C:\{wimFileName} /quiet /force /idt");
+            scriptBuilder.AppendLine(loaderCommand);
 
             var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd)
             {

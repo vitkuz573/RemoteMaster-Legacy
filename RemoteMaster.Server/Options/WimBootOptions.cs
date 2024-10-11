@@ -11,8 +11,8 @@ public class WimBootOptions
     [JsonPropertyName("folderPath")]
     public string FolderPath { get; set; } = string.Empty;
 
-    [JsonPropertyName("tbWinPeFile")]
-    public string TbWinPeFile { get; set; } = string.Empty;
+    [JsonPropertyName("loaderCommand")]
+    public string LoaderCommand { get; set; } = string.Empty;
 
     [JsonPropertyName("winFile")]
     public string WimFile { get; set; } = string.Empty;

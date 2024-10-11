@@ -9,9 +9,9 @@
 
 <CommonDialog>
     <Content>
-        <MudTextField T="string" Label="Folder Path" @bind-Value="@_folderPath" />
-        <MudTextField T="string" Label="TBWinPE File" @bind-Value="_tbwinpeFile" />
+        <MudTextField T="string" Label="Folder" @bind-Value="@_folderPath" />
         <MudTextField T="string" Label="WIM File" @bind-Value="_wimFile" />
+        <MudTextField T="string" Label="Loader" @bind-Value="@_loaderCommand" />
         <MudTextField T="string" Label="Username" @bind-Value="@_username" />
         <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
     </Content>
