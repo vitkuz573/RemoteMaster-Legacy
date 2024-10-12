@@ -28,6 +28,7 @@ public class HostInformationService : IHostInformationService
             .Where(nic => nic.OperationalStatus == OperationalStatus.Up)
             .Where(nic => nic.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet)
             .Where(nic => !IsVpnAdapter(nic))
+            .Where(nic => !IsVirtualAdapter(nic))
             .Where(nic => nic.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork && !ua.Address.ToString().StartsWith("169.254")))
             .Select(nic => new
             {
@@ -43,10 +44,20 @@ public class HostInformationService : IHostInformationService
         var descriptionLower = nic.Description.ToLower();
 
         return descriptionLower.Contains("vpn") ||
+               descriptionLower.Contains("tun");
+    }
+
+    private static bool IsVirtualAdapter(NetworkInterface nic)
+    {
+        var descriptionLower = nic.Description.ToLower();
+        var macAddress = nic.GetPhysicalAddress().ToString();
+
+        return string.IsNullOrEmpty(macAddress) ||
                descriptionLower.Contains("virtual") ||
-               descriptionLower.Contains("pseudo") ||
-               descriptionLower.Contains("tap-windows") ||
-               descriptionLower.Contains("tap");
+               descriptionLower.Contains("vmware") ||
+               descriptionLower.Contains("wi-fi direct") ||
+               descriptionLower.Contains("hyper-v") ||
+               descriptionLower.Contains("pseudo");
     }
 
     private static IPAddress GetIPv4Address(NetworkInterface networkInterface)
