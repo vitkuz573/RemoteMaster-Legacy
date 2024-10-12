@@ -53,6 +53,7 @@ public class HostInformationService : IHostInformationService
         var macAddress = nic.GetPhysicalAddress().ToString();
 
         return string.IsNullOrEmpty(macAddress) ||
+               descriptionLower.Contains("tap") ||
                descriptionLower.Contains("virtual") ||
                descriptionLower.Contains("vmware") ||
                descriptionLower.Contains("wi-fi direct") ||
