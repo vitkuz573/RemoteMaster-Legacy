@@ -2,15 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderService, IInstanceManagerService instanceManagerService) : IUpdaterInstanceService
+public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderService, IInstanceManagerService instanceManagerService, ILogger<UpdaterInstanceService> logger) : IUpdaterInstanceService
 {
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
@@ -48,7 +48,7 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting new instance of the host. Executable path: {ExecutablePath}", _executablePath);
+            logger.LogError(ex, "Error starting new instance of the host. Executable path: {ExecutablePath}", _executablePath);
         }
     }
 }

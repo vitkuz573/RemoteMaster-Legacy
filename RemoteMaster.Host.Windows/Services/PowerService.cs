@@ -2,25 +2,25 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
+public class PowerService(ITokenPrivilegeService tokenPrivilegeService, ILogger<PowerService> logger) : IPowerService
 {
     public void Reboot(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
-        Log.Information("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
+        logger.LogInformation("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
 
         if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
         {
-            Log.Error("Failed to adjust privileges for system reboot.");
+            logger.LogError("Failed to adjust privileges for system reboot.");
 
             return;
         }
@@ -37,11 +37,11 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
 
         if (!result)
         {
-            Log.Error("Failed to initiate system reboot.");
+            logger.LogError("Failed to initiate system reboot.");
         }
         else
         {
-            Log.Information("System reboot initiated successfully.");
+            logger.LogInformation("System reboot initiated successfully.");
         }
     }
 
@@ -49,11 +49,11 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
-        Log.Information("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
+        logger.LogInformation("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
 
         if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
         {
-            Log.Error("Failed to adjust privileges for system shutdown.");
+            logger.LogError("Failed to adjust privileges for system shutdown.");
 
             return;
         }
@@ -70,11 +70,11 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
 
         if (!result)
         {
-            Log.Error("Failed to initiate system shutdown.");
+            logger.LogError("Failed to initiate system shutdown.");
         }
         else
         {
-            Log.Information("System shutdown initiated successfully.");
+            logger.LogInformation("System shutdown initiated successfully.");
         }
     }
 }

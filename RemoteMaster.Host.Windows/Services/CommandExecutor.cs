@@ -4,15 +4,15 @@
 
 using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Shared.Models;
-using Serilog;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext, IProcessService processService) : ICommandExecutor
+public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext, IProcessService processService, ILogger<CommandExecutor> logger) : ICommandExecutor
 {
     public async Task ExecuteCommandAsync(string command)
     {
@@ -41,7 +41,7 @@ public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext,
         }
         catch (Exception ex)
         {
-            Log.Error($"Error executing command: {command}. Exception: {ex.Message}");
+            logger.LogError($"Error executing command: {command}. Exception: {ex.Message}");
         }
     }
 

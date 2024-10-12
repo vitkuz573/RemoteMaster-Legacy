@@ -5,16 +5,16 @@
 using System.Collections.Concurrent;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService(IDesktopService desktopService) : IInputService
+public sealed class InputService(IDesktopService desktopService, ILogger<InputService> logger) : IInputService
 {
     private readonly ConcurrentQueue<Action> _operationQueue = new();
     private readonly ManualResetEvent _queueEvent = new(false);
@@ -87,7 +87,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         {
             if (!BlockInput(block))
             {
-                Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
+                logger.LogError("Failed to block/unblock input. Error code: {ErrorCode}", Marshal.GetLastWin32Error());
             }
         }
     }
@@ -106,7 +106,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Exception occurred during operation processing");
+                    logger.LogError(ex, "Exception occurred during operation processing");
                 }
             }
 

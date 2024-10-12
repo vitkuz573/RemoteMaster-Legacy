@@ -4,24 +4,24 @@
 
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
-using Serilog;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
+public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
 {
     public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
         ArgumentNullException.ThrowIfNull(scriptExecutionRequest);
 
-        Log.Information("Executing script with shell: {Shell}", scriptExecutionRequest.Shell);
+        logger.LogInformation("Executing script with shell: {Shell}", scriptExecutionRequest.Shell);
 
         const string publicDirectory = @"C:\Users\Public";
 
@@ -35,7 +35,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         var fileName = $"{Guid.NewGuid()}{extension}";
         var tempFilePath = Path.Combine(publicDirectory, fileName);
 
-        Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
+        logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
 
         var encoding = scriptExecutionRequest.Shell switch
         {
@@ -52,7 +52,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         {
             if (!File.Exists(tempFilePath))
             {
-                Log.Error("Temp file was not created: {TempFilePath}", tempFilePath);
+                logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
 
                 return;
             }
@@ -92,7 +92,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while executing the script.");
+            logger.LogError(ex, "An error occurred while executing the script.");
         }
         finally
         {

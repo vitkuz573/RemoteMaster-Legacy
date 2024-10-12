@@ -4,9 +4,9 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
-using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -18,10 +18,12 @@ public class GdiCapturing : ScreenCapturingService
     private Bitmap _bitmap;
     private Graphics _memoryGraphics;
     private readonly ICursorRenderService _cursorRenderService;
+    private readonly ILogger<ScreenCapturingService> _logger;
 
-    public GdiCapturing(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
+    public GdiCapturing(ICursorRenderService cursorRenderService, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, logger)
     {
         _cursorRenderService = cursorRenderService;
+        _logger = logger;
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
         _memoryGraphics = Graphics.FromImage(_bitmap);
     }
@@ -44,7 +46,7 @@ public class GdiCapturing : ScreenCapturingService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Capturing error in GetFrame.");
+            _logger.LogError(ex, "Capturing error in GetFrame.");
 
             return null;
         }

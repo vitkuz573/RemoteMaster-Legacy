@@ -4,10 +4,10 @@
 
 using System.ComponentModel;
 using System.Security.Principal;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using Serilog;
 using Windows.Win32.NetworkManagement.NetManagement;
 using static Windows.Win32.PInvoke;
 
@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Windows.Services;
 /// <summary>
 /// Provides services for managing domain membership of the machine.
 /// </summary>
-public class DomainService(IPowerService powerService) : IDomainService
+public class DomainService(IPowerService powerService, ILogger<DomainService> logger) : IDomainService
 {
     /// <summary>
     /// Joins the machine to a domain.
@@ -90,25 +90,25 @@ public class DomainService(IPowerService powerService) : IDomainService
                         try
                         {
                             Directory.Delete(profileImagePath, true);
-                            Log.Information("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
+                            logger.LogInformation("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
 
                             profileListKey.DeleteSubKeyTree(sidString);
-                            Log.Information("Registry key for SID {SID} deleted successfully.", sidString);
+                            logger.LogInformation("Registry key for SID {SID} deleted successfully.", sidString);
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "Error deleting profile directory {ProfileImagePath}.", profileImagePathValue);
+                            logger.LogError(ex, "Error deleting profile directory {ProfileImagePath}.", profileImagePathValue);
                         }
                     }
                     else
                     {
-                        Log.Warning("Subkey {SidString} not found.", sidString);
+                        logger.LogWarning("Subkey {SidString} not found.", sidString);
                     }
                 }
             }
             else
             {
-                Log.Warning("Registry key {ProfileListPath} not found.", profileListPath);
+                logger.LogWarning("Registry key {ProfileListPath} not found.", profileListPath);
             }
         }
 

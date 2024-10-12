@@ -2,11 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
-using Serilog;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -18,17 +18,19 @@ public sealed class UserInstanceService : IUserInstanceService
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
     private readonly IInstanceManagerService _instanceManagerService;
     private readonly IProcessService _processService;
+    private readonly ILogger<UserInstanceService> _logger;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
     public bool IsRunning => _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, Argument));
 
-    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService)
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, ILogger<UserInstanceService> logger)
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
 
         _instanceManagerService = instanceManagerService;
         _processService = processService;
+        _logger = logger;
 
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
@@ -39,13 +41,13 @@ public sealed class UserInstanceService : IUserInstanceService
         {
             var processId = StartNewInstance();
 
-            Log.Information("Successfully started a new instance of the host.");
+            _logger.LogInformation("Successfully started a new instance of the host.");
 
             OnUserInstanceCreated(new UserInstanceCreatedEventArgs(processId));
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _currentExecutablePath);
+            _logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", _currentExecutablePath);
         }
     }
 
@@ -62,13 +64,13 @@ public sealed class UserInstanceService : IUserInstanceService
 
             try
             {
-                Log.Information("Attempting to kill process with ID: {ProcessId}.", process.Id);
+                _logger.LogInformation("Attempting to kill process with ID: {ProcessId}.", process.Id);
                 process.Kill();
-                Log.Information("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
+                _logger.LogInformation("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error stopping instance of the host. Process ID: {ProcessId}. Message: {Message}", process.Id, ex.Message);
+                _logger.LogError(ex, "Error stopping instance of the host. Process ID: {ProcessId}. Message: {Message}", process.Id, ex.Message);
             }
         }
     }

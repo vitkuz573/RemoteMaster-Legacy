@@ -4,15 +4,15 @@
 
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
-using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ChatWindowService : IHostedService
+public class ChatWindowService(ILogger<ChatWindowService> logger) : IHostedService
 {
     private const string ClassName = "ChatWindowClass";
 
@@ -45,7 +45,7 @@ public class ChatWindowService : IHostedService
     {
         if (!TryRegisterClass())
         {
-            Log.Error("Failed to register the window class.");
+            logger.LogError("Failed to register the window class.");
 
             return;
         }
@@ -54,7 +54,7 @@ public class ChatWindowService : IHostedService
 
         if (_hwnd.IsNull)
         {
-            Log.Error("Failed to create hidden window.");
+            logger.LogError("Failed to create hidden window.");
         }
 
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);

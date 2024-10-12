@@ -4,13 +4,13 @@
 
 using System.Diagnostics;
 using System.IO.Abstractions;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem) : IHostUninstaller
+public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -25,11 +25,11 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
                 hostService.Stop();
                 hostService.Delete();
 
-                Log.Information("{ServiceName} Service uninstalled successfully.", hostService.Name);
+                logger.LogInformation("{ServiceName} Service uninstalled successfully.", hostService.Name);
             }
             else
             {
-                Log.Information("{ServiceName} Service is not installed.", hostService.Name);
+                logger.LogInformation("{ServiceName} Service is not installed.", hostService.Name);
             }
 
             if (userInstanceService.IsRunning)
@@ -47,16 +47,16 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
             }
             else
             {
-                Log.Information("Current process is running from the application directory. Skipping deletion of files and directory.");
+                logger.LogInformation("Current process is running from the application directory. Skipping deletion of files and directory.");
             }
 
             hostLifecycleService.RemoveCertificate();
 
-            Log.Information("Uninstallation process completed successfully.");
+            logger.LogInformation("Uninstallation process completed successfully.");
         }
         catch (Exception ex)
         {
-            Log.Error("An error occurred: {Message}", ex.Message);
+            logger.LogError("An error occurred: {Message}", ex.Message);
         }
     }
 
@@ -64,7 +64,7 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
     {
         if (!fileSystem.Directory.Exists(directoryPath))
         {
-            Log.Information("Directory {DirectoryPath} does not exist, no files to delete.", directoryPath);
+            logger.LogInformation("Directory {DirectoryPath} does not exist, no files to delete.", directoryPath);
 
             return;
         }
@@ -76,13 +76,13 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
 
         try
         {
-            Log.Information("Attempting to delete directory: {DirectoryPath}", directoryPath);
+            logger.LogInformation("Attempting to delete directory: {DirectoryPath}", directoryPath);
             fileSystem.Directory.Delete(directoryPath, true);
-            Log.Information("{DirectoryPath} has been successfully deleted.", directoryPath);
+            logger.LogInformation("{DirectoryPath} has been successfully deleted.", directoryPath);
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to delete directory {DirectoryPath}: {Message}", directoryPath, ex.Message);
+            logger.LogError("Failed to delete directory {DirectoryPath}: {Message}", directoryPath, ex.Message);
         }
     }
 

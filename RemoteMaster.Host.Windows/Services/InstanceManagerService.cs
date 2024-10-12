@@ -3,13 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem) : IInstanceManagerService
+public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
     private string _executablePath = Environment.ProcessPath!;
 
@@ -25,13 +25,13 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
 
                 if (destinationDirectory != null && !fileSystem.Directory.Exists(destinationDirectory))
                 {
-                    Log.Information("Creating directory {DestinationDirectory} for the executable.", destinationDirectory);
+                    logger.LogInformation("Creating directory {DestinationDirectory} for the executable.", destinationDirectory);
                     fileSystem.Directory.CreateDirectory(destinationDirectory);
                 }
 
-                Log.Information("Copying executable from {ExecutablePath} to {DestinationPath}", _executablePath, destinationPath);
+                logger.LogInformation("Copying executable from {ExecutablePath} to {DestinationPath}", _executablePath, destinationPath);
                 fileSystem.File.Copy(_executablePath, destinationPath, true);
-                Log.Information("Successfully copied the executable.");
+                logger.LogInformation("Successfully copied the executable.");
 
                 _executablePath = destinationPath;
             }
@@ -42,19 +42,19 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
             process.StartInfo = startInfo;
 
             process.Start();
-            Log.Information("Started a new instance of the host with NativeProcess. Process ID: {ProcessId}", process.Id);
+            logger.LogInformation("Started a new instance of the host with NativeProcess. Process ID: {ProcessId}", process.Id);
 
             return process.Id;
         }
         catch (IOException ioEx)
         {
-            Log.Error(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", _executablePath, destinationPath);
+            logger.LogError(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", _executablePath, destinationPath);
 
             throw;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
+            logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
 
             throw;
         }

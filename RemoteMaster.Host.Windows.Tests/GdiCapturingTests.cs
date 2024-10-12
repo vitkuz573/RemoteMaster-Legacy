@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
@@ -13,17 +14,19 @@ namespace RemoteMaster.Host.Windows.Tests;
 public class GdiCapturingTests : IDisposable
 {
     private readonly Mock<IDesktopService> _mockDesktopService;
+    private readonly Mock<ILogger<ScreenCapturingService>> _mockLogger;
     private readonly GdiCapturing _gdiCapturing;
 
     public GdiCapturingTests()
     {
         Mock<ICursorRenderService> mockCursorRenderService = new();
         _mockDesktopService = new Mock<IDesktopService>();
+        _mockLogger = new Mock<ILogger<ScreenCapturingService>>();
 
         mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
         mockCursorRenderService.Setup(crs => crs.ClearCache());
 
-        _gdiCapturing = new GdiCapturing(mockCursorRenderService.Object, _mockDesktopService.Object);
+        _gdiCapturing = new GdiCapturing(mockCursorRenderService.Object, _mockDesktopService.Object, _mockLogger.Object);
     }
 
     [Fact]

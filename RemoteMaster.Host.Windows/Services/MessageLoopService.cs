@@ -4,8 +4,8 @@
 
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Windows.Abstractions;
-using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
@@ -19,10 +19,12 @@ public class MessageLoopService : IHostedService
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
     private readonly ISessionChangeEventService _sessionChangeEventService;
+    private readonly ILogger<MessageLoopService> _logger;
 
-    public MessageLoopService(ISessionChangeEventService sessionChangeEventService)
+    public MessageLoopService(ISessionChangeEventService sessionChangeEventService, ILogger<MessageLoopService> logger)
     {
         _sessionChangeEventService = sessionChangeEventService;
+        _logger = logger;
         _wndProcDelegate = WndProc;
     }
 
@@ -48,7 +50,7 @@ public class MessageLoopService : IHostedService
     {
         if (!TryRegisterClass())
         {
-            Log.Error("Failed to register the window class.");
+            _logger.LogError("Failed to register the window class.");
 
             return;
         }
@@ -57,7 +59,7 @@ public class MessageLoopService : IHostedService
 
         if (_hwnd.IsNull)
         {
-            Log.Error("Failed to create hidden window.");
+            _logger.LogError("Failed to create hidden window.");
 
             return;
         }
@@ -95,11 +97,11 @@ public class MessageLoopService : IHostedService
     {
         if (!WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS))
         {
-            Log.Error("Failed to register session notifications.");
+            _logger.LogError("Failed to register session notifications.");
         }
         else
         {
-            Log.Information("Successfully registered for session notifications.");
+            _logger.LogInformation("Successfully registered for session notifications.");
         }
     }
 

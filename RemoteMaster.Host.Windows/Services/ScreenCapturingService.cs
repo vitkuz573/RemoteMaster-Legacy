@@ -4,11 +4,12 @@
 
 using System.Drawing;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
-using Serilog;
+using Serilog.Core;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -17,6 +18,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
     private readonly IDesktopService _desktopService;
+    private readonly ILogger<ScreenCapturingService> _logger;
     private readonly object _screenBoundsLock = new();
 
     public bool DrawCursor { get; set; } = false;
@@ -37,9 +39,10 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    protected ScreenCapturingService(IDesktopService desktopService)
+    protected ScreenCapturingService(IDesktopService desktopService, ILogger<ScreenCapturingService> logger)
     {
         _desktopService = desktopService;
+        _logger = logger;
 
         Init();
     }
@@ -84,14 +87,14 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
                 if (!_desktopService.SwitchToInputDesktop())
                 {
-                    Log.Error("Failed to switch to input desktop. Last Win32 error code: {ErrorCode}", Marshal.GetLastWin32Error());
+                    _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {ErrorCode}", Marshal.GetLastWin32Error());
                 }
 
                 return GetFrame();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error while getting next frame.");
+                _logger.LogError(ex, "Error while getting next frame.");
 
                 return null;
             }

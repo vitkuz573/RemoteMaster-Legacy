@@ -3,13 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class WoLConfiguratorService(IRegistryService registryService, IProcessService processService) : IWoLConfiguratorService
+public class WoLConfiguratorService(IRegistryService registryService, IProcessService processService, ILogger<WoLConfiguratorService> logger) : IWoLConfiguratorService
 {
     private const string PowerSettingsKeyPath = @"SYSTEM\CurrentControlSet\Control\Session Manager\Power";
     private const string HiberbootEnabledValueName = "HiberbootEnabled";
@@ -77,7 +77,7 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while enabling Wake on LAN for all adapters.");
+            logger.LogError(ex, "An error occurred while enabling Wake on LAN for all adapters.");
             throw;
         }
     }

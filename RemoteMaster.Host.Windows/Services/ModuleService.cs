@@ -3,11 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.JsonContexts;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -15,8 +15,11 @@ public class ModuleService : IModuleService
 {
     private readonly Dictionary<string, IModule> _modules = [];
 
-    public ModuleService()
+    private readonly ILogger<ModuleService> _logger;
+    public ModuleService(ILogger<ModuleService> logger)
     {
+        _logger = logger;
+
         LoadModules();
     }
 
@@ -40,7 +43,7 @@ public class ModuleService : IModuleService
 
             if (!File.Exists(moduleInfoPath))
             {
-                Log.Warning($"No module-info.json in {directory}");
+                _logger.LogWarning("No module-info.json in {ModuleDirectory}", directory);
 
                 continue;
             }
@@ -59,7 +62,7 @@ public class ModuleService : IModuleService
             }
             catch (Exception ex)
             {
-                Log.Error($"Error loading module from {directory}: {ex.Message}");
+                _logger.LogError("Error loading module from {ModuleDirectory}: {Message}", directory, ex.Message);
             }
         }
     }

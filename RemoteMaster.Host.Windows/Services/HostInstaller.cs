@@ -6,6 +6,7 @@ using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.JsonContexts;
 using RemoteMaster.Host.Core.Models;
@@ -14,12 +15,11 @@ using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
-using Serilog;
 using Windows.Win32.Foundation;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInstaller(INetworkDriveService networkDriveService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem) : IHostInstaller
+public class HostInstaller(INetworkDriveService networkDriveService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -37,7 +37,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                 {
                     if (!MapNetworkDriveAsync(installRequest.ModulesPath, installRequest.UserCredentials))
                     {
-                        Log.Information("Install aborted.");
+                        logger.LogInformation("Install aborted.");
 
                         return;
                     }
@@ -47,7 +47,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
                 if (!Directory.Exists(modulesDirectory))
                 {
-                    Log.Error("Modules directory not found at path: {ModulesDirectory}", modulesDirectory);
+                    logger.LogError("Modules directory not found at path: {ModulesDirectory}", modulesDirectory);
                     return;
                 }
 
@@ -73,10 +73,10 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             var hostInformation = hostInformationService.GetHostInformation();
 
-            Log.Information("Starting installation...");
-            Log.Information("Server: {Server}", installRequest.Server);
-            Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
-            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}", hostInformation.Name, installRequest.Organization, installRequest.OrganizationalUnit);
+            logger.LogInformation("Starting installation...");
+            logger.LogInformation("Server: {Server}", installRequest.Server);
+            logger.LogInformation("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
+            logger.LogInformation("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}", hostInformation.Name, installRequest.Organization, installRequest.OrganizationalUnit);
 
             var hostService = serviceFactory.GetService("RCHost");
 
@@ -97,7 +97,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-            Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
+            logger.LogInformation("{ServiceName} installed and started successfully.", hostService.Name);
 
             await hostLifecycleService.RegisterAsync();
             await hostLifecycleService.GetCaCertificateAsync();
@@ -110,11 +110,11 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
         catch (Exception ex)
         {
-            Log.Error("An error occurred: {Message}", ex.Message);
+            logger.LogError("An error occurred: {Message}", ex.Message);
         }
     }
 
-    private static async Task InstallOrUpdateModuleAsync(string zipFilePath, string modulesFolderPath)
+    private async Task InstallOrUpdateModuleAsync(string zipFilePath, string modulesFolderPath)
     {
         try
         {
@@ -122,7 +122,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             if (moduleInfo == null)
             {
-                Log.Error("No module info found in zip file: {ZipFilePath}", zipFilePath);
+                logger.LogError("No module info found in zip file: {ZipFilePath}", zipFilePath);
                 
                 return;
             }
@@ -133,7 +133,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
                 if (entryPoint == null)
                 {
-                    Log.Error("Module {ModuleName} does not contain the required entry point: {EntryPoint}", moduleInfo.Name, moduleInfo.EntryPoint);
+                    logger.LogError("Module {ModuleName} does not contain the required entry point: {EntryPoint}", moduleInfo.Name, moduleInfo.EntryPoint);
                     
                     return;
                 }
@@ -144,7 +144,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             if (installedModuleInfo != null && moduleInfo.Version <= installedModuleInfo.Version)
             {
-                Log.Information("Module {ModuleName} is already up-to-date. Skipping.", moduleInfo.Name);
+                logger.LogInformation("Module {ModuleName} is already up-to-date. Skipping.", moduleInfo.Name);
                 
                 return;
             }
@@ -156,29 +156,29 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
             
-            Log.Information("Module {ModuleName} extracted to {TargetPath}", moduleInfo.Name, moduleTargetPath);
-            Log.Information("Module {ModuleName} installed successfully with entry point {Executable}.", moduleInfo.Name, moduleInfo.EntryPoint);
+            logger.LogInformation("Module {ModuleName} extracted to {TargetPath}", moduleInfo.Name, moduleTargetPath);
+            logger.LogInformation("Module {ModuleName} installed successfully with entry point {Executable}.", moduleInfo.Name, moduleInfo.EntryPoint);
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to install module from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
+            logger.LogError("Failed to install module from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
         }
     }
 
     private bool MapNetworkDriveAsync(string folderPath, Credentials? userCredentials)
     {
-        Log.Information($"Attempting to map network drive with remote path: {folderPath}");
+        logger.LogInformation("Attempting to map network drive with remote path: {FolderPath}", folderPath);
 
         var isMapped = networkDriveService.MapNetworkDrive(folderPath, userCredentials?.UserName, userCredentials?.Password);
 
         if (!isMapped)
         {
-            Log.Error($"Failed to map network drive with remote path {folderPath}.");
-            Log.Error("Unable to map network drive with the provided credentials.");
+            logger.LogError("Failed to map network drive with remote path {FolderPath}.", folderPath);
+            logger.LogError("Unable to map network drive with the provided credentials.");
         }
         else
         {
-            Log.Information($"Successfully mapped network drive with remote path: {folderPath}");
+            logger.LogInformation("Successfully mapped network drive with remote path: {FolderPath}", folderPath);
         }
 
         return isMapped;
@@ -186,16 +186,16 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
     private void UnmapNetworkDriveAsync(string folderPath)
     {
-        Log.Information($"Attempting to unmap network drive with remote path: {folderPath}");
+        logger.LogInformation("Attempting to unmap network drive with remote path: {FolderPath}", folderPath);
         var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
 
         if (!isCancelled)
         {
-            Log.Error($"Failed to unmap network drive with remote path {folderPath}.");
+            logger.LogError("Failed to unmap network drive with remote path {FolderPath}.", folderPath);
         }
         else
         {
-            Log.Information($"Successfully unmapped network drive with remote path: {folderPath}");
+            logger.LogInformation("Successfully unmapped network drive with remote path: {FolderPath}", folderPath);
         }
     }
 
@@ -225,7 +225,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
     }
 
-    private static async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
+    private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
     {
         try
         {
@@ -258,7 +258,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                     continue;
                 }
 
-                Log.Error($"File {file.Name} copied with errors. Checksum does not match.");
+                logger.LogError("File {FileName} copied with errors. Checksum does not match.", file.Name);
 
                 return false;
             }
@@ -277,13 +277,13 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}");
+            logger.LogError("Failed to copy directory {SourceDir} to {DestDir}: {Message}", sourceDir, destDir, ex.Message);
 
             return false;
         }
     }
 
-    private static async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
+    private async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
     {
         var attempts = 0;
 
@@ -298,7 +298,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                     break;
                 }
 
-                Log.Error($"Checksum verification failed for file {sourceFile}.");
+                logger.LogError("Checksum verification failed for file {SourceFile}.", sourceFile);
 
                 return false;
             }
@@ -309,7 +309,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                     throw;
                 }
 
-                Log.Warning($"File {sourceFile} is currently in use. Retrying in 1 second...");
+                logger.LogWarning("File {SourceFile} is currently in use. Retrying in 1 second...", sourceFile);
                 await Task.Delay(1000);
             }
         }
@@ -317,21 +317,21 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         return true;
     }
 
-    private static bool VerifyChecksum(string sourceFilePath, string destFilePath)
+    private bool VerifyChecksum(string sourceFilePath, string destFilePath)
     {
         var sourceChecksum = GenerateChecksum(sourceFilePath);
         var destChecksum = GenerateChecksum(destFilePath);
 
-        Log.Information($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].");
+        logger.LogInformation("Verifying checksum: {SourceFilePath} [Source Checksum: {SourceChecksum}] -> {DestFilePath} [Destination Checksum: {DestChecksum}].", sourceFilePath, sourceChecksum, destFilePath, destChecksum);
 
         if (sourceChecksum != destChecksum)
         {
-            Log.Error("Checksum mismatch. The files may have been tampered with or corrupted.");
+            logger.LogError("Checksum mismatch. The files may have been tampered with or corrupted.");
 
             return false;
         }
 
-        Log.Information("Checksum verification successful. No differences found.");
+        logger.LogInformation("Checksum verification successful. No differences found.");
 
         return true;
     }
@@ -345,7 +345,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 
-    private static async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
+    private async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
     {
         try
         {
@@ -363,7 +363,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
         catch (Exception ex)
         {
-            Log.Error("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
+            logger.LogError("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
 
             return null;
         }

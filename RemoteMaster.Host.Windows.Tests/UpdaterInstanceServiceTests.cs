@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
@@ -15,13 +16,15 @@ public class UpdaterInstanceServiceTests
 {
     private readonly Mock<IArgumentBuilderService> _mockArgumentBuilderService;
     private readonly Mock<IInstanceManagerService> _mockInstanceStarterService;
+    private readonly Mock<ILogger<UpdaterInstanceService>> _mockLogger;
     private readonly UpdaterInstanceService _service;
 
     public UpdaterInstanceServiceTests()
     {
         _mockArgumentBuilderService = new Mock<IArgumentBuilderService>();
         _mockInstanceStarterService = new Mock<IInstanceManagerService>();
-        _service = new UpdaterInstanceService(_mockArgumentBuilderService.Object, _mockInstanceStarterService.Object);
+        _mockLogger = new Mock<ILogger<UpdaterInstanceService>>();
+        _service = new UpdaterInstanceService(_mockArgumentBuilderService.Object, _mockInstanceStarterService.Object, _mockLogger.Object);
     }
 
     [Fact]

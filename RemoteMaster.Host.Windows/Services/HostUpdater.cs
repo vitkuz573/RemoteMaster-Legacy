@@ -8,19 +8,19 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Core.JsonContexts;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
-using Serilog;
 using Windows.Win32.Foundation;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IHostUpdater
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -521,13 +521,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         switch (messageType)
         {
             case MessageType.Information:
-                Log.Information(message);
+                logger.LogInformation("{Message}", message);
                 break;
             case MessageType.Warning:
-                Log.Warning(message);
+                logger.LogWarning("{Message}", message);
                 break;
             case MessageType.Error:
-                Log.Error(message);
+                logger.LogError("{Message}", message);
                 break;
         }
 
@@ -560,7 +560,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
-    private static async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
+    private async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
     {
         try
         {
@@ -578,7 +578,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
         catch (Exception ex)
         {
-            Log.Error("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
+            logger.LogError("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
             
             return null;
         }
