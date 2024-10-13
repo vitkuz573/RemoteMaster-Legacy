@@ -9,7 +9,6 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
-using Serilog.Core;
 
 namespace RemoteMaster.Host.Windows.Services;
 
