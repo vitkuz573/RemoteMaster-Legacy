@@ -7,7 +7,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class TelegramBotUnitOfWork(TelegramBotDbContext context, ITelegramBotRepository telegramBots) : UnitOfWork<TelegramBotDbContext>(context), ITelegramBotUnitOfWork
+public class TelegramBotUnitOfWork(TelegramBotDbContext context, ITelegramBotRepository telegramBots, ILogger<UnitOfWork<TelegramBotDbContext>> logger) : UnitOfWork<TelegramBotDbContext>(context, logger), ITelegramBotUnitOfWork
 {
     public ITelegramBotRepository TelegramBots { get; } = telegramBots;
 }
