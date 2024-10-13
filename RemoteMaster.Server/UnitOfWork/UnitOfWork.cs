@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.UnitOfWork;
 
 public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>> logger) : IUnitOfWork where TContext : DbContext
 {
-    private IDbContextTransaction _transaction;
+    private IDbContextTransaction? _transaction;
     private bool _disposed;
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
