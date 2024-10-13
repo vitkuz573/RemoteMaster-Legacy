@@ -136,7 +136,11 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
             }
             else
             {
-                throw new Exception("Error: Invalid login attempt.");
+                return new AuthenticationResult
+                {
+                    Status = AuthenticationStatus.InvalidCredentials,
+                    ErrorMessage = "Error: Invalid login attempt."
+                };
             }
         }
         catch (Exception ex)
