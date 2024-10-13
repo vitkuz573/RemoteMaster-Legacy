@@ -8,34 +8,75 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class UnitOfWork<TContext>(TContext context) : IUnitOfWork where TContext : DbContext
+public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>> logger) : IUnitOfWork where TContext : DbContext
 {
     private IDbContextTransaction _transaction;
     private bool _disposed;
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            logger.LogInformation("Committing changes...");
+
+            return await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error committing changes: {Message}", ex.Message);
+            throw;
+        }
     }
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            logger.LogInformation("Beginning transaction...");
+
+            _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error beginning transaction: {Message}", ex.Message);
+            throw;
+        }
     }
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction != null)
+        try
         {
-            await _transaction.CommitAsync(cancellationToken);
+            if (_transaction != null)
+            {
+                logger.LogInformation("Committing transaction...");
+
+                await _transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error committing transaction: {Message}", ex.Message);
+            await RollbackTransactionAsync(cancellationToken);
+            throw;
         }
     }
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction != null)
+        try
         {
-            await _transaction.RollbackAsync(cancellationToken);
+            if (_transaction != null)
+            {
+                logger.LogWarning("Rolling back transaction...");
+
+                await _transaction.RollbackAsync(cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error rolling back transaction: {Message}", ex.Message);
+            throw;
         }
     }
 
@@ -47,6 +88,8 @@ public class UnitOfWork<TContext>(TContext context) : IUnitOfWork where TContext
             {
                 _transaction?.Dispose();
                 context.Dispose();
+
+                logger.LogInformation("Context and transaction disposed.");
             }
 
             _disposed = true;
