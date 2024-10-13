@@ -46,7 +46,7 @@ public class SecurityInitializationService(ICertificateAuthorityService certific
             {
                 foreach (var error in result.Errors)
                 {
-                    logger.LogError($"Error creating service user: {error.Description}");
+                    logger.LogError("Error creating service user: {ErrorDescription}", error.Description);
                 }
             }
         }

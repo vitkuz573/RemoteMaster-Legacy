@@ -137,7 +137,7 @@ public partial class LogsViewer : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
             }
         }
 

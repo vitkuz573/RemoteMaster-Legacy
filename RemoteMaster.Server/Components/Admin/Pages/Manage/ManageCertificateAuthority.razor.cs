@@ -39,7 +39,7 @@ public partial class ManageCertificateAuthority
         }
         else
         {
-            Logger.LogError($"Error retrieving CA certificate: {caCertificateResult.Errors.First().Message}");
+            Logger.LogError("Error retrieving CA certificate: {Message}", caCertificateResult.Errors.First().Message);
         }
     }
 
@@ -69,12 +69,12 @@ public partial class ManageCertificateAuthority
             }
             else
             {
-                Logger.LogError($"Error retrieving CA certificate for export: {caCertificateResult.Errors.First().Message}");
+                Logger.LogError("Error retrieving CA certificate for export: {Message}", caCertificateResult.Errors.First().Message);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Error exporting certificate: {ex.Message}");
+            Logger.LogError("Error exporting certificate: {Message}", ex.Message);
 
             throw;
         }

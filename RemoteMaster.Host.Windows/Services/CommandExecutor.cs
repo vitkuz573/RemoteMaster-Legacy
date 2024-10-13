@@ -41,7 +41,7 @@ public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext,
         }
         catch (Exception ex)
         {
-            logger.LogError($"Error executing command: {command}. Exception: {ex.Message}");
+            logger.LogError("Error executing command: {Command}. Exception: {Message}", command, ex.Message);
         }
     }
 

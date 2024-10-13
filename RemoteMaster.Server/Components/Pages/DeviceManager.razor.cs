@@ -30,7 +30,7 @@ public partial class DeviceManager : IAsyncDisposable
     private List<DeviceDto> _deviceItems = [];
     private bool _firstRenderCompleted;
 
-    private readonly Dictionary<string, bool> _devicePanelState = new();
+    private readonly Dictionary<string, bool> _devicePanelState = [];
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -141,7 +141,7 @@ public partial class DeviceManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
             }
         }
 
