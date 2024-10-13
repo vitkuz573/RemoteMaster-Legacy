@@ -4,9 +4,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ICertificateUnitOfWork : IDisposable
+public interface ICertificateUnitOfWork : IUnitOfWork
 {
     ICrlRepository Crls { get; }
-
-    Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }

@@ -7,21 +7,11 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class ApplicationUnitOfWork(ApplicationDbContext context, IApplicationClaimRepository applicationClaimRepository, IApplicationUserRepository applicationUserRepository, IOrganizationRepository organizationRepository) : IApplicationUnitOfWork
+public class ApplicationUnitOfWork(ApplicationDbContext context, IApplicationClaimRepository applicationClaimRepository, IApplicationUserRepository applicationUserRepository, IOrganizationRepository organizationRepository) : UnitOfWork<ApplicationDbContext>(context), IApplicationUnitOfWork
 {
     public IApplicationClaimRepository ApplicationClaims { get; } = applicationClaimRepository;
 
     public IApplicationUserRepository ApplicationUsers { get; } = applicationUserRepository;
 
     public IOrganizationRepository Organizations { get; } = organizationRepository;
-
-    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
-    {
-        return await context.SaveChangesAsync(cancellationToken);
-    }
-
-    public void Dispose()
-    {
-        context.Dispose();
-    }
 }

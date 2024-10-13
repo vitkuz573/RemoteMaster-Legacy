@@ -4,9 +4,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ITelegramBotUnitOfWork : IDisposable
+public interface ITelegramBotUnitOfWork : IUnitOfWork
 {
     ITelegramBotRepository TelegramBots { get; }
-
-    Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }

@@ -7,17 +7,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class CertificateUnitOfWork(CertificateDbContext context, ICrlRepository crls) : ICertificateUnitOfWork
+public class CertificateUnitOfWork(CertificateDbContext context, ICrlRepository crls) : UnitOfWork<CertificateDbContext>(context), ICertificateUnitOfWork
 {
     public ICrlRepository Crls { get; } = crls;
-
-    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
-    {
-        return await context.SaveChangesAsync(cancellationToken);
-    }
-
-    public void Dispose()
-    {
-        context.Dispose();
-    }
 }

@@ -7,17 +7,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class TelegramBotUnitOfWork(TelegramBotDbContext context, ITelegramBotRepository telegramBots) : ITelegramBotUnitOfWork
+public class TelegramBotUnitOfWork(TelegramBotDbContext context, ITelegramBotRepository telegramBots) : UnitOfWork<TelegramBotDbContext>(context), ITelegramBotUnitOfWork
 {
     public ITelegramBotRepository TelegramBots { get; } = telegramBots;
-
-    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
-    {
-        return await context.SaveChangesAsync(cancellationToken);
-    }
-
-    public void Dispose()
-    {
-        context.Dispose();
-    }
 }

@@ -4,13 +4,11 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IApplicationUnitOfWork : IDisposable
+public interface IApplicationUnitOfWork : IUnitOfWork
 {
     IApplicationClaimRepository ApplicationClaims { get; }
 
     IApplicationUserRepository ApplicationUsers { get; }
 
     IOrganizationRepository Organizations { get; }
-
-    Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }
