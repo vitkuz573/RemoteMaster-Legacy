@@ -137,8 +137,6 @@ public partial class FileManager : IAsyncDisposable
 
         _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
         {
-            Logger.LogInformation("Received {Count} files and directories.", fileSystemItems.Count);
-
             _fileSystemItems = fileSystemItems;
             _allFileSystemItems = [.. _fileSystemItems];
 
