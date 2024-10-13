@@ -62,7 +62,7 @@ public class OrganizationServiceTests
         // Assert
         Assert.Equal("Organization created successfully.", result);
         _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.AddAsync(It.IsAny<Organization>()), Times.Once);
-        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class OrganizationServiceTests
         // Assert
         Assert.Equal("Organization updated successfully.", result);
         _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.Update(organization), Times.Once);
-        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class OrganizationServiceTests
         // Assert
         Assert.Equal("Error: Organization not found.", result);
         _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.Update(It.IsAny<Organization>()), Times.Never);
-        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _applicationUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class OrganizationServiceTests
         // Assert
         Assert.Equal("Organization deleted successfully.", result);
         _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.Delete(organization), Times.Once);
-        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -134,6 +134,6 @@ public class OrganizationServiceTests
 
         // Assert
         _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.RemoveHostAsync(organization.Id, unit.Id, host.Id), Times.Once);
-        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

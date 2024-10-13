@@ -8,5 +8,5 @@ public interface ITelegramBotUnitOfWork : IDisposable
 {
     ITelegramBotRepository TelegramBots { get; }
 
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }

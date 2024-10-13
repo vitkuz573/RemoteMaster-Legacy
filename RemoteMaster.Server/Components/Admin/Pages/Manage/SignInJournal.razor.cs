@@ -230,7 +230,7 @@ public partial class SignInJournal
     private async Task ClearJournal()
     {
         ApplicationUnitOfWork.ApplicationUsers.ClearSignInEntries();
-        await ApplicationUnitOfWork.SaveChangesAsync();
+        await ApplicationUnitOfWork.CommitAsync();
 
         _signInEntries.Clear();
     }

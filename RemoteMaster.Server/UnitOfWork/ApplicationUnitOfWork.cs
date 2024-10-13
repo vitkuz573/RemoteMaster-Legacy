@@ -15,7 +15,7 @@ public class ApplicationUnitOfWork(ApplicationDbContext context, IApplicationCla
 
     public IOrganizationRepository Organizations { get; } = organizationRepository;
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
         return await context.SaveChangesAsync(cancellationToken);
     }

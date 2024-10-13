@@ -45,14 +45,14 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
                 await ProcessTaskAsync(task, tokenService);
 
                 await applicationUnitOfWork.Organizations.MarkCertificateRenewalTaskCompleted(task.Id);
-                await applicationUnitOfWork.SaveChangesAsync();
+                await applicationUnitOfWork.CommitAsync();
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error processing task for host: {HostName}", task.Host!.Name);
 
                 await applicationUnitOfWork.Organizations.MarkCertificateRenewalTaskFailed(task.Id);
-                await applicationUnitOfWork.SaveChangesAsync();
+                await applicationUnitOfWork.CommitAsync();
             }
         }
     }

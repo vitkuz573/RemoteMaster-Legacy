@@ -57,7 +57,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
             await applicationUnitOfWork.Organizations.AddAsync(newOrganization);
         }
 
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         return dto.Id.HasValue ? "Organization updated successfully." : "Organization created successfully.";
     }
@@ -67,7 +67,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         ArgumentNullException.ThrowIfNull(organization);
 
         applicationUnitOfWork.Organizations.Delete(organization);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         return "Organization deleted successfully.";
     }
@@ -88,7 +88,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
             organization?.AddUser(user.Id);
         }
 
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
     }
 
     public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(string userId)
@@ -114,6 +114,6 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
 
         await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
         applicationUnitOfWork.Organizations.Update(organization);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
     }
 }

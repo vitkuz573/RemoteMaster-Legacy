@@ -12,5 +12,5 @@ public interface IApplicationUnitOfWork : IDisposable
 
     IOrganizationRepository Organizations { get; }
 
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }

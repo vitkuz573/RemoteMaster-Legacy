@@ -79,7 +79,7 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
         }
 
         applicationUnitOfWork.Organizations.Update(organization);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
     }
@@ -101,7 +101,7 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
             organization.RemoveOrganizationalUnit(organizationalUnit.Id);
 
             applicationUnitOfWork.Organizations.Update(organization);
-            await applicationUnitOfWork.SaveChangesAsync();
+            await applicationUnitOfWork.CommitAsync();
 
             return "Organizational unit deleted successfully.";
         }
@@ -140,6 +140,6 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
             unit?.AddUser(user.Id);
         }
 
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
     }
 }

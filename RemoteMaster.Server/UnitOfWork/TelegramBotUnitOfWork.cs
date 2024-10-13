@@ -11,7 +11,7 @@ public class TelegramBotUnitOfWork(TelegramBotDbContext context, ITelegramBotRep
 {
     public ITelegramBotRepository TelegramBots { get; } = telegramBots;
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
         return await context.SaveChangesAsync(cancellationToken);
     }

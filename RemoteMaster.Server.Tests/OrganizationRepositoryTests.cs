@@ -89,12 +89,12 @@ public class OrganizationRepositoryTests
         _organizationRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Organization>()))
             .Callback<Organization>(org => _context.Organizations.Add(org));
 
-        _unitOfWorkMock.Setup(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(uow => uow.CommitAsync(It.IsAny<CancellationToken>()))
             .Callback(() => _context.SaveChangesAsync());
 
         // Act
         await _repository.AddAsync(organization);
-        await _unitOfWorkMock.Object.SaveChangesAsync();
+        await _unitOfWorkMock.Object.CommitAsync();
 
         // Assert
         Assert.Contains(_context.Organizations, o => o.Name == "New Org");
@@ -111,7 +111,7 @@ public class OrganizationRepositoryTests
         // Act
         organization.SetName("Updated Org");
         _repository.Update(organization);
-        await _unitOfWorkMock.Object.SaveChangesAsync();
+        await _unitOfWorkMock.Object.CommitAsync();
 
         // Assert
         var updatedOrganization = await _repository.GetByIdAsync(organization.Id);
@@ -129,12 +129,12 @@ public class OrganizationRepositoryTests
         _organizationRepositoryMock.Setup(repo => repo.Delete(It.IsAny<Organization>()))
             .Callback<Organization>(org => _context.Organizations.Remove(org));
 
-        _unitOfWorkMock.Setup(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(uow => uow.CommitAsync(It.IsAny<CancellationToken>()))
             .Callback(() => _context.SaveChangesAsync());
 
         // Act
         _repository.Delete(organization);
-        await _unitOfWorkMock.Object.SaveChangesAsync();
+        await _unitOfWorkMock.Object.CommitAsync();
 
         // Assert
         var result = await _repository.GetByIdAsync(organization.Id);
@@ -160,7 +160,7 @@ public class OrganizationRepositoryTests
 
         // Act
         await _repository.RemoveHostAsync(organization.Id, unit.Id, hostId);
-        await _unitOfWorkMock.Object.SaveChangesAsync();
+        await _unitOfWorkMock.Object.CommitAsync();
 
         // Assert
         var updatedOrganization = await _repository.GetByIdAsync(organization.Id);

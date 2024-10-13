@@ -67,7 +67,7 @@ public class CrlServiceTests
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
         Assert.Contains(crl.RevokedCertificates, rc => rc.SerialNumber.Value == serialNumberValue && rc.Reason == reason);
 
-        _certificateUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _certificateUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class CrlServiceTests
         Assert.NotNull(result.ValueOrDefault);
         Assert.NotEmpty(result.ValueOrDefault);
 
-        _certificateUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _certificateUnitOfWorkMock.Verify(uow => uow.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

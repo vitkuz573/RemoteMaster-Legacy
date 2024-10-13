@@ -55,7 +55,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         }
 
         applicationUnitOfWork.ApplicationUsers.Update(user);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
     }
@@ -93,7 +93,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         }
 
         applicationUnitOfWork.ApplicationUsers.Update(user);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         logger.LogInformation("All refresh tokens for user {UserId} have been revoked. Reason: {RevocationReason}", userId, revocationReason);
 
@@ -130,7 +130,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
             applicationUnitOfWork.ApplicationUsers.Update(user);
         }
 
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         logger.LogInformation("Cleaned up expired or revoked refresh tokens.");
 

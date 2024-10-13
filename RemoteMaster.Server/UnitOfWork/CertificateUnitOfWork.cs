@@ -11,7 +11,7 @@ public class CertificateUnitOfWork(CertificateDbContext context, ICrlRepository 
 {
     public ICrlRepository Crls { get; } = crls;
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
         return await context.SaveChangesAsync(cancellationToken);
     }

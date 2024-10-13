@@ -139,7 +139,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             parentUnit.AddHost(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
 
             applicationUnitOfWork.Organizations.Update(organizationResult.Value);
-            await applicationUnitOfWork.SaveChangesAsync();
+            await applicationUnitOfWork.CommitAsync();
 
             var successMessage = $"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
             
@@ -170,7 +170,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         var organization = host.Parent.Organization;
 
         applicationUnitOfWork.Organizations.Update(organization);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
 
         return Result.Ok();
     }
@@ -216,7 +216,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             }
 
             await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationResult.Value.Id, parentUnit.Id, host.Id);
-            await applicationUnitOfWork.SaveChangesAsync();
+            await applicationUnitOfWork.CommitAsync();
 
             var successMessage = $"Host unregistered: `{request.MacAddress}` from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
 
@@ -278,7 +278,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             host.SetIpAddress(request.IpAddress);
 
             applicationUnitOfWork.Organizations.Update(organizationResult.Value);
-            await applicationUnitOfWork.SaveChangesAsync();
+            await applicationUnitOfWork.CommitAsync();
 
             var successMessage = $"Host information updated: {host.Name} (`{host.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
 

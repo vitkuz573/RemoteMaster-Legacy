@@ -154,7 +154,7 @@ public partial class MoveHostsDialog
                 await ApplicationUnitOfWork.Organizations.MoveHostAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
             }
 
-            await ApplicationUnitOfWork.SaveChangesAsync();
+            await ApplicationUnitOfWork.CommitAsync();
 
             await OnHostsMoved.InvokeAsync(Hosts.Keys);
 

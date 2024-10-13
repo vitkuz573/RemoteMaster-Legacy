@@ -18,6 +18,6 @@ public class ApplicationUserService(IApplicationUnitOfWork applicationUnitOfWork
         var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
 
         await applicationUnitOfWork.ApplicationUsers.AddSignInEntryAsync(user.Id, isSuccessful, ipAddress);
-        await applicationUnitOfWork.SaveChangesAsync();
+        await applicationUnitOfWork.CommitAsync();
     }
 }

@@ -8,5 +8,5 @@ public interface ICertificateUnitOfWork : IDisposable
 {
     ICrlRepository Crls { get; }
 
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<int> CommitAsync(CancellationToken cancellationToken = default);
 }

@@ -41,7 +41,7 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
                 await certificateUnitOfWork.Crls.AddAsync(crl);
             }
 
-            await certificateUnitOfWork.SaveChangesAsync();
+            await certificateUnitOfWork.CommitAsync();
 
             logger.LogInformation("Certificate with serial number {SerialNumber} has been successfully revoked.", serialNumber);
 
@@ -97,7 +97,7 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
                 await certificateUnitOfWork.Crls.AddAsync(crl);
             }
 
-            await certificateUnitOfWork.SaveChangesAsync();
+            await certificateUnitOfWork.CommitAsync();
 
             return Result.Ok(crlData);
         }

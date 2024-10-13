@@ -166,7 +166,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
 
             await applicationUnitOfWork.ApplicationClaims.AddAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.DisplayName, matchingClaim.Description));
 
-            await applicationUnitOfWork.SaveChangesAsync();
+            await applicationUnitOfWork.CommitAsync();
         }
     }
 

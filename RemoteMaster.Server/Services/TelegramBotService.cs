@@ -24,7 +24,7 @@ public class TelegramBotService(ITelegramBotUnitOfWork telegramBotUnitOfWork) : 
     public async Task UpdateBotSettingsAsync(TelegramBot telegramBot)
     {
         telegramBotUnitOfWork.TelegramBots.Update(telegramBot);
-        await telegramBotUnitOfWork.SaveChangesAsync();
+        await telegramBotUnitOfWork.CommitAsync();
     }
 
     public async Task AddNewChatIdAsync(int botId, int newChatId)
