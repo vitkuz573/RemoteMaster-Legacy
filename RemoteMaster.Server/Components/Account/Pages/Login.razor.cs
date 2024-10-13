@@ -43,91 +43,48 @@ public partial class Login
     public async Task LoginUser()
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress ?? IPAddress.None;
-        var user = await UserManager.FindByNameAsync(Input.Username);
+        var result = await AuthenticationService.LoginAsync(Input.Username, Input.Password, ipAddress, ReturnUrl);
 
-        if (user == null)
+        switch (result.Status)
         {
-            _errorMessage = "Error: Invalid login attempt.";
-            return;
-        }
+            case AuthenticationStatus.Success:
+                RedirectManager.RedirectTo(result.RedirectUrl ?? "/");
+                break;
 
-        var userRoles = await UserManager.GetRolesAsync(user);
-
-        if (!userRoles.Any())
-        {
-            _errorMessage = "Error: User does not belong to any roles.";
-            await ApplicationUserService.AddSignInEntry(user, false);
-            return;
-        }
-
-        var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
-        var isLocalhost = IPAddress.IsLoopback(ipAddress);
-
-        if (isRootAdmin && !isLocalhost)
-        {
-            Logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
-            _errorMessage = "Error: RootAdministrator access is restricted to localhost.";
-            await ApplicationUserService.AddSignInEntry(user, false);
-            return;
-        }
-
-        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
-
-        if (result.Succeeded)
-        {
-            if (isRootAdmin && isLocalhost)
-            {
-                Logger.LogInformation("RootAdministrator logged in from localhost. Redirecting to Admin page.");
-                await ApplicationUserService.AddSignInEntry(user, true);
-                RedirectManager.RedirectTo("Admin");
-                return;
-            }
-
-            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveRevocation);
-
-            Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
-
-            var tokenDataResult = await TokenService.GenerateTokensAsync(user.Id);
-
-            if (tokenDataResult.IsSuccess)
-            {
-                var storeTokensResult = await TokenStorageService.StoreTokensAsync(user.Id, tokenDataResult.Value);
-
-                if (storeTokensResult.IsSuccess)
+            case AuthenticationStatus.RequiresTwoFactor:
+                RedirectManager.RedirectTo("Account/LoginWith2fa", new()
                 {
-                    Logger.LogInformation("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
-                    await ApplicationUserService.AddSignInEntry(user, true);
-                    RedirectManager.RedirectTo(ReturnUrl);
-                }
-                else
-                {
-                    _errorMessage = "Error: Failed to store tokens.";
-                    await ApplicationUserService.AddSignInEntry(user, false);
-                }
-            }
-            else
-            {
+                    ["returnUrl"] = ReturnUrl
+                });
+                break;
+
+            case AuthenticationStatus.LockedOut:
+                _errorMessage = "Error: Your account has been locked out.";
+                break;
+
+            case AuthenticationStatus.InvalidCredentials:
+                _errorMessage = "Error: Invalid login attempt.";
+                break;
+
+            case AuthenticationStatus.NoRolesAssigned:
+                _errorMessage = "Error: User does not belong to any roles.";
+                break;
+
+            case AuthenticationStatus.RootAdminAccessDenied:
+                _errorMessage = "Error: RootAdministrator access is restricted to localhost.";
+                break;
+
+            case AuthenticationStatus.TokenGenerationFailed:
                 _errorMessage = "Error: Failed to generate tokens.";
-                await ApplicationUserService.AddSignInEntry(user, false);
-            }
-        }
-        else if (result.RequiresTwoFactor)
-        {
-            RedirectManager.RedirectTo("Account/LoginWith2fa", new()
-            {
-                ["returnUrl"] = ReturnUrl
-            });
-        }
-        else if (result.IsLockedOut)
-        {
-            Logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
-            _errorMessage = "Error: Your account has been locked out.";
-            await ApplicationUserService.AddSignInEntry(user, false);
-        }
-        else
-        {
-            _errorMessage = "Error: Invalid login attempt.";
-            await ApplicationUserService.AddSignInEntry(user, false);
+                break;
+
+            case AuthenticationStatus.TokenStorageFailed:
+                _errorMessage = "Error: Failed to store tokens.";
+                break;
+
+            default:
+                _errorMessage = "An unknown error occurred.";
+                break;
         }
     }
 

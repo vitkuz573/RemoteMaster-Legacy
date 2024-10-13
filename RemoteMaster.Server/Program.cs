@@ -161,6 +161,7 @@ public static class Program
         services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
         services.AddScoped<ICertificateUnitOfWork, CertificateUnitOfWork>();
         services.AddScoped<ITelegramBotUnitOfWork, TelegramBotUnitOfWork>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
