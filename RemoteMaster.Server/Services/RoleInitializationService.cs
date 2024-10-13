@@ -117,14 +117,14 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
     {
         using var scope = serviceProvider.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var applicationClaimRepository = scope.ServiceProvider.GetRequiredService<IApplicationClaimRepository>();
+        var applicationUnitOfWork = scope.ServiceProvider.GetRequiredService<IApplicationUnitOfWork>();
 
         foreach (var role in _roles)
         {
             await EnsureRoleExists(roleManager, role);
         }
 
-        await EnsureClaimsExist(applicationClaimRepository);
+        await EnsureClaimsExist(applicationUnitOfWork);
         await AssignClaimsToRoles(roleManager);
     }
 
@@ -149,13 +149,13 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
         }
     }
 
-    private async Task EnsureClaimsExist(IApplicationClaimRepository applicationClaimRepository)
+    private async Task EnsureClaimsExist(IApplicationUnitOfWork applicationUnitOfWork)
     {
         var claims = _roleClaims.SelectMany(rc => rc.Value).Distinct().ToList();
 
         foreach (var claim in claims)
         {
-            var existingClaims = await applicationClaimRepository.FindAsync(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
+            var existingClaims = await applicationUnitOfWork.ApplicationClaims.FindAsync(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
 
             if (existingClaims.Any())
             {
@@ -164,9 +164,9 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
 
             var matchingClaim = AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value) ?? throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the predefined claim list.");
 
-            await applicationClaimRepository.AddAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.DisplayName, matchingClaim.Description));
+            await applicationUnitOfWork.ApplicationClaims.AddAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.DisplayName, matchingClaim.Description));
 
-            await applicationClaimRepository.SaveChangesAsync();
+            await applicationUnitOfWork.SaveChangesAsync();
         }
     }
 

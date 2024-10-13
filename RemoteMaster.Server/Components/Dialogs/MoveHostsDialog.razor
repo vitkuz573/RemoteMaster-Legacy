@@ -5,8 +5,8 @@
 @using RemoteMaster.Server.Aggregates.ApplicationUserAggregate
 
 @inject UserManager<ApplicationUser> UserManager
-@inject IOrganizationRepository OrganizationRepository
 @inject IOrganizationalUnitService OrganizationalUnitService
+@inject IApplicationUnitOfWork ApplicationUnitOfWork
 
 <CommonDialog>
     <Content>

@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class OrganizationController(IOrganizationRepository organizationRepository) : ControllerBase
+public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork) : ControllerBase
 {
     [HttpGet("address")]
     [ProducesResponseType(typeof(ApiResponse<AddressDto>), 200)]
@@ -36,7 +36,7 @@ public class OrganizationController(IOrganizationRepository organizationReposito
             return BadRequest(errorResponse);
         }
 
-        var organization = await organizationRepository.FindAsync(o => o.Name == organizationName);
+        var organization = await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == organizationName);
 
         var organizationEntity = organization.FirstOrDefault();
 

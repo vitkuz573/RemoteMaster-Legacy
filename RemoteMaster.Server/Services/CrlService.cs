@@ -13,13 +13,13 @@ using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(ICrlRepository crlRepository, ICertificateProvider certificateProvider, IFileSystem fileSystem, ILogger<CrlService> logger) : ICrlService
+public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertificateProvider certificateProvider, IFileSystem fileSystem, ILogger<CrlService> logger) : ICrlService
 {
     public async Task<Result> RevokeCertificateAsync(SerialNumber serialNumber, X509RevocationReason reason)
     {
         try
         {
-            var crl = (await crlRepository.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await certificateUnitOfWork.Crls.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
             try
             {
@@ -27,29 +27,29 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
             }
             catch (InvalidOperationException ex)
             {
-                logger.LogInformation($"Certificate with serial number {serialNumber} has already been revoked.");
+                logger.LogInformation("Certificate with serial number {SerialNumber} has already been revoked.", serialNumber);
                 
                 return Result.Fail(ex.Message);
             }
 
             if (crl.Id > 0)
             {
-                crlRepository.Update(crl);
+                certificateUnitOfWork.Crls.Update(crl);
             }
             else
             {
-                await crlRepository.AddAsync(crl);
+                await certificateUnitOfWork.Crls.AddAsync(crl);
             }
 
-            await crlRepository.SaveChangesAsync();
+            await certificateUnitOfWork.SaveChangesAsync();
 
-            logger.LogInformation($"Certificate with serial number {serialNumber} has been successfully revoked.");
+            logger.LogInformation("Certificate with serial number {SerialNumber} has been successfully revoked.", serialNumber);
 
             return Result.Ok();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Error revoking certificate with serial number {serialNumber}");
+            logger.LogError(ex, "Error revoking certificate with serial number {SerialNumber}", serialNumber);
             
             return Result.Fail($"Error revoking certificate with serial number {serialNumber}").WithError(ex.Message);
         }
@@ -70,7 +70,7 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
             var issuerCertificate = issuerCertificateResult.Value;
             var crlBuilder = new CertificateRevocationListBuilder();
 
-            var crl = (await crlRepository.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await certificateUnitOfWork.Crls.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
 
             var currentCrlNumber = BigInteger.Parse(crl.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
@@ -90,14 +90,14 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
 
             if (crl.Id > 0)
             {
-                crlRepository.Update(crl);
+                certificateUnitOfWork.Crls.Update(crl);
             }
             else
             {
-                await crlRepository.AddAsync(crl);
+                await certificateUnitOfWork.Crls.AddAsync(crl);
             }
 
-            await crlRepository.SaveChangesAsync();
+            await certificateUnitOfWork.SaveChangesAsync();
 
             return Result.Ok(crlData);
         }
@@ -130,7 +130,7 @@ public class CrlService(ICrlRepository crlRepository, ICertificateProvider certi
 
             await fileSystem.File.WriteAllBytesAsync(crlFilePath, crlData);
 
-            logger.LogInformation($"CRL published to {crlFilePath}");
+            logger.LogInformation("CRL published to {CrlFilePath}", crlFilePath);
 
             return Result.Ok();
         }

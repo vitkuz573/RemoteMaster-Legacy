@@ -25,11 +25,11 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
     private async void DoWork(object? state)
     {
         using var scope = serviceScopeFactory.CreateScope();
-        var organizationRepository = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
+        var applicationUnitOfWork = scope.ServiceProvider.GetRequiredService<IApplicationUnitOfWork>();
         var accessTokenProvider = scope.ServiceProvider.GetRequiredService<IAccessTokenProvider>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
-        var tasks = await organizationRepository.GetAllCertificateRenewalTasksAsync();
+        var tasks = await applicationUnitOfWork.Organizations.GetAllCertificateRenewalTasksAsync();
 
         var pendingTasks = tasks.Where(t => t.Status == CertificateRenewalStatus.Pending || t.Status == CertificateRenewalStatus.Failed).ToList();
 
@@ -37,19 +37,19 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         {
             try
             {
-                logger.LogInformation($"Processing task for host: {task.Host!.Name}");
+                logger.LogInformation("Processing task for host: {HostName}", task.Host!.Name);
 
                 await ProcessTaskAsync(task, tokenService);
 
-                await organizationRepository.MarkCertificateRenewalTaskCompleted(task.Id);
-                await organizationRepository.SaveChangesAsync();
+                await applicationUnitOfWork.Organizations.MarkCertificateRenewalTaskCompleted(task.Id);
+                await applicationUnitOfWork.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error processing task for host: {task.Host!.Name}");
+                logger.LogError(ex, "Error processing task for host: {HostName}", task.Host!.Name);
 
-                await organizationRepository.MarkCertificateRenewalTaskFailed(task.Id);
-                await organizationRepository.SaveChangesAsync();
+                await applicationUnitOfWork.Organizations.MarkCertificateRenewalTaskFailed(task.Id);
+                await applicationUnitOfWork.SaveChangesAsync();
             }
         }
     }
@@ -76,7 +76,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
 
         await hubConnection.InvokeAsync("RenewCertificate");
 
-        logger.LogInformation($"Certificate renewal completed for host: {task.Host.Name}");
+        logger.LogInformation("Certificate renewal completed for host: {HostName}", task.Host.Name);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

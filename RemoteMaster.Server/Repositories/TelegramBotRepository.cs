@@ -55,9 +55,4 @@ public class TelegramBotRepository(TelegramBotDbContext context) : ITelegramBotR
     {
         context.TelegramBots.Remove(entity);
     }
-
-    public async Task SaveChangesAsync()
-    {
-        await context.SaveChangesAsync();
-    }
 }

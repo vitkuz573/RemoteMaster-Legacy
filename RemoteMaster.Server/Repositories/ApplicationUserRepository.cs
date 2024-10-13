@@ -55,11 +55,6 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
         context.Users.Remove(entity);
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await context.SaveChangesAsync();
-    }
-
     public async Task AddSignInEntryAsync(string userId, bool isSuccessful, IPAddress ipAddress)
     {
         var user = await GetByIdAsync(userId);

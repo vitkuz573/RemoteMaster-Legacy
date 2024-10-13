@@ -9,7 +9,7 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class HostAccessHandler(IApplicationUserRepository userRepository, IOrganizationRepository organizationRepository) : AuthorizationHandler<HostAccessRequirement>
+public class HostAccessHandler(IApplicationUnitOfWork applicationUnitOfWork) : AuthorizationHandler<HostAccessRequirement>
 {
     protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, HostAccessRequirement requirement)
     {
@@ -27,7 +27,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 return;
             }
 
-            var user = await userRepository.GetByIdAsync(userId);
+            var user = await applicationUnitOfWork.ApplicationUsers.GetByIdAsync(userId);
 
             if (user == null)
             {
@@ -38,7 +38,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
 
             if (user.CanAccessUnregisteredHosts)
             {
-                var isHostRegistered = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
+                var isHostRegistered = await applicationUnitOfWork.Organizations.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
 
                 if (!isHostRegistered.Any())
                 {
@@ -48,7 +48,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 }
             }
 
-            var hosts = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
+            var hosts = await applicationUnitOfWork.Organizations.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
             var host = hosts.FirstOrDefault();
 
             if (host == null)
@@ -58,7 +58,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 return;
             }
 
-            var organizationalUnit = await organizationRepository.GetOrganizationalUnitByIdAsync(host.ParentId);
+            var organizationalUnit = await applicationUnitOfWork.Organizations.GetOrganizationalUnitByIdAsync(host.ParentId);
 
             if (organizationalUnit == null)
             {

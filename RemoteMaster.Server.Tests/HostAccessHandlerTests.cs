@@ -18,15 +18,20 @@ namespace RemoteMaster.Server.Tests;
 
 public class HostAccessHandlerTests
 {
-    private readonly Mock<IApplicationUserRepository> _userRepositoryMock;
-    private readonly Mock<IOrganizationRepository> _organizationRepositoryMock;
+    private readonly Mock<IApplicationUnitOfWork> _unitOfWorkMock;
     private readonly HostAccessHandler _handler;
 
     public HostAccessHandlerTests()
     {
-        _userRepositoryMock = new Mock<IApplicationUserRepository>();
-        _organizationRepositoryMock = new Mock<IOrganizationRepository>();
-        _handler = new HostAccessHandler(_userRepositoryMock.Object, _organizationRepositoryMock.Object);
+        _unitOfWorkMock = new Mock<IApplicationUnitOfWork>();
+
+        var userRepositoryMock = new Mock<IApplicationUserRepository>();
+        var organizationRepositoryMock = new Mock<IOrganizationRepository>();
+
+        _unitOfWorkMock.Setup(uow => uow.ApplicationUsers).Returns(userRepositoryMock.Object);
+        _unitOfWorkMock.Setup(uow => uow.Organizations).Returns(organizationRepositoryMock.Object);
+
+        _handler = new HostAccessHandler(_unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -55,10 +60,10 @@ public class HostAccessHandlerTests
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
 
-        _userRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<string>()))
+        _unitOfWorkMock.Setup(uow => uow.ApplicationUsers.GetByIdAsync(It.IsAny<string>()))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync([]);
 
         // Act
@@ -90,13 +95,13 @@ public class HostAccessHandlerTests
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
 
-        _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
+        _unitOfWorkMock.Setup(uow => uow.ApplicationUsers.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync([organizationalUnit.Hosts.First()]);
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
 
         // Act
@@ -129,13 +134,13 @@ public class HostAccessHandlerTests
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
 
-        _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
+        _unitOfWorkMock.Setup(uow => uow.ApplicationUsers.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync([organizationalUnit.Hosts.First()]);
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
 
         // Act
@@ -179,13 +184,13 @@ public class HostAccessHandlerTests
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
 
-        _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
+        _unitOfWorkMock.Setup(uow => uow.ApplicationUsers.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync([organizationalUnit1.Hosts.First()]);
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
             .ReturnsAsync(organizationalUnit1);
 
         // Act
@@ -229,13 +234,13 @@ public class HostAccessHandlerTests
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
 
-        _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
+        _unitOfWorkMock.Setup(uow => uow.ApplicationUsers.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync([organizationalUnit1.Hosts.First()]);
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit2.Id))
+        _unitOfWorkMock.Setup(uow => uow.Organizations.GetOrganizationalUnitByIdAsync(organizationalUnit2.Id))
             .ReturnsAsync(organizationalUnit1);
 
         // Act

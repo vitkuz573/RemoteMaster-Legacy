@@ -16,14 +16,17 @@ namespace RemoteMaster.Server.Tests;
 
 public class OrganizationServiceTests
 {
-    private readonly Mock<IOrganizationRepository> _organizationRepositoryMock;
+    private readonly Mock<IApplicationUnitOfWork> _applicationUnitOfWorkMock;
     private readonly OrganizationService _organizationService;
 
     public OrganizationServiceTests()
     {
-        _organizationRepositoryMock = new Mock<IOrganizationRepository>();
-        Mock<IApplicationUserRepository> applicationUserRepositoryMock = new();
-        _organizationService = new OrganizationService(_organizationRepositoryMock.Object, applicationUserRepositoryMock.Object);
+        _applicationUnitOfWorkMock = new Mock<IApplicationUnitOfWork>();
+
+        var organizationRepositoryMock = new Mock<IOrganizationRepository>();
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations).Returns(organizationRepositoryMock.Object);
+
+        _organizationService = new OrganizationService(_applicationUnitOfWorkMock.Object);
     }
 
     [Fact]
@@ -35,14 +38,15 @@ public class OrganizationServiceTests
             new("Org1", new Address("City1", "State1", new CountryCode("US"))),
             new("Org2", new Address("City2", "State2", new CountryCode("GB")))
         };
-        _organizationRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(organizations);
+
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.GetAllAsync()).ReturnsAsync(organizations);
 
         // Act
         var result = await _organizationService.GetAllOrganizationsAsync();
 
         // Assert
         Assert.Equal(2, result.Count());
-        _organizationRepositoryMock.Verify(repo => repo.GetAllAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.GetAllAsync(), Times.Once);
     }
 
     [Fact]
@@ -50,15 +54,15 @@ public class OrganizationServiceTests
     {
         // Arrange
         var dto = new OrganizationDto(null, "New Org", new AddressDto("City1", "State1", "US"));
-        _organizationRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Organization>())).Returns(Task.CompletedTask);
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.AddAsync(It.IsAny<Organization>())).Returns(Task.CompletedTask);
 
         // Act
         var result = await _organizationService.AddOrUpdateOrganizationAsync(dto);
 
         // Assert
         Assert.Equal("Organization created successfully.", result);
-        _organizationRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Organization>()), Times.Once);
-        _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.AddAsync(It.IsAny<Organization>()), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -67,16 +71,17 @@ public class OrganizationServiceTests
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
         var dto = new OrganizationDto(organization.Id, "Updated Org", new AddressDto("City", "State", "US"));
-        _organizationRepositoryMock.Setup(repo => repo.GetByIdAsync(organization.Id)).ReturnsAsync(organization);
-        _organizationRepositoryMock.Setup(repo => repo.Update(organization));
+
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.GetByIdAsync(organization.Id)).ReturnsAsync(organization);
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.Update(organization));
 
         // Act
         var result = await _organizationService.AddOrUpdateOrganizationAsync(dto);
 
         // Assert
         Assert.Equal("Organization updated successfully.", result);
-        _organizationRepositoryMock.Verify(repo => repo.Update(organization), Times.Once);
-        _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.Update(organization), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -84,15 +89,15 @@ public class OrganizationServiceTests
     {
         // Arrange
         var dto = new OrganizationDto(Guid.NewGuid(), "Nonexistent Org", new AddressDto("City", "State", "US"));
-        _organizationRepositoryMock.Setup(repo => repo.GetByIdAsync(dto.Id!.Value)).ReturnsAsync((Organization)null!);
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.GetByIdAsync(dto.Id!.Value)).ReturnsAsync((Organization)null!);
 
         // Act
         var result = await _organizationService.AddOrUpdateOrganizationAsync(dto);
 
         // Assert
         Assert.Equal("Error: Organization not found.", result);
-        _organizationRepositoryMock.Verify(repo => repo.Update(It.IsAny<Organization>()), Times.Never);
-        _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+        _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.Update(It.IsAny<Organization>()), Times.Never);
+        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -100,15 +105,16 @@ public class OrganizationServiceTests
     {
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
-        _organizationRepositoryMock.Setup(repo => repo.Delete(organization));
+
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.Delete(organization));
 
         // Act
         var result = await _organizationService.DeleteOrganizationAsync(organization);
 
         // Assert
         Assert.Equal("Organization deleted successfully.", result);
-        _organizationRepositoryMock.Verify(repo => repo.Delete(organization), Times.Once);
-        _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.Delete(organization), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -116,20 +122,18 @@ public class OrganizationServiceTests
     {
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
-
         organization.AddOrganizationalUnit("Unit");
         var unit = organization.OrganizationalUnits.First();
-
         unit.AddHost("Host1", IPAddress.Loopback, PhysicalAddress.Parse("001122334455"));
         var host = unit.Hosts.First();
 
-        _organizationRepositoryMock.Setup(repo => repo.GetByIdAsync(organization.Id)).ReturnsAsync(organization);
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.GetByIdAsync(organization.Id)).ReturnsAsync(organization);
 
         // Act
         await _organizationService.RemoveHostAsync(organization.Id, unit.Id, host.Id);
 
         // Assert
-        _organizationRepositoryMock.Verify(repo => repo.RemoveHostAsync(organization.Id, unit.Id, host.Id), Times.Once);
-        _organizationRepositoryMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.Organizations.RemoveHostAsync(organization.Id, unit.Id, host.Id), Times.Once);
+        _applicationUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -37,7 +37,7 @@ public partial class MoveHostsDialog
         if (!Hosts.IsEmpty)
         {
             var firstHostParentId = Hosts.First().Key.OrganizationalUnitId;
-            var organization = await OrganizationRepository.GetOrganizationByUnitIdAsync(firstHostParentId);
+            var organization = await ApplicationUnitOfWork.Organizations.GetOrganizationByUnitIdAsync(firstHostParentId);
 
             var currentOrganizationalUnit = organization?.OrganizationalUnits.FirstOrDefault(ou => ou.Id == firstHostParentId);
 
@@ -91,7 +91,7 @@ public partial class MoveHostsDialog
 
             if (appUser != null)
             {
-                var organization = await OrganizationRepository.GetByIdAsync(organizationId);
+                var organization = await ApplicationUnitOfWork.Organizations.GetByIdAsync(organizationId);
                 
                 if (organization != null)
                 {
@@ -117,7 +117,7 @@ public partial class MoveHostsDialog
     {
         if (_selectedOrganizationalUnitId.HasValue && _selectedOrganizationalUnitId != Guid.Empty)
         {
-            var targetOrganization = await OrganizationRepository.GetByIdAsync(_selectedOrganizationId);
+            var targetOrganization = await ApplicationUnitOfWork.Organizations.GetByIdAsync(_selectedOrganizationId);
 
             if (targetOrganization == null)
             {
@@ -151,10 +151,10 @@ public partial class MoveHostsDialog
 
                 var currentParentUnitId = host.Key.OrganizationalUnitId;
                 
-                await OrganizationRepository.MoveHostAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
+                await ApplicationUnitOfWork.Organizations.MoveHostAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
             }
 
-            await OrganizationRepository.SaveChangesAsync();
+            await ApplicationUnitOfWork.SaveChangesAsync();
 
             await OnHostsMoved.InvokeAsync(Hosts.Keys);
 

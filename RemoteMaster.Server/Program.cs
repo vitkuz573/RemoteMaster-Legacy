@@ -33,6 +33,7 @@ using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Repositories;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Server.UnitOfWork;
 using RemoteMaster.Server.Validators;
 using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.Extensions;
@@ -157,6 +158,9 @@ public static class Program
         services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
         services.AddScoped<IEventNotificationService, TelegramEventNotificationService>();
         services.AddScoped<IHostMoveRequestService, HostMoveRequestService>();
+        services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
+        services.AddScoped<ICertificateUnitOfWork, CertificateUnitOfWork>();
+        services.AddScoped<ITelegramBotUnitOfWork, TelegramBotUnitOfWork>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();

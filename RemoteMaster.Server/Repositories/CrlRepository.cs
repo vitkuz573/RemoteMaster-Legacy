@@ -56,9 +56,4 @@ public class CrlRepository(CertificateDbContext context) : ICrlRepository
     {
         context.CertificateRevocationLists.Remove(entity);
     }
-
-    public async Task SaveChangesAsync()
-    {
-        await context.SaveChangesAsync();
-    }
 }

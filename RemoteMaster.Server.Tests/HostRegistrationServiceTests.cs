@@ -18,6 +18,7 @@ namespace RemoteMaster.Server.Tests;
 public class HostRegistrationServiceTests
 {
     private readonly Mock<IEventNotificationService> _eventNotificationServiceMock;
+    private readonly Mock<IApplicationUnitOfWork> _applicationUnitOfWorkMock;
     private readonly Mock<IOrganizationRepository> _organizationRepositoryMock;
     private readonly IHostRegistrationService _hostRegistrationService;
 
@@ -25,7 +26,11 @@ public class HostRegistrationServiceTests
     {
         _eventNotificationServiceMock = new Mock<IEventNotificationService>();
         _organizationRepositoryMock = new Mock<IOrganizationRepository>();
-        _hostRegistrationService = new HostRegistrationService(_eventNotificationServiceMock.Object, _organizationRepositoryMock.Object);
+        _applicationUnitOfWorkMock = new Mock<IApplicationUnitOfWork>();
+
+        _applicationUnitOfWorkMock.Setup(uow => uow.Organizations).Returns(_organizationRepositoryMock.Object);
+
+        _hostRegistrationService = new HostRegistrationService(_eventNotificationServiceMock.Object, _applicationUnitOfWorkMock.Object);
     }
 
     [Fact]
@@ -61,7 +66,7 @@ public class HostRegistrationServiceTests
         // Assert
         Assert.True(result.IsSuccess);
         _eventNotificationServiceMock.Verify(x => x.SendNotificationAsync(It.IsAny<string>()), Times.Once);
-        _organizationRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);  // Проверяем SaveChanges через UnitOfWork
     }
 
     [Fact]

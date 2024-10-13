@@ -9,8 +9,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
@@ -22,7 +22,7 @@ namespace RemoteMaster.Server.Tests;
 public class CrlServiceTests
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly Mock<ICrlRepository> _crlRepositoryMock;
+    private readonly Mock<ICertificateUnitOfWork> _certificateUnitOfWorkMock;
     private readonly Mock<ICertificateProvider> _certificateProviderMock;
     private readonly MockFileSystem _mockFileSystem;
 
@@ -30,12 +30,12 @@ public class CrlServiceTests
     {
         var serviceCollection = new ServiceCollection();
 
-        _crlRepositoryMock = new Mock<ICrlRepository>();
+        _certificateUnitOfWorkMock = new Mock<ICertificateUnitOfWork>();
         _certificateProviderMock = new Mock<ICertificateProvider>();
         _mockFileSystem = new MockFileSystem();
 
         serviceCollection.AddSingleton(_certificateProviderMock.Object);
-        serviceCollection.AddSingleton(_crlRepositoryMock.Object);
+        serviceCollection.AddSingleton(_certificateUnitOfWorkMock.Object);
         serviceCollection.AddSingleton<IFileSystem>(_mockFileSystem);
         serviceCollection.AddSingleton<ILogger<CrlService>>(NullLogger<CrlService>.Instance);
         serviceCollection.AddScoped<ICrlService, CrlService>();
@@ -60,12 +60,14 @@ public class CrlServiceTests
         var serialNumber = SerialNumber.FromExistingValue(serialNumberValue);
         var crl = new Crl(BigInteger.Zero.ToString());
 
-        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync([crl]);
+        _certificateUnitOfWorkMock.Setup(uow => uow.Crls.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.RevokeCertificateAsync(serialNumber, reason);
 
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
         Assert.Contains(crl.RevokedCertificates, rc => rc.SerialNumber.Value == serialNumberValue && rc.Reason == reason);
+
+        _certificateUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -81,13 +83,15 @@ public class CrlServiceTests
         var crl = new Crl("1");
         crl.RevokeCertificate(SerialNumber.FromExistingValue("1234567890"), X509RevocationReason.KeyCompromise);
 
-        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync([crl]);
+        _certificateUnitOfWorkMock.Setup(uow => uow.Crls.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.GenerateCrlAsync();
 
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
         Assert.NotNull(result.ValueOrDefault);
         Assert.NotEmpty(result.ValueOrDefault);
+
+        _certificateUnitOfWorkMock.Verify(uow => uow.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -116,7 +120,7 @@ public class CrlServiceTests
         var crl = new Crl(BigInteger.Zero.ToString());
         crl.RevokeCertificate(serialNumber, X509RevocationReason.KeyCompromise);
 
-        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync([crl]);
+        _certificateUnitOfWorkMock.Setup(uow => uow.Crls.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.RevokeCertificateAsync(serialNumber, X509RevocationReason.KeyCompromise);
 

@@ -9,13 +9,13 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationalUnitService(IOrganizationRepository organizationRepository) : IOrganizationalUnitService
+public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfWork) : IOrganizationalUnitService
 {
     public async Task<string[]> GetFullPathAsync(Guid organizationalUnitId)
     {
         var path = new List<string>();
 
-        var organization = await organizationRepository.GetOrganizationByUnitIdAsync(organizationalUnitId);
+        var organization = await applicationUnitOfWork.Organizations.GetOrganizationByUnitIdAsync(organizationalUnitId);
         
         if (organization == null)
         {
@@ -43,7 +43,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var organization = await organizationRepository.GetByIdAsync(dto.OrganizationId);
+        var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(dto.OrganizationId);
 
         if (organization == null)
         {
@@ -78,8 +78,8 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             organization.AddOrganizationalUnit(dto.Name);
         }
 
-        organizationRepository.Update(organization);
-        await organizationRepository.SaveChangesAsync();
+        applicationUnitOfWork.Organizations.Update(organization);
+        await applicationUnitOfWork.SaveChangesAsync();
 
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
     }
@@ -89,7 +89,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
     {
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
-        var organization = await organizationRepository.GetByIdAsync(organizationalUnit.OrganizationId);
+        var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(organizationalUnit.OrganizationId);
 
         if (organization == null)
         {
@@ -100,8 +100,8 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         {
             organization.RemoveOrganizationalUnit(organizationalUnit.Id);
 
-            organizationRepository.Update(organization);
-            await organizationRepository.SaveChangesAsync();
+            applicationUnitOfWork.Organizations.Update(organization);
+            await applicationUnitOfWork.SaveChangesAsync();
 
             return "Organizational unit deleted successfully.";
         }
@@ -113,7 +113,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
 
     public async Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync()
     {
-        var organizations = await organizationRepository.GetAllAsync();
+        var organizations = await applicationUnitOfWork.Organizations.GetAllAsync();
 
         return organizations.SelectMany(o => o.OrganizationalUnits);
     }
@@ -122,7 +122,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var organizations = (await organizationRepository.GetAllAsync()).ToList();
+        var organizations = (await applicationUnitOfWork.Organizations.GetAllAsync()).ToList();
 
         foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
         {
@@ -140,6 +140,6 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             unit?.AddUser(user.Id);
         }
 
-        await organizationRepository.SaveChangesAsync();
+        await applicationUnitOfWork.SaveChangesAsync();
     }
 }

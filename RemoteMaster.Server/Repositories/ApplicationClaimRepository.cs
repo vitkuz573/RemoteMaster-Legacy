@@ -52,9 +52,4 @@ public class ApplicationClaimRepository(ApplicationDbContext context) : IApplica
     {
         context.ApplicationClaims.Remove(entity);
     }
-
-    public async Task SaveChangesAsync()
-    {
-        await context.SaveChangesAsync();
-    }
 }

@@ -8,7 +8,7 @@ using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
 namespace RemoteMaster.Server.Services;
 
-public class ApplicationUserService(IApplicationUserRepository applicationUserRepository, IHttpContextAccessor httpContextAccessor) : IApplicationUserService
+public class ApplicationUserService(IApplicationUnitOfWork applicationUnitOfWork, IHttpContextAccessor httpContextAccessor) : IApplicationUserService
 {
     public async Task AddSignInEntry(ApplicationUser user, bool isSuccessful)
     {
@@ -17,7 +17,7 @@ public class ApplicationUserService(IApplicationUserRepository applicationUserRe
         var httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
         var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
 
-        await applicationUserRepository.AddSignInEntryAsync(user.Id, isSuccessful, ipAddress);
-        await applicationUserRepository.SaveChangesAsync();
+        await applicationUnitOfWork.ApplicationUsers.AddSignInEntryAsync(user.Id, isSuccessful, ipAddress);
+        await applicationUnitOfWork.SaveChangesAsync();
     }
 }

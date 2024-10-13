@@ -28,9 +28,9 @@ public partial class ManageRoleClaims
             .Where(role => role.Name != "RootAdministrator" && role.Name != "ServiceUser")
             .ToListAsync();
 
-        var allClaims = (await ApplicationClaimRepository.GetAllAsync()).ToList();
+        var allClaims = (await ApplicationUnitOfWork.ApplicationClaims.GetAllAsync()).ToList();
 
-        if (allClaims.Any())
+        if (allClaims.Count != 0)
         {
             var groupedClaims = allClaims
                 .GroupBy(ac => ac.ClaimType)

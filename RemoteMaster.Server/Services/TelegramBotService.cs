@@ -7,15 +7,15 @@ using RemoteMaster.Server.Aggregates.TelegramBotAggregate;
 
 namespace RemoteMaster.Server.Services;
 
-public class TelegramBotService(ITelegramBotRepository telegramBotRepository) : ITelegramBotService
+public class TelegramBotService(ITelegramBotUnitOfWork telegramBotUnitOfWork) : ITelegramBotService
 {
     public async Task<TelegramBot?> GetBotSettingsAsync()
     {
-        var telegramBot = (await telegramBotRepository.GetAllAsync()).FirstOrDefault() ?? new TelegramBot();
+        var telegramBot = (await telegramBotUnitOfWork.TelegramBots.GetAllAsync()).FirstOrDefault() ?? new TelegramBot();
 
         if (telegramBot.Id == 0)
         {
-            await telegramBotRepository.AddAsync(telegramBot);
+            await telegramBotUnitOfWork.TelegramBots.AddAsync(telegramBot);
         }
 
         return telegramBot;
@@ -23,13 +23,13 @@ public class TelegramBotService(ITelegramBotRepository telegramBotRepository) : 
 
     public async Task UpdateBotSettingsAsync(TelegramBot telegramBot)
     {
-        telegramBotRepository.Update(telegramBot);
-        await telegramBotRepository.SaveChangesAsync();
+        telegramBotUnitOfWork.TelegramBots.Update(telegramBot);
+        await telegramBotUnitOfWork.SaveChangesAsync();
     }
 
     public async Task AddNewChatIdAsync(int botId, int newChatId)
     {
-        var bot = await telegramBotRepository.GetByIdAsync(botId) ?? new TelegramBot();
+        var bot = await telegramBotUnitOfWork.TelegramBots.GetByIdAsync(botId) ?? new TelegramBot();
         bot.AddChatId(newChatId);
 
         await UpdateBotSettingsAsync(bot);
@@ -37,7 +37,7 @@ public class TelegramBotService(ITelegramBotRepository telegramBotRepository) : 
 
     public async Task RemoveChatIdAsync(int botId, int chatId)
     {
-        var bot = await telegramBotRepository.GetByIdAsync(botId);
+        var bot = await telegramBotUnitOfWork.TelegramBots.GetByIdAsync(botId);
 
         if (bot != null && bot.ChatIds.Any(c => c.ChatId == chatId))
         {

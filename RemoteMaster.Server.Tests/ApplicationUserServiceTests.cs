@@ -13,17 +13,21 @@ namespace RemoteMaster.Server.Tests;
 
 public class ApplicationUserServiceTests
 {
-    private readonly Mock<IApplicationUserRepository> _applicationUserRepositoryMock;
+    private readonly Mock<IApplicationUnitOfWork> _applicationUnitOfWorkMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+    private readonly Mock<IApplicationUserRepository> _applicationUserRepositoryMock;
     private readonly ApplicationUserService _applicationUserService;
 
     public ApplicationUserServiceTests()
     {
+        _applicationUnitOfWorkMock = new Mock<IApplicationUnitOfWork>();
         _applicationUserRepositoryMock = new Mock<IApplicationUserRepository>();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
+        _applicationUnitOfWorkMock.Setup(uow => uow.ApplicationUsers).Returns(_applicationUserRepositoryMock.Object);
+
         _applicationUserService = new ApplicationUserService(
-            _applicationUserRepositoryMock.Object,
+            _applicationUnitOfWorkMock.Object,
             _httpContextAccessorMock.Object
         );
     }
@@ -48,7 +52,7 @@ public class ApplicationUserServiceTests
 
         // Assert
         _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), true, IPAddress.Loopback), Times.Once);
-        _applicationUserRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -93,7 +97,7 @@ public class ApplicationUserServiceTests
 
         // Assert
         _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), true, IPAddress.None), Times.Once);
-        _applicationUserRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -116,6 +120,6 @@ public class ApplicationUserServiceTests
 
         // Assert
         _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), false, IPAddress.Parse("192.168.1.1")), Times.Once);
-        _applicationUserRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _applicationUnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

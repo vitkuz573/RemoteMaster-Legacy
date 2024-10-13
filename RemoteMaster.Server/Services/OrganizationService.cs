@@ -10,11 +10,11 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationService(IOrganizationRepository organizationRepository, IApplicationUserRepository applicationUserRepository) : IOrganizationService
+public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) : IOrganizationService
 {
     public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
     {
-        return await organizationRepository.GetAllAsync();
+        return await applicationUnitOfWork.Organizations.GetAllAsync();
     }
 
     public async Task<string> AddOrUpdateOrganizationAsync(OrganizationDto dto)
@@ -26,7 +26,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
 
         if (dto.Id.HasValue)
         {
-            var organization = await organizationRepository.GetByIdAsync(dto.Id.Value);
+            var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(dto.Id.Value);
 
             if (organization == null)
             {
@@ -38,7 +38,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
             organization.SetName(dto.Name);
             organization.SetAddress(address);
 
-            organizationRepository.Update(organization);
+            applicationUnitOfWork.Organizations.Update(organization);
 
             if (addressChanged)
             {
@@ -46,7 +46,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
                 {
                     foreach (var host in unit.Hosts)
                     {
-                        await organizationRepository.CreateCertificateRenewalTaskAsync(organization.Id, host.Id, DateTime.UtcNow.AddHours(1));
+                        await applicationUnitOfWork.Organizations.CreateCertificateRenewalTaskAsync(organization.Id, host.Id, DateTime.UtcNow.AddHours(1));
                     }
                 }
             }
@@ -54,10 +54,10 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
         else
         {
             var newOrganization = new Organization(dto.Name, address);
-            await organizationRepository.AddAsync(newOrganization);
+            await applicationUnitOfWork.Organizations.AddAsync(newOrganization);
         }
 
-        await organizationRepository.SaveChangesAsync();
+        await applicationUnitOfWork.SaveChangesAsync();
 
         return dto.Id.HasValue ? "Organization updated successfully." : "Organization created successfully.";
     }
@@ -66,8 +66,8 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
     {
         ArgumentNullException.ThrowIfNull(organization);
 
-        organizationRepository.Delete(organization);
-        await organizationRepository.SaveChangesAsync();
+        applicationUnitOfWork.Organizations.Delete(organization);
+        await applicationUnitOfWork.SaveChangesAsync();
 
         return "Organization deleted successfully.";
     }
@@ -78,33 +78,33 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
 
         foreach (var org in user.UserOrganizations.ToList().Where(org => !selectedOrganizationIds.Contains(org.OrganizationId)))
         {
-            var organization = await organizationRepository.GetByIdAsync(org.OrganizationId);
+            var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(org.OrganizationId);
             organization?.RemoveUser(user.Id);
         }
 
         foreach (var orgId in selectedOrganizationIds.Where(orgId => user.UserOrganizations.All(uo => uo.OrganizationId != orgId)))
         {
-            var organization = await organizationRepository.GetByIdAsync(orgId);
+            var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(orgId);
             organization?.AddUser(user.Id);
         }
 
-        await organizationRepository.SaveChangesAsync();
+        await applicationUnitOfWork.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(string userId)
     {
-        var user = await applicationUserRepository.GetByIdAsync(userId) ?? throw new InvalidOperationException($"User with ID '{userId}' not found.");
+        var user = await applicationUnitOfWork.ApplicationUsers.GetByIdAsync(userId) ?? throw new InvalidOperationException($"User with ID '{userId}' not found.");
         
         var accessibleOrganizationIds = user.UserOrganizations.Select(uo => uo.OrganizationId);
         var accessibleOrganizationalUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId);
 
-        return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
+        return await applicationUnitOfWork.Organizations.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
 
     }
 
     public async Task RemoveHostAsync(Guid organizationId, Guid organizationalUnitId, Guid hostId)
     {
-        var organization = await organizationRepository.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
+        var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
         var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId) ?? throw new InvalidOperationException("Organizational Unit not found");
 
         if (organizationalUnit.Hosts.All(c => c.Id != hostId))
@@ -112,8 +112,8 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
             throw new InvalidOperationException("Host not found");
         }
 
-        await organizationRepository.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
-        organizationRepository.Update(organization);
-        await organizationRepository.SaveChangesAsync();
+        await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
+        applicationUnitOfWork.Organizations.Update(organization);
+        await applicationUnitOfWork.SaveChangesAsync();
     }
 }

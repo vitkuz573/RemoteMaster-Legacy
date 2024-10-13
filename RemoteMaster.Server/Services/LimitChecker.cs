@@ -8,7 +8,7 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanProvider, IOrganizationRepository organizationRepository) : ILimitChecker
+public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanProvider, IApplicationUnitOfWork applicationUnitOfWork) : ILimitChecker
 {
     private PlanLimits GetCurrentPlanLimits()
     {
@@ -20,7 +20,7 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
     public async Task<bool> CanAddOrganization()
     {
         var limits = GetCurrentPlanLimits();
-        var organizations = await organizationRepository.GetAllAsync();
+        var organizations = await applicationUnitOfWork.Organizations.GetAllAsync();
         var organizationCount = organizations.Count();
 
         return organizationCount < limits.MaxOrganizations;

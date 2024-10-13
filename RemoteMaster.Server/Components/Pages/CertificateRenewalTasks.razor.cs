@@ -15,7 +15,7 @@ public partial class CertificateRenewalTasks : ComponentBase
 
     protected async override Task OnInitializedAsync()
     {
-        _certificateTasks = (await OrganizationRepository.GetAllCertificateRenewalTasksAsync()).ToList();
+        _certificateTasks = (await ApplicationUnitOfWork.Organizations.GetAllCertificateRenewalTasksAsync()).ToList();
     }
 
     private async Task DeleteTask(Guid taskId)
@@ -24,8 +24,8 @@ public partial class CertificateRenewalTasks : ComponentBase
 
         if (taskToRemove != null)
         {
-            await OrganizationRepository.DeleteCertificateRenewalTaskAsync(taskId);
-            await OrganizationRepository.SaveChangesAsync();
+            await ApplicationUnitOfWork.Organizations.DeleteCertificateRenewalTaskAsync(taskId);
+            await ApplicationUnitOfWork.SaveChangesAsync();
 
             _certificateTasks.Remove(taskToRemove);
 

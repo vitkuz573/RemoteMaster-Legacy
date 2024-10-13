@@ -13,7 +13,7 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, ITokenSigningService tokenSigningService, IApplicationUserRepository applicationUserRepository, ILogger<TokenService> logger) : ITokenService
+public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, ITokenSigningService tokenSigningService, IApplicationUnitOfWork applicationUnitOfWork, ILogger<TokenService> logger) : ITokenService
 {
     private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
@@ -54,8 +54,8 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
             return Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray());
         }
 
-        applicationUserRepository.Update(user);
-        await applicationUserRepository.SaveChangesAsync();
+        applicationUnitOfWork.ApplicationUsers.Update(user);
+        await applicationUnitOfWork.SaveChangesAsync();
 
         return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
     }
@@ -69,7 +69,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
     {
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
 
-        var user = await applicationUserRepository.GetByIdAsync(userId);
+        var user = await applicationUnitOfWork.ApplicationUsers.GetByIdAsync(userId);
 
         if (user == null)
         {
@@ -82,7 +82,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
 
         if (refreshTokens.Count == 0)
         {
-            logger.LogInformation($"No active refresh tokens found for revocation for user {userId}.");
+            logger.LogInformation("No active refresh tokens found for revocation for user {UserId}.", user);
 
             return Result.Fail("No active refresh tokens found for revocation.");
         }
@@ -92,10 +92,10 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
             user.RevokeRefreshToken(token.TokenValue.Value, revocationReason, ipAddress);
         }
 
-        applicationUserRepository.Update(user);
-        await applicationUserRepository.SaveChangesAsync();
+        applicationUnitOfWork.ApplicationUsers.Update(user);
+        await applicationUnitOfWork.SaveChangesAsync();
 
-        logger.LogInformation($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
+        logger.LogInformation("All refresh tokens for user {UserId} have been revoked. Reason: {RevocationReason}", userId, revocationReason);
 
         return Result.Ok();
     }
@@ -104,7 +104,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
     {
         logger.LogDebug("Starting cleanup of expired and revoked refresh tokens.");
 
-        var usersWithExpiredTokens = (await applicationUserRepository.FindAsync(u =>
+        var usersWithExpiredTokens = (await applicationUnitOfWork.ApplicationUsers.FindAsync(u =>
             u.RefreshTokens.Any(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
 
         if (usersWithExpiredTokens.Count == 0)
@@ -124,13 +124,13 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
             {
                 user.RemoveRefreshToken(token);
 
-                logger.LogDebug($"Removed token: {token.TokenValue.Value}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
+                logger.LogDebug("Removed token: {TokenValue}, User ID: {UserId}, Expired at: {TokenExpires}, Revoked at: {TokenRevoked}", token.TokenValue.Value, user.Id, token.TokenValue.Expires, token.RevocationInfo?.Revoked);
             }
 
-            applicationUserRepository.Update(user);
+            applicationUnitOfWork.ApplicationUsers.Update(user);
         }
 
-        await applicationUserRepository.SaveChangesAsync();
+        await applicationUnitOfWork.SaveChangesAsync();
 
         logger.LogInformation("Cleaned up expired or revoked refresh tokens.");
 

@@ -67,7 +67,7 @@ public partial class SignInJournal
 
     protected async override Task OnInitializedAsync()
     {
-        _signInEntries = (await ApplicationUserRepository.GetAllSignInEntriesAsync()).ToList();
+        _signInEntries = (await ApplicationUnitOfWork.ApplicationUsers.GetAllSignInEntriesAsync()).ToList();
     }
 
     private void SortByColumn(string columnName)
@@ -229,8 +229,8 @@ public partial class SignInJournal
 
     private async Task ClearJournal()
     {
-        ApplicationUserRepository.ClearSignInEntries();
-        await ApplicationUserRepository.SaveChangesAsync();
+        ApplicationUnitOfWork.ApplicationUsers.ClearSignInEntries();
+        await ApplicationUnitOfWork.SaveChangesAsync();
 
         _signInEntries.Clear();
     }

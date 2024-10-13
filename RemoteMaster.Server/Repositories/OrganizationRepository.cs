@@ -62,11 +62,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         context.Organizations.Remove(entity);
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await context.SaveChangesAsync();
-    }
-
     public async Task<IEnumerable<Host>> FindHostsAsync(Expression<Func<Host, bool>> predicate)
     {
         return await context.Organizations
