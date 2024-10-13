@@ -95,7 +95,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         applicationUnitOfWork.ApplicationUsers.Update(user);
         await applicationUnitOfWork.CommitAsync();
 
-        logger.LogInformation("All refresh tokens for user {UserId} have been revoked. Reason: {RevocationReason}", userId, revocationReason);
+        logger.LogInformation("All refresh tokens for user {Username} have been revoked. Reason: {RevocationReason}", user.UserName, revocationReason);
 
         return Result.Ok();
     }
