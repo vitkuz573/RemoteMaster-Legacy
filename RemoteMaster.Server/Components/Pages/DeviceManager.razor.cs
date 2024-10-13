@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
+using MessagePack.Resolvers;
+using MessagePack;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -71,7 +74,12 @@ public partial class DeviceManager : IAsyncDisposable
                     return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                 };
             })
-            .AddMessagePackProtocol()
+            .AddMessagePackProtocol(options =>
+            {
+                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+            })
             .Build();
 
         _connection.On<List<DeviceDto>>("ReceiveDeviceList", async deviceItems =>

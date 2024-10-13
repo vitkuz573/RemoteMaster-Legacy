@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
+using MessagePack.Resolvers;
+using MessagePack;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -42,7 +45,12 @@ public partial class Chat : IAsyncDisposable
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/chat")
-            .AddMessagePackProtocol()
+            .AddMessagePackProtocol(options =>
+            {
+                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+            })
             .Build();
 
         _connection.On<ChatMessageDto>("ReceiveMessage", chatMessageDto =>
