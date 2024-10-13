@@ -20,57 +20,44 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
 
     public async Task<Result<TokenData>> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
     {
-        await applicationUnitOfWork.BeginTransactionAsync();
+        var user = await userManager.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == userId);
 
-        try
+        if (user == null)
         {
-            var user = await userManager.Users
-                .Include(u => u.RefreshTokens)
-                .SingleOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-            {
-                return Result.Fail<TokenData>("User not found");
-            }
-
-            var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
-
-            var claimsResult = await claimsService.GetClaimsForUserAsync(user);
-
-            if (claimsResult.IsFailed)
-            {
-                return Result.Fail<TokenData>(claimsResult.Errors.Select(e => e.Message).ToArray());
-            }
-
-            var accessTokenResult = tokenSigningService.GenerateAccessToken(claimsResult.Value);
-
-            if (accessTokenResult.IsFailed)
-            {
-                return Result.Fail<TokenData>(accessTokenResult.Errors.Select(e => e.Message).ToArray());
-            }
-
-            var refreshTokenResult = oldRefreshToken != null
-                ? Result.Ok(user.ReplaceRefreshToken(oldRefreshToken, ipAddress))
-                : Result.Ok(user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress));
-
-            if (refreshTokenResult.IsFailed)
-            {
-                return Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray());
-            }
-
-            applicationUnitOfWork.ApplicationUsers.Update(user);
-            await applicationUnitOfWork.CommitAsync();
-
-            await applicationUnitOfWork.CommitTransactionAsync();
-
-            return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
+            return Result.Fail<TokenData>("User not found");
         }
-        catch (Exception ex)
+
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
+
+        var claimsResult = await claimsService.GetClaimsForUserAsync(user);
+
+        if (claimsResult.IsFailed)
         {
-            await applicationUnitOfWork.RollbackTransactionAsync();
-            logger.LogError("Error generating tokens: {Message}", ex.Message);
-            throw;
+            return Result.Fail<TokenData>(claimsResult.Errors.Select(e => e.Message).ToArray());
         }
+
+        var accessTokenResult = tokenSigningService.GenerateAccessToken(claimsResult.Value);
+
+        if (accessTokenResult.IsFailed)
+        {
+            return Result.Fail<TokenData>(accessTokenResult.Errors.Select(e => e.Message).ToArray());
+        }
+
+        var refreshTokenResult = oldRefreshToken != null
+            ? Result.Ok(user.ReplaceRefreshToken(oldRefreshToken, ipAddress))
+            : Result.Ok(user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress));
+
+        if (refreshTokenResult.IsFailed)
+        {
+            return Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray());
+        }
+
+        applicationUnitOfWork.ApplicationUsers.Update(user);
+        await applicationUnitOfWork.CommitAsync();
+
+        return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
     }
 
     private static TokenData CreateTokenData(string accessToken, string refreshToken)
@@ -80,99 +67,74 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
 
     public async Task<Result> RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
     {
-        await applicationUnitOfWork.BeginTransactionAsync();
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
 
-        try
+        var user = await applicationUnitOfWork.ApplicationUsers.GetByIdAsync(userId);
+
+        if (user == null)
         {
-            var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
-
-            var user = await applicationUnitOfWork.ApplicationUsers.GetByIdAsync(userId);
-
-            if (user == null)
-            {
-                return Result.Fail("User not found");
-            }
-
-            var refreshTokens = user.RefreshTokens
-                .Where(rt => rt.RevocationInfo == null && rt.TokenValue.Expires > DateTime.UtcNow)
-                .ToList();
-
-            if (refreshTokens.Count == 0)
-            {
-                logger.LogInformation("No active refresh tokens found for revocation for user {UserId}.", user);
-                
-                return Result.Fail("No active refresh tokens found for revocation.");
-            }
-
-            foreach (var token in refreshTokens)
-            {
-                user.RevokeRefreshToken(token.TokenValue.Value, revocationReason, ipAddress);
-            }
-
-            applicationUnitOfWork.ApplicationUsers.Update(user);
-            await applicationUnitOfWork.CommitAsync();
-
-            await applicationUnitOfWork.CommitTransactionAsync();
-
-            logger.LogInformation("All refresh tokens for user {Username} have been revoked. Reason: {RevocationReason}", user.UserName, revocationReason);
-            
-            return Result.Ok();
+            return Result.Fail("User not found");
         }
-        catch (Exception ex)
+
+        var refreshTokens = user.RefreshTokens
+            .Where(rt => rt.RevocationInfo == null && rt.TokenValue.Expires > DateTime.UtcNow)
+            .ToList();
+
+        if (refreshTokens.Count == 0)
         {
-            await applicationUnitOfWork.RollbackTransactionAsync();
-            logger.LogError("Error revoking refresh tokens for user {UserId}: {Message}", userId, ex.Message);
-            throw;
+            logger.LogInformation("No active refresh tokens found for revocation for user {UserId}.", user);
+
+            return Result.Fail("No active refresh tokens found for revocation.");
         }
+
+        foreach (var token in refreshTokens)
+        {
+            user.RevokeRefreshToken(token.TokenValue.Value, revocationReason, ipAddress);
+        }
+
+        applicationUnitOfWork.ApplicationUsers.Update(user);
+        await applicationUnitOfWork.CommitAsync();
+
+        logger.LogInformation("All refresh tokens for user {Username} have been revoked. Reason: {RevocationReason}", user.UserName, revocationReason);
+
+        return Result.Ok();
     }
 
     public async Task<Result> CleanUpExpiredRefreshTokens()
     {
-        await applicationUnitOfWork.BeginTransactionAsync();
+        logger.LogDebug("Starting cleanup of expired and revoked refresh tokens.");
 
-        try
+        var usersWithExpiredTokens = (await applicationUnitOfWork.ApplicationUsers.FindAsync(u =>
+            u.RefreshTokens.Any(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
+
+        if (usersWithExpiredTokens.Count == 0)
         {
-            logger.LogDebug("Starting cleanup of expired and revoked refresh tokens.");
+            logger.LogInformation("No expired or revoked tokens found for cleanup.");
 
-            var usersWithExpiredTokens = (await applicationUnitOfWork.ApplicationUsers.FindAsync(u =>
-                u.RefreshTokens.Any(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
+            return Result.Fail("No expired or revoked tokens found for cleanup.");
+        }
 
-            if (usersWithExpiredTokens.Count == 0)
+        foreach (var user in usersWithExpiredTokens)
+        {
+            var expiredTokens = user.RefreshTokens
+                .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
+                .ToList();
+
+            foreach (var token in expiredTokens)
             {
-                logger.LogInformation("No expired or revoked tokens found for cleanup.");
+                user.RemoveRefreshToken(token);
 
-                return Result.Fail("No expired or revoked tokens found for cleanup.");
+                logger.LogDebug("Removed token: {TokenValue}, User ID: {UserId}, Expired at: {TokenExpires}, Revoked at: {TokenRevoked}", token.TokenValue.Value, user.Id, token.TokenValue.Expires, token.RevocationInfo?.Revoked);
             }
 
-            foreach (var user in usersWithExpiredTokens)
-            {
-                var expiredTokens = user.RefreshTokens
-                    .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
-                    .ToList();
-
-                foreach (var token in expiredTokens)
-                {
-                    user.RemoveRefreshToken(token);
-                    
-                    logger.LogDebug("Removed token: {TokenValue}, User ID: {UserId}, Expired at: {TokenExpires}, Revoked at: {TokenRevoked}", token.TokenValue.Value, user.Id, token.TokenValue.Expires, token.RevocationInfo?.Revoked);
-                }
-
-                applicationUnitOfWork.ApplicationUsers.Update(user);
-            }
-
-            await applicationUnitOfWork.CommitAsync();
-            await applicationUnitOfWork.CommitTransactionAsync();
-
-            logger.LogInformation("Cleaned up expired or revoked refresh tokens.");
-
-            return Result.Ok();
+            applicationUnitOfWork.ApplicationUsers.Update(user);
         }
-        catch (Exception ex)
-        {
-            await applicationUnitOfWork.RollbackTransactionAsync();
-            logger.LogError("Error cleaning up expired tokens: {Message}", ex.Message);
-            throw;
-        }
+
+        await applicationUnitOfWork.CommitAsync();
+
+        logger.LogInformation("Cleaned up expired or revoked refresh tokens.");
+
+        return Result.Ok();
     }
 
     public async Task<Result> IsRefreshTokenValid(string userId, string refreshToken)
