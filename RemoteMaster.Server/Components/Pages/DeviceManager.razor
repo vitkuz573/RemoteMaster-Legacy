@@ -11,44 +11,45 @@
 
 @if (_deviceItems.Any())
 {
-    @foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
-    {
-        <div class="mx-auto mt-5 w-full max-w-6xl">
-            <div class="mb-4 rounded border border-gray-300">
-                <button @onclick="() => TogglePanel(deviceGroup.Key)" class="w-full px-4 py-3 bg-gray-200 text-left text-lg font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <div class="mx-auto mt-6 w-full max-w-7xl">
+        @foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
+        {
+            <div class="mb-6 overflow-hidden rounded-lg border border-gray-200 shadow-lg">
+                <button @onclick="() => TogglePanel(deviceGroup.Key)"
+                        class="w-full px-6 py-4 bg-indigo-600 text-left text-lg font-semibold text-white hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @deviceGroup.Key
                 </button>
 
                 @if (IsPanelOpen(deviceGroup.Key))
                 {
-                    <div class="border-t border-gray-300 bg-white p-4">
+                    <div class="divide-y divide-gray-100 border-t border-gray-200 bg-white">
                         @foreach (var device in deviceGroup)
                         {
-                            <div class="mb-4 rounded border bg-gray-50 p-4">
-                                <div class="mb-2">
-                                    <p class="text-sm text-gray-600"><strong>Name:</strong> @device.Name</p>
-                                    <p class="text-sm text-gray-600"><strong>Manufacturer:</strong> @device.Manufacturer</p>
-                                    <p class="text-sm text-gray-600"><strong>Hardware Id:</strong> @device.HardwareId</p>
-                                    <p class="text-sm text-gray-600"><strong>Compatible Ids:</strong> @device.CompatibleIds</p>
-                                    <p class="text-sm text-gray-600"><strong>Location Info:</strong> @device.LocationInfo</p>
-                                    <p class="text-sm text-gray-600"><strong>Service:</strong> @device.Service</p>
+                            <div class="flex items-center justify-between p-4 transition duration-300 hover:bg-gray-50">
+                                <div class="flex-1">
+                                    <p class="text-md font-semibold text-gray-800">@device.Name</p>
+                                    <p class="text-sm text-gray-500">Manufacturer: @device.Manufacturer</p>
+                                    <p class="text-sm text-gray-500">Hardware ID: @device.HardwareId</p>
+                                    <p class="text-sm text-gray-500">Location Info: @device.LocationInfo</p>
                                 </div>
                                 <div class="flex space-x-4">
                                     @if (device.IsEnabled)
                                     {
-                                        <button disabled class="rounded bg-gray-400 px-4 py-2 text-white">
+                                        <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
                                             Enable
                                         </button>
-                                        <button @onclick="() => DisableDevice(device.DeviceInstanceId)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                        <button @onclick="() => DisableDevice(device.DeviceInstanceId)"
+                                                class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-red-300">
                                             Disable
                                         </button>
                                     }
                                     else
                                     {
-                                        <button @onclick="() => EnableDevice(device.DeviceInstanceId)" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                                        <button @onclick="() => EnableDevice(device.DeviceInstanceId)"
+                                                class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-300">
                                             Enable
                                         </button>
-                                        <button disabled class="rounded bg-gray-400 px-4 py-2 text-white">
+                                        <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
                                             Disable
                                         </button>
                                     }
@@ -58,8 +59,8 @@
                     </div>
                 }
             </div>
-        </div>
-    }
+        }
+    </div>
 }
 else
 {
