@@ -17,25 +17,25 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            logger.LogInformation("Committing changes...");
-
-            try
-            {
-                var result = await context.SaveChangesAsync(cancellationToken);
-                logger.LogInformation("Changes committed successfully.");
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Error committing changes: {Message}", ex.Message);
-                throw;
-            }
+            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
         }
 
-        throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
+        logger.LogInformation("Committing changes...");
+
+        try
+        {
+            var result = await context.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Changes committed successfully.");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error committing changes: {Message}", ex.Message);
+            throw;
+        }
     }
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
