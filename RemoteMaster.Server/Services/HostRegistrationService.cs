@@ -88,14 +88,24 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             throw new InvalidOperationException("Host information must be provided during the registration process.");
         }
 
+        var existingHost = await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.MacAddress.Equals(hostConfiguration.Host.MacAddress));
+
+        if (existingHost.Any())
+        {
+            var errorMessage = $"Host with MAC address `{hostConfiguration.Host.MacAddress}` is already registered in the system.";
+            await eventNotificationService.SendNotificationAsync(errorMessage);
+
+            return Result.Fail(errorMessage);
+        }
+
         var organizationResult = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
 
         if (organizationResult.IsFailed)
         {
             var errorMessage = $"Host registration failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
-            
+
             return Result.Fail(errorMessage);
         }
 
@@ -104,9 +114,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         if (parentOuResult.IsFailed)
         {
             var errorMessage = $"Host registration failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
-            
+
             return Result.Fail(errorMessage);
         }
 
@@ -119,20 +129,20 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             if (host != null)
             {
                 var updateResult = await UpdateHostAsync(host, hostConfiguration);
-                
+
                 if (updateResult.IsFailed)
                 {
                     var errorMessage = $"Failed to update existing host: {updateResult.Errors.FirstOrDefault()?.Message}";
-                    
+
                     await eventNotificationService.SendNotificationAsync(errorMessage);
-                    
+
                     return Result.Fail(errorMessage);
                 }
 
                 var updateSuccessMessage = $"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-                
+
                 await eventNotificationService.SendNotificationAsync(updateSuccessMessage);
-                
+
                 return Result.Ok();
             }
 
@@ -142,7 +152,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             await applicationUnitOfWork.CommitAsync();
 
             var successMessage = $"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(successMessage);
 
             return Result.Ok();
@@ -150,9 +160,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         catch (Exception ex)
         {
             var errorMessage = $"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
-            
+
             return Result.Fail(errorMessage);
         }
     }
