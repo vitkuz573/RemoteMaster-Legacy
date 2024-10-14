@@ -84,35 +84,32 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
                 var tokenDataResult = await tokenService.GenerateTokensAsync(user.Id);
 
-                if (tokenDataResult.IsSuccess)
-                {
-                    var storeTokensResult = await tokenStorageService.StoreTokensAsync(user.Id, tokenDataResult.Value);
-
-                    if (storeTokensResult.IsSuccess)
-                    {
-                        logger.LogInformation("User {Username} logged in from IP {IPAddress} at {LoginTime}.", username, ipAddress, DateTime.UtcNow.ToLocalTime());
-
-                        await applicationUserService.AddSignInEntry(user, true);
-
-                        await applicationUnitOfWork.CommitTransactionAsync();
-
-                        return new AuthenticationResult
-                        {
-                            Status = AuthenticationStatus.Success,
-                            RedirectUrl = returnUrl
-                        };
-                    }
-                    else
-                    {
-                        throw new Exception("Error: Failed to store tokens.");
-                    }
-                }
-                else
+                if (!tokenDataResult.IsSuccess)
                 {
                     throw new Exception("Error: Failed to generate tokens.");
                 }
+
+                var storeTokensResult = await tokenStorageService.StoreTokensAsync(user.Id, tokenDataResult.Value);
+
+                if (!storeTokensResult.IsSuccess)
+                {
+                    throw new Exception("Error: Failed to store tokens.");
+                }
+
+                logger.LogInformation("User {Username} logged in from IP {IPAddress} at {LoginTime}.", username, ipAddress, DateTime.UtcNow.ToLocalTime());
+
+                await applicationUserService.AddSignInEntry(user, true);
+
+                await applicationUnitOfWork.CommitTransactionAsync();
+
+                return new AuthenticationResult
+                {
+                    Status = AuthenticationStatus.Success,
+                    RedirectUrl = returnUrl
+                };
             }
-            else if (result.RequiresTwoFactor)
+
+            if (result.RequiresTwoFactor)
             {
                 await applicationUnitOfWork.CommitTransactionAsync();
 
@@ -122,19 +119,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
                     RedirectUrl = "Account/LoginWith2fa"
                 };
             }
-            else if (result.IsLockedOut)
-            {
-                logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
 
-                await applicationUnitOfWork.CommitTransactionAsync();
-
-                return new AuthenticationResult
-                {
-                    Status = AuthenticationStatus.LockedOut,
-                    ErrorMessage = "Error: Your account has been locked out."
-                };
-            }
-            else
+            if (!result.IsLockedOut)
             {
                 return new AuthenticationResult
                 {
@@ -142,6 +128,17 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
                     ErrorMessage = "Error: Invalid login attempt."
                 };
             }
+
+            logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
+
+            await applicationUnitOfWork.CommitTransactionAsync();
+
+            return new AuthenticationResult
+            {
+                Status = AuthenticationStatus.LockedOut,
+                ErrorMessage = "Error: Your account has been locked out."
+            };
+
         }
         catch (Exception ex)
         {
