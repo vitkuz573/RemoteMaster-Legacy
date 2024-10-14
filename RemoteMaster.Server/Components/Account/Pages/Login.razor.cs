@@ -35,8 +35,6 @@ public partial class Login
         {
             Logger.LogInformation("User already logged in. Redirecting to the origin page or default page.");
             RedirectManager.RedirectTo(ReturnUrl ?? "/");
-
-            return;
         }
     }
 
@@ -83,7 +81,7 @@ public partial class Login
                 break;
 
             default:
-                _errorMessage = "An unknown error occurred.";
+                _errorMessage = "Error: An unknown error occurred.";
                 break;
         }
     }

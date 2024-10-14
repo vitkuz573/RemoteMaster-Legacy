@@ -1,15 +1,8 @@
 ﻿@page "/Account/Login"
 
-@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
-@using RemoteMaster.Server.Aggregates.ApplicationUserAggregate
 
-@inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
-@inject ITokenService TokenService
-@inject UserManager<ApplicationUser> UserManager
-@inject ITokenStorageService TokenStorageService
-@inject IApplicationUserService ApplicationUserService
 @inject IAuthenticationService AuthenticationService
 @inject ILogger<Login> Logger
 
