@@ -654,7 +654,47 @@ public partial class Home
         }
     }
 
-    private async Task WimBoot() => await ExecuteAction<BootToWimDialog>("WIM Boot");
+    private async Task WimBoot()
+    {
+        var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
+
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
+        var additionalParameters = new Dictionary<string, object>
+        {
+            { nameof(BootToWimDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemoved) }
+        };
+
+        var dialogParameters = new DialogParameters
+        {
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.Hosts), hosts },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.HubPath), "hubs/control" },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.StartConnection), true },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.RequireConnections), true },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.AdditionalParameters), additionalParameters }
+        };
+
+        await ExecuteDialog<BootToWimDialog>("WIM Boot", dialogParameters, dialogOptions);
+
+        return;
+
+        async Task OnHostsRemoved(IEnumerable<HostDto> removedHosts)
+        {
+            foreach (var removedHost in removedHosts)
+            {
+                _selectedHosts.RemoveAll(c => c.Id == removedHost.Id);
+                _availableHosts.TryRemove(removedHost.IpAddress, out _);
+                _unavailableHosts.TryRemove(removedHost.IpAddress, out _);
+                _pendingHosts.TryRemove(removedHost.IpAddress, out _);
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     private async Task OpenTaskManager() => await OpenHostWindow("taskmanager");
 
