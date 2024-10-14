@@ -13,13 +13,19 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
     private IDbContextTransaction? _transaction;
     private bool _disposed;
 
+    public bool IsInTransaction => _transaction != null;
+
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             logger.LogInformation("Committing changes...");
 
-            return await context.SaveChangesAsync(cancellationToken);
+            var result = await context.SaveChangesAsync(cancellationToken);
+
+            logger.LogInformation("Changes committed successfully.");
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -30,6 +36,11 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
+        if (_transaction != null)
+        {
+            throw new InvalidOperationException("A transaction is already in progress.");
+        }
+
         try
         {
             logger.LogInformation("Beginning transaction...");
@@ -45,14 +56,18 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
+        if (_transaction == null)
+        {
+            throw new InvalidOperationException("No transaction in progress to commit.");
+        }
+
         try
         {
-            if (_transaction != null)
-            {
-                logger.LogInformation("Committing transaction...");
+            logger.LogInformation("Committing transaction...");
 
-                await _transaction.CommitAsync(cancellationToken);
-            }
+            await _transaction.CommitAsync(cancellationToken);
+
+            logger.LogInformation("Transaction committed successfully.");
         }
         catch (Exception ex)
         {
@@ -60,23 +75,46 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             await RollbackTransactionAsync(cancellationToken);
             throw;
         }
+        finally
+        {
+            await DisposeTransactionAsync();
+        }
     }
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
+        if (_transaction == null)
+        {
+            throw new InvalidOperationException("No transaction in progress to rollback.");
+        }
+
         try
         {
-            if (_transaction != null)
-            {
-                logger.LogWarning("Rolling back transaction...");
+            logger.LogWarning("Rolling back transaction...");
 
-                await _transaction.RollbackAsync(cancellationToken);
-            }
+            await _transaction.RollbackAsync(cancellationToken);
+
+            logger.LogWarning("Transaction rolled back successfully.");
         }
         catch (Exception ex)
         {
             logger.LogError("Error rolling back transaction: {Message}", ex.Message);
             throw;
+        }
+        finally
+        {
+            await DisposeTransactionAsync();
+        }
+    }
+
+    private async Task DisposeTransactionAsync()
+    {
+        if (_transaction != null)
+        {
+            await _transaction.DisposeAsync();
+            _transaction = null;
+
+            logger.LogInformation("Transaction disposed.");
         }
     }
 

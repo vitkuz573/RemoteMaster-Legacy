@@ -6,6 +6,8 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IUnitOfWork : IDisposable
 {
+    bool IsInTransaction { get; }
+
     Task<int> CommitAsync(CancellationToken cancellationToken = default);
     
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
