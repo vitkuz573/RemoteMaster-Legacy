@@ -4,15 +4,16 @@
 
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Shared.Models;
-using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using RemoteMaster.Shared.DTOs;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
+using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class DeviceManagerService : IDeviceManagerService
+public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDeviceManagerService
 {
     public List<DeviceDto> GetDeviceList()
     {
@@ -193,6 +194,45 @@ public class DeviceManagerService : IDeviceManagerService
         }
         catch (Exception)
         {
+            return false;
+        }
+    }
+
+    public bool UpdateDeviceDriver(string hardwareId, string infFilePath)
+    {
+        BOOL rebootRequired = default;
+
+        try
+        {
+            var hwndParent = HWND.Null;
+
+            const UPDATEDRIVERFORPLUGANDPLAYDEVICES_FLAGS installFlags = UPDATEDRIVERFORPLUGANDPLAYDEVICES_FLAGS.INSTALLFLAG_FORCE;
+
+            bool result;
+
+            unsafe
+            {
+                result = UpdateDriverForPlugAndPlayDevices(hwndParent, hardwareId, infFilePath, installFlags, &rebootRequired);
+            }
+
+            if (result)
+            {
+                if (rebootRequired)
+                {
+                    logger.LogInformation("Reboot is required to complete the driver update.");
+                }
+
+                return true;
+            }
+
+            logger.LogError("Driver update failed.");
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("An error occurred during driver update: {Message}", ex.Message);
+
             return false;
         }
     }

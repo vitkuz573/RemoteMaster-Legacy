@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
@@ -18,4 +17,6 @@ public interface IDeviceManagerService
     bool StopDeviceByInstanceId(string deviceInstanceId);
 
     bool StartDeviceByInstanceId(string deviceInstanceId);
+
+    bool UpdateDeviceDriver(string hardwareId, string infFilePath);
 }

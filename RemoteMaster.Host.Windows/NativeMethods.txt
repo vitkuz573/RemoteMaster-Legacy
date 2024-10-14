@@ -136,3 +136,5 @@ SetFocus
 
 // System Information and Status
 RtlGetVersion
+
+UpdateDriverForPlugAndPlayDevices
