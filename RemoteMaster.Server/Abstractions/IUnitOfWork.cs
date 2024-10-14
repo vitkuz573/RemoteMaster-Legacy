@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IUnitOfWork : IDisposable
+public interface IUnitOfWork : IDisposable, IAsyncDisposable
 {
     bool IsInTransaction { get; }
 

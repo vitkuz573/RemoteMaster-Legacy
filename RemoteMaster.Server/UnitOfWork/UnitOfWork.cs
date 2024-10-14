@@ -17,40 +17,51 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        try
+        if (!_disposed)
         {
             logger.LogInformation("Committing changes...");
 
-            var result = await context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                var result = await context.SaveChangesAsync(cancellationToken);
+                logger.LogInformation("Changes committed successfully.");
 
-            logger.LogInformation("Changes committed successfully.");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Error committing changes: {Message}", ex.Message);
+                throw;
+            }
+        }
 
-            return result;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Error committing changes: {Message}", ex.Message);
-            throw;
-        }
+        throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
     }
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction != null)
+        if (!_disposed)
         {
-            throw new InvalidOperationException("A transaction is already in progress.");
-        }
+            if (_transaction != null)
+            {
+                throw new InvalidOperationException("A transaction is already in progress.");
+            }
 
-        try
-        {
             logger.LogInformation("Beginning transaction...");
 
-            _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Error beginning transaction: {Message}", ex.Message);
+                throw;
+            }
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError("Error beginning transaction: {Message}", ex.Message);
-            throw;
+            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
         }
     }
 
@@ -61,23 +72,30 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             throw new InvalidOperationException("No transaction in progress to commit.");
         }
 
-        try
+        if (!_disposed)
         {
             logger.LogInformation("Committing transaction...");
 
-            await _transaction.CommitAsync(cancellationToken);
-
-            logger.LogInformation("Transaction committed successfully.");
+            try
+            {
+                await _transaction.CommitAsync(cancellationToken);
+                
+                logger.LogInformation("Transaction committed successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Error committing transaction: {Message}", ex.Message);
+                await RollbackTransactionAsync(cancellationToken);
+                throw;
+            }
+            finally
+            {
+                await DisposeTransactionAsync();
+            }
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError("Error committing transaction: {Message}", ex.Message);
-            await RollbackTransactionAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await DisposeTransactionAsync();
+            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
         }
     }
 
@@ -88,22 +106,29 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             throw new InvalidOperationException("No transaction in progress to rollback.");
         }
 
-        try
+        if (!_disposed)
         {
             logger.LogWarning("Rolling back transaction...");
 
-            await _transaction.RollbackAsync(cancellationToken);
-
-            logger.LogWarning("Transaction rolled back successfully.");
+            try
+            {
+                await _transaction.RollbackAsync(cancellationToken);
+               
+                logger.LogWarning("Transaction rolled back successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Error rolling back transaction: {Message}", ex.Message);
+                throw;
+            }
+            finally
+            {
+                await DisposeTransactionAsync();
+            }
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError("Error rolling back transaction: {Message}", ex.Message);
-            throw;
-        }
-        finally
-        {
-            await DisposeTransactionAsync();
+            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
         }
     }
 
@@ -113,25 +138,48 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
         {
             await _transaction.DisposeAsync();
             _transaction = null;
-
             logger.LogInformation("Transaction disposed.");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore();
+        GC.SuppressFinalize(this);
+    }
+
+    protected async virtual ValueTask DisposeAsyncCore()
+    {
+        if (!_disposed)
+        {
+            if (_transaction != null)
+            {
+                await _transaction.DisposeAsync();
+            }
+
+            await context.DisposeAsync();
+            _disposed = true;
+
+            logger.LogInformation("Context and transaction disposed asynchronously.");
         }
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _transaction?.Dispose();
-                context.Dispose();
-
-                logger.LogInformation("Context and transaction disposed.");
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _transaction?.Dispose();
+            context.Dispose();
+
+            logger.LogInformation("Context and transaction disposed.");
+        }
+
+        _disposed = true;
     }
 
     public void Dispose()
