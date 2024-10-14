@@ -51,28 +51,28 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                    @foreach (var item in _fileSystemItems)
-                    {
-                        <tr>
-                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                <div class="flex items-center space-x-2">
-                                    <button @onclick="() => HandleClick(item)" class="flex items-center space-x-2 p-0 hover:underline focus:outline-none">
-                                        @if (item.Type == FileSystemItemType.Directory)
-                                        {
-                                            <span class="material-icons">folder</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="material-icons">insert_drive_file</span>
-                                        }
-                                        <span class="hover:no-underline">@item.Name</span>
-                                    </button>
-                                </div>
-                            </td>
-                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@item.Type</td>
-                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@FormatSize(item.Size)</td>
-                        </tr>
-                    }
+                @foreach (var item in _fileSystemItems)
+                {
+                    <tr>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                            <div class="flex items-center space-x-2">
+                                <button @onclick="() => HandleClick(item)" class="flex items-center space-x-2 p-0 focus:outline-none">
+                                    @if (item.Type == FileSystemItemType.Directory)
+                                    {
+                                        <span class="material-icons">folder</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="material-icons">insert_drive_file</span>
+                                    }
+                                    <span class="hover:underline">@item.Name</span>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@item.Type</td>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@FormatSize(item.Size)</td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

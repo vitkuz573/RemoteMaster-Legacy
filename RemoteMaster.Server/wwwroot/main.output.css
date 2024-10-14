@@ -1782,10 +1782,6 @@ video {
   text-decoration-line: underline;
 }
 
-.hover\:no-underline:hover {
-  text-decoration-line: none;
-}
-
 .hover\:opacity-75:hover {
   opacity: 0.75;
 }
