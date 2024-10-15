@@ -238,22 +238,22 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
     private static string GetDevicePropertyString(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
     {
-        var buffer = new byte[DefaultBufferSize];
-
-        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, buffer, out var result) ? CleanString(result) : string.Empty;
+        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, out var result)
+            ? CleanString(result)
+            : string.Empty;
     }
 
     private static List<string> GetDevicePropertyMultiString(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
     {
-        var buffer = new byte[DefaultBufferSize];
-
-        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, buffer, out var result)
+        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, out var result)
             ? CleanMultiString(result)
             : [];
     }
 
-    private static bool TryGetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property, Span<byte> buffer, out byte[] result)
+    private static bool TryGetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property, out byte[] result)
     {
+        Span<byte> buffer = new byte[DefaultBufferSize];
+
         uint requiredSize = 0;
         uint propertyRegDataType = 0;
 
@@ -264,10 +264,20 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
             success = SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, property, &propertyRegDataType, buffer, &requiredSize);
         }
 
+        if (!success && requiredSize > buffer.Length)
+        {
+            buffer = new byte[requiredSize];
+
+            unsafe
+            {
+                success = SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, property, &propertyRegDataType, buffer, &requiredSize);
+            }
+        }
+
         if (success && requiredSize <= buffer.Length)
         {
             result = buffer[..(int)requiredSize].ToArray();
-
+            
             return true;
         }
 
@@ -279,7 +289,6 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
     private static string GetDeviceInstanceId(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
     {
         var instanceIdBuffer = new char[DefaultBufferSize];
-
         uint requiredSize = 0;
 
         unsafe
@@ -290,10 +299,27 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
                 {
                     return new string(pInstanceId, 0, (int)requiredSize - 1);
                 }
+
+                if (requiredSize > instanceIdBuffer.Length)
+                {
+                    instanceIdBuffer = new char[requiredSize];
+
+                    fixed (char* pInstanceIdExpanded = instanceIdBuffer)
+                    {
+                        if (!SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, pInstanceIdExpanded, requiredSize, &requiredSize))
+                        {
+                            return string.Empty;
+                        }
+                    }
+                }
+                else
+                {
+                    return string.Empty;
+                }
+
+                return new string(pInstanceId, 0, (int)requiredSize - 1);
             }
         }
-
-        return string.Empty;
     }
 
     private static string GetClassNameFromGuid(Guid classGuid)
@@ -319,9 +345,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
     private static SETUP_DI_DEVICE_CONFIGURATION_FLAGS GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
     {
-        var buffer = new byte[4];
-
-        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, buffer, out var result)
+        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, out var result)
             ? (SETUP_DI_DEVICE_CONFIGURATION_FLAGS)BitConverter.ToUInt32(result, 0)
             : default;
     }
