@@ -36,7 +36,7 @@ public partial class DeviceManager : IAsyncDisposable
 
     private readonly Dictionary<string, bool> _devicePanelState = [];
 
-    private bool _isCategoryGrouping = false;
+    private bool _isCategoryGrouping;
 
     private static readonly Dictionary<string, DeviceClassInfo> DeviceClassInfoMap = new()
     {
@@ -103,6 +103,8 @@ public partial class DeviceManager : IAsyncDisposable
     private void ToggleGrouping()
     {
         _isCategoryGrouping = !_isCategoryGrouping;
+
+        _devicePanelState.Clear();
     }
 
     private async Task FetchDevices()
