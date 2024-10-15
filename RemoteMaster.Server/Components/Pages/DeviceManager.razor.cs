@@ -53,7 +53,7 @@ public partial class DeviceManager : IAsyncDisposable
         { "Processor", new DeviceClassInfo("Processor", "Processor", new IconInfo("memory", "material-symbols-outlined"), "System Devices") },
         { "Firmware", new DeviceClassInfo("Firmware", "Firmware", new IconInfo("memory", "material-symbols-outlined"), "System Devices") },
         { "SecurityDevices", new DeviceClassInfo("SecurityDevices", "Security Devices", new IconInfo("security", "material-icons"), "System Devices") },
-        { "Ports", new DeviceClassInfo("Ports", "Ports", new IconInfo("settings_input_hdmi", "material-symbols-outlined"), "System Devices") }, // Изменено на System Devices
+        { "Ports", new DeviceClassInfo("Ports", "Ports", new IconInfo("settings_input_hdmi", "material-symbols-outlined"), "System Devices") },
 
         // Network Devices
         { "Net", new DeviceClassInfo("Net", "Network Device", new IconInfo("network_check", "material-symbols-outlined"), "Network Devices") },
@@ -70,7 +70,7 @@ public partial class DeviceManager : IAsyncDisposable
         { "HIDClass", new DeviceClassInfo("HIDClass", "Input Device", new IconInfo("gamepad", "material-symbols-outlined"), "Input Devices") },
         { "Mouse", new DeviceClassInfo("Mouse", "Mouse", new IconInfo("mouse", "material-icons"), "Input Devices") },
         { "Keyboard", new DeviceClassInfo("Keyboard", "Keyboard", new IconInfo("keyboard", "material-icons"), "Input Devices") },
-        { "USB", new DeviceClassInfo("USB", "USB Device", new IconInfo("usb", "material-symbols-outlined"), "Input Devices") }, // Изменено на Input Devices
+        { "USB", new DeviceClassInfo("USB", "USB Device", new IconInfo("usb", "material-symbols-outlined"), "Input Devices") },
 
         // Audio Devices
         { "MEDIA", new DeviceClassInfo("MEDIA", "Media Device", new IconInfo("perm_media", "material-icons"), "Audio Devices") },
