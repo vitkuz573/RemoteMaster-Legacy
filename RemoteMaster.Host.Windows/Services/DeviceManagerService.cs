@@ -40,7 +40,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
             var deviceInstanceId = GetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData);
             var deviceName = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_DEVICEDESC);
             var hardwareId = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_HARDWAREID);
-            var compatibleIds = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_COMPATIBLEIDS);
+            var compatibleIds = GetDevicePropertyMultiString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_COMPATIBLEIDS);
             var manufacturer = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_MFG);
             var friendlyName = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_FRIENDLYNAME);
             var locationInfo = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_LOCATION_INFORMATION);
@@ -243,6 +243,15 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
         return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, buffer, out var result) ? CleanString(result) : string.Empty;
     }
 
+    private static List<string> GetDevicePropertyMultiString(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
+    {
+        var buffer = new byte[DefaultBufferSize];
+
+        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, buffer, out var result)
+            ? CleanMultiString(result)
+            : [];
+    }
+
     private static bool TryGetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property, Span<byte> buffer, out byte[] result)
     {
         uint requiredSize = 0;
@@ -322,5 +331,14 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
         var str = Encoding.Unicode.GetString(buffer);
 
         return str.Split('\0')[0].Trim();
+    }
+
+    private static List<string> CleanMultiString(byte[] buffer)
+    {
+        var str = Encoding.Unicode.GetString(buffer);
+
+        var strings = str.Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+
+        return strings.ToList();
     }
 }

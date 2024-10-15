@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class DeviceDto(string name, string deviceClass, string manufacturer, string hardwareId, string compatibleIds, string locationInfo, string service, string deviceInstanceId, bool isEnabled)
+public class DeviceDto(string name, string deviceClass, string manufacturer, string hardwareId, List<string> compatibleIds, string locationInfo, string service, string deviceInstanceId, bool isEnabled)
 {
     public string Name { get; } = name;
 
@@ -14,7 +14,7 @@ public class DeviceDto(string name, string deviceClass, string manufacturer, str
 
     public string HardwareId { get; } = hardwareId;
 
-    public string CompatibleIds { get; } = compatibleIds;
+    public List<string> CompatibleIds { get; } = compatibleIds;
 
     public string LocationInfo { get; } = locationInfo;
 
