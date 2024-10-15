@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
@@ -42,5 +43,12 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
         {
             await Clients.Caller.NotifyDeviceEnableFailed(deviceInstanceId);
         }
+    }
+
+    public void UpdateDeviceDriver(DriverUpdateRequest driveUpdateRequest)
+    {
+        ArgumentNullException.ThrowIfNull(driveUpdateRequest);
+
+        deviceManagerService.UpdateDeviceDriver(driveUpdateRequest.HardwareId, driveUpdateRequest.InfFilePath);
     }
 }
