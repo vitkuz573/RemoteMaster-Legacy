@@ -67,7 +67,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
             }
 
             var configFlags = GetConfigFlags(deviceInfoSetHandle, deviceInfoData);
-            var isEnabled = (configFlags & 0x00000001) == 0;
+            var isEnabled = (configFlags & SETUP_DI_DEVICE_CONFIGURATION_FLAGS.CONFIGFLAG_DISABLED) == 0;
 
             devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service, deviceInstanceId, isEnabled));
 
@@ -268,7 +268,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
         }
     }
 
-    private static uint GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
+    private static SETUP_DI_DEVICE_CONFIGURATION_FLAGS GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
     {
         var buffer = new byte[4];
 
@@ -277,8 +277,13 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
         unsafe
         {
-            return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? BitConverter.ToUInt32(buffer, 0) : 0;
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                return (SETUP_DI_DEVICE_CONFIGURATION_FLAGS)BitConverter.ToUInt32(buffer, 0);
+            }
         }
+
+        return default;
     }
 
     private static string CleanString(byte[] buffer)

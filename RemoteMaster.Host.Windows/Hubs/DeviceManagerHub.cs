@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR;
+using RemoteMaster.Host.Core.Enums;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.DTOs;
 
@@ -23,11 +24,11 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
 
         if (result)
         {
-            await Clients.Caller.NotifyDeviceDisabled(deviceInstanceId);
+            await Clients.Caller.NotifyDeviceStatusChanged(deviceInstanceId, "Device disabled successfully", NotificationSeverity.Success);
         }
         else
         {
-            await Clients.Caller.NotifyDeviceDisableFailed(deviceInstanceId);
+            await Clients.Caller.NotifyDeviceStatusChanged(deviceInstanceId, "Failed to disable device", NotificationSeverity.Error);
         }
     }
 
@@ -37,11 +38,11 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
 
         if (result)
         {
-            await Clients.Caller.NotifyDeviceEnabled(deviceInstanceId);
+            await Clients.Caller.NotifyDeviceStatusChanged(deviceInstanceId, "Device enabled successfully", NotificationSeverity.Success);
         }
         else
         {
-            await Clients.Caller.NotifyDeviceEnableFailed(deviceInstanceId);
+            await Clients.Caller.NotifyDeviceStatusChanged(deviceInstanceId, "Failed to enable device", NotificationSeverity.Error);
         }
     }
 
