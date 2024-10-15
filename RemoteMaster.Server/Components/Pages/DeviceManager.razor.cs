@@ -3,14 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 
@@ -172,5 +173,38 @@ public partial class DeviceManager : IAsyncDisposable
         await FetchDevices();
 
         StateHasChanged();
+    }
+
+    private static IconInfo GetIconForDeviceClass(string deviceClass)
+    {
+        return deviceClass switch
+        {
+            "Monitor" => new IconInfo("monitor", "material-symbols-outlined"),
+            "System" => new IconInfo("settings", "material-icons"),
+            "Net" => new IconInfo("network_check", "material-symbols-outlined"),
+            "SoftwareComponent" => new IconInfo("widgets", "material-symbols-outlined"),
+            "Display" => new IconInfo("tv", "material-symbols-outlined"),
+            "PrintQueue" => new IconInfo("print", "material-icons"),
+            "DiskDrive" => new IconInfo("storage", "material-symbols-outlined"),
+            "HIDClass" => new IconInfo("gamepad", "material-symbols-outlined"),
+            "SoftwareDevice" => new IconInfo("important_devices", "material-symbols-outlined"),
+            "USB" => new IconInfo("usb", "material-symbols-outlined"),
+            "MEDIA" => new IconInfo("perm_media", "material-icons"),
+            "UCMCLIENT" => new IconInfo("developer_board", "material-symbols-outlined"),
+            "SCSIAdapter" => new IconInfo("dns", "material-icons"),
+            "Ports" => new IconInfo("settings_input_hdmi", "material-symbols-outlined"),
+            "VolumeSnapshot" => new IconInfo("camera_roll", "material-symbols-outlined"),
+            "Mouse" => new IconInfo("mouse", "material-icons"),
+            "Keyboard" => new IconInfo("keyboard", "material-icons"),
+            "Computer" => new IconInfo("computer", "material-symbols-outlined"),
+            "Processor" => new IconInfo("memory", "material-symbols-outlined"),
+            "HDC" => new IconInfo("hard_drive", "material-symbols-outlined"),
+            "Volume" => new IconInfo("disc_full", "material-symbols-outlined"),
+            "SecurityDevices" => new IconInfo("security", "material-icons"),
+            "Bluetooth" => new IconInfo("bluetooth", "material-symbols-outlined"),
+            "Firmware" => new IconInfo("memory", "material-symbols-outlined"),
+            "AudioEndpoint" => new IconInfo("speaker", "material-symbols-outlined"),
+            _ => new IconInfo("devices", "material-icons")
+        };
     }
 }

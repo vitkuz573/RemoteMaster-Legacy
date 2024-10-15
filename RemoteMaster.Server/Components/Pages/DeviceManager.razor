@@ -14,10 +14,27 @@
     <div class="mx-auto mt-6 w-full max-w-7xl">
         @foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
         {
-            <div class="mb-6 overflow-hidden rounded-lg border border-gray-200 shadow-lg">
+            var iconInfo = GetIconForDeviceClass(deviceGroup.Key);
+
+            <div class="mb-4 rounded-lg border border-gray-300 shadow-sm">
                 <button @onclick="() => TogglePanel(deviceGroup.Key)"
-                        class="w-full px-6 py-4 bg-indigo-600 text-left text-lg font-semibold text-white hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    @deviceGroup.Key
+                        class="flex items-center justify-between w-full px-4 py-3 bg-indigo-500 text-white text-lg font-medium rounded-lg hover:bg-indigo-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <span class="flex items-center space-x-3">
+                        <span class="@iconInfo.IconStyle">
+                            @iconInfo.IconName
+                        </span>
+                        <span>@deviceGroup.Key</span>
+                    </span>
+                    <span class="material-icons">
+                        @if (IsPanelOpen(deviceGroup.Key))
+                        {
+                            <span class="material-icons">expand_less</span>
+                        }
+                        else
+                        {
+                            <span class="material-icons">expand_more</span>
+                        }
+                    </span>
                 </button>
 
                 @if (IsPanelOpen(deviceGroup.Key))
@@ -25,7 +42,7 @@
                     <div class="divide-y divide-gray-100 border-t border-gray-200 bg-white">
                         @foreach (var device in deviceGroup)
                         {
-                            <div class="flex items-center justify-between p-4 transition duration-300 hover:bg-gray-50">
+                            <div class="flex items-center justify-between p-4 transition-all duration-300 hover:bg-gray-50">
                                 <div class="flex-1">
                                     <p class="text-md select-text font-semibold text-gray-800">@device.Name</p>
                                     <p class="select-text text-sm text-gray-500">Manufacturer: @device.Manufacturer</p>
@@ -38,14 +55,14 @@
                                             Enable
                                         </button>
                                         <button @onclick="() => DisableDevice(device.DeviceInstanceId)"
-                                                class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                                class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-300">
                                             Disable
                                         </button>
                                     }
                                     else
                                     {
                                         <button @onclick="() => EnableDevice(device.DeviceInstanceId)"
-                                                class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-300">
+                                                class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-300">
                                             Enable
                                         </button>
                                         <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
