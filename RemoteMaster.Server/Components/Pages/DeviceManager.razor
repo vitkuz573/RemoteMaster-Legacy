@@ -18,7 +18,7 @@
 
             <div class="mb-4 rounded-lg border border-gray-300 shadow-sm">
                 <button @onclick="() => TogglePanel(deviceGroup.Key)"
-                        class="flex items-center justify-between w-full px-4 py-3 bg-indigo-500 text-white text-lg font-medium rounded-lg hover:bg-indigo-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        class="flex items-center justify-between w-full px-4 py-3 bg-indigo-500 text-white text-lg font-medium hover:bg-indigo-600 transition-all duration-300 focus:outline-none focus-visible:ring-0">
                     <span class="flex items-center space-x-3">
                         <span class="@iconInfo.IconStyle">
                             @iconInfo.IconName
@@ -39,7 +39,7 @@
 
                 @if (IsPanelOpen(deviceGroup.Key))
                 {
-                    <div class="divide-y divide-gray-100 border-t border-gray-200 bg-white">
+                    <div class="divide-y divide-gray-100 rounded-b-lg border-t border-gray-200 bg-white">
                         @foreach (var device in deviceGroup)
                         {
                             <div class="flex items-center justify-between p-4 transition-all duration-300 hover:bg-gray-50">
