@@ -2,8 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Host.Core.Enums;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
@@ -11,11 +11,5 @@ public interface IDeviceManagerClient
 {
     Task ReceiveDeviceList(List<DeviceDto> devices);
 
-    Task NotifyDeviceDisabled(string deviceInstanceId);
-
-    Task NotifyDeviceDisableFailed(string deviceInstanceId);
-
-    Task NotifyDeviceEnabled(string deviceInstanceId);
-
-    Task NotifyDeviceEnableFailed(string deviceInstanceId);
+    Task NotifyDeviceStatusChanged(string deviceInstanceId, string message, NotificationSeverity severity);
 }
