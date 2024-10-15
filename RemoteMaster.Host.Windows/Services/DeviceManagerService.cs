@@ -15,6 +15,8 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDeviceManagerService
 {
+    private const int DefaultBufferSize = 512;
+
     public List<DeviceDto> GetDeviceList()
     {
         var devices = new List<DeviceDto>();
@@ -35,18 +37,15 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
         while (SetupDiEnumDeviceInfo(deviceInfoSetHandle, deviceIndex, ref deviceInfoData))
         {
-            var instanceIdBuffer = new char[512];
-
-            var deviceInstanceId = GetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, instanceIdBuffer);
-
-            var deviceName = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_DEVICEDESC);
-            var hardwareId = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_HARDWAREID);
-            var compatibleIds = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_COMPATIBLEIDS);
-            var manufacturer = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_MFG);
-            var friendlyName = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_FRIENDLYNAME);
-            var locationInfo = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_LOCATION_INFORMATION);
-            var service = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_SERVICE);
-            var classGuid = GetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CLASSGUID);
+            var deviceInstanceId = GetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData);
+            var deviceName = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_DEVICEDESC);
+            var hardwareId = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_HARDWAREID);
+            var compatibleIds = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_COMPATIBLEIDS);
+            var manufacturer = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_MFG);
+            var friendlyName = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_FRIENDLYNAME);
+            var locationInfo = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_LOCATION_INFORMATION);
+            var service = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_SERVICE);
+            var classGuid = GetDevicePropertyString(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CLASSGUID);
 
             if (string.IsNullOrWhiteSpace(classGuid))
             {
@@ -237,8 +236,41 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
         }
     }
 
-    private static string GetDeviceInstanceId(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, char[] instanceIdBuffer)
+    private static string GetDevicePropertyString(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
     {
+        var buffer = new byte[DefaultBufferSize];
+
+        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, property, buffer, out var result) ? CleanString(result) : string.Empty;
+    }
+
+    private static bool TryGetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property, Span<byte> buffer, out byte[] result)
+    {
+        uint requiredSize = 0;
+        uint propertyRegDataType = 0;
+
+        bool success;
+
+        unsafe
+        {
+            success = SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, property, &propertyRegDataType, buffer, &requiredSize);
+        }
+
+        if (success && requiredSize <= buffer.Length)
+        {
+            result = buffer[..(int)requiredSize].ToArray();
+
+            return true;
+        }
+
+        result = [];
+
+        return false;
+    }
+
+    private static string GetDeviceInstanceId(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
+    {
+        var instanceIdBuffer = new char[DefaultBufferSize];
+
         uint requiredSize = 0;
 
         unsafe
@@ -255,47 +287,9 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
         return string.Empty;
     }
 
-    private static string GetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
-    {
-        var buffer = new byte[512];
-
-        uint requiredSize = 0;
-        uint propertyRegDataType = 0;
-
-        unsafe
-        {
-            return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, property, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? CleanString(buffer) : string.Empty;
-        }
-    }
-
-    private static SETUP_DI_DEVICE_CONFIGURATION_FLAGS GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
-    {
-        var buffer = new byte[4];
-
-        uint requiredSize = 0;
-        uint propertyRegDataType = 0;
-
-        unsafe
-        {
-            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
-            {
-                return (SETUP_DI_DEVICE_CONFIGURATION_FLAGS)BitConverter.ToUInt32(buffer, 0);
-            }
-        }
-
-        return default;
-    }
-
-    private static string CleanString(byte[] buffer)
-    {
-        var str = Encoding.Unicode.GetString(buffer);
-
-        return str.Split('\0')[0].Trim();
-    }
-
     private static string GetClassNameFromGuid(Guid classGuid)
     {
-        var classNameBuffer = new char[256];
+        var classNameBuffer = new char[DefaultBufferSize];
         uint requiredSize = 0;
 
         unsafe
@@ -312,5 +306,21 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
                 return new string(classNamePtr, 0, (int)requiredSize - 1);
             }
         }
+    }
+
+    private static SETUP_DI_DEVICE_CONFIGURATION_FLAGS GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
+    {
+        var buffer = new byte[4];
+
+        return TryGetDeviceProperty(deviceInfoSetHandle, deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, buffer, out var result)
+            ? (SETUP_DI_DEVICE_CONFIGURATION_FLAGS)BitConverter.ToUInt32(result, 0)
+            : default;
+    }
+
+    private static string CleanString(byte[] buffer)
+    {
+        var str = Encoding.Unicode.GetString(buffer);
+
+        return str.Split('\0')[0].Trim();
     }
 }
