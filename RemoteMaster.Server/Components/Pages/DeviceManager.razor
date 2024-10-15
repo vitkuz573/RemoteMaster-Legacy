@@ -23,7 +23,7 @@
                         <span class="@iconInfo.IconStyle">
                             @iconInfo.IconName
                         </span>
-                        <span>@deviceGroup.Key</span>
+                        <span>@(HumanReadableDeviceClassNames.TryGetValue(deviceGroup.Key, out var name) ? name : deviceGroup.Key)</span>
                     </span>
                     <span class="material-icons">
                         @if (IsPanelOpen(deviceGroup.Key))

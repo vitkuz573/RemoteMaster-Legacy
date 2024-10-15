@@ -36,6 +36,35 @@ public partial class DeviceManager : IAsyncDisposable
 
     private readonly Dictionary<string, bool> _devicePanelState = [];
 
+    private static readonly Dictionary<string, string> HumanReadableDeviceClassNames = new()
+    {
+        { "Monitor", "Monitor" },
+        { "System", "System Device" },
+        { "Net", "Network Device" },
+        { "SoftwareComponent", "Software Component" },
+        { "Display", "Display" },
+        { "PrintQueue", "Print Queue" },
+        { "DiskDrive", "Disk Drive" },
+        { "HIDClass", "Input Device" },
+        { "SoftwareDevice", "Software Device" },
+        { "USB", "USB Device" },
+        { "MEDIA", "Media Device" },
+        { "UCMCLIENT", "UCM Client" },
+        { "SCSIAdapter", "SCSI Adapter" },
+        { "Ports", "Ports" },
+        { "VolumeSnapshot", "Volume Snapshot" },
+        { "Mouse", "Mouse" },
+        { "Keyboard", "Keyboard" },
+        { "Computer", "Computer" },
+        { "Processor", "Processor" },
+        { "HDC", "Hard Disk Controller" },
+        { "Volume", "Volume" },
+        { "SecurityDevices", "Security Devices" },
+        { "Bluetooth", "Bluetooth Device" },
+        { "Firmware", "Firmware" },
+        { "AudioEndpoint", "Audio Endpoint" }
+    };
+
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
