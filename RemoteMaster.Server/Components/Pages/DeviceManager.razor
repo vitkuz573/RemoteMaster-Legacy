@@ -10,78 +10,181 @@
 @inject IAccessTokenProvider AccessTokenProvider
 @inject ILogger<DeviceManager> Logger
 
-@if (_deviceItems.Any())
-{
-    <div class="mx-auto mt-6 w-full max-w-7xl">
-        @foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
-        {
-            var deviceClassInfo = DeviceClassInfoMap.TryGetValue(deviceGroup.Key, out var value) 
-                ? value 
-                : new DeviceClassInfo(deviceGroup.Key, deviceGroup.Key, new IconInfo("devices", "material-icons"));
-
-            <div class="mb-4 rounded-lg border border-gray-300 shadow-sm">
-                <button @onclick="() => TogglePanel(deviceGroup.Key)"
-                        class="flex items-center justify-between w-full px-4 py-3 bg-indigo-500 text-white text-lg font-medium hover:bg-indigo-600 transition-all duration-300 focus:outline-none focus-visible:ring-0">
-                    <span class="flex items-center space-x-3">
-                        <span class="@deviceClassInfo.IconInfo.IconStyle">
-                            @deviceClassInfo.IconInfo.IconName
-                        </span>
-                        <span>@deviceClassInfo.DisplayName</span>
-                    </span>
-                    <span class="material-icons">
-                        @if (IsPanelOpen(deviceGroup.Key))
-                        {
-                            <span class="material-icons">expand_less</span>
-                        }
-                        else
-                        {
-                            <span class="material-icons">expand_more</span>
-                        }
-                    </span>
-                </button>
-
-                @if (IsPanelOpen(deviceGroup.Key))
+<div class="mx-auto mt-6 w-full max-w-7xl">
+    <div class="mb-4 flex justify-end">
+        <button @onclick="ToggleGrouping" class="rounded bg-indigo-500 px-4 py-2 text-lg font-medium text-white shadow-sm transition-all duration-200 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <span class="material-icons mr-2 align-middle">
+                @if (_isCategoryGrouping)
                 {
-                    <div class="divide-y divide-gray-100 rounded-b-lg border-t border-gray-200 bg-white">
-                        @foreach (var device in deviceGroup)
-                        {
-                            <div class="flex items-center justify-between p-4 transition-all duration-300 hover:bg-gray-50">
-                                <div class="flex-1">
-                                    <p class="text-md select-text font-semibold text-gray-800">@device.Name</p>
-                                    <p class="select-text text-sm text-gray-500">Manufacturer: @device.Manufacturer</p>
-                                    <p class="select-text text-sm text-gray-500">Hardware ID: @device.HardwareId</p>
-                                </div>
-                                <div class="flex space-x-4">
-                                    @if (device.IsEnabled)
-                                    {
-                                        <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
-                                            Enable
-                                        </button>
-                                        <button @onclick="() => DisableDevice(device.DeviceInstanceId)"
-                                                class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-300">
-                                            Disable
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button @onclick="() => EnableDevice(device.DeviceInstanceId)"
-                                                class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-300">
-                                            Enable
-                                        </button>
-                                        <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
-                                            Disable
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
+                    @:devices
                 }
-            </div>
-        }
+                else
+                {
+                    @:category
+                }
+            </span>
+            @if (_isCategoryGrouping)
+            {
+                <span>Group by devices</span>
+            }
+            else
+            {
+                <span>Group by categories</span>
+            }
+        </button>
     </div>
-}
-else
-{
-    <p class="text-center text-gray-500">No devices found.</p>
-}
+
+    @if (_deviceItems.Any())
+    {
+        @if (_isCategoryGrouping)
+        {
+            @foreach (var deviceGroup in _deviceItems.GroupBy(device => 
+            {
+               var deviceClassInfo = DeviceClassInfoMap.TryGetValue(device.DeviceClass, out var value) 
+                   ? value 
+                   : new DeviceClassInfo(device.DeviceClass, device.DeviceClass, new IconInfo("devices", "material-icons"), "UnknownDevices");
+
+               return deviceClassInfo.GroupName;
+            }))
+            {
+                var firstDevice = deviceGroup.First();
+                var deviceClassInfo = DeviceClassInfoMap.TryGetValue(firstDevice.DeviceClass, out var value)
+                ? value
+                : new DeviceClassInfo(firstDevice.DeviceClass, firstDevice.DeviceClass, new IconInfo("devices", "material-icons"), "UnknownDevices");
+
+                <div class="mb-4 rounded-lg border border-gray-300 shadow-sm">
+                    <button @onclick="() => TogglePanel(deviceClassInfo.GroupName)"
+                            class="flex items-center justify-between w-full px-4 py-3 bg-indigo-500 text-white text-lg font-medium hover:bg-indigo-600 transition-all duration-300 focus:outline-none focus-visible:ring-0">
+                        <span class="flex items-center space-x-3">
+                            <span class="@deviceClassInfo.IconInfo.IconStyle">
+                                @deviceClassInfo.IconInfo.IconName
+                            </span>
+                            <span>@deviceClassInfo.GroupName</span>
+                        </span>
+                        <span class="material-icons">
+                            @if (IsPanelOpen(deviceClassInfo.GroupName))
+                            {
+                                <span class="material-icons">expand_less</span>
+                            }
+                            else
+                            {
+                                <span class="material-icons">expand_more</span>
+                            }
+                        </span>
+                    </button>
+
+                    @if (IsPanelOpen(deviceClassInfo.GroupName))
+                    {
+                        <div class="divide-y divide-gray-100 rounded-b-lg border-t border-gray-200 bg-white">
+                            @foreach (var device in deviceGroup)
+                            {
+                                <div class="flex items-center justify-between p-4 transition-all duration-300 hover:bg-gray-50">
+                                    <div class="flex-1">
+                                        <p class="text-md select-text font-semibold text-gray-800">@device.Name</p>
+                                        <p class="select-text text-sm text-gray-500">Manufacturer: @device.Manufacturer</p>
+                                        <p class="select-text text-sm text-gray-500">Hardware ID: @device.HardwareId</p>
+                                    </div>
+                                    <div class="flex space-x-4">
+                                        @if (device.IsEnabled)
+                                        {
+                                            <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
+                                                Enable
+                                            </button>
+                                            <button @onclick="() => DisableDevice(device.DeviceInstanceId)"
+                                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                                Disable
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button @onclick="() => EnableDevice(device.DeviceInstanceId)"
+                                                    class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-300">
+                                                Enable
+                                            </button>
+                                            <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
+                                                Disable
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            @foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
+            {
+                var deviceClassInfo = DeviceClassInfoMap.TryGetValue(deviceGroup.Key, out var value) 
+                    ? value 
+                    : new DeviceClassInfo(deviceGroup.Key, deviceGroup.Key, new IconInfo("devices", "material-icons"), "Unknown Devices");
+
+                <div class="mb-4 rounded-lg border border-gray-300 shadow-sm">
+                    <button @onclick="() => TogglePanel(deviceGroup.Key)"
+                            class="flex items-center justify-between w-full px-4 py-3 bg-indigo-500 text-white text-lg font-medium hover:bg-indigo-600 transition-all duration-300 focus:outline-none focus-visible:ring-0">
+                        <span class="flex items-center space-x-3">
+                            <span class="@deviceClassInfo.IconInfo.IconStyle">
+                                @deviceClassInfo.IconInfo.IconName
+                            </span>
+                            <span>@deviceClassInfo.DisplayName</span>
+                        </span>
+                        <span class="material-icons">
+                            @if (IsPanelOpen(deviceGroup.Key))
+                            {
+                                <span class="material-icons">expand_less</span>
+                            }
+                            else
+                            {
+                                <span class="material-icons">expand_more</span>
+                            }
+                        </span>
+                    </button>
+
+                    @if (IsPanelOpen(deviceGroup.Key))
+                    {
+                        <div class="divide-y divide-gray-100 rounded-b-lg border-t border-gray-200 bg-white">
+                            @foreach (var device in deviceGroup)
+                            {
+                                <div class="flex items-center justify-between p-4 transition-all duration-300 hover:bg-gray-50">
+                                    <div class="flex-1">
+                                        <p class="text-md select-text font-semibold text-gray-800">@device.Name</p>
+                                        <p class="select-text text-sm text-gray-500">Manufacturer: @device.Manufacturer</p>
+                                        <p class="select-text text-sm text-gray-500">Hardware ID: @device.HardwareId</p>
+                                    </div>
+                                    <div class="flex space-x-4">
+                                        @if (device.IsEnabled)
+                                        {
+                                            <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
+                                                Enable
+                                            </button>
+                                            <button @onclick="() => DisableDevice(device.DeviceInstanceId)"
+                                                    class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                                Disable
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button @onclick="() => EnableDevice(device.DeviceInstanceId)"
+                                                    class="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-300">
+                                                Enable
+                                            </button>
+                                            <button disabled class="rounded-lg bg-gray-400 px-4 py-2 text-sm text-white">
+                                                Disable
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+    }
+    else
+    {
+        <p class="text-center text-gray-500">No devices found.</p>
+    }
+</div>

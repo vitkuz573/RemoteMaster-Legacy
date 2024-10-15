@@ -36,33 +36,35 @@ public partial class DeviceManager : IAsyncDisposable
 
     private readonly Dictionary<string, bool> _devicePanelState = [];
 
+    private bool _isCategoryGrouping = true;
+
     private static readonly Dictionary<string, DeviceClassInfo> DeviceClassInfoMap = new()
     {
-        { "Monitor", new DeviceClassInfo("Monitor", "Monitor", new IconInfo("monitor", "material-symbols-outlined")) },
-        { "System", new DeviceClassInfo("System", "System Device", new IconInfo("settings", "material-icons")) },
-        { "Net", new DeviceClassInfo("Net", "Network Device", new IconInfo("network_check", "material-symbols-outlined")) },
-        { "SoftwareComponent", new DeviceClassInfo("SoftwareComponent", "Software Component", new IconInfo("widgets", "material-symbols-outlined")) },
-        { "Display", new DeviceClassInfo("Display", "Display", new IconInfo("tv", "material-symbols-outlined")) },
-        { "PrintQueue", new DeviceClassInfo("PrintQueue", "Print Queue", new IconInfo("print", "material-icons")) },
-        { "DiskDrive", new DeviceClassInfo("DiskDrive", "Disk Drive", new IconInfo("storage", "material-symbols-outlined")) },
-        { "HIDClass", new DeviceClassInfo("HIDClass", "Input Device", new IconInfo("gamepad", "material-symbols-outlined")) },
-        { "SoftwareDevice", new DeviceClassInfo("SoftwareDevice", "Software Device", new IconInfo("important_devices", "material-symbols-outlined")) },
-        { "USB", new DeviceClassInfo("USB", "USB Device", new IconInfo("usb", "material-symbols-outlined")) },
-        { "MEDIA", new DeviceClassInfo("MEDIA", "Media Device", new IconInfo("perm_media", "material-icons")) },
-        { "UCMCLIENT", new DeviceClassInfo("UCMCLIENT", "UCM Client", new IconInfo("developer_board", "material-symbols-outlined")) },
-        { "SCSIAdapter", new DeviceClassInfo("SCSIAdapter", "SCSI Adapter", new IconInfo("dns", "material-icons")) },
-        { "Ports", new DeviceClassInfo("Ports", "Ports", new IconInfo("settings_input_hdmi", "material-symbols-outlined")) },
-        { "VolumeSnapshot", new DeviceClassInfo("VolumeSnapshot", "Volume Snapshot", new IconInfo("camera_roll", "material-symbols-outlined")) },
-        { "Mouse", new DeviceClassInfo("Mouse", "Mouse", new IconInfo("mouse", "material-icons")) },
-        { "Keyboard", new DeviceClassInfo("Keyboard", "Keyboard", new IconInfo("keyboard", "material-icons")) },
-        { "Computer", new DeviceClassInfo("Computer", "Computer", new IconInfo("computer", "material-symbols-outlined")) },
-        { "Processor", new DeviceClassInfo("Processor", "Processor", new IconInfo("memory", "material-symbols-outlined")) },
-        { "HDC", new DeviceClassInfo("HDC", "Hard Disk Controller", new IconInfo("hard_drive", "material-symbols-outlined")) },
-        { "Volume", new DeviceClassInfo("Volume", "Volume", new IconInfo("disc_full", "material-symbols-outlined")) },
-        { "SecurityDevices", new DeviceClassInfo("SecurityDevices", "Security Devices", new IconInfo("security", "material-icons")) },
-        { "Bluetooth", new DeviceClassInfo("Bluetooth", "Bluetooth Device", new IconInfo("bluetooth", "material-symbols-outlined")) },
-        { "Firmware", new DeviceClassInfo("Firmware", "Firmware", new IconInfo("memory", "material-symbols-outlined")) },
-        { "AudioEndpoint", new DeviceClassInfo("AudioEndpoint", "Audio Endpoint", new IconInfo("speaker", "material-symbols-outlined")) }
+        { "Monitor", new DeviceClassInfo("Monitor", "Monitor", new IconInfo("monitor", "material-symbols-outlined"), "Display Devices") },
+        { "System", new DeviceClassInfo("System", "System Device", new IconInfo("settings", "material-icons"), "System Devices") },
+        { "Net", new DeviceClassInfo("Net", "Network Device", new IconInfo("network_check", "material-symbols-outlined"), "Network Devices") },
+        { "SoftwareComponent", new DeviceClassInfo("SoftwareComponent", "Software Component", new IconInfo("widgets", "material-symbols-outlined"), "System Devices") },
+        { "Display", new DeviceClassInfo("Display", "Display", new IconInfo("tv", "material-symbols-outlined"), "Display Devices") },
+        { "PrintQueue", new DeviceClassInfo("PrintQueue", "Print Queue", new IconInfo("print", "material-icons"), "Display Devices") },
+        { "DiskDrive", new DeviceClassInfo("DiskDrive", "Disk Drive", new IconInfo("storage", "material-symbols-outlined"), "Storage Devices") },
+        { "HIDClass", new DeviceClassInfo("HIDClass", "Input Device", new IconInfo("gamepad", "material-symbols-outlined"), "Input Devices") },
+        { "SoftwareDevice", new DeviceClassInfo("SoftwareDevice", "Software Device", new IconInfo("important_devices", "material-symbols-outlined"), "System Devices") },
+        { "USB", new DeviceClassInfo("USB", "USB Device", new IconInfo("usb", "material-symbols-outlined"), "Network Devices") },
+        { "MEDIA", new DeviceClassInfo("MEDIA", "Media Device", new IconInfo("perm_media", "material-icons"), "Audio Devices") },
+        { "UCMCLIENT", new DeviceClassInfo("UCMCLIENT", "UCM Client", new IconInfo("developer_board", "material-symbols-outlined"), "Specialized Devices") },
+        { "SCSIAdapter", new DeviceClassInfo("SCSIAdapter", "SCSI Adapter", new IconInfo("dns", "material-icons"), "Storage Devices") },
+        { "Ports", new DeviceClassInfo("Ports", "Ports", new IconInfo("settings_input_hdmi", "material-symbols-outlined"), "Network Devices") },
+        { "VolumeSnapshot", new DeviceClassInfo("VolumeSnapshot", "Volume Snapshot", new IconInfo("camera_roll", "material-symbols-outlined"), "Storage Devices") },
+        { "Mouse", new DeviceClassInfo("Mouse", "Mouse", new IconInfo("mouse", "material-icons"), "Input Devices") },
+        { "Keyboard", new DeviceClassInfo("Keyboard", "Keyboard", new IconInfo("keyboard", "material-icons"), "Input Devices") },
+        { "Computer", new DeviceClassInfo("Computer", "Computer", new IconInfo("computer", "material-symbols-outlined"), "System Devices") },
+        { "Processor", new DeviceClassInfo("Processor", "Processor", new IconInfo("memory", "material-symbols-outlined"), "System Devices") },
+        { "HDC", new DeviceClassInfo("HDC", "Hard Disk Controller", new IconInfo("hard_drive", "material-symbols-outlined"), "Storage Devices") },
+        { "Volume", new DeviceClassInfo("Volume", "Volume", new IconInfo("disc_full", "material-symbols-outlined"), "Storage Devices") },
+        { "SecurityDevices", new DeviceClassInfo("SecurityDevices", "Security Devices", new IconInfo("security", "material-icons"), "System Devices") },
+        { "Bluetooth", new DeviceClassInfo("Bluetooth", "Bluetooth Device", new IconInfo("bluetooth", "material-symbols-outlined"), "Network Devices") },
+        { "Firmware", new DeviceClassInfo("Firmware", "Firmware", new IconInfo("memory", "material-symbols-outlined"), "System Devices") },
+        { "AudioEndpoint", new DeviceClassInfo("AudioEndpoint", "Audio Endpoint", new IconInfo("speaker", "material-symbols-outlined"), "Audio Devices") }
     };
 
     protected override void OnAfterRender(bool firstRender)
@@ -83,6 +85,11 @@ public partial class DeviceManager : IAsyncDisposable
             await InitializeHostConnectionAsync();
             await FetchDevices();
         }
+    }
+
+    private void ToggleGrouping()
+    {
+        _isCategoryGrouping = !_isCategoryGrouping;
     }
 
     private async Task FetchDevices()

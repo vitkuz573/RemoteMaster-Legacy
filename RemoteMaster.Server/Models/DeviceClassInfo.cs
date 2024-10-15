@@ -4,4 +4,4 @@
 
 namespace RemoteMaster.Server.Models;
 
-public record DeviceClassInfo(string Name, string DisplayName, IconInfo IconInfo);
+public record DeviceClassInfo(string Name, string DisplayName, IconInfo IconInfo, string GroupName);
