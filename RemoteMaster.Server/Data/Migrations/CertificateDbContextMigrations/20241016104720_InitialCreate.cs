@@ -12,18 +12,16 @@ namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "CrlInfos",
+                name: "CertificateRevocationLists",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CrlNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NextUpdate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CrlHash = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Number = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CrlInfos", x => x.Id);
+                    table.PrimaryKey("PK_CertificateRevocationLists", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -32,14 +30,25 @@ namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SerialNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RevocationDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                    RevocationDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CrlId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RevokedCertificates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RevokedCertificates_CertificateRevocationLists_CrlId",
+                        column: x => x.CrlId,
+                        principalTable: "CertificateRevocationLists",
+                        principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RevokedCertificates_CrlId",
+                table: "RevokedCertificates",
+                column: "CrlId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RevokedCertificates_SerialNumber",
@@ -52,10 +61,10 @@ namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CrlInfos");
+                name: "RevokedCertificates");
 
             migrationBuilder.DropTable(
-                name: "RevokedCertificates");
+                name: "CertificateRevocationLists");
         }
     }
 }

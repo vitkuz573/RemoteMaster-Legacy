@@ -12,37 +12,39 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
 {
     [DbContext(typeof(CertificateDbContext))]
-    [Migration("20240830145941_SomeUpdateCrl")]
-    partial class SomeUpdateCrl
+    [Migration("20241016104720_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("RemoteMaster.Server.Entities.Crl", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Aggregates.CrlAggregate.Crl", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Number")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(1);
 
                     b.HasKey("Id");
 
                     b.ToTable("CertificateRevocationLists");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Entities.RevokedCertificate", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Aggregates.CrlAggregate.RevokedCertificate", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,30 +65,47 @@ namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
                         .HasColumnType("datetimeoffset")
                         .HasColumnOrder(3);
 
-                    b.Property<string>("SerialNumber")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)")
-                        .HasColumnOrder(1);
-
                     b.HasKey("Id");
 
                     b.HasIndex("CrlId");
 
-                    b.HasIndex("SerialNumber")
-                        .IsUnique();
-
                     b.ToTable("RevokedCertificates", (string)null);
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Entities.RevokedCertificate", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Aggregates.CrlAggregate.RevokedCertificate", b =>
                 {
-                    b.HasOne("RemoteMaster.Server.Entities.Crl", null)
+                    b.HasOne("RemoteMaster.Server.Aggregates.CrlAggregate.Crl", null)
                         .WithMany("RevokedCertificates")
                         .HasForeignKey("CrlId");
+
+                    b.OwnsOne("RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects.SerialNumber", "SerialNumber", b1 =>
+                        {
+                            b1.Property<int>("RevokedCertificateId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("SerialNumber")
+                                .HasColumnOrder(1);
+
+                            b1.HasKey("RevokedCertificateId");
+
+                            b1.HasIndex("Value")
+                                .IsUnique();
+
+                            b1.ToTable("RevokedCertificates");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RevokedCertificateId");
+                        });
+
+                    b.Navigation("SerialNumber")
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Entities.Crl", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Aggregates.CrlAggregate.Crl", b =>
                 {
                     b.Navigation("RevokedCertificates");
                 });

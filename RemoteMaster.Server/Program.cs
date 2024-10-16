@@ -64,8 +64,6 @@ public static class Program
             serverOptions.ListenAnyIP(5254);
         });
 
-        builder.Configuration.AddTelegramBotConfiguration(builder.Services.BuildServiceProvider());
-
         var app = builder.Build();
 
         ConfigurePipeline(app);
@@ -116,7 +114,6 @@ public static class Program
         services.AddAuthorizationBuilder()
             .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "MouseInput"));
 
-        services.AddDbContext<TelegramBotDbContext>();
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CertificateDbContext>();
 
@@ -137,7 +134,6 @@ public static class Program
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
-        services.AddScoped<ITelegramBotRepository, TelegramBotRepository>();
         services.AddScoped<IApplicationClaimRepository, ApplicationClaimRepository>();
         services.AddScoped<ICrlRepository, CrlRepository>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
@@ -152,7 +148,6 @@ public static class Program
         services.AddScoped<IHostRegistrationService, HostRegistrationService>();
         services.AddScoped<IUserPlanProvider, UserPlanProvider>();
         services.AddScoped<ILimitChecker, LimitChecker>();
-        services.AddScoped<ITelegramBotService, TelegramBotService>();
         services.AddScoped<IApplicationUserService, ApplicationUserService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
@@ -160,7 +155,6 @@ public static class Program
         services.AddScoped<IHostMoveRequestService, HostMoveRequestService>();
         services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
         services.AddScoped<ICertificateUnitOfWork, CertificateUnitOfWork>();
-        services.AddScoped<ITelegramBotUnitOfWork, TelegramBotUnitOfWork>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
@@ -175,7 +169,7 @@ public static class Program
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<IValidateOptions<CertificateAuthorityOptions>, CertificateAuthorityOptionsValidator>();
         services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
-        // services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
+        services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
         services.AddSingleton<IPlanService, PlanService>();
         services.AddSingleton<ITokenSigningService, RsaTokenSigningService>();
@@ -189,6 +183,7 @@ public static class Program
         services.AddHostedService<CertificateRenewalTaskService>();
 
         services.Configure<ApplicationSettings>(configurationManager);
+        services.Configure<TelegramBotOptions>(configurationManager.GetSection("telegramBot"));
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateAuthorityOptions>(configurationManager.GetSection("certificateAuthority"));
         services.Configure<InternalCertificateOptions>(configurationManager.GetSection("certificateAuthority:internalOptions"));
@@ -238,12 +233,7 @@ public static class Program
                 name: "CertificateDbContext",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["db", "entityframework"]
-            )
-            .AddDbContextCheck<TelegramBotDbContext>(
-                name: "TelegramBotDbContext",
-                failureStatus: HealthStatus.Unhealthy,
-                tags: ["db", "entityframework"]
-            ); ;
+            );
 
         services.AddRateLimiter(options =>
         {

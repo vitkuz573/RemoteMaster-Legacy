@@ -12,6 +12,22 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "ApplicationClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClaimType = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    ClaimValue = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApplicationClaims", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
@@ -30,6 +46,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CanAccessUnregisteredHosts = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -54,15 +71,15 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "Organizations",
                 columns: table => new
                 {
-                    NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Locality = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    State = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Locality = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    State = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Country = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Organizations", x => x.NodeId);
+                    table.PrimaryKey("PK_Organizations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -184,12 +201,13 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     CreatedByIp = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
                     Revoked = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RevokedByIp = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
-                    RevocationReason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RevocationReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ReplacedByTokenId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RefreshTokens", x => x.Id);
+                    table.CheckConstraint("CK_RefreshTokens_ReplacedByTokenId_Required", "[RevocationReason] <> 'Replaced' OR [ReplacedByTokenId] IS NOT NULL");
                     table.ForeignKey(
                         name: "FK_RefreshTokens_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -200,32 +218,55 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_RefreshTokens_RefreshTokens_ReplacedByTokenId",
                         column: x => x.ReplacedByTokenId,
                         principalTable: "RefreshTokens",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SignInEntries",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SignInTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsSuccessful = table.Column<bool>(type: "bit", nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SignInEntries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SignInEntries_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "OrganizationalUnits",
                 columns: table => new
                 {
-                    NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrganizationalUnits", x => x.NodeId);
+                    table.PrimaryKey("PK_OrganizationalUnits", x => x.Id);
                     table.ForeignKey(
                         name: "FK_OrganizationalUnits_OrganizationalUnits_ParentId",
                         column: x => x.ParentId,
                         principalTable: "OrganizationalUnits",
-                        principalColumn: "NodeId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrganizationalUnits_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "NodeId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -249,29 +290,29 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_UserOrganizations_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "NodeId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Computers",
+                name: "Hosts",
                 columns: table => new
                 {
-                    NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MacAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
+                    MacAddress = table.Column<string>(type: "nvarchar(17)", maxLength: 17, nullable: false),
                     ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Computers", x => x.NodeId);
+                    table.PrimaryKey("PK_Hosts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Computers_OrganizationalUnits_ParentId",
+                        name: "FK_Hosts_OrganizationalUnits_ParentId",
                         column: x => x.ParentId,
                         principalTable: "OrganizationalUnits",
-                        principalColumn: "NodeId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -294,7 +335,42 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_UserOrganizationalUnits_OrganizationalUnits_OrganizationalUnitId",
                         column: x => x.OrganizationalUnitId,
                         principalTable: "OrganizationalUnits",
-                        principalColumn: "NodeId",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CertificateRenewalTasks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    HostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PlannedDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    LastAttemptDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CertificateRenewalTasks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CertificateRenewalTasks_Hosts_HostId",
+                        column: x => x.HostId,
+                        principalTable: "Hosts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CertificateRenewalTasks_OrganizationalUnits_OrganizationalUnitId",
+                        column: x => x.OrganizationalUnitId,
+                        principalTable: "OrganizationalUnits",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CertificateRenewalTasks_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -338,8 +414,29 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Computers_ParentId",
-                table: "Computers",
+                name: "IX_CertificateRenewalTasks_HostId",
+                table: "CertificateRenewalTasks",
+                column: "HostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CertificateRenewalTasks_OrganizationalUnitId",
+                table: "CertificateRenewalTasks",
+                column: "OrganizationalUnitId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CertificateRenewalTasks_OrganizationId",
+                table: "CertificateRenewalTasks",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Hosts_MacAddress",
+                table: "Hosts",
+                column: "MacAddress",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Hosts_ParentId",
+                table: "Hosts",
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
@@ -359,6 +456,11 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Organizations_Locality_State_Country",
+                table: "Organizations",
+                columns: new[] { "Locality", "State", "Country" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Organizations_Name",
                 table: "Organizations",
                 column: "Name",
@@ -372,7 +474,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_ReplacedByTokenId",
                 table: "RefreshTokens",
-                column: "ReplacedByTokenId");
+                column: "ReplacedByTokenId",
+                unique: true,
+                filter: "[ReplacedByTokenId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_Revoked",
@@ -382,6 +486,11 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_UserId",
                 table: "RefreshTokens",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SignInEntries_UserId",
+                table: "SignInEntries",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -399,6 +508,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ApplicationClaims");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
             migrationBuilder.DropTable(
@@ -414,10 +526,13 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Computers");
+                name: "CertificateRenewalTasks");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "SignInEntries");
 
             migrationBuilder.DropTable(
                 name: "UserOrganizationalUnits");
@@ -429,10 +544,13 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "OrganizationalUnits");
+                name: "Hosts");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "OrganizationalUnits");
 
             migrationBuilder.DropTable(
                 name: "Organizations");

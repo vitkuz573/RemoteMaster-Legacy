@@ -17,7 +17,6 @@ public class MigrationService(IServiceScopeFactory serviceScopeFactory, ILogger<
         {
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
             scope.ServiceProvider.GetRequiredService<CertificateDbContext>(),
-            scope.ServiceProvider.GetRequiredService<TelegramBotDbContext>()
         };
 
         try

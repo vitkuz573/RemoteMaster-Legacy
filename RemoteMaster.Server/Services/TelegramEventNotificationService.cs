@@ -11,13 +11,13 @@ using Telegram.Bot.Types.Enums;
 
 namespace RemoteMaster.Server.Services;
 
-public class TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOptions> botOptionsSnapshot, ILogger<TelegramEventNotificationService> logger) : IEventNotificationService
+public class TelegramEventNotificationService(IOptions<TelegramBotOptions> telegramBotOptions, ILogger<TelegramEventNotificationService> logger) : IEventNotificationService
 {
     public async Task<Result> SendNotificationAsync(string message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        var botOptions = botOptionsSnapshot.Value;
+        var botOptions = telegramBotOptions.Value;
 
         if (!botOptions.IsEnabled || !botOptions.ChatIds.Any())
         {

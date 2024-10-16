@@ -12,15 +12,15 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240906102032_CreateCertificateRenewalTasks")]
-    partial class CreateCertificateRenewalTasks
+    [Migration("20241016104747_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -169,22 +169,26 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.Property<string>("ClaimType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnOrder(1);
 
                     b.Property<string>("ClaimValue")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnOrder(2);
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
                         .HasColumnOrder(4);
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnOrder(3);
 
                     b.HasKey("Id");
@@ -339,37 +343,43 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnOrder(0);
 
-                    b.Property<Guid>("ComputerId")
+                    b.Property<Guid>("HostId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnOrder(1);
 
-                    b.Property<DateTime?>("LastAttemptDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnOrder(4);
+                    b.Property<DateTimeOffset?>("LastAttemptDate")
+                        .HasColumnType("datetimeoffset")
+                        .HasColumnOrder(5);
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnOrder(2);
 
-                    b.Property<DateTime>("PlannedDate")
-                        .HasColumnType("datetime2")
+                    b.Property<Guid>("OrganizationalUnitId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnOrder(3);
+
+                    b.Property<DateTimeOffset>("PlannedDate")
+                        .HasColumnType("datetimeoffset")
+                        .HasColumnOrder(4);
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnOrder(5);
+                        .HasColumnOrder(6);
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ComputerId");
+                    b.HasIndex("HostId");
 
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationalUnitId");
 
                     b.ToTable("CertificateRenewalTasks");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Computer", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Host", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -404,7 +414,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Computers");
+                    b.ToTable("Hosts");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Organization", b =>
@@ -555,6 +565,45 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.Token", "TokenValue", b1 =>
+                        {
+                            b1.Property<int>("RefreshTokenId")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTime>("Created")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("Created")
+                                .HasColumnOrder(4);
+
+                            b1.Property<string>("CreatedBy")
+                                .IsRequired()
+                                .HasMaxLength(45)
+                                .HasColumnType("nvarchar(45)")
+                                .HasColumnName("CreatedByIp")
+                                .HasColumnOrder(5);
+
+                            b1.Property<DateTime>("Expires")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("Expires")
+                                .HasColumnOrder(3);
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("Token")
+                                .HasColumnOrder(2);
+
+                            b1.HasKey("RefreshTokenId");
+
+                            b1.HasIndex("Expires");
+
+                            b1.ToTable("RefreshTokens");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RefreshTokenId");
+                        });
+
                     b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.TokenRevocationInfo", "RevocationInfo", b1 =>
                         {
                             b1.Property<int>("RefreshTokenId")
@@ -571,7 +620,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                                 .HasColumnName("Revoked")
                                 .HasColumnOrder(6);
 
-                            b1.Property<string>("RevokedByIp")
+                            b1.Property<string>("RevokedBy")
                                 .HasMaxLength(45)
                                 .HasColumnType("nvarchar(45)")
                                 .HasColumnName("RevokedByIp")
@@ -580,45 +629,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                             b1.HasKey("RefreshTokenId");
 
                             b1.HasIndex("Revoked");
-
-                            b1.ToTable("RefreshTokens");
-
-                            b1.WithOwner()
-                                .HasForeignKey("RefreshTokenId");
-                        });
-
-                    b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.TokenValue", "TokenValue", b1 =>
-                        {
-                            b1.Property<int>("RefreshTokenId")
-                                .HasColumnType("int");
-
-                            b1.Property<DateTime>("Created")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("Created")
-                                .HasColumnOrder(4);
-
-                            b1.Property<string>("CreatedByIp")
-                                .IsRequired()
-                                .HasMaxLength(45)
-                                .HasColumnType("nvarchar(45)")
-                                .HasColumnName("CreatedByIp")
-                                .HasColumnOrder(5);
-
-                            b1.Property<DateTime>("Expires")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("Expires")
-                                .HasColumnOrder(3);
-
-                            b1.Property<string>("Token")
-                                .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
-                                .HasColumnName("Token")
-                                .HasColumnOrder(2);
-
-                            b1.HasKey("RefreshTokenId");
-
-                            b1.HasIndex("Expires");
 
                             b1.ToTable("RefreshTokens");
 
@@ -649,9 +659,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.CertificateRenewalTask", b =>
                 {
-                    b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.Computer", "Computer")
+                    b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.Host", "Host")
                         .WithMany()
-                        .HasForeignKey("ComputerId")
+                        .HasForeignKey("HostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -661,15 +671,23 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Computer");
+                    b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.OrganizationalUnit", "OrganizationalUnit")
+                        .WithMany()
+                        .HasForeignKey("OrganizationalUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Host");
 
                     b.Navigation("Organization");
+
+                    b.Navigation("OrganizationalUnit");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Computer", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Host", b =>
                 {
                     b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.OrganizationalUnit", "Parent")
-                        .WithMany("Computers")
+                        .WithMany("Hosts")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -795,7 +813,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 {
                     b.Navigation("Children");
 
-                    b.Navigation("Computers");
+                    b.Navigation("Hosts");
 
                     b.Navigation("UserOrganizationalUnits");
                 });
