@@ -19,7 +19,7 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
     {
         try
         {
-            var crl = (await certificateUnitOfWork.Crls.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await certificateUnitOfWork.CertificateRevocationLists.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
             try
             {
@@ -34,11 +34,11 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
 
             if (crl.Id > 0)
             {
-                certificateUnitOfWork.Crls.Update(crl);
+                certificateUnitOfWork.CertificateRevocationLists.Update(crl);
             }
             else
             {
-                await certificateUnitOfWork.Crls.AddAsync(crl);
+                await certificateUnitOfWork.CertificateRevocationLists.AddAsync(crl);
             }
 
             await certificateUnitOfWork.CommitAsync();
@@ -70,7 +70,7 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
             var issuerCertificate = issuerCertificateResult.Value;
             var crlBuilder = new CertificateRevocationListBuilder();
 
-            var crl = (await certificateUnitOfWork.Crls.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await certificateUnitOfWork.CertificateRevocationLists.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
 
             var currentCrlNumber = BigInteger.Parse(crl.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
@@ -90,11 +90,11 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
 
             if (crl.Id > 0)
             {
-                certificateUnitOfWork.Crls.Update(crl);
+                certificateUnitOfWork.CertificateRevocationLists.Update(crl);
             }
             else
             {
-                await certificateUnitOfWork.Crls.AddAsync(crl);
+                await certificateUnitOfWork.CertificateRevocationLists.AddAsync(crl);
             }
 
             await certificateUnitOfWork.CommitAsync();

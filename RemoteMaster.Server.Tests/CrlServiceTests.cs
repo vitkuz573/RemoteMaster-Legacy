@@ -60,7 +60,7 @@ public class CrlServiceTests
         var serialNumber = SerialNumber.FromExistingValue(serialNumberValue);
         var crl = new Crl(BigInteger.Zero.ToString());
 
-        _certificateUnitOfWorkMock.Setup(uow => uow.Crls.GetAllAsync()).ReturnsAsync([crl]);
+        _certificateUnitOfWorkMock.Setup(uow => uow.CertificateRevocationLists.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.RevokeCertificateAsync(serialNumber, reason);
 
@@ -83,7 +83,7 @@ public class CrlServiceTests
         var crl = new Crl("1");
         crl.RevokeCertificate(SerialNumber.FromExistingValue("1234567890"), X509RevocationReason.KeyCompromise);
 
-        _certificateUnitOfWorkMock.Setup(uow => uow.Crls.GetAllAsync()).ReturnsAsync([crl]);
+        _certificateUnitOfWorkMock.Setup(uow => uow.CertificateRevocationLists.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.GenerateCrlAsync();
 
@@ -120,7 +120,7 @@ public class CrlServiceTests
         var crl = new Crl(BigInteger.Zero.ToString());
         crl.RevokeCertificate(serialNumber, X509RevocationReason.KeyCompromise);
 
-        _certificateUnitOfWorkMock.Setup(uow => uow.Crls.GetAllAsync()).ReturnsAsync([crl]);
+        _certificateUnitOfWorkMock.Setup(uow => uow.CertificateRevocationLists.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.RevokeCertificateAsync(serialNumber, X509RevocationReason.KeyCompromise);
 

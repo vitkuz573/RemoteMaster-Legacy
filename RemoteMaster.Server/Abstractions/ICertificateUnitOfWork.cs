@@ -6,5 +6,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ICertificateUnitOfWork : IUnitOfWork
 {
-    ICrlRepository Crls { get; }
+    ICrlRepository CertificateRevocationLists { get; }
 }
