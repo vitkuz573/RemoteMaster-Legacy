@@ -22,12 +22,19 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
         }
 
+        var entries = context.ChangeTracker.Entries();
+
+        foreach (var entry in entries)
+        {
+            logger.LogInformation("Entity {EntityType} state: {State}", entry.Entity.GetType().Name, entry.State);
+        }
+
         logger.LogInformation("Committing changes...");
 
         try
         {
             var result = await context.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("Changes committed successfully.");
+            logger.LogInformation("Changes committed successfully. {ChangesCount} entities affected.", result);
 
             return result;
         }
@@ -52,6 +59,7 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             try
             {
                 _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+                logger.LogInformation("Transaction started with ID: {TransactionId}", _transaction.TransactionId);
             }
             catch (Exception ex)
             {
@@ -74,17 +82,16 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
 
         if (!_disposed)
         {
-            logger.LogInformation("Committing transaction...");
+            logger.LogInformation("Committing transaction with ID: {TransactionId}...", _transaction.TransactionId);
 
             try
             {
                 await _transaction.CommitAsync(cancellationToken);
-                
-                logger.LogInformation("Transaction committed successfully.");
+                logger.LogInformation("Transaction {TransactionId} committed successfully.", _transaction.TransactionId);
             }
             catch (Exception ex)
             {
-                logger.LogError("Error committing transaction: {Message}", ex.Message);
+                logger.LogError("Error committing transaction {TransactionId}: {Message}", _transaction.TransactionId, ex.Message);
                 await RollbackTransactionAsync(cancellationToken);
                 throw;
             }
@@ -108,17 +115,16 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
 
         if (!_disposed)
         {
-            logger.LogWarning("Rolling back transaction...");
+            logger.LogWarning("Rolling back transaction with ID: {TransactionId}...", _transaction.TransactionId);
 
             try
             {
                 await _transaction.RollbackAsync(cancellationToken);
-               
-                logger.LogWarning("Transaction rolled back successfully.");
+                logger.LogWarning("Transaction {TransactionId} rolled back successfully.", _transaction.TransactionId);
             }
             catch (Exception ex)
             {
-                logger.LogError("Error rolling back transaction: {Message}", ex.Message);
+                logger.LogError("Error rolling back transaction {TransactionId}: {Message}", _transaction.TransactionId, ex.Message);
                 throw;
             }
             finally
@@ -136,6 +142,7 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
     {
         if (_transaction != null)
         {
+            logger.LogInformation("Disposing transaction with ID: {TransactionId}...", _transaction.TransactionId);
             await _transaction.DisposeAsync();
             _transaction = null;
             logger.LogInformation("Transaction disposed.");
