@@ -632,26 +632,14 @@ public partial class Home
 
     private async Task Refresh()
     {
-        if (_selectedNode is { } orgUnit)
+        var hostsToRefresh = _availableHosts.Values.Concat(_unavailableHosts.Values).ToList();
+
+        foreach (var hostDto in hostsToRefresh)
         {
-            foreach (var host in orgUnit.Hosts)
-            {
-                if (!_availableHosts.ContainsKey(host.IpAddress) && !_unavailableHosts.ContainsKey(host.IpAddress))
-                {
-                    continue;
-                }
-
-                var hostDto = new HostDto(host.Name, host.IpAddress, host.MacAddress)
-                {
-                    Id = host.Id,
-                    OrganizationId = host.Parent!.OrganizationId,
-                    OrganizationalUnitId = host.ParentId,
-                    Thumbnail = null
-                };
-
-                await LogonHost(hostDto);
-            }
+            await LogonHost(hostDto);
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task WimBoot()
