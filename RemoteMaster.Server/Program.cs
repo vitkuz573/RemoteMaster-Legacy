@@ -26,6 +26,7 @@ using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.DomainEvents;
 using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
@@ -134,6 +135,8 @@ public static class Program
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
+        services.AddScoped<IDomainEventHandler<OrganizationAddressChangedEvent>, OrganizationAddressChangedEventHandler>();
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<IApplicationClaimRepository, ApplicationClaimRepository>();
         services.AddScoped<ICrlRepository, CrlRepository>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();

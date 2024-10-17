@@ -4,11 +4,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IAggregateRoot
+public interface IDomainEvent
 {
-    IReadOnlyCollection<IDomainEvent> DomainEvents { get; }
-
-    void AddDomainEvent(IDomainEvent domainEvent);
-
-    void ClearDomainEvents();
+    DateTime OccurredOn { get; }
 }

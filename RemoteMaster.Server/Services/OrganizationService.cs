@@ -10,7 +10,7 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) : IOrganizationService
+public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, IDomainEventDispatcher domainEventDispatcher, ILogger<OrganizationService> logger) : IOrganizationService
 {
     public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
     {
@@ -24,40 +24,32 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         var countryCode = new CountryCode(dto.Address.Country);
         var address = new Address(dto.Address.Locality, dto.Address.State, countryCode);
 
+        Organization? organization = null;
+
         if (dto.Id.HasValue)
         {
-            var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(dto.Id.Value);
+            organization = await applicationUnitOfWork.Organizations.GetByIdAsync(dto.Id.Value);
 
             if (organization == null)
             {
                 return "Error: Organization not found.";
             }
 
-            var addressChanged = !organization.Address.Equals(address);
 
             organization.SetName(dto.Name);
             organization.SetAddress(address);
 
             applicationUnitOfWork.Organizations.Update(organization);
-
-            if (addressChanged)
-            {
-                foreach (var unit in organization.OrganizationalUnits)
-                {
-                    foreach (var host in unit.Hosts)
-                    {
-                        await applicationUnitOfWork.Organizations.CreateCertificateRenewalTaskAsync(organization.Id, host.Id, DateTime.UtcNow.AddHours(1));
-                    }
-                }
-            }
         }
         else
         {
-            var newOrganization = new Organization(dto.Name, address);
-            await applicationUnitOfWork.Organizations.AddAsync(newOrganization);
+            organization = new Organization(dto.Name, address);
+            await applicationUnitOfWork.Organizations.AddAsync(organization);
         }
 
         await applicationUnitOfWork.CommitAsync();
+
+        await DispatchDomainEventsAsync(organization);
 
         return dto.Id.HasValue ? "Organization updated successfully." : "Organization created successfully.";
     }
@@ -115,5 +107,17 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
         applicationUnitOfWork.Organizations.Update(organization);
         await applicationUnitOfWork.CommitAsync();
+    }
+
+    private async Task DispatchDomainEventsAsync(Organization organization)
+    {
+        if (!organization.DomainEvents.Any())
+        {
+            return;
+        }
+
+        await domainEventDispatcher.DispatchAsync(organization.DomainEvents);
+
+        organization.ClearDomainEvents();
     }
 }

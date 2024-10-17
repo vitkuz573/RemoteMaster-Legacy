@@ -12,9 +12,13 @@ namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
 public class ApplicationUser : IdentityUser, IAggregateRoot
 {
+    private readonly List<IDomainEvent> _domainEvents = [];
+
     private readonly List<UserOrganization> _userOrganizations = [];
     private readonly List<UserOrganizationalUnit> _userOrganizationalUnits = [];
     private readonly List<RefreshToken> _refreshTokens = [];
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     public IReadOnlyCollection<UserOrganization> UserOrganizations => _userOrganizations.AsReadOnly();
 
@@ -78,5 +82,15 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue!.Value == token);
 
         return refreshToken?.IsValid() ?? false;
+    }
+
+    public void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
     }
 }

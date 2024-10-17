@@ -18,6 +18,10 @@ public class ApplicationClaim : IAggregateRoot
         Description = description;
     }
 
+    private readonly List<IDomainEvent> _domainEvents = [];
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
     public int Id { get; private set; }
 
     public string ClaimType { get; private set; } = null!;
@@ -27,4 +31,14 @@ public class ApplicationClaim : IAggregateRoot
     public string DisplayName { get; private set; } = null!;
 
     public string Description { get; private set; } = null!;
+
+    public void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
 }

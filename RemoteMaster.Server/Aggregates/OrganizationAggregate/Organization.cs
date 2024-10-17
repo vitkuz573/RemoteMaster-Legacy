@@ -4,6 +4,7 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
+using RemoteMaster.Server.DomainEvents;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
@@ -17,6 +18,8 @@ public class Organization : IAggregateRoot
         Address = address;
     }
 
+    private readonly List<IDomainEvent> _domainEvents = [];
+
     private readonly List<OrganizationalUnit> _organizationalUnits = [];
     private readonly List<UserOrganization> _userOrganizations = [];
 
@@ -25,6 +28,8 @@ public class Organization : IAggregateRoot
     public string Name { get; private set; } = null!;
 
     public Address Address { get; private set; } = null!;
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     public IReadOnlyCollection<OrganizationalUnit> OrganizationalUnits => _organizationalUnits.AsReadOnly();
     
@@ -38,6 +43,8 @@ public class Organization : IAggregateRoot
     public void SetAddress(Address address)
     {
         Address = address ?? throw new ArgumentNullException(nameof(address));
+
+        AddDomainEvent(new OrganizationAddressChangedEvent(Id, address));
     }
 
     public void AddOrganizationalUnit(string unitName, Guid? parentId = null)
@@ -106,5 +113,15 @@ public class Organization : IAggregateRoot
         var host = unit.Hosts.Single(c => c.Id == hostId);
 
         return new CertificateRenewalTask(host, this, plannedDate);
+    }
+
+    public void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
     }
 }

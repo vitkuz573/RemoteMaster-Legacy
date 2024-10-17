@@ -10,6 +10,8 @@ namespace RemoteMaster.Server.Aggregates.CrlAggregate;
 
 public class Crl : IAggregateRoot
 {
+    private readonly List<IDomainEvent> _domainEvents = [];
+
     private readonly List<RevokedCertificate> _revokedCertificates = [];
 
     private Crl() { }
@@ -22,6 +24,8 @@ public class Crl : IAggregateRoot
     public int Id { get; private set; }
 
     public string Number { get; private set; } = null!;
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     public IReadOnlyCollection<RevokedCertificate> RevokedCertificates => _revokedCertificates.AsReadOnly();
 
@@ -42,5 +46,15 @@ public class Crl : IAggregateRoot
     public void SetNumber(string number)
     {
         Number = number;
+    }
+
+    public void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
     }
 }
