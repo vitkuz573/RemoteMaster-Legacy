@@ -4,7 +4,6 @@
 
 using System.IO.Abstractions;
 using System.IO.Compression;
-using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -15,7 +14,6 @@ using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
-using Windows.Win32.Foundation;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -223,126 +221,6 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         {
             fileSystem.File.Copy(sourceDirectoryPath, targetDirectoryPath, true);
         }
-    }
-
-    private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
-    {
-        try
-        {
-            var dir = new DirectoryInfo(sourceDir);
-
-            if (!dir.Exists)
-            {
-                throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDir}.");
-            }
-
-            var dirs = dir.GetDirectories();
-
-            if (!Directory.Exists(destDir))
-            {
-                Directory.CreateDirectory(destDir);
-            }
-
-            foreach (var file in dir.GetFiles())
-            {
-                if (file.Name.Equals("RemoteMaster.Host.json", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var tempPath = Path.Combine(destDir, file.Name);
-                var copiedSuccessfully = await TryCopyFileAsync(file.FullName, tempPath, overwrite);
-
-                if (copiedSuccessfully)
-                {
-                    continue;
-                }
-
-                logger.LogError("File {FileName} copied with errors. Checksum does not match.", file.Name);
-
-                return false;
-            }
-
-            foreach (var subdir in dirs)
-            {
-                var tempPath = Path.Combine(destDir, subdir.Name);
-
-                if (!await CopyDirectoryAsync(subdir.FullName, tempPath, overwrite))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Failed to copy directory {SourceDir} to {DestDir}: {Message}", sourceDir, destDir, ex.Message);
-
-            return false;
-        }
-    }
-
-    private async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
-    {
-        var attempts = 0;
-
-        while (true)
-        {
-            try
-            {
-                File.Copy(sourceFile, destFile, overwrite);
-
-                if (VerifyChecksum(sourceFile, destFile))
-                {
-                    break;
-                }
-
-                logger.LogError("Checksum verification failed for file {SourceFile}.", sourceFile);
-
-                return false;
-            }
-            catch (IOException ex) when (ex.HResult == (int)WIN32_ERROR.ERROR_SHARING_VIOLATION)
-            {
-                if (++attempts == 5)
-                {
-                    throw;
-                }
-
-                logger.LogWarning("File {SourceFile} is currently in use. Retrying in 1 second...", sourceFile);
-                await Task.Delay(1000);
-            }
-        }
-
-        return true;
-    }
-
-    private bool VerifyChecksum(string sourceFilePath, string destFilePath)
-    {
-        var sourceChecksum = GenerateChecksum(sourceFilePath);
-        var destChecksum = GenerateChecksum(destFilePath);
-
-        logger.LogInformation("Verifying checksum: {SourceFilePath} [Source Checksum: {SourceChecksum}] -> {DestFilePath} [Destination Checksum: {DestChecksum}].", sourceFilePath, sourceChecksum, destFilePath, destChecksum);
-
-        if (sourceChecksum != destChecksum)
-        {
-            logger.LogError("Checksum mismatch. The files may have been tampered with or corrupted.");
-
-            return false;
-        }
-
-        logger.LogInformation("Checksum verification successful. No differences found.");
-
-        return true;
-    }
-
-    private static string GenerateChecksum(string filePath)
-    {
-        using var sha256 = SHA256.Create();
-        using var stream = File.OpenRead(filePath);
-        var hash = sha256.ComputeHash(stream);
-
-        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 
     private async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
