@@ -91,7 +91,7 @@ public static class Program
             builder.AddFallback(new FallbackStrategyOptions<string>
             {
                 ShouldHandle = new PredicateBuilder<string>().Handle<HubException>(ex => ex.Message.Contains("Method does not exist")),
-                FallbackAction = async context =>
+                FallbackAction = async _ =>
                 {
                     await Task.CompletedTask;
 
