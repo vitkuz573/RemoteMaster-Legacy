@@ -43,5 +43,3 @@ public class RegistrationRestrictionMiddleware(RequestDelegate next)
         return users.Any();
     }
 }
-
-
