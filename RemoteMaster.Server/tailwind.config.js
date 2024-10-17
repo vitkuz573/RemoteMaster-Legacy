@@ -1,13 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ["./Components/**/*.{razor,razor.cs}", "./wwwroot/js/*.js"],
+    content: ["./Components/**/*.{razor,razor.cs}", "./wwwroot/js/*.js", "./src/ts/*.ts"],
     darkMode: "class",
     theme: {
-        extend: {
-            backgroundColor: {
-                'de876c': "#DE876C"
-            }
-        }
+        extend: {}
     },
     variants: {
         extend: {}
