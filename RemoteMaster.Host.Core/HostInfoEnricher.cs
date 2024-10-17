@@ -22,7 +22,7 @@ public class HostInfoEnricher : ILogEventEnricher
 
         _hostIpAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostIpAddress", new ScalarValue(hostInfo.IpAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
         _hostName = new Lazy<LogEventProperty>(() => new LogEventProperty("HostName", new ScalarValue(hostInfo.Name)), LazyThreadSafetyMode.ExecutionAndPublication);
-        _macAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("MacAddress", new ScalarValue(hostInfo.MacAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
+        _macAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostMacAddress", new ScalarValue(hostInfo.MacAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)

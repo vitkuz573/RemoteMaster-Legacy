@@ -19,7 +19,6 @@ public class HostRegistrationMonitorService : IHostedService
     private readonly Timer _timer;
     private readonly string _syncIndicatorFilePath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
 
-
     public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, ILogger<HostRegistrationMonitorService> logger)
     {
         _hostLifecycleService = hostLifecycleService;
