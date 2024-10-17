@@ -61,7 +61,9 @@ public partial class SignInJournal
     {
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", Columns);
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/autocomplete.js");
+
+            await module.InvokeVoidAsync("setupAutocomplete", "filterInput", Columns);
         }
     }
 
