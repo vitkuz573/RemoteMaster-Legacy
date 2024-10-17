@@ -33,11 +33,10 @@ public class OrganizationalUnit
 
     private OrganizationalUnit() { }
 
-    internal OrganizationalUnit(string name, OrganizationalUnit? parent = null)
+    internal OrganizationalUnit(string name, Guid? parentId)
     {
         Name = name;
-        Parent = parent;
-        ParentId = parent?.Id;
+        ParentId = parentId;
     }
 
     public void SetName(string name)
@@ -45,10 +44,9 @@ public class OrganizationalUnit
         Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
-    public void SetParent(OrganizationalUnit? parent)
+    public void SetParent(Guid? parentId)
     {
-        Parent = parent;
-        ParentId = parent?.Id;
+        ParentId = parentId;
     }
 
     public void AssignToOrganization(Organization organization)

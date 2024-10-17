@@ -42,11 +42,9 @@ public class Organization : IAggregateRoot
 
     public void AddOrganizationalUnit(string unitName, Guid? parentId = null)
     {
-        OrganizationalUnit? parentUnit = null;
-
         if (parentId.HasValue)
         {
-            parentUnit = _organizationalUnits.SingleOrDefault(u => u.Id == parentId.Value);
+            var parentUnit = _organizationalUnits.SingleOrDefault(u => u.Id == parentId.Value);
 
             if (parentUnit == null)
             {
@@ -54,7 +52,7 @@ public class Organization : IAggregateRoot
             }
         }
 
-        var unit = new OrganizationalUnit(unitName, parentUnit);
+        var unit = new OrganizationalUnit(unitName, parentId);
 
         unit.AssignToOrganization(this);
 

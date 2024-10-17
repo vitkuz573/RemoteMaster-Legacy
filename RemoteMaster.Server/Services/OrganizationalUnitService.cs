@@ -50,13 +50,6 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
             return "Error: Organization not found.";
         }
 
-        OrganizationalUnit? parent = null;
-
-        if (dto.ParentId.HasValue)
-        {
-            parent = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == dto.ParentId.Value);
-        }
-
         if (dto.Id.HasValue)
         {
             var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == dto.Id.Value);
@@ -68,9 +61,9 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
 
             organizationalUnit.SetName(dto.Name);
 
-            if (parent != null)
+            if (dto.ParentId.HasValue)
             {
-                organizationalUnit.SetParent(parent);
+                organizationalUnit.SetParent(dto.ParentId);
             }
         }
         else
@@ -83,7 +76,6 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
 
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
     }
-
 
     public async Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnit organizationalUnit)
     {
