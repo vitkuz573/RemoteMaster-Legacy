@@ -118,14 +118,14 @@ public class CertificateService(IHostInformationService hostInformationService, 
         handler.Credentials = new NetworkCredential(_options.Username, _options.Password);
 
         using var client = new HttpClient(handler);
-        using var requestBody = new FormUrlEncodedContent(new[]
-        {
+        using var requestBody = new FormUrlEncodedContent(
+        [
             new KeyValuePair<string, string>("Mode", "newreq"),
             new KeyValuePair<string, string>("CertRequest", $"{Convert.ToBase64String(csrBytes)}"),
             new KeyValuePair<string, string>("CertAttrib", $"CertificateTemplate:{_options.TemplateName}"),
             new KeyValuePair<string, string>("TargetStoreFlags", "0"),
             new KeyValuePair<string, string>("SaveCert", "yes")
-        });
+        ]);
 
         var response = await client.PostAsync($"{baseUrl}certfnsh.asp", requestBody);
         var responseBody = await response.Content.ReadAsStringAsync();
