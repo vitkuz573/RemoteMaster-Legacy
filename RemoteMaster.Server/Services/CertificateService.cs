@@ -19,8 +19,6 @@ using Windows.Win32.Security.Cryptography.Certificates;
 
 namespace RemoteMaster.Server.Services;
 
-#pragma warning disable
-
 public class CertificateService(IHostInformationService hostInformationService, ICertificateAuthorityService certificateAuthorityService, IOptions<ActiveDirectoryOptions> options, ILogger<CertificateService> logger) : ICertificateService
 {
     private readonly ActiveDirectoryOptions _options = options.Value;
@@ -116,13 +114,11 @@ public class CertificateService(IHostInformationService hostInformationService, 
     {
         var baseUrl = $"http://{_options.Server}/certsrv/";
 
-        var handler = new HttpClientHandler
-        {
-            Credentials = new NetworkCredential(_options.Username, _options.Password),
-        };
+        using var handler = new HttpClientHandler();
+        handler.Credentials = new NetworkCredential(_options.Username, _options.Password);
 
         using var client = new HttpClient(handler);
-        var requestBody = new FormUrlEncodedContent(new[]
+        using var requestBody = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("Mode", "newreq"),
             new KeyValuePair<string, string>("CertRequest", $"{Convert.ToBase64String(csrBytes)}"),
@@ -185,7 +181,9 @@ public class CertificateService(IHostInformationService hostInformationService, 
             try
             {
                 var certBytes = Convert.FromBase64String(responseBstr.ToString());
+#pragma warning disable CA2000
                 var certificate = new X509Certificate2(certBytes);
+#pragma warning restore CA2000
 
                 return Result.Ok(certificate);
             }
