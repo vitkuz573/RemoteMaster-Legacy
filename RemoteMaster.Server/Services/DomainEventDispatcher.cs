@@ -28,6 +28,12 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
 
             foreach (var handler in handlers)
             {
+                if (handler == null)
+                {
+                    logger.LogWarning("Handler is null for event: {DomainEventType}", eventType.Name);
+                    continue;
+                }
+
                 logger.LogInformation("Found handler of type: {HandlerType} for event: {DomainEventType}", handler.GetType().Name, eventType.Name);
 
                 try
@@ -36,11 +42,22 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
 
                     if (handleMethod != null)
                     {
-                        var task = (Task)handleMethod.Invoke(handler, [domainEvent]);
-                        await task;
-                    }
+                        var result = handleMethod.Invoke(handler, [domainEvent]);
 
-                    logger.LogInformation("Successfully handled event: {DomainEventType} by handler: {HandlerType}", eventType.Name, handler.GetType().Name);
+                        if (result is Task task)
+                        {
+                            await task;
+                            logger.LogInformation("Successfully handled event: {DomainEventType} by handler: {HandlerType}", eventType.Name, handler.GetType().Name);
+                        }
+                        else
+                        {
+                            logger.LogWarning("Handle method returned null or non-task result for event: {DomainEventType} by handler: {HandlerType}", eventType.Name, handler.GetType().Name);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("No 'Handle' method found on handler: {HandlerType} for event: {DomainEventType}", handler.GetType().Name, eventType.Name);
+                    }
                 }
                 catch (Exception ex)
                 {
