@@ -35,7 +35,6 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, I
                 return "Error: Organization not found.";
             }
 
-
             organization.SetName(dto.Name);
             organization.SetAddress(address);
 

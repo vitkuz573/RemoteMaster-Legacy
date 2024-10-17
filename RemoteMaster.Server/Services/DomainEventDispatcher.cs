@@ -38,7 +38,7 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
 
                 try
                 {
-                    var handleMethod = handlerType.GetMethod("Handle");
+                    var handleMethod = handler.GetType().GetMethod("Handle");
 
                     if (handleMethod != null)
                     {

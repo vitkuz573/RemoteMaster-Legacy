@@ -22,11 +22,12 @@ public class OrganizationServiceTests
     public OrganizationServiceTests()
     {
         _applicationUnitOfWorkMock = new Mock<IApplicationUnitOfWork>();
+        Mock<IDomainEventDispatcher> domainEventDispatcherMock = new();
 
         var organizationRepositoryMock = new Mock<IOrganizationRepository>();
         _applicationUnitOfWorkMock.Setup(uow => uow.Organizations).Returns(organizationRepositoryMock.Object);
 
-        _organizationService = new OrganizationService(_applicationUnitOfWorkMock.Object);
+        _organizationService = new OrganizationService(_applicationUnitOfWorkMock.Object, domainEventDispatcherMock.Object);
     }
 
     [Fact]
