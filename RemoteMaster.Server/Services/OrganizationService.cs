@@ -10,7 +10,7 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, IDomainEventDispatcher domainEventDispatcher, ILogger<OrganizationService> logger) : IOrganizationService
+public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, IDomainEventDispatcher domainEventDispatcher) : IOrganizationService
 {
     public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
     {
@@ -24,7 +24,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, I
         var countryCode = new CountryCode(dto.Address.Country);
         var address = new Address(dto.Address.Locality, dto.Address.State, countryCode);
 
-        Organization? organization = null;
+        Organization? organization;
 
         if (dto.Id.HasValue)
         {
