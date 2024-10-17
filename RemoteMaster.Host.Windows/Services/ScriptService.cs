@@ -29,6 +29,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
         {
             Shell.Cmd => ".bat",
             Shell.PowerShell => ".ps1",
+            Shell.Pwsh => ".ps1",
             _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
         };
 
@@ -41,6 +42,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
         {
             Shell.Cmd => new UTF8Encoding(false),
             Shell.PowerShell => new UTF8Encoding(true),
+            Shell.Pwsh => new UTF8Encoding(true),
             _ => Encoding.UTF8
         };
 
@@ -59,8 +61,9 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
 
             var applicationToRun = scriptExecutionRequest.Shell switch
             {
-                Shell.Cmd => $"cmd.exe /c \"{tempFilePath}\"",
-                Shell.PowerShell => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+                Shell.Cmd => $"cmd /c \"{tempFilePath}\"",
+                Shell.PowerShell => $"powershell -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+                Shell.Pwsh => $"pwsh -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
                 _ => throw new ArgumentOutOfRangeException(nameof(scriptExecutionRequest))
             };
 

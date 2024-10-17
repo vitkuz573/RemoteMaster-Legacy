@@ -7,5 +7,6 @@ namespace RemoteMaster.Shared.Enums;
 public enum Shell
 {
     Cmd,
-    PowerShell
+    PowerShell,
+    Pwsh
 }
