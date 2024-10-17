@@ -26,10 +26,10 @@ public class DomainEventDispatcherTests
     public async Task DispatchAsync_Should_Throw_If_DomainEvents_Is_Null()
     {
         // Arrange
-        IEnumerable<IDomainEvent> domainEvents = null;
+        IEnumerable<IDomainEvent>? domainEvents = null;
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _dispatcher.DispatchAsync(domainEvents));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _dispatcher.DispatchAsync(domainEvents!));
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class DomainEventDispatcherTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No handler found for event")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("No handler found for event")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -66,7 +66,7 @@ public class DomainEventDispatcherTests
 
         _serviceProviderMock
             .Setup(sp => sp.GetService(It.Is<Type>(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))))
-            .Returns(new List<object> { null });
+            .Returns(new List<object> { null! });
 
         // Act
         await _dispatcher.DispatchAsync(domainEvents);
@@ -76,7 +76,7 @@ public class DomainEventDispatcherTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Handler is null for event")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Handler is null for event")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -125,7 +125,7 @@ public class DomainEventDispatcherTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Successfully handled event")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully handled event")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -153,7 +153,7 @@ public class DomainEventDispatcherTests
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Error occurred while handling event")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error occurred while handling event")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -180,7 +180,7 @@ public class DomainEventDispatcherTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No 'Handle' method found")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("No 'Handle' method found")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
