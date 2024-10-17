@@ -49,10 +49,9 @@ public class OrganizationalUnit
         ParentId = parentId;
     }
 
-    public void AssignToOrganization(Organization organization)
+    public void AssignToOrganization(Guid organizationId)
     {
-        Organization = organization ?? throw new ArgumentNullException(nameof(organization));
-        OrganizationId = organization.Id;
+        OrganizationId = organizationId;
     }
 
     public void AddHost(string name, IPAddress ipAddress, PhysicalAddress macAddress)

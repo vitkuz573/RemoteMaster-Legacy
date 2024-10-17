@@ -54,7 +54,7 @@ public class Organization : IAggregateRoot
 
         var unit = new OrganizationalUnit(unitName, parentId);
 
-        unit.AssignToOrganization(this);
+        unit.AssignToOrganization(Id);
 
         _organizationalUnits.Add(unit);
     }
