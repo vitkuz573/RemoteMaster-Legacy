@@ -18,11 +18,8 @@ public class CertificateRenewalTask
         }
 
         Id = Guid.NewGuid();
-        Host = host ?? throw new ArgumentNullException(nameof(host));
         HostId = host.Id;
-        Organization = organization ?? throw new ArgumentNullException(nameof(organization));
         OrganizationId = organization.Id;
-        OrganizationalUnit = host.Parent ?? throw new ArgumentNullException(nameof(host));
         OrganizationalUnitId = host.ParentId;
         PlannedDate = plannedDate;
         Status = CertificateRenewalStatus.Pending;
