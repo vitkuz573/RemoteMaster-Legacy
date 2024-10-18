@@ -9,10 +9,10 @@ using RemoteMaster.Server.Data;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
+namespace RemoteMaster.Server.Data.Migrations.CrlDbContextMigrations
 {
-    [DbContext(typeof(CertificateDbContext))]
-    [Migration("20241016104720_InitialCreate")]
+    [DbContext(typeof(CrlDbContext))]
+    [Migration("20241018022855_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

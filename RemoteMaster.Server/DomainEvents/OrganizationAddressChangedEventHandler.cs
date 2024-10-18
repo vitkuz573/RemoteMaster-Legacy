@@ -3,10 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.DomainEvents;
 
-public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork applicationUnitOfWork, ILogger<OrganizationAddressChangedEventHandler> logger) : IDomainEventHandler<OrganizationAddressChangedEvent>
+public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork applicationUnitOfWork, CertificateTaskDbContext context, ILogger<OrganizationAddressChangedEventHandler> logger) : IDomainEventHandler<OrganizationAddressChangedEvent>
 {
     public async Task Handle(OrganizationAddressChangedEvent domainEvent)
     {
@@ -22,9 +23,13 @@ public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork appli
             {
                 foreach (var host in unit.Hosts)
                 {
-                    await applicationUnitOfWork.Organizations.CreateCertificateRenewalTaskAsync(organization.Id, host.Id, DateTime.UtcNow.AddHours(1));
+                    var task = host.CreateCertificateRenewalTask(DateTimeOffset.UtcNow.AddHours(1));
+
+                    context.CertificateRenewalTasks.Add(task);
                 }
             }
+
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -126,55 +126,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         context.Organizations.Update(targetOrganization);
     }
 
-    public async Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync()
-    {
-        return await context.CertificateRenewalTasks
-            .Include(task => task.Host)
-            .Include(task => task.Organization)
-            .Include(task => task.OrganizationalUnit)
-            .ToListAsync();
-    }
-
-    public async Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid hostId, DateTimeOffset plannedDate)
-    {
-        var organization = await GetByIdAsync(organizationId);
-
-        var certificateRenewalTask = organization?.CreateCertificateRenewalTask(hostId, plannedDate);
-
-        if (certificateRenewalTask != null)
-        {
-            await context.CertificateRenewalTasks.AddAsync(certificateRenewalTask);
-        }
-        else
-        {
-            throw new InvalidOperationException("Certificate renewal task could not be created.");
-        }
-    }
-
-    public async Task DeleteCertificateRenewalTaskAsync(Guid taskId)
-    {
-        var task = await context.CertificateRenewalTasks
-            .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
-
-        context.CertificateRenewalTasks.Remove(task);
-    }
-
-    public async Task MarkCertificateRenewalTaskCompleted(Guid taskId)
-    {
-        var task = await context.CertificateRenewalTasks
-            .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
-
-        task.MarkCompleted();
-    }
-
-    public async Task MarkCertificateRenewalTaskFailed(Guid taskId)
-    {
-        var task = await context.CertificateRenewalTasks
-            .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
-
-        task.MarkFailed();
-    }
-
     public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds)
     {
         return await context.Organizations

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
+namespace RemoteMaster.Server.Data.Migrations.CrlDbContextMigrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

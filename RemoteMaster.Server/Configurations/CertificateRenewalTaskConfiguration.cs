@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.BusinessProcesses;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -23,29 +24,6 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
         builder.Property(crt => crt.HostId)
             .IsRequired()
             .HasColumnOrder(1);
-
-        builder.HasOne(crt => crt.Host)
-            .WithMany()
-            .HasForeignKey(crt => crt.HostId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Property(crt => crt.OrganizationId)
-            .IsRequired()
-            .HasColumnOrder(2);
-
-        builder.HasOne(crt => crt.Organization)
-            .WithMany()
-            .HasForeignKey(crt => crt.OrganizationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Property(crt => crt.OrganizationalUnitId)
-            .IsRequired()
-            .HasColumnOrder(3);
-
-        builder.HasOne(crt => crt.OrganizationalUnit)
-            .WithMany()
-            .HasForeignKey(crt => crt.OrganizationalUnitId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(crt => crt.PlannedDate)
             .IsRequired()

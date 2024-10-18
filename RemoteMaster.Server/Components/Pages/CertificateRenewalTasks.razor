@@ -2,9 +2,9 @@
 
 @rendermode InteractiveServer
 
-@using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 
-@inject IApplicationUnitOfWork ApplicationUnitOfWork
+@inject CertificateTaskDbContext CertificateTaskDbContext
 
 <div class="container mx-auto py-8">
     <h1 class="mb-6 text-2xl font-bold">Certificate Renewal Tasks</h1>
@@ -31,9 +31,9 @@
             @foreach (var task in _certificateTasks)
             {
                 <tr class="border-t">
-                    <td class="px-4 py-2">@task.Host.Name</td>
-                    <td class="px-4 py-2">@task.Organization.Name</td>
-                    <td class="px-4 py-2">@task.OrganizationalUnit.Name</td>
+                    <td class="px-4 py-2">@task.HostId</td>
+                    <td class="px-4 py-2">@task.HostId</td>
+                    <td class="px-4 py-2">@task.HostId</td>
                     <td class="px-4 py-2">@task.PlannedDate.ToLocalTime().ToString("g")</td>
                     <td class="px-4 py-2">
                         @if (task.LastAttemptDate.HasValue)

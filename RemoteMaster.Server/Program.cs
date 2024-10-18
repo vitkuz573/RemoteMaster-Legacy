@@ -116,7 +116,8 @@ public static class Program
             .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "MouseInput"));
 
         services.AddDbContext<ApplicationDbContext>();
-        services.AddDbContext<CertificateDbContext>();
+        services.AddDbContext<CrlDbContext>();
+        services.AddDbContext<CertificateTaskDbContext>();
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -232,8 +233,8 @@ public static class Program
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["db", "entityframework"]
             )
-            .AddDbContextCheck<CertificateDbContext>(
-                name: "CertificateDbContext",
+            .AddDbContextCheck<CrlDbContext>(
+                name: "CrlDbContext",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["db", "entityframework"]
             );

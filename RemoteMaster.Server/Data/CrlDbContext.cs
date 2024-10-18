@@ -10,7 +10,7 @@ using RemoteMaster.Server.Configurations;
 
 namespace RemoteMaster.Server.Data;
 
-public class CertificateDbContext(DbContextOptions<CertificateDbContext> options, IConfiguration? configuration = null) : DbContext(options)
+public class CrlDbContext(DbContextOptions<CrlDbContext> options, IConfiguration? configuration = null) : DbContext(options)
 {
     public DbSet<Crl> CertificateRevocationLists { get; set; }
 

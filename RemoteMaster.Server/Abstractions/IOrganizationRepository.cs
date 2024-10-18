@@ -20,15 +20,5 @@ public interface IOrganizationRepository : IRepository<Organization, Guid>
 
     Task MoveHostAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid hostId, Guid sourceUnitId, Guid targetUnitId);
 
-    Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync();
-
-    Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid hostId, DateTimeOffset plannedDate);
-
-    Task DeleteCertificateRenewalTaskAsync(Guid taskId);
-
-    Task MarkCertificateRenewalTaskCompleted(Guid taskId);
-
-    Task MarkCertificateRenewalTaskFailed(Guid taskId);
-
     Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds);
 }

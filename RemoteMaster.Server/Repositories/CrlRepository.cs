@@ -10,7 +10,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Repositories;
 
-public class CrlRepository(CertificateDbContext context) : ICrlRepository
+public class CrlRepository(CrlDbContext context) : ICrlRepository
 {
     public async Task<Crl?> GetByIdAsync(int id)
     {

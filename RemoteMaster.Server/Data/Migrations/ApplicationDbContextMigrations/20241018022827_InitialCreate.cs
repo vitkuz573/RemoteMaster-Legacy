@@ -339,41 +339,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "CertificateRenewalTasks",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    HostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlannedDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    LastAttemptDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CertificateRenewalTasks", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CertificateRenewalTasks_Hosts_HostId",
-                        column: x => x.HostId,
-                        principalTable: "Hosts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CertificateRenewalTasks_OrganizationalUnits_OrganizationalUnitId",
-                        column: x => x.OrganizationalUnitId,
-                        principalTable: "OrganizationalUnits",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CertificateRenewalTasks_Organizations_OrganizationId",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organizations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -412,21 +377,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CertificateRenewalTasks_HostId",
-                table: "CertificateRenewalTasks",
-                column: "HostId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CertificateRenewalTasks_OrganizationalUnitId",
-                table: "CertificateRenewalTasks",
-                column: "OrganizationalUnitId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CertificateRenewalTasks_OrganizationId",
-                table: "CertificateRenewalTasks",
-                column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Hosts_MacAddress",
@@ -526,7 +476,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "CertificateRenewalTasks");
+                name: "Hosts");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
@@ -544,13 +494,10 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Hosts");
+                name: "OrganizationalUnits");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "OrganizationalUnits");
 
             migrationBuilder.DropTable(
                 name: "Organizations");

@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.BusinessProcesses;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -13,9 +13,9 @@ public partial class CertificateRenewalTasks : ComponentBase
 {
     private List<CertificateRenewalTask> _certificateTasks = [];
 
-    protected async override Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _certificateTasks = (await ApplicationUnitOfWork.Organizations.GetAllCertificateRenewalTasksAsync()).ToList();
+        _certificateTasks = CertificateTaskDbContext.CertificateRenewalTasks.ToList();
     }
 
     private async Task DeleteTask(Guid taskId)
@@ -24,8 +24,9 @@ public partial class CertificateRenewalTasks : ComponentBase
 
         if (taskToRemove != null)
         {
-            await ApplicationUnitOfWork.Organizations.DeleteCertificateRenewalTaskAsync(taskId);
-            await ApplicationUnitOfWork.CommitAsync();
+            CertificateTaskDbContext.CertificateRenewalTasks.Remove(taskToRemove);
+
+            await CertificateTaskDbContext.SaveChangesAsync();
 
             _certificateTasks.Remove(taskToRemove);
 

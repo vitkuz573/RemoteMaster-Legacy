@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Net.NetworkInformation;
+using RemoteMaster.Server.BusinessProcesses;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
@@ -43,5 +44,10 @@ public class Host
     public void SetName(string name)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
+    }
+
+    public CertificateRenewalTask CreateCertificateRenewalTask(DateTimeOffset plannedDate)
+    {
+        return new CertificateRenewalTask(Id, plannedDate);
     }
 }

@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241016104747_InitialCreate")]
+    [Migration("20241018022827_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -336,49 +336,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.ToTable("SignInEntries");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.CertificateRenewalTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnOrder(0);
-
-                    b.Property<Guid>("HostId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnOrder(1);
-
-                    b.Property<DateTimeOffset?>("LastAttemptDate")
-                        .HasColumnType("datetimeoffset")
-                        .HasColumnOrder(5);
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnOrder(2);
-
-                    b.Property<Guid>("OrganizationalUnitId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnOrder(3);
-
-                    b.Property<DateTimeOffset>("PlannedDate")
-                        .HasColumnType("datetimeoffset")
-                        .HasColumnOrder(4);
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnOrder(6);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HostId");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("OrganizationalUnitId");
-
-                    b.ToTable("CertificateRenewalTasks");
-                });
-
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Host", b =>
                 {
                     b.Property<Guid>("Id")
@@ -655,33 +612,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.CertificateRenewalTask", b =>
-                {
-                    b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.Host", "Host")
-                        .WithMany()
-                        .HasForeignKey("HostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.OrganizationalUnit", "OrganizationalUnit")
-                        .WithMany()
-                        .HasForeignKey("OrganizationalUnitId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Host");
-
-                    b.Navigation("Organization");
-
-                    b.Navigation("OrganizationalUnit");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Host", b =>

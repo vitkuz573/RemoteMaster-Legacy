@@ -8,10 +8,10 @@ using RemoteMaster.Server.Data;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
+namespace RemoteMaster.Server.Data.Migrations.CrlDbContextMigrations
 {
-    [DbContext(typeof(CertificateDbContext))]
-    partial class CertificateDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(CrlDbContext))]
+    partial class CrlDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {

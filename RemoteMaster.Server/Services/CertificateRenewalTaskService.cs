@@ -2,12 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.BusinessProcesses;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
+using RemoteMaster.Server.Repositories;
 using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Services;
@@ -31,38 +33,44 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         var applicationUnitOfWork = scope.ServiceProvider.GetRequiredService<IApplicationUnitOfWork>();
         var accessTokenProvider = scope.ServiceProvider.GetRequiredService<IAccessTokenProvider>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var certificateTaskDbContext = scope.ServiceProvider.GetRequiredService<CertificateTaskDbContext>();
+        var organizationRepository = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
 
-        var tasks = await applicationUnitOfWork.Organizations.GetAllCertificateRenewalTasksAsync();
+        var tasks = certificateTaskDbContext.CertificateRenewalTasks.ToList();
 
-        var pendingTasks = tasks.Where(t => t.Status == CertificateRenewalStatus.Pending || t.Status == CertificateRenewalStatus.Failed).ToList();
+        var pendingTasks = tasks.Where(t => t.Status is CertificateRenewalStatus.Pending or CertificateRenewalStatus.Failed).ToList();
 
         foreach (var task in pendingTasks)
         {
+            var host = (await organizationRepository.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
+
             try
             {
-                logger.LogInformation("Processing task for host: {HostName}", task.Host!.Name);
+                logger.LogInformation("Processing task for host: {HostName}", host!.Name);
 
-                await ProcessTaskAsync(task, tokenService);
+                await ProcessTaskAsync(organizationRepository, task, tokenService);
 
-                await applicationUnitOfWork.Organizations.MarkCertificateRenewalTaskCompleted(task.Id);
-                await applicationUnitOfWork.CommitAsync();
+                task.Status = CertificateRenewalStatus.Completed;
+                await certificateTaskDbContext.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error processing task for host: {HostName}", task.Host!.Name);
+                logger.LogError(ex, "Error processing task for host: {HostName}", host!.Name);
 
-                await applicationUnitOfWork.Organizations.MarkCertificateRenewalTaskFailed(task.Id);
-                await applicationUnitOfWork.CommitAsync();
+                task.Status = CertificateRenewalStatus.Failed;
+                await certificateTaskDbContext.SaveChangesAsync();
             }
         }
     }
 
-    private async Task ProcessTaskAsync(CertificateRenewalTask task, ITokenService tokenService)
+    private async Task ProcessTaskAsync(IOrganizationRepository organizationRepository, CertificateRenewalTask task, ITokenService tokenService)
     {
         await Task.Delay(1000);
 
+        var host = (await organizationRepository.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
+
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"https://{task.Host!.IpAddress}:5001/hubs/control", options =>
+            .WithUrl($"https://{host!.IpAddress}:5001/hubs/control", options =>
             {
                 options.AccessTokenProvider = async () =>
                 {
@@ -84,7 +92,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
 
         await hubConnection.InvokeAsync("RenewCertificate");
 
-        logger.LogInformation("Certificate renewal completed for host: {HostName}", task.Host.Name);
+        logger.LogInformation("Certificate renewal completed for host: {HostName}", host.Name);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

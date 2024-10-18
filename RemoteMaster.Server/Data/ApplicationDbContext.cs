@@ -26,8 +26,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ApplicationClaim> ApplicationClaims { get; set; }
 
-    public DbSet<CertificateRenewalTask> CertificateRenewalTasks { get; set; }
-
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -62,6 +60,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.ApplyConfiguration(new ApplicationClaimConfiguration());
         builder.ApplyConfiguration(new UserOrganizationConfiguration());
         builder.ApplyConfiguration(new UserOrganizationalUnitConfiguration());
-        builder.ApplyConfiguration(new CertificateRenewalTaskConfiguration());
     }
 }

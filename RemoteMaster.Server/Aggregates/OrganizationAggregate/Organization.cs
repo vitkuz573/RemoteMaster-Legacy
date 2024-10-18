@@ -107,14 +107,6 @@ public class Organization : IAggregateRoot
         _userOrganizations.Remove(userOrganization);
     }
 
-    public CertificateRenewalTask CreateCertificateRenewalTask(Guid hostId, DateTimeOffset plannedDate)
-    {
-        var unit = _organizationalUnits.SingleOrDefault(u => u.Hosts.Any(c => c.Id == hostId)) ?? throw new InvalidOperationException("Host not found in this organization.");
-        var host = unit.Hosts.Single(c => c.Id == hostId);
-
-        return new CertificateRenewalTask(host, this, plannedDate);
-    }
-
     public void AddDomainEvent(IDomainEvent domainEvent)
     {
         _domainEvents.Add(domainEvent);
