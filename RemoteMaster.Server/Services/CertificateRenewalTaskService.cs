@@ -36,7 +36,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
 
         var pendingTasks = tasks
             .Where(t => t.Status is CertificateRenewalStatus.Pending or CertificateRenewalStatus.Failed)
-            .Where(t => t.RenewalSchedule.PlannedDate <= DateTimeOffset.Now)
+            //.Where(t => t.RenewalSchedule.PlannedDate <= DateTimeOffset.Now)
             .ToList();
 
         foreach (var task in pendingTasks)

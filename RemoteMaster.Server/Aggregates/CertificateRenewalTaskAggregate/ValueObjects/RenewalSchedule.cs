@@ -4,15 +4,7 @@
 
 namespace RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate.ValueObjects;
 
-public record RenewalSchedule(DateTimeOffset PlannedDate, DateTimeOffset? LastAttemptDate)
+public record RenewalSchedule(DateTimeOffset PlannedDate, DateTimeOffset? LastAttemptDate = null)
 {
-    public RenewalSchedule(DateTimeOffset plannedDate) : this(plannedDate, null)
-    {
-        if (plannedDate <= DateTimeOffset.Now)
-        {
-            throw new ArgumentException("Planned date must be in the future.", nameof(plannedDate));
-        }
-    }
-
     public RenewalSchedule SetLastAttemptDate(DateTimeOffset lastAttemptDate) => this with { LastAttemptDate = lastAttemptDate };
 }

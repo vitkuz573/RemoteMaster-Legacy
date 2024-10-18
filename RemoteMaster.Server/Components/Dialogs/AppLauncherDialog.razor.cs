@@ -20,7 +20,8 @@ public partial class AppLauncherDialog
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
-    private string _applicationPath = string.Empty;
+    private string _sourcePath = string.Empty;
+    private string _filePathInSource = string.Empty;
     private string _destinationPath = string.Empty;
     private string _parameters = string.Empty;
     private string _username = string.Empty;
@@ -40,32 +41,42 @@ public partial class AppLauncherDialog
                     UpdateResultsForHost(host, message);
                     await InvokeAsync(StateHasChanged);
                 });
+
                 _subscribedConnections.Add(connection);
             }
 
             var scriptBuilder = new StringBuilder();
 
-            if (_applicationPath.StartsWith(@"\\"))
+            if (_sourcePath.StartsWith(@"\\"))
             {
                 if (!string.IsNullOrEmpty(_username) && !string.IsNullOrEmpty(_password))
                 {
-                    scriptBuilder.AppendLine($"net use \"{_applicationPath}\" /user:{_username} {_password}");
+                    scriptBuilder.AppendLine($"net use \"{_sourcePath}\" /user:{_username} {_password}");
                 }
 
                 if (!string.IsNullOrEmpty(_destinationPath))
                 {
-                    scriptBuilder.AppendLine($"copy \"{_applicationPath}\" \"{_destinationPath}\"");
+                    scriptBuilder.AppendLine($"copy \"{_sourcePath}\\{_filePathInSource}\" \"{_destinationPath}\"");
+                    scriptBuilder.AppendLine($"\"{_destinationPath}\\{_filePathInSource}\" {_parameters}");
                 }
                 else
                 {
-                    scriptBuilder.AppendLine($"\"{_applicationPath}\" {_parameters}");
+                    scriptBuilder.AppendLine($"\"{_sourcePath}\\{_filePathInSource}\" {_parameters}");
                 }
 
-                scriptBuilder.AppendLine($"net use \"{_applicationPath}\" /delete");
+                scriptBuilder.AppendLine($"net use \"{_sourcePath}\" /delete");
             }
             else
             {
-                scriptBuilder.AppendLine($"\"{_applicationPath}\" {_parameters}");
+                if (!string.IsNullOrEmpty(_destinationPath))
+                {
+                    scriptBuilder.AppendLine($"copy \"{_sourcePath}\" \"{_destinationPath}\"");
+                    scriptBuilder.AppendLine($"\"{_destinationPath}\\{_filePathInSource}\" {_parameters}");
+                }
+                else
+                {
+                    scriptBuilder.AppendLine($"\"{_sourcePath}\" {_parameters}");
+                }
             }
 
             var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd);
