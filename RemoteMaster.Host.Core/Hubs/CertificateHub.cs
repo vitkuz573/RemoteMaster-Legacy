@@ -11,7 +11,6 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class CertificateHub(IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<ICertificateClient>
 {
     [Authorize(Policy = "RenewCertificatePolicy")]
