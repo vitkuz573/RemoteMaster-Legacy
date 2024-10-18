@@ -7,7 +7,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class ApplicationUnitOfWork(ApplicationDbContext context, IApplicationClaimRepository applicationClaimRepository, IApplicationUserRepository applicationUserRepository, IOrganizationRepository organizationRepository, ILogger<UnitOfWork<ApplicationDbContext>> logger) : UnitOfWork<ApplicationDbContext>(context, logger), IApplicationUnitOfWork
+public class ApplicationUnitOfWork(ApplicationDbContext context, IDomainEventDispatcher domainEventDispatcher, IApplicationClaimRepository applicationClaimRepository, IApplicationUserRepository applicationUserRepository, IOrganizationRepository organizationRepository, ILogger<UnitOfWork<ApplicationDbContext>> logger) : UnitOfWork<ApplicationDbContext>(context, domainEventDispatcher, logger), IApplicationUnitOfWork
 {
     public IApplicationClaimRepository ApplicationClaims { get; } = applicationClaimRepository;
 

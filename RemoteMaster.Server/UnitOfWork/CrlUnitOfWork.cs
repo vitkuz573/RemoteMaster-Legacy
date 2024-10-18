@@ -7,7 +7,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class CertificateUnitOfWork(CrlDbContext context, ICrlRepository certificateRevocationLists, ILogger<UnitOfWork<CrlDbContext>> logger) : UnitOfWork<CrlDbContext>(context, logger), ICertificateUnitOfWork
+public class CrlUnitOfWork(CrlDbContext context, IDomainEventDispatcher domainEventDispatcher, ICrlRepository certificateRevocationLists, ILogger<UnitOfWork<CrlDbContext>> logger) : UnitOfWork<CrlDbContext>(context, domainEventDispatcher, logger), ICrlUnitOfWork
 {
     public ICrlRepository CertificateRevocationLists { get; } = certificateRevocationLists;
 }

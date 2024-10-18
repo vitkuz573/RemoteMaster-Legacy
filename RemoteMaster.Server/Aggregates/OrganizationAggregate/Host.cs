@@ -4,7 +4,7 @@
 
 using System.Net;
 using System.Net.NetworkInformation;
-using RemoteMaster.Server.BusinessProcesses;
+using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 

@@ -10,7 +10,7 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, IDomainEventDispatcher domainEventDispatcher) : IOrganizationService
+public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) : IOrganizationService
 {
     public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
     {
@@ -47,8 +47,6 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, I
         }
 
         await applicationUnitOfWork.CommitAsync();
-
-        await DispatchDomainEventsAsync(organization);
 
         return dto.Id.HasValue ? "Organization updated successfully." : "Organization created successfully.";
     }
@@ -106,17 +104,5 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork, I
         await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
         applicationUnitOfWork.Organizations.Update(organization);
         await applicationUnitOfWork.CommitAsync();
-    }
-
-    private async Task DispatchDomainEventsAsync(Organization organization)
-    {
-        if (!organization.DomainEvents.Any())
-        {
-            return;
-        }
-
-        await domainEventDispatcher.DispatchAsync(organization.DomainEvents);
-
-        organization.ClearDomainEvents();
     }
 }

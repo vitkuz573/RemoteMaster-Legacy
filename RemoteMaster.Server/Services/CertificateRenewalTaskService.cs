@@ -6,8 +6,7 @@ using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.BusinessProcesses;
-using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Shared.Formatters;
 
@@ -30,43 +29,42 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
     {
         using var scope = serviceScopeFactory.CreateScope();
         var applicationUnitOfWork = scope.ServiceProvider.GetRequiredService<IApplicationUnitOfWork>();
+        var certificateTaskUnitOfWork = scope.ServiceProvider.GetRequiredService<ICertificateTaskUnitOfWork>();
         var accessTokenProvider = scope.ServiceProvider.GetRequiredService<IAccessTokenProvider>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
-        var certificateTaskDbContext = scope.ServiceProvider.GetRequiredService<CertificateTaskDbContext>();
-        var organizationRepository = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
 
-        var tasks = certificateTaskDbContext.CertificateRenewalTasks.ToList();
+        var tasks = await certificateTaskUnitOfWork.CertificateRenewalTasks.GetAllAsync();
 
         var pendingTasks = tasks.Where(t => t.Status is CertificateRenewalStatus.Pending or CertificateRenewalStatus.Failed).ToList();
 
         foreach (var task in pendingTasks)
         {
-            var host = (await organizationRepository.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
+            var host = (await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
 
             try
             {
                 logger.LogInformation("Processing task for host: {HostName}", host!.Name);
 
-                await ProcessTaskAsync(organizationRepository, task, tokenService);
+                await ProcessTaskAsync(applicationUnitOfWork, task, tokenService);
 
                 task.Status = CertificateRenewalStatus.Completed;
-                await certificateTaskDbContext.SaveChangesAsync();
+                await certificateTaskUnitOfWork.CommitAsync();
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error processing task for host: {HostName}", host!.Name);
 
                 task.Status = CertificateRenewalStatus.Failed;
-                await certificateTaskDbContext.SaveChangesAsync();
+                await certificateTaskUnitOfWork.CommitAsync();
             }
         }
     }
 
-    private async Task ProcessTaskAsync(IOrganizationRepository organizationRepository, CertificateRenewalTask task, ITokenService tokenService)
+    private async Task ProcessTaskAsync(IApplicationUnitOfWork applicationUnitOfWork, CertificateRenewalTask task, ITokenService tokenService)
     {
         await Task.Delay(1000);
 
-        var host = (await organizationRepository.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
+        var host = (await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
 
         var hubConnection = new HubConnectionBuilder()
             .WithUrl($"https://{host!.IpAddress}:5001/hubs/certificate", options =>

@@ -8,7 +8,7 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.UnitOfWork;
 
-public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>> logger) : IUnitOfWork where TContext : DbContext
+public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domainEventDispatcher, ILogger<UnitOfWork<TContext>> logger) : IUnitOfWork where TContext : DbContext
 {
     private IDbContextTransaction? _transaction;
     private bool _disposed;
@@ -36,6 +36,10 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             var result = await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Changes committed successfully. {ChangesCount} entities affected.", result);
 
+            var domainEvents = GetDomainEvents();
+
+            await domainEventDispatcher.DispatchAsync(domainEvents);
+
             return result;
         }
         catch (Exception ex)
@@ -43,6 +47,25 @@ public class UnitOfWork<TContext>(TContext context, ILogger<UnitOfWork<TContext>
             logger.LogError("Error committing changes: {Message}", ex.Message);
             throw;
         }
+    }
+
+    private IEnumerable<IDomainEvent> GetDomainEvents()
+    {
+        var domainEntities = context.ChangeTracker
+            .Entries<IAggregateRoot>()
+            .Where(x => x.Entity.DomainEvents.Any())
+            .Select(x => x.Entity).ToList();
+
+        var domainEvents = domainEntities
+            .SelectMany(x => x.DomainEvents)
+            .ToList();
+
+        foreach (var entity in domainEntities)
+        {
+            entity.ClearDomainEvents();
+        }
+
+        return domainEvents;
     }
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)

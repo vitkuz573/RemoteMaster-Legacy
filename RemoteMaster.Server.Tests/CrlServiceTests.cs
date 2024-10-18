@@ -22,7 +22,7 @@ namespace RemoteMaster.Server.Tests;
 public class CrlServiceTests
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly Mock<ICertificateUnitOfWork> _certificateUnitOfWorkMock;
+    private readonly Mock<ICrlUnitOfWork> _certificateUnitOfWorkMock;
     private readonly Mock<ICertificateProvider> _certificateProviderMock;
     private readonly MockFileSystem _mockFileSystem;
 
@@ -30,7 +30,7 @@ public class CrlServiceTests
     {
         var serviceCollection = new ServiceCollection();
 
-        _certificateUnitOfWorkMock = new Mock<ICertificateUnitOfWork>();
+        _certificateUnitOfWorkMock = new Mock<ICrlUnitOfWork>();
         _certificateProviderMock = new Mock<ICertificateProvider>();
         _mockFileSystem = new MockFileSystem();
 

@@ -5,8 +5,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.BusinessProcesses;
 
 namespace RemoteMaster.Server.Configurations;
 

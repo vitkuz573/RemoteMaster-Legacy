@@ -142,6 +142,7 @@ public static class Program
         services.AddScoped<ICrlRepository, CrlRepository>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<ICertificateRenewalTaskRepository, CertificateRenewalTaskRepository>();
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IHostCommandService, HostCommandService>();
         services.AddScoped<ICrlService, CrlService>();
@@ -158,7 +159,8 @@ public static class Program
         services.AddScoped<IEventNotificationService, TelegramEventNotificationService>();
         services.AddScoped<IHostMoveRequestService, HostMoveRequestService>();
         services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
-        services.AddScoped<ICertificateUnitOfWork, CertificateUnitOfWork>();
+        services.AddScoped<ICrlUnitOfWork, CrlUnitOfWork>();
+        services.AddScoped<ICertificateTaskUnitOfWork, CertificateTaskUnitOfWork>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();

@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -16,7 +15,7 @@ public partial class CertificateRenewalTasks : ComponentBase
 
     protected async override Task OnInitializedAsync()
     {
-        var tasks = await CertificateTaskDbContext.CertificateRenewalTasks.ToListAsync();
+        var tasks = (await CertificateTaskUnitOfWork.CertificateRenewalTasks.GetAllAsync()).ToList();
 
         var hostIds = tasks.Select(t => t.HostId).Distinct().ToList();
 
@@ -43,13 +42,13 @@ public partial class CertificateRenewalTasks : ComponentBase
 
         if (taskToRemove != null)
         {
-            var dbTask = await CertificateTaskDbContext.CertificateRenewalTasks.FindAsync(taskId);
+            var dbTask = await CertificateTaskUnitOfWork.CertificateRenewalTasks.GetByIdAsync(taskId);
             
             if (dbTask != null)
             {
-                CertificateTaskDbContext.CertificateRenewalTasks.Remove(dbTask);
+                CertificateTaskUnitOfWork.CertificateRenewalTasks.Delete(dbTask);
                 
-                await CertificateTaskDbContext.SaveChangesAsync();
+                await CertificateTaskUnitOfWork.CommitAsync();
 
                 _certificateTasks.Remove(taskToRemove);
 

@@ -13,13 +13,13 @@ using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertificateProvider certificateProvider, IFileSystem fileSystem, ILogger<CrlService> logger) : ICrlService
+public class CrlService(ICrlUnitOfWork crlUnitOfWork, ICertificateProvider certificateProvider, IFileSystem fileSystem, ILogger<CrlService> logger) : ICrlService
 {
     public async Task<Result> RevokeCertificateAsync(SerialNumber serialNumber, X509RevocationReason reason)
     {
         try
         {
-            var crl = (await certificateUnitOfWork.CertificateRevocationLists.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await crlUnitOfWork.CertificateRevocationLists.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
             try
             {
@@ -34,14 +34,14 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
 
             if (crl.Id > 0)
             {
-                certificateUnitOfWork.CertificateRevocationLists.Update(crl);
+                crlUnitOfWork.CertificateRevocationLists.Update(crl);
             }
             else
             {
-                await certificateUnitOfWork.CertificateRevocationLists.AddAsync(crl);
+                await crlUnitOfWork.CertificateRevocationLists.AddAsync(crl);
             }
 
-            await certificateUnitOfWork.CommitAsync();
+            await crlUnitOfWork.CommitAsync();
 
             logger.LogInformation("Certificate with serial number {SerialNumber} has been successfully revoked.", serialNumber);
 
@@ -70,7 +70,7 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
             var issuerCertificate = issuerCertificateResult.Value;
             var crlBuilder = new CertificateRevocationListBuilder();
 
-            var crl = (await certificateUnitOfWork.CertificateRevocationLists.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await crlUnitOfWork.CertificateRevocationLists.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
 
             var currentCrlNumber = BigInteger.Parse(crl.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
@@ -90,14 +90,14 @@ public class CrlService(ICertificateUnitOfWork certificateUnitOfWork, ICertifica
 
             if (crl.Id > 0)
             {
-                certificateUnitOfWork.CertificateRevocationLists.Update(crl);
+                crlUnitOfWork.CertificateRevocationLists.Update(crl);
             }
             else
             {
-                await certificateUnitOfWork.CertificateRevocationLists.AddAsync(crl);
+                await crlUnitOfWork.CertificateRevocationLists.AddAsync(crl);
             }
 
-            await certificateUnitOfWork.CommitAsync();
+            await crlUnitOfWork.CommitAsync();
 
             return Result.Ok(crlData);
         }

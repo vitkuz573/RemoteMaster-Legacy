@@ -3,9 +3,8 @@
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Abstractions
-@using RemoteMaster.Server.Data
 
-@inject CertificateTaskDbContext CertificateTaskDbContext
+@inject ICertificateTaskUnitOfWork CertificateTaskUnitOfWork
 @inject IApplicationUnitOfWork ApplicationUnitOfWork
 
 <div class="container mx-auto py-8">
