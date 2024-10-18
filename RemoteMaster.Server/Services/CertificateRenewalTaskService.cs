@@ -30,33 +30,39 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         using var scope = serviceScopeFactory.CreateScope();
         var applicationUnitOfWork = scope.ServiceProvider.GetRequiredService<IApplicationUnitOfWork>();
         var certificateTaskUnitOfWork = scope.ServiceProvider.GetRequiredService<ICertificateTaskUnitOfWork>();
-        var accessTokenProvider = scope.ServiceProvider.GetRequiredService<IAccessTokenProvider>();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
         var tasks = await certificateTaskUnitOfWork.CertificateRenewalTasks.GetAllAsync();
 
-        var pendingTasks = tasks.Where(t => t.Status is CertificateRenewalStatus.Pending or CertificateRenewalStatus.Failed).ToList();
+        var pendingTasks = tasks
+            .Where(t => t.Status is CertificateRenewalStatus.Pending or CertificateRenewalStatus.Failed)
+            .Where(t => t.RenewalSchedule.PlannedDate <= DateTimeOffset.Now)
+            .ToList();
 
         foreach (var task in pendingTasks)
         {
             var host = (await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
+
+            CertificateRenewalStatus newStatus;
 
             try
             {
                 logger.LogInformation("Processing task for host: {HostName}", host!.Name);
 
                 await ProcessTaskAsync(applicationUnitOfWork, task, tokenService);
-
-                task.Status = CertificateRenewalStatus.Completed;
-                await certificateTaskUnitOfWork.CommitAsync();
+                newStatus = CertificateRenewalStatus.Completed;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error processing task for host: {HostName}", host!.Name);
 
-                task.Status = CertificateRenewalStatus.Failed;
-                await certificateTaskUnitOfWork.CommitAsync();
+                newStatus = CertificateRenewalStatus.Failed;
             }
+
+            task.SetStatus(newStatus);
+            task.RenewalSchedule.SetLastAttemptDate(DateTimeOffset.Now);
+
+            await certificateTaskUnitOfWork.CommitAsync();
         }
     }
 

@@ -22,15 +22,20 @@ public class CertificateRenewalTask : IAggregateRoot
         Status = CertificateRenewalStatus.Pending;
     }
 
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; }
 
-    public Guid HostId { get; set; }
+    public Guid HostId { get; private set; }
 
-    public RenewalSchedule RenewalSchedule { get; set; }
+    public RenewalSchedule RenewalSchedule { get; private set; }
 
-    public CertificateRenewalStatus Status { get; set; }
+    public CertificateRenewalStatus Status { get; private set; }
 
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+    public void SetStatus(CertificateRenewalStatus status)
+    {
+        Status = status;
+    }
 
     public void AddDomainEvent(IDomainEvent domainEvent)
     {
