@@ -29,8 +29,8 @@ public partial class CertificateRenewalTasks : ComponentBase
             {
                 Id = task.Id,
                 HostName = host?.Name ?? "Unknown",
-                PlannedDate = task.PlannedDate,
-                LastAttemptDate = task.LastAttemptDate,
+                PlannedDate = task.RenewalSchedule.PlannedDate,
+                LastAttemptDate = task.RenewalSchedule.LastAttemptDate,
                 Status = task.Status
             };
         }).ToList();

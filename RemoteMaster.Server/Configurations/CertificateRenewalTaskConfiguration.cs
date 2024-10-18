@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -25,12 +24,17 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
             .IsRequired()
             .HasColumnOrder(1);
 
-        builder.Property(crt => crt.PlannedDate)
-            .IsRequired()
-            .HasColumnOrder(4);
+        builder.OwnsOne(crt => crt.RenewalSchedule, rs =>
+        {
+            rs.Property(r => r.PlannedDate)
+                .IsRequired()
+                .HasColumnName("PlannedDate")
+                .HasColumnOrder(4);
 
-        builder.Property(crt => crt.LastAttemptDate)
-            .HasColumnOrder(5);
+            rs.Property(r => r.LastAttemptDate)
+                .HasColumnName("LastAttemptDate")
+                .HasColumnOrder(5);
+        });
 
         builder.Property(crt => crt.Status)
             .IsRequired()

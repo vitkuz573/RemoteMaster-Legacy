@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate.ValueObjects;
 using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
@@ -13,16 +14,11 @@ public class CertificateRenewalTask : IAggregateRoot
 
     private CertificateRenewalTask() { }
 
-    internal CertificateRenewalTask(Guid hostId, DateTimeOffset plannedDate)
+    internal CertificateRenewalTask(Guid hostId, RenewalSchedule renewalSchedule)
     {
-        if (plannedDate <= DateTimeOffset.Now)
-        {
-            throw new ArgumentException("Planned date must be in the future.", nameof(plannedDate));
-        }
-
         Id = Guid.NewGuid();
         HostId = hostId;
-        PlannedDate = plannedDate;
+        RenewalSchedule = renewalSchedule;
         Status = CertificateRenewalStatus.Pending;
     }
 
@@ -30,9 +26,7 @@ public class CertificateRenewalTask : IAggregateRoot
 
     public Guid HostId { get; set; }
 
-    public DateTimeOffset PlannedDate { get; set; }
-
-    public DateTimeOffset? LastAttemptDate { get; set; }
+    public RenewalSchedule RenewalSchedule { get; set; }
 
     public CertificateRenewalStatus Status { get; set; }
 

@@ -5,6 +5,7 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
+using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
@@ -48,6 +49,8 @@ public class Host
 
     public CertificateRenewalTask CreateCertificateRenewalTask(DateTimeOffset plannedDate)
     {
-        return new CertificateRenewalTask(Id, plannedDate);
+        var renewalSchedule = new RenewalSchedule(plannedDate);
+
+        return new CertificateRenewalTask(Id, renewalSchedule);
     }
 }
