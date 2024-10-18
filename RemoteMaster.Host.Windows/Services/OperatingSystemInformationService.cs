@@ -14,21 +14,25 @@ public class OperatingSystemInformationService : IOperatingSystemInformationServ
 {
     public string GetName()
     {
-        var versionInfo = new OSVERSIONINFOW
+        var osVersionInfo = new OSVERSIONINFOW
         {
-            dwOSVersionInfoSize = (uint)Marshal.SizeOf(typeof(OSVERSIONINFOW))
+            dwOSVersionInfoSize = (uint)Marshal.SizeOf<OSVERSIONINFOW>()
         };
 
-        var status = RtlGetVersion(ref versionInfo);
+        var status = RtlGetVersion(ref osVersionInfo);
 
         if (status.SeverityCode != NTSTATUS.Severity.Success)
         {
-            throw new InvalidOperationException($"RtlGetVersion failed with status code: {status}");
+            throw new InvalidOperationException($"RtlGetVersion failed with status: {status}");
         }
 
-        var isWindows11 = versionInfo is { dwMajorVersion: 10, dwBuildNumber: >= 22000 };
-        var versionName = isWindows11 ? "Windows 11" : $"Windows {versionInfo.dwMajorVersion}.{versionInfo.dwMinorVersion}";
+        var versionName = osVersionInfo switch
+        {
+            { dwMajorVersion: 10, dwBuildNumber: >= 22000 } => "Windows 11",
+            { dwMajorVersion: 10 } => "Windows 10",
+            _ => $"Windows {osVersionInfo.dwMajorVersion}.{osVersionInfo.dwMinorVersion}"
+        };
 
-        return $"{versionName} (Build {versionInfo.dwBuildNumber})";
+        return $"{versionName} (Build {osVersionInfo.dwBuildNumber})";
     }
 }
