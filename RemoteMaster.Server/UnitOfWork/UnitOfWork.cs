@@ -59,7 +59,8 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
         var domainEntities = context.ChangeTracker
             .Entries<IAggregateRoot>()
             .Where(x => x.Entity.DomainEvents.Any())
-            .Select(x => x.Entity).ToList();
+            .Select(x => x.Entity)
+            .ToList();
 
         var domainEvents = domainEntities
             .SelectMany(x => x.DomainEvents)
