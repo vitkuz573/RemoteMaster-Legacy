@@ -30,7 +30,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
         var deviceInfoData = new SP_DEVINFO_DATA
         {
-            cbSize = (uint)Marshal.SizeOf(typeof(SP_DEVINFO_DATA))
+            cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
         };
 
         uint deviceIndex = 0;

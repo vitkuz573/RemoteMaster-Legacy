@@ -15,7 +15,7 @@ public class CursorRenderService : ICursorRenderService
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
     private Rectangle _cachedScreenBounds;
-    private readonly uint _cursorInfoSize = (uint)Marshal.SizeOf(typeof(CURSORINFO));
+    private readonly uint _cursorInfoSize = (uint)Marshal.SizeOf<CURSORINFO>();
 
     public void DrawCursor(Graphics g, Rectangle currentScreenBounds)
     {

@@ -141,7 +141,7 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
 
         var inputs = new Span<INPUT>(ref input);
 
-        SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+        SendInput(inputs, Marshal.SizeOf<INPUT>());
 
         ReturnInput(input);
     }
