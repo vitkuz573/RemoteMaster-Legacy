@@ -17,10 +17,7 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
-        }
+        ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
 
         var entries = context.ChangeTracker.Entries();
 
@@ -36,7 +33,7 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
             var result = await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Changes committed successfully. {ChangesCount} entities affected.", result);
 
-            var domainEvents = GetDomainEvents().ToList();
+            var domainEvents = GetDomainEvents();
 
             foreach (var domainEvent in domainEvents)
             {
@@ -54,11 +51,11 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
         }
     }
 
-    private IEnumerable<IDomainEvent> GetDomainEvents()
+    private List<IDomainEvent> GetDomainEvents()
     {
         var domainEntities = context.ChangeTracker
             .Entries<IAggregateRoot>()
-            .Where(x => x.Entity.DomainEvents.Any())
+            .Where(x => x.Entity.DomainEvents.Count != 0)
             .Select(x => x.Entity)
             .ToList();
 
@@ -76,94 +73,79 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (!_disposed)
+        ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
+
+        if (_transaction != null)
         {
-            if (_transaction != null)
-            {
-                throw new InvalidOperationException("A transaction is already in progress.");
-            }
-
-            logger.LogInformation("Beginning transaction...");
-
-            try
-            {
-                _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
-                logger.LogInformation("Transaction started with ID: {TransactionId}", _transaction.TransactionId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Error beginning transaction: {Message}", ex.Message);
-                throw;
-            }
+            throw new InvalidOperationException("A transaction is already in progress.");
         }
-        else
+
+        logger.LogInformation("Beginning transaction...");
+
+        try
         {
-            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
+            _transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            logger.LogInformation("Transaction started with ID: {TransactionId}", _transaction.TransactionId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error beginning transaction: {Message}", ex.Message);
+            throw;
         }
     }
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
+
         if (_transaction == null)
         {
             throw new InvalidOperationException("No transaction in progress to commit.");
         }
 
-        if (!_disposed)
-        {
-            logger.LogInformation("Committing transaction with ID: {TransactionId}...", _transaction.TransactionId);
+        logger.LogInformation("Committing transaction with ID: {TransactionId}...", _transaction.TransactionId);
 
-            try
-            {
-                await _transaction.CommitAsync(cancellationToken);
-                logger.LogInformation("Transaction {TransactionId} committed successfully.", _transaction.TransactionId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Error committing transaction {TransactionId}: {Message}", _transaction.TransactionId, ex.Message);
-                await RollbackTransactionAsync(cancellationToken);
-                throw;
-            }
-            finally
-            {
-                await DisposeTransactionAsync();
-            }
-        }
-        else
+        try
         {
-            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
+            await _transaction.CommitAsync(cancellationToken);
+            logger.LogInformation("Transaction {TransactionId} committed successfully.", _transaction.TransactionId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error committing transaction {TransactionId}: {Message}", _transaction.TransactionId, ex.Message);
+            await RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            await DisposeTransactionAsync();
         }
     }
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
+
         if (_transaction == null)
         {
             throw new InvalidOperationException("No transaction in progress to rollback.");
         }
 
-        if (!_disposed)
-        {
-            logger.LogWarning("Rolling back transaction with ID: {TransactionId}...", _transaction.TransactionId);
+        logger.LogWarning("Rolling back transaction with ID: {TransactionId}...", _transaction.TransactionId);
 
-            try
-            {
-                await _transaction.RollbackAsync(cancellationToken);
-                logger.LogWarning("Transaction {TransactionId} rolled back successfully.", _transaction.TransactionId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Error rolling back transaction {TransactionId}: {Message}", _transaction.TransactionId, ex.Message);
-                throw;
-            }
-            finally
-            {
-                await DisposeTransactionAsync();
-            }
-        }
-        else
+        try
         {
-            throw new ObjectDisposedException(nameof(UnitOfWork<TContext>));
+            await _transaction.RollbackAsync(cancellationToken);
+            logger.LogWarning("Transaction {TransactionId} rolled back successfully.", _transaction.TransactionId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error rolling back transaction {TransactionId}: {Message}", _transaction.TransactionId, ex.Message);
+            throw;
+        }
+        finally
+        {
+            await DisposeTransactionAsync();
         }
     }
 
