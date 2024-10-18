@@ -75,7 +75,7 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
 
-        if (_transaction != null)
+        if (IsInTransaction)
         {
             throw new InvalidOperationException("A transaction is already in progress.");
         }
@@ -98,12 +98,12 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
 
-        if (_transaction == null)
+        if (!IsInTransaction)
         {
             throw new InvalidOperationException("No transaction in progress to commit.");
         }
 
-        logger.LogInformation("Committing transaction with ID: {TransactionId}...", _transaction.TransactionId);
+        logger.LogInformation("Committing transaction with ID: {TransactionId}...", _transaction!.TransactionId);
 
         try
         {
@@ -126,12 +126,12 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
 
-        if (_transaction == null)
+        if (!IsInTransaction)
         {
             throw new InvalidOperationException("No transaction in progress to rollback.");
         }
 
-        logger.LogWarning("Rolling back transaction with ID: {TransactionId}...", _transaction.TransactionId);
+        logger.LogWarning("Rolling back transaction with ID: {TransactionId}...", _transaction!.TransactionId);
 
         try
         {
@@ -151,9 +151,9 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
 
     private async Task DisposeTransactionAsync()
     {
-        if (_transaction != null)
+        if (IsInTransaction)
         {
-            logger.LogInformation("Disposing transaction with ID: {TransactionId}...", _transaction.TransactionId);
+            logger.LogInformation("Disposing transaction with ID: {TransactionId}...", _transaction!.TransactionId);
             await _transaction.DisposeAsync();
             _transaction = null;
             logger.LogInformation("Transaction disposed.");
@@ -170,9 +170,9 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
     {
         if (!_disposed)
         {
-            if (_transaction != null)
+            if (IsInTransaction)
             {
-                await _transaction.DisposeAsync();
+                await _transaction!.DisposeAsync();
             }
 
             await context.DisposeAsync();
