@@ -7,11 +7,9 @@ using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.DomainEvents;
 
-public class OrganizationAddressChangedEvent(Guid organizationId, Address newAddress) : IDomainEvent
+public class OrganizationAddressChangedEvent(Guid organizationId, Address newAddress) : DomainEventBase
 {
     public Guid OrganizationId { get; } = organizationId;
     
     public Address NewAddress { get; } = newAddress;
-    
-    public DateTime OccurredOn { get; private set; } = DateTime.UtcNow;
 }

@@ -36,7 +36,12 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
             var result = await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Changes committed successfully. {ChangesCount} entities affected.", result);
 
-            var domainEvents = GetDomainEvents();
+            var domainEvents = GetDomainEvents().ToList();
+
+            foreach (var domainEvent in domainEvents)
+            {
+                logger.LogInformation("Domain event {DomainEventType} occurred at {OccurredOn}", domainEvent.GetType().Name, domainEvent.OccurredOn);
+            }
 
             await domainEventDispatcher.DispatchAsync(domainEvents);
 
