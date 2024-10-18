@@ -20,7 +20,7 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
             var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(eventType);
             var handlers = serviceProvider.GetServices(handlerType).ToList();
 
-            if (!handlers.Any())
+            if (handlers.Count == 0)
             {
                 logger.LogWarning("No handler found for event: {DomainEventType}", eventType.Name);
                 continue;
