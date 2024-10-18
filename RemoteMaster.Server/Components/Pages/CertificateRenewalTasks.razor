@@ -2,9 +2,11 @@
 
 @rendermode InteractiveServer
 
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 
 @inject CertificateTaskDbContext CertificateTaskDbContext
+@inject IApplicationUnitOfWork ApplicationUnitOfWork
 
 <div class="container mx-auto py-8">
     <h1 class="mb-6 text-2xl font-bold">Certificate Renewal Tasks</h1>
@@ -17,40 +19,36 @@
     {
         <table class="min-w-full rounded-lg border border-gray-300 bg-white shadow-md">
             <thead>
-            <tr>
-                <th class="bg-gray-100 px-4 py-2 text-left">Host</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Organization</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Organizational Unit</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Planned Date</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Last Attempt Date</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Status</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Actions</th>
-            </tr>
+                <tr>
+                    <th class="bg-gray-100 px-4 py-2 text-left">Host</th>
+                    <th class="bg-gray-100 px-4 py-2 text-left">Planned Date</th>
+                    <th class="bg-gray-100 px-4 py-2 text-left">Last Attempt Date</th>
+                    <th class="bg-gray-100 px-4 py-2 text-left">Status</th>
+                    <th class="bg-gray-100 px-4 py-2 text-left">Actions</th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var task in _certificateTasks)
-            {
-                <tr class="border-t">
-                    <td class="px-4 py-2">@task.HostId</td>
-                    <td class="px-4 py-2">@task.HostId</td>
-                    <td class="px-4 py-2">@task.HostId</td>
-                    <td class="px-4 py-2">@task.PlannedDate.ToLocalTime().ToString("g")</td>
-                    <td class="px-4 py-2">
-                        @if (task.LastAttemptDate.HasValue)
-                        {
-                            @task.LastAttemptDate.Value.ToLocalTime().ToString("g")
-                        }
-                        else
-                        {
-                            <span class="text-gray-500">N/A</span>
-                        }
-                    </td>
-                    <td class="px-4 py-2">@task.Status</td>
-                    <td class="px-4 py-2">
-                        <button class="text-red-600 hover:underline" @onclick="() => DeleteTask(task.Id)">Delete</button>
-                    </td>
-                </tr>
-            }
+                @foreach (var task in _certificateTasks)
+                {
+                    <tr class="border-t">
+                        <td class="px-4 py-2">@task.HostName</td>
+                        <td class="px-4 py-2">@task.PlannedDate.ToLocalTime().ToString("g")</td>
+                        <td class="px-4 py-2">
+                            @if (task.LastAttemptDate.HasValue)
+                            {
+                                @task.LastAttemptDate.Value.ToLocalTime().ToString("g")
+                            }
+                            else
+                            {
+                                <span class="text-gray-500">N/A</span>
+                            }
+                        </td>
+                        <td class="px-4 py-2">@task.Status</td>
+                        <td class="px-4 py-2">
+                            <button class="text-red-600 hover:underline" @onclick="() => DeleteTask(task.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     }
