@@ -70,7 +70,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         var host = (await organizationRepository.FindHostsAsync(h => h.Id == task.HostId)).FirstOrDefault();
 
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"https://{host!.IpAddress}:5001/hubs/control", options =>
+            .WithUrl($"https://{host!.IpAddress}:5001/hubs/certificate", options =>
             {
                 options.AccessTokenProvider = async () =>
                 {
