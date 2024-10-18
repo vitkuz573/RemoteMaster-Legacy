@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Moq;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.UnitOfWork;
 
 namespace RemoteMaster.Server.Tests;
@@ -21,6 +22,7 @@ public class UnitOfWorkTests
     {
         _dbContextMock = new Mock<DbContext>();
         Mock<IDbContextTransaction> dbContextTransactionMock = new();
+        Mock<IDomainEventDispatcher> domainEventDispatcher = new();
         _loggerMock = new Mock<ILogger<UnitOfWork<DbContext>>>();
 
         var databaseMock = new Mock<DatabaseFacade>(_dbContextMock.Object);
@@ -29,7 +31,7 @@ public class UnitOfWorkTests
 
         _dbContextMock.Setup(db => db.Database).Returns(databaseMock.Object);
 
-        _unitOfWork = new UnitOfWork<DbContext>(_dbContextMock.Object, _loggerMock.Object);
+        _unitOfWork = new UnitOfWork<DbContext>(_dbContextMock.Object, domainEventDispatcher.Object, _loggerMock.Object);
     }
 
     [Fact]
