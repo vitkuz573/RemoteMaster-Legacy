@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Win32;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
@@ -15,4 +16,6 @@ public interface IRegistryService
     void SetValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind);
 
     object GetValue(RegistryHive hive, string keyPath, string valueName, object defaultValue);
+
+    IEnumerable<RegistryValueDto> GetAllValues(RegistryHive hive, string keyPath);
 }

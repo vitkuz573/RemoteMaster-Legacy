@@ -10,7 +10,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using Microsoft.Win32;
 using Polly;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -30,9 +32,9 @@ public partial class Registry : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
 
-    private List<string> _rootKeys = [];
+    private readonly List<string> _rootKeys = [];
     private string? _currentPath;
-    private Dictionary<string, string>? _registryValues = null;
+    private readonly List<RegistryValueDto> _registryValues = [];
 
     private bool _firstRenderCompleted;
 
@@ -61,14 +63,28 @@ public partial class Registry : IAsyncDisposable
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetRootKeys"));
     }
 
+    private async Task FetchAllRegistryValues(RegistryHive hive, string keyPath)
+    {
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("GetAllRegistryValues", hive, keyPath));
+    }
+
     private void SelectKey(string rootKey)
     {
         _currentPath = rootKey;
-        _registryValues = new Dictionary<string, string>
+
+        _registryValues.Clear();
+
+        var hive = rootKey switch
         {
-            { "ExampleValue1", "Some Data" },
-            { "ExampleValue2", "Another Data" }
+            @"HKEY_LOCAL_MACHINE\" => RegistryHive.LocalMachine,
+            @"HKEY_CURRENT_USER\" => RegistryHive.CurrentUser,
+            @"HKEY_CLASSES_ROOT\" => RegistryHive.ClassesRoot,
+            @"HKEY_USERS\" => RegistryHive.Users,
+            @"HKEY_CURRENT_CONFIG\" => RegistryHive.CurrentConfig,
+            _ => throw new InvalidOperationException("Unknown root key")
         };
+
+        _ = FetchAllRegistryValues(hive, string.Empty);
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -94,6 +110,7 @@ public partial class Registry : IAsyncDisposable
             .Build();
 
         _connection.On<IEnumerable<string>>("ReceiveRootKeys", _rootKeys.AddRange);
+        _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", _registryValues.AddRange);
 
         _connection.Closed += async _ =>
         {

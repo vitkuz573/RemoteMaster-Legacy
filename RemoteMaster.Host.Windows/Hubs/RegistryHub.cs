@@ -42,4 +42,11 @@ public class RegistryHub(IRegistryService registryService) : Hub<IRegistryClient
 
         await Clients.Caller.ReceiveSubKeyNames(subKeyNames);
     }
+
+    public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
+    {
+        var values = registryService.GetAllValues(hive, keyPath);
+
+        await Clients.Caller.ReceiveAllRegistryValues(values);
+    }
 }

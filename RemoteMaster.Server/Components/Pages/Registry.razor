@@ -56,12 +56,12 @@
                     <tbody class="bg-white">
                         @if (_registryValues != null)
                         {
-                            @foreach (var (name, value) in _registryValues)
+                            @foreach (var registryValue in _registryValues)
                             {
                                 <tr class="border-t">
-                                    <td class="px-4 py-2 text-sm text-gray-700">@name</td>
-                                    <td class="px-4 py-2 text-sm text-gray-500">String</td> <!-- Hardcoded type for now -->
-                                    <td class="px-4 py-2 text-sm text-gray-500">@value</td>
+                                    <td class="px-4 py-2 text-sm text-gray-700">@registryValue.Name</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500">@registryValue.ValueType</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500">@registryValue.Value</td>
                                 </tr>
                             }
                         }

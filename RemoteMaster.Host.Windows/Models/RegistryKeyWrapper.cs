@@ -16,6 +16,16 @@ public class RegistryKeyWrapper(RegistryKey registryKey) : IRegistryKey
         return registryKey.GetSubKeyNames();
     }
 
+    public string[] GetValueNames()
+    {
+        return registryKey.GetValueNames();
+    }
+
+    public RegistryValueKind GetValueKind(string? name)
+    {
+        return registryKey.GetValueKind(name);
+    }
+
     public object? GetValue(string name, object? defaultValue)
     {
         return registryKey.GetValue(name, defaultValue);

@@ -4,6 +4,7 @@
 
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -40,5 +41,33 @@ public class RegistryService(IRegistryKeyFactory registryKeyFactory) : IRegistry
         using var key = OpenSubKey(hive, keyPath, false);
 
         return key?.GetValue(valueName, defaultValue) ?? defaultValue;
+    }
+
+    public IEnumerable<RegistryValueDto> GetAllValues(RegistryHive hive, string keyPath)
+    {
+        using var key = OpenSubKey(hive, keyPath, false);
+
+        if (key == null)
+        {
+            return [];
+        }
+
+        var valueNames = key.GetValueNames();
+        var values = new List<RegistryValueDto>();
+
+        foreach (var valueName in valueNames)
+        {
+            var value = key.GetValue(valueName, null);
+            var valueType = key.GetValueKind(valueName);
+
+            values.Add(new RegistryValueDto
+            {
+                Name = valueName,
+                Value = value,
+                ValueType = valueType
+            });
+        }
+
+        return values;
     }
 }

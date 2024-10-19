@@ -12,6 +12,10 @@ public interface IRegistryKey : IDisposable
 
     string[] GetSubKeyNames();
 
+    string[] GetValueNames();
+
+    RegistryValueKind GetValueKind(string? name);
+
     object? GetValue(string name, object? defaultValue);
 
     void SetValue(string name, object value, RegistryValueKind valueKind);
