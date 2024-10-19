@@ -10,9 +10,56 @@
 
 <PageTitle>Registry</PageTitle>
 
-@foreach (var rootKey in _rootKeys)
-{
-    <div>
-        @rootKey
+<div class="flex h-screen">
+    <!-- Sidebar for registry keys tree -->
+    <div class="w-1/4 overflow-y-auto bg-gray-100 p-4">
+        <h2 class="mb-4 text-lg font-semibold">Registry Keys</h2>
+        <ul>
+            @foreach (var rootKey in _rootKeys)
+            {
+                <li class="mb-2 cursor-pointer text-blue-600 hover:underline" @onclick="() => SelectKey(rootKey)">
+                    @rootKey
+                </li>
+            }
+        </ul>
     </div>
-}
+
+    <!-- Right-side container -->
+    <div class="flex-1 p-4">
+        <!-- Current selected registry path -->
+        <div class="mb-4">
+            <h3 class="text-sm font-semibold text-gray-500">Current Path:</h3>
+            <div class="text-lg text-gray-900">
+                @if (_currentPath != null)
+                {
+                    @_currentPath
+                }
+                else
+                {
+                    <span class="text-gray-400">Select a key from the list</span>
+                }
+            </div>
+        </div>
+
+        <!-- Registry key values -->
+        <div>
+            <h3 class="text-lg font-semibold text-gray-600">Values</h3>
+            <div class="grid-cols-3 mt-2 grid gap-4">
+                @if (_registryValues != null)
+                {
+                    @foreach (var (name, value) in _registryValues)
+                    {
+                        <div class="rounded border bg-white p-2 shadow">
+                            <div class="text-sm font-medium text-gray-700">@name</div>
+                            <div class="text-xs text-gray-500">@value</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-gray-400">No values to display</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -29,7 +29,11 @@ public partial class Registry : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
+
     private List<string> _rootKeys = [];
+    private string? _currentPath;
+    private Dictionary<string, string>? _registryValues = null;
+
     private bool _firstRenderCompleted;
 
     protected override void OnAfterRender(bool firstRender)
@@ -55,6 +59,16 @@ public partial class Registry : IAsyncDisposable
     private async Task FetchRootKeys()
     {
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetRootKeys"));
+    }
+
+    private void SelectKey(string rootKey)
+    {
+        _currentPath = rootKey;
+        _registryValues = new Dictionary<string, string>
+        {
+            { "ExampleValue1", "Some Data" },
+            { "ExampleValue2", "Another Data" }
+        };
     }
 
     private async Task InitializeHostConnectionAsync()
