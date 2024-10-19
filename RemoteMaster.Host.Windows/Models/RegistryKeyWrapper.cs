@@ -9,6 +9,8 @@ namespace RemoteMaster.Host.Windows.Models;
 
 public class RegistryKeyWrapper(RegistryKey registryKey) : IRegistryKey
 {
+    public string Name => registryKey.Name;
+
     public string[] GetSubKeyNames()
     {
         return registryKey.GetSubKeyNames();

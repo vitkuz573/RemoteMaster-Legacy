@@ -8,6 +8,8 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IRegistryKey : IDisposable
 {
+    string Name { get; }
+
     string[] GetSubKeyNames();
 
     object? GetValue(string name, object? defaultValue);
