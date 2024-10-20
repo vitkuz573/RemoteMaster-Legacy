@@ -241,12 +241,14 @@ public partial class Registry : IAsyncDisposable
             }
         });
 
-        _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", values =>
+        _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", async values =>
         {
             Logger.LogInformation("Received {ValuesCount} registry values", values.Count());
 
             _registryValues.Clear();
             _registryValues.AddRange(values);
+
+            await InvokeAsync(StateHasChanged);
         });
 
         _connection.Closed += async _ =>
