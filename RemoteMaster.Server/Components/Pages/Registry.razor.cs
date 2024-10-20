@@ -33,9 +33,9 @@ public partial class Registry : IAsyncDisposable
     private ClaimsPrincipal? _user;
 
     private readonly List<string> _rootKeys = [];
+    private readonly List<RegistryNode> _rootNodes = new();
     private string? _currentPath;
-    private readonly List<RegistryValueDto> _registryValues = [];
-    private readonly List<RegistryKeyNode> _rootNodes = [];
+    private readonly List<RegistryValueDto> _registryValues = new();
 
     private bool _firstRenderCompleted;
 
@@ -56,6 +56,16 @@ public partial class Registry : IAsyncDisposable
         {
             await InitializeHostConnectionAsync();
             await FetchRootKeys();
+        }
+    }
+
+    private async Task ToggleExpand(RegistryNode node)
+    {
+        node.IsExpanded = !node.IsExpanded;
+
+        if (node.IsExpanded && node.SubKeys.Count == 0)
+        {
+            await LoadSubKeys(node.KeyFullPath);
         }
     }
 
@@ -91,22 +101,37 @@ public partial class Registry : IAsyncDisposable
         await _connection!.InvokeAsync("GetSubKeyNames", hive, keyPath, parentKey);
     }
 
-    private RegistryKeyNode? FindNodeByKey(string fullPath)
+    private RegistryNode? FindNodeByKey(string fullPath)
     {
         foreach (var rootNode in _rootNodes)
         {
-            if (fullPath.Equals(rootNode.KeyName, StringComparison.OrdinalIgnoreCase))
-            {
-                return rootNode;
-            }
-
-            var foundNode = rootNode.FindNodeByKey(fullPath);
+            var foundNode = FindNodeRecursive(rootNode, fullPath);
 
             if (foundNode != null)
             {
                 return foundNode;
             }
         }
+
+        return null;
+    }
+
+    private static RegistryNode? FindNodeRecursive(RegistryNode currentNode, string fullPath)
+    {
+        if (currentNode.KeyFullPath.Equals(fullPath, System.StringComparison.OrdinalIgnoreCase))
+        {
+            return currentNode;
+        }
+
+        foreach (var subKey in currentNode.SubKeys)
+        {
+            var foundNode = FindNodeRecursive(subKey, fullPath);
+            if (foundNode != null)
+            {
+                return foundNode;
+            }
+        }
+
         return null;
     }
 
@@ -165,11 +190,15 @@ public partial class Registry : IAsyncDisposable
 
             foreach (var rootKey in _rootKeys)
             {
-                _rootNodes.Add(new RegistryKeyNode
+                _rootNodes.Add(new RegistryNode
                 {
                     KeyName = rootKey,
+                    ParentKey = null,
+                    SubKeys = []
                 });
             }
+
+            InvokeAsync(StateHasChanged);
         });
 
         _connection.On<IEnumerable<string>, string>("ReceiveSubKeyNames", async (subKeyNames, parentKey) =>
@@ -182,7 +211,17 @@ public partial class Registry : IAsyncDisposable
             {
                 Logger.LogInformation("Setting {SubKeyNamesCount} subkeys for node: {ParentKey}", subKeyNames.Count(), parentKey);
 
-                node.SetSubKeys(subKeyNames);
+                node.SubKeys.Clear();
+
+                foreach (var subKeyName in subKeyNames)
+                {
+                    node.SubKeys.Add(new RegistryNode
+                    {
+                        KeyName = subKeyName,
+                        ParentKey = parentKey,
+                        SubKeys = []
+                    });
+                }
 
                 await InvokeAsync(StateHasChanged);
             }
@@ -253,5 +292,18 @@ public partial class Registry : IAsyncDisposable
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    private class RegistryNode
+    {
+        public string KeyName { get; set; } = string.Empty;
+        
+        public bool IsExpanded { get; set; } = false;
+        
+        public List<RegistryNode> SubKeys { get; set; } = [];
+        
+        public string KeyFullPath => ParentKey == null ? KeyName : $"{ParentKey}\\{KeyName}";
+        
+        public string? ParentKey { get; set; }
     }
 }
