@@ -292,9 +292,9 @@ public partial class Registry : IAsyncDisposable
         builder.OpenElement(1, "div");
         builder.AddAttribute(2, "class", "flex items-center space-x-2");
         builder.OpenElement(3, "span");
-        builder.AddAttribute(4, "class", "cursor-pointer");
+        builder.AddAttribute(4, "class", "cursor-pointer material-icons");
         builder.AddAttribute(5, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node)));
-        builder.AddContent(6, node.IsExpanded ? "▾" : "▸");
+        builder.AddContent(6, node.IsExpanded ? "expand_more" : "chevron_right");
         builder.CloseElement();
 
         builder.OpenElement(7, "span");
