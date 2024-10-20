@@ -61,7 +61,17 @@
                                 <tr class="border-t">
                                     <td class="px-4 py-2 text-sm text-gray-700">@registryValue.Name</td>
                                     <td class="px-4 py-2 text-sm text-gray-500">@registryValue.ValueType</td>
-                                    <td class="px-4 py-2 text-sm text-gray-500">@registryValue.Value</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500">
+                                        @if (registryValue.Value is byte[] byteArray)
+                                        {
+                                            var hexValue = BitConverter.ToString(byteArray).Replace("-", " ");
+                                            <span>@hexValue</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@registryValue.Value</span>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         }
