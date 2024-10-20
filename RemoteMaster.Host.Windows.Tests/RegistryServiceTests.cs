@@ -94,4 +94,78 @@ public class RegistryServiceTests
         // Assert
         Assert.Equal(defaultValue, result);
     }
+
+    [Fact]
+    public void GetAllValues_ValidKey_ReturnsAllValues()
+    {
+        // Arrange
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\MyApp";
+        var valueNames = new[] { "TestValue1", "TestValue2" };
+        var values = new object[] { "Test1", 2 };
+        var valueKinds = new[] { RegistryValueKind.String, RegistryValueKind.DWord };
+
+        _mockRegistryKey.Setup(k => k.GetValueNames()).Returns(valueNames);
+        _mockRegistryKey.Setup(k => k.GetValue("TestValue1", null)).Returns(values[0]);
+        _mockRegistryKey.Setup(k => k.GetValue("TestValue2", null)).Returns(values[1]);
+        _mockRegistryKey.Setup(k => k.GetValueKind("TestValue1")).Returns(valueKinds[0]);
+        _mockRegistryKey.Setup(k => k.GetValueKind("TestValue2")).Returns(valueKinds[1]);
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
+
+        // Act
+        var result = _registryService.GetAllValues(hive, keyPath);
+
+        // Assert
+        Assert.Equal(2, result.Count());
+        Assert.Contains(result, r => r.Name == "TestValue1" && (string)r.Value! == "Test1" && r.ValueType == RegistryValueKind.String);
+        Assert.Contains(result, r => r.Name == "TestValue2" && (int)r.Value! == 2 && r.ValueType == RegistryValueKind.DWord);
+    }
+
+    [Fact]
+    public void GetAllValues_KeyDoesNotExist_ReturnsEmpty()
+    {
+        // Arrange
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\NonExistent";
+
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns((IRegistryKey)null!);
+
+        // Act
+        var result = _registryService.GetAllValues(hive, keyPath);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void SetValue_KeyDoesNotExist_ThrowsException()
+    {
+        // Arrange
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\NonExistent";
+        const string valueName = "TestValue";
+        const string value = "Test";
+        const RegistryValueKind valueKind = RegistryValueKind.String;
+
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, true)).Returns((IRegistryKey)null!);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => _registryService.SetValue(hive, keyPath, valueName, value, valueKind));
+    }
+
+    [Fact]
+    public void OpenSubKey_KeyCannotBeOpened_ReturnsNull()
+    {
+        // Arrange
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\InaccessibleKey";
+
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns((IRegistryKey)null!);
+
+        // Act
+        var result = _registryService.OpenSubKey(hive, keyPath, false);
+
+        // Assert
+        Assert.Null(result);
+    }
 }

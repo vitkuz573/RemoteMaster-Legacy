@@ -32,8 +32,8 @@ public class RegistryService(IRegistryKeyFactory registryKeyFactory) : IRegistry
 
     public void SetValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)
     {
-        using var key = OpenSubKey(hive, keyPath, true);
-        key?.SetValue(valueName, value, valueKind);
+        using var key = OpenSubKey(hive, keyPath, true) ?? throw new InvalidOperationException($"Cannot open key at path '{keyPath}' for writing.");
+        key.SetValue(valueName, value, valueKind);
     }
 
     public object GetValue(RegistryHive hive, string keyPath, string valueName, object defaultValue)
