@@ -298,7 +298,7 @@ public partial class Registry : IAsyncDisposable
         builder.CloseElement();
         builder.CloseElement();
 
-        if (node.IsExpanded && node.SubKeys != null && node.SubKeys.Any())
+        if (node.IsExpanded && node.SubKeys != null && node.SubKeys.Count != 0)
         {
             builder.OpenElement(11, "ul");
             builder.AddAttribute(12, "class", "ml-4 whitespace-nowrap");
