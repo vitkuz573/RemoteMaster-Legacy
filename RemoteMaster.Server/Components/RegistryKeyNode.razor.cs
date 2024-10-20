@@ -23,7 +23,7 @@ public partial class RegistryKeyNode
     private bool IsExpanded { get; set; } = false;
 
 #pragma warning disable CA2227
-    public List<string>? SubKeys { get; set; }
+    public List<string> SubKeys { get; set; } = [];
 #pragma warning restore CA2227
 
     private readonly List<RegistryKeyNode> _childNodes = [];
@@ -34,12 +34,12 @@ public partial class RegistryKeyNode
     {
         IsExpanded = !IsExpanded;
 
-        if (IsExpanded && SubKeys == null)
+        if (IsExpanded)
         {
             await OnSubKeyExpand.InvokeAsync(KeyFullPath);
-
-            StateHasChanged();
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task SelectThisKey()

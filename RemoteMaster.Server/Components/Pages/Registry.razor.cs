@@ -168,7 +168,6 @@ public partial class Registry : IAsyncDisposable
                 _rootNodes.Add(new RegistryKeyNode
                 {
                     KeyName = rootKey,
-                    SubKeys = []
                 });
             }
         });
