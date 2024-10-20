@@ -54,10 +54,13 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
             return;
         }
 
-        var subKeyNames = key.GetSubKeyNames();
+        var subKeyNames = key.GetSubKeyNames().ToList();
 
-        await Clients.Caller.ReceiveSubKeyNames([.. subKeyNames], parentKey);
+        logger.LogInformation("Fetched {SubKeyCount} subkeys for keyPath: {KeyPath}", subKeyNames.Count, keyPath ?? "<root>");
+
+        await Clients.Caller.ReceiveSubKeyNames(subKeyNames, parentKey);
     }
+
 
     public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
     {
