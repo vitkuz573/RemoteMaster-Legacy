@@ -40,12 +40,18 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     {
         logger.LogInformation("Fetching subkeys for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
 
-#pragma warning disable CA2000
-        using var key = string.IsNullOrEmpty(keyPath)
-            ? RegistryKey.OpenBaseKey(hive, RegistryView.Default)
-            : RegistryKey.OpenBaseKey(hive, RegistryView.Default)?.OpenSubKey(keyPath);
-#pragma warning restore CA2000
+        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+        
+        if (baseKey == null)
+        {
+            logger.LogError("Failed to open base key: {Hive}", hive);
+            await Clients.Caller.ReceiveSubKeyNames([], parentKey);
 
+            return;
+        }
+
+        using var key = string.IsNullOrEmpty(keyPath) ? baseKey : baseKey.OpenSubKey(keyPath);
+        
         if (key == null)
         {
             logger.LogError("Failed to open key: {KeyPath}", keyPath ?? "<root>");
