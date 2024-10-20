@@ -63,7 +63,18 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
 
     public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
     {
+        logger.LogInformation("Fetching all registry values for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath);
+
         var values = registryService.GetAllValues(hive, keyPath);
+
+        if (values.Any())
+        {
+            logger.LogInformation("Fetched {ValuesCount} registry values for keyPath: {KeyPath}", values.Count(), keyPath);
+        }
+        else
+        {
+            logger.LogWarning("No registry values found for keyPath: {KeyPath}", keyPath);
+        }
 
         await Clients.Caller.ReceiveAllRegistryValues(values);
     }

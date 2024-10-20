@@ -33,8 +33,8 @@ public partial class Registry : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
 
-    private readonly List<RegistryNode> _rootNodes = [];
     private string? _currentPath;
+    private readonly List<RegistryNode> _rootNodes = [];
     private readonly List<RegistryValueDto> _registryValues = [];
 
     private bool _firstRenderCompleted;
@@ -153,17 +153,33 @@ public partial class Registry : IAsyncDisposable
 
         _registryValues.Clear();
 
-        var hive = keyPath switch
+        var hiveRoot = keyPath switch
         {
-            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => RegistryHive.LocalMachine,
-            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => RegistryHive.CurrentUser,
-            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => RegistryHive.ClassesRoot,
-            string path when path.StartsWith(@"HKEY_USERS\") => RegistryHive.Users,
-            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => RegistryHive.CurrentConfig,
+            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
+            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
+            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
+            string path when path.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
+            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
-        _ = FetchAllRegistryValues(hive, keyPath[hive.ToString().Length..]);
+        var keyPathWithoutRoot = keyPath.Equals(hiveRoot, StringComparison.OrdinalIgnoreCase)
+            ? null
+            : keyPath[(hiveRoot.Length + 1)..].TrimStart('\\');
+
+        var hive = hiveRoot switch
+        {
+            "HKEY_LOCAL_MACHINE" => RegistryHive.LocalMachine,
+            "HKEY_CURRENT_USER" => RegistryHive.CurrentUser,
+            "HKEY_CLASSES_ROOT" => RegistryHive.ClassesRoot,
+            "HKEY_USERS" => RegistryHive.Users,
+            "HKEY_CURRENT_CONFIG" => RegistryHive.CurrentConfig,
+            _ => throw new InvalidOperationException("Unknown root key")
+        };
+
+        Logger.LogInformation("Fetching all registry values for hive: {Hive}, keyPath: {KeyPath}", hive, keyPathWithoutRoot ?? "<root>");
+
+        _ = FetchAllRegistryValues(hive, keyPathWithoutRoot);
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -227,6 +243,8 @@ public partial class Registry : IAsyncDisposable
 
         _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", values =>
         {
+            Logger.LogInformation("Received {ValuesCount} registry values", values.Count());
+
             _registryValues.Clear();
             _registryValues.AddRange(values);
         });
