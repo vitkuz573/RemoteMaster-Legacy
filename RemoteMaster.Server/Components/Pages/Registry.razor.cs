@@ -198,12 +198,7 @@ public partial class Registry : IAsyncDisposable
 
             foreach (var rootKey in _rootKeys)
             {
-                _rootNodes.Add(new RegistryNode
-                {
-                    KeyName = rootKey,
-                    ParentKey = null,
-                    SubKeys = []
-                });
+                _rootNodes.Add(new RegistryNode(rootKey, null));
             }
 
             InvokeAsync(StateHasChanged);
@@ -223,12 +218,7 @@ public partial class Registry : IAsyncDisposable
 
                 foreach (var subKeyName in subKeyNames)
                 {
-                    node.SubKeys.Add(new RegistryNode
-                    {
-                        KeyName = subKeyName,
-                        ParentKey = parentKey,
-                        SubKeys = []
-                    });
+                    node.SubKeys.Add(new RegistryNode(subKeyName, parentKey));
                 }
 
                 await InvokeAsync(StateHasChanged);
@@ -298,7 +288,7 @@ public partial class Registry : IAsyncDisposable
         builder.CloseElement();
         builder.CloseElement();
 
-        if (node.IsExpanded && node.SubKeys != null && node.SubKeys.Count != 0)
+        if (node.IsExpanded && node.SubKeys.Count != 0)
         {
             builder.OpenElement(11, "ul");
             builder.AddAttribute(12, "class", "ml-4 whitespace-nowrap");
@@ -310,7 +300,7 @@ public partial class Registry : IAsyncDisposable
 
             builder.CloseElement();
         }
-        else if (node.IsExpanded && (node.SubKeys == null || node.SubKeys.Count == 0))
+        else if (node.IsExpanded && node.SubKeys.Count == 0)
         {
             builder.OpenElement(14, "p");
             builder.AddContent(15, "No subkeys available");
@@ -343,16 +333,16 @@ public partial class Registry : IAsyncDisposable
         GC.SuppressFinalize(this);
     }
 
-    private class RegistryNode
+    private class RegistryNode(string keyName, string? parentKey = null)
     {
-        public string KeyName { get; set; } = string.Empty;
+        public string KeyName { get; } = keyName;
         
         public bool IsExpanded { get; set; } = false;
         
-        public List<RegistryNode> SubKeys { get; set; } = [];
+        public List<RegistryNode> SubKeys { get; } = [];
         
         public string KeyFullPath => ParentKey == null ? KeyName : $"{ParentKey}\\{KeyName}";
-        
-        public string? ParentKey { get; set; }
+
+        public string? ParentKey { get; } = parentKey;
     }
 }
