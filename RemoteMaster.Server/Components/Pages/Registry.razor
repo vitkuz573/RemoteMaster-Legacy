@@ -12,49 +12,51 @@
 
 <div class="flex h-screen">
     <!-- Sidebar for registry keys tree -->
-    <div class="w-1/4 overflow-auto bg-gray-100 p-4">
+    <div class="w-1/4 bg-gray-100 p-4">
         <h2 class="mb-4 text-lg font-semibold">Registry Keys</h2>
-        <ul>
-            @if (_rootNodes != null)
-            {
-                @foreach (var rootNode in _rootNodes)
+        <div class="max-h-full overflow-auto">
+            <ul class="whitespace-nowrap">
+                @if (_rootNodes != null)
                 {
-                    <li>
-                        <div class="flex items-center space-x-2">
-                            <span class="cursor-pointer" @onclick="@(e => ToggleExpand(rootNode))">
-                                @(rootNode.IsExpanded ? "▾" : "▸")
-                            </span>
-                            <span class="cursor-pointer" @onclick="@(e => SelectKey(rootNode.KeyFullPath))">
-                                @rootNode.KeyName
-                            </span>
-                        </div>
+                    @foreach (var rootNode in _rootNodes)
+                    {
+                        <li>
+                            <div class="flex items-center space-x-2">
+                                <span class="cursor-pointer" @onclick="@(e => ToggleExpand(rootNode))">
+                                    @(rootNode.IsExpanded ? "▾" : "▸")
+                                </span>
+                                <span class="cursor-pointer" @onclick="@(e => SelectKey(rootNode.KeyFullPath))">
+                                    @rootNode.KeyName
+                                </span>
+                            </div>
 
-                        @if (rootNode.IsExpanded && rootNode.SubKeys != null && rootNode.SubKeys.Any())
-                        {
-                            <ul class="ml-4">
-                                @foreach (var subKey in rootNode.SubKeys)
-                                {
-                                    <li>
-                                        <div class="flex items-center space-x-2">
-                                            <span class="cursor-pointer" @onclick="@(e => ToggleExpand(subKey))">
-                                                @(subKey.IsExpanded ? "▾" : "▸")
-                                            </span>
-                                            <span class="cursor-pointer" @onclick="@(e => SelectKey(subKey.KeyFullPath))">
-                                                @subKey.KeyName
-                                            </span>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                        else if (rootNode.IsExpanded && (rootNode.SubKeys == null || !rootNode.SubKeys.Any()))
-                        {
-                            <p>No subkeys available</p>
-                        }
-                    </li>
+                            @if (rootNode.IsExpanded && rootNode.SubKeys != null && rootNode.SubKeys.Any())
+                            {
+                                <ul class="ml-4 whitespace-nowrap">
+                                    @foreach (var subKey in rootNode.SubKeys)
+                                    {
+                                        <li>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="cursor-pointer" @onclick="@(e => ToggleExpand(subKey))">
+                                                    @(subKey.IsExpanded ? "▾" : "▸")
+                                                </span>
+                                                <span class="cursor-pointer" @onclick="@(e => SelectKey(subKey.KeyFullPath))">
+                                                    @subKey.KeyName
+                                                </span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else if (rootNode.IsExpanded && (rootNode.SubKeys == null || !rootNode.SubKeys.Any()))
+                            {
+                                <p>No subkeys available</p>
+                            }
+                        </li>
+                    }
                 }
-            }
-        </ul>
+            </ul>
+        </div>
     </div>
 
     <!-- Right-side container -->
