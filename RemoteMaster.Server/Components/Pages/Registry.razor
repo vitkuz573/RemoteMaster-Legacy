@@ -16,12 +16,9 @@
         <h2 class="mb-4 text-lg font-semibold">Registry Keys</h2>
         <div class="flex-1 overflow-auto">
             <ul class="whitespace-nowrap">
-                @if (_rootNodes != null)
+                @foreach (var rootNode in _rootNodes)
                 {
-                    @foreach (var rootNode in _rootNodes)
-                    {
-                        @RenderRegistryNode(rootNode)
-                    }
+                    @RenderRegistryNode(rootNode)
                 }
             </ul>
         </div>

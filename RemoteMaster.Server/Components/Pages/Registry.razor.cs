@@ -33,7 +33,6 @@ public partial class Registry : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
 
-    private readonly List<string> _rootKeys = [];
     private readonly List<RegistryNode> _rootNodes = [];
     private string? _currentPath;
     private readonly List<RegistryValueDto> _registryValues = [];
@@ -191,12 +190,9 @@ public partial class Registry : IAsyncDisposable
 
         _connection.On<IEnumerable<string>>("ReceiveRootKeys", keys =>
         {
-            _rootKeys.Clear();
-            _rootKeys.AddRange(keys);
-
             _rootNodes.Clear();
 
-            foreach (var rootKey in _rootKeys)
+            foreach (var rootKey in keys)
             {
                 _rootNodes.Add(new RegistryNode(rootKey, null));
             }
