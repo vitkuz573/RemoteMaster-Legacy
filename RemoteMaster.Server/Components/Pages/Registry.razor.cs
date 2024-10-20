@@ -8,6 +8,7 @@ using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Microsoft.Win32;
@@ -124,7 +125,7 @@ public partial class Registry : IAsyncDisposable
 
     private static RegistryNode? FindNodeRecursive(RegistryNode currentNode, string fullPath)
     {
-        if (currentNode.KeyFullPath.Equals(fullPath, System.StringComparison.OrdinalIgnoreCase))
+        if (currentNode.KeyFullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
         {
             return currentNode;
         }
@@ -132,6 +133,7 @@ public partial class Registry : IAsyncDisposable
         foreach (var subKey in currentNode.SubKeys)
         {
             var foundNode = FindNodeRecursive(subKey, fullPath);
+
             if (foundNode != null)
             {
                 return foundNode;
@@ -276,6 +278,47 @@ public partial class Registry : IAsyncDisposable
             }
         }
     }
+
+    private RenderFragment RenderRegistryNode(RegistryNode node) => builder =>
+    {
+        builder.OpenElement(0, "li");
+
+        builder.OpenElement(1, "div");
+        builder.AddAttribute(2, "class", "flex items-center space-x-2");
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "cursor-pointer");
+        builder.AddAttribute(5, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node)));
+        builder.AddContent(6, node.IsExpanded ? "▾" : "▸");
+        builder.CloseElement();
+
+        builder.OpenElement(7, "span");
+        builder.AddAttribute(8, "class", "cursor-pointer");
+        builder.AddAttribute(9, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath)));
+        builder.AddContent(10, node.KeyName);
+        builder.CloseElement();
+        builder.CloseElement();
+
+        if (node.IsExpanded && node.SubKeys != null && node.SubKeys.Any())
+        {
+            builder.OpenElement(11, "ul");
+            builder.AddAttribute(12, "class", "ml-4 whitespace-nowrap");
+
+            foreach (var subNode in node.SubKeys)
+            {
+                builder.AddContent(13, RenderRegistryNode(subNode));
+            }
+
+            builder.CloseElement();
+        }
+        else if (node.IsExpanded && (node.SubKeys == null || node.SubKeys.Count == 0))
+        {
+            builder.OpenElement(14, "p");
+            builder.AddContent(15, "No subkeys available");
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
 
     [JSInvokable]
     public async Task OnBeforeUnload()
