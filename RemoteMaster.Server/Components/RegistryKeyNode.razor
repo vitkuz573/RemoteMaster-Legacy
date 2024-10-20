@@ -1,0 +1,26 @@
+﻿@inject ILogger<RegistryKeyNode> Logger
+
+<li>
+    <div class="flex items-center space-x-2">
+        <span class="cursor-pointer" @onclick="ToggleExpand">
+            @(IsExpanded ? "▾" : "▸")
+        </span>
+        <span class="cursor-pointer" @onclick="SelectThisKey">
+            @KeyName
+        </span>
+    </div>
+
+    @if (IsExpanded && SubKeys != null && SubKeys.Any())
+    {
+        <ul class="ml-4">
+            @foreach (var subKey in SubKeys)
+            {
+                <RegistryKeyNode KeyName="@subKey" ParentKey="@KeyFullPath" OnSubKeyExpand="@OnSubKeyExpand" OnKeySelect="@OnKeySelect" />
+            }
+        </ul>
+    }
+    else if (IsExpanded && (SubKeys == null || !SubKeys.Any()))
+    {
+        <p>No subkeys available</p>
+    }
+</li>

@@ -12,14 +12,15 @@
 
 <div class="flex h-screen">
     <!-- Sidebar for registry keys tree -->
-    <div class="w-1/4 overflow-y-auto bg-gray-100 p-4">
+    <div class="w-1/4 overflow-auto bg-gray-100 p-4">
         <h2 class="mb-4 text-lg font-semibold">Registry Keys</h2>
         <ul>
-            @foreach (var rootKey in _rootKeys)
+            @if (_rootNodes != null)
             {
-                <li class="mb-2 cursor-pointer text-blue-600 hover:underline" @onclick="() => SelectKey(rootKey)">
-                    @rootKey
-                </li>
+                @foreach (var rootNode in _rootNodes)
+                {
+                    <RegistryKeyNode KeyName="@rootNode.KeyName" ParentKey="" OnSubKeyExpand="LoadSubKeys" OnKeySelect="SelectKey" />
+                }
             }
         </ul>
     </div>
@@ -54,7 +55,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white">
-                        @if (_registryValues != null)
+                        @if (_registryValues != null && _registryValues.Any())
                         {
                             @foreach (var registryValue in _registryValues)
                             {

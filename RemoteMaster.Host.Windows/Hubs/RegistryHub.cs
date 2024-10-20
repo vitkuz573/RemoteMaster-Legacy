@@ -4,13 +4,14 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
 [Authorize]
-public class RegistryHub(IRegistryService registryService) : Hub<IRegistryClient>
+public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> logger) : Hub<IRegistryClient>
 {
     public async Task GetRootKeys()
     {
@@ -35,12 +36,27 @@ public class RegistryHub(IRegistryService registryService) : Hub<IRegistryClient
         await Clients.Caller.ReceiveOperationResult("Value set successfully.");
     }
 
-    public async Task GetSubKeyNames(RegistryHive hive, string keyPath)
+    public async Task GetSubKeyNames(RegistryHive hive, string? keyPath, string parentKey)
     {
-        using var key = registryService.OpenSubKey(hive, keyPath, writable: false);
-        var subKeyNames = key?.GetSubKeyNames() ?? Enumerable.Empty<string>();
+        logger.LogInformation("Fetching subkeys for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
 
-        await Clients.Caller.ReceiveSubKeyNames(subKeyNames);
+#pragma warning disable CA2000
+        using var key = string.IsNullOrEmpty(keyPath)
+            ? RegistryKey.OpenBaseKey(hive, RegistryView.Default)
+            : RegistryKey.OpenBaseKey(hive, RegistryView.Default)?.OpenSubKey(keyPath);
+#pragma warning restore CA2000
+
+        if (key == null)
+        {
+            logger.LogError("Failed to open key: {KeyPath}", keyPath ?? "<root>");
+            await Clients.Caller.ReceiveSubKeyNames([], parentKey);
+
+            return;
+        }
+
+        var subKeyNames = key.GetSubKeyNames();
+
+        await Clients.Caller.ReceiveSubKeyNames([.. subKeyNames], parentKey);
     }
 
     public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)

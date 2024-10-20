@@ -35,6 +35,7 @@ public partial class Registry : IAsyncDisposable
     private readonly List<string> _rootKeys = [];
     private string? _currentPath;
     private readonly List<RegistryValueDto> _registryValues = [];
+    private readonly List<RegistryKeyNode> _rootNodes = [];
 
     private bool _firstRenderCompleted;
 
@@ -63,28 +64,74 @@ public partial class Registry : IAsyncDisposable
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetRootKeys"));
     }
 
+    private async Task LoadSubKeys(string parentKey)
+    {
+        Logger.LogInformation("Loading subkeys for: {ParentKey}", parentKey);
+
+        var hive = parentKey switch
+        {
+            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => RegistryHive.LocalMachine,
+            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => RegistryHive.CurrentUser,
+            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => RegistryHive.ClassesRoot,
+            string path when path.StartsWith(@"HKEY_USERS\") => RegistryHive.Users,
+            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => RegistryHive.CurrentConfig,
+            _ => throw new InvalidOperationException("Unknown root key")
+        };
+
+        var keyPath = parentKey switch
+        {
+            @"HKEY_LOCAL_MACHINE\" => null,
+            @"HKEY_CURRENT_USER\" => null,
+            @"HKEY_CLASSES_ROOT\" => null,
+            @"HKEY_USERS\" => null,
+            @"HKEY_CURRENT_CONFIG\" => null,
+            _ => parentKey[(hive.ToString().Length + 1)..]
+        };
+
+        await _connection!.InvokeAsync("GetSubKeyNames", hive, keyPath, parentKey);
+    }
+
+    private RegistryKeyNode? FindNodeByKey(string fullPath)
+    {
+        foreach (var rootNode in _rootNodes)
+        {
+            if (fullPath.Equals(rootNode.KeyName, StringComparison.OrdinalIgnoreCase))
+            {
+                return rootNode;
+            }
+
+            var foundNode = rootNode.FindNodeByKey(fullPath);
+
+            if (foundNode != null)
+            {
+                return foundNode;
+            }
+        }
+        return null;
+    }
+
     private async Task FetchAllRegistryValues(RegistryHive hive, string keyPath)
     {
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetAllRegistryValues", hive, keyPath));
     }
 
-    private void SelectKey(string rootKey)
+    private void SelectKey(string keyPath)
     {
-        _currentPath = rootKey;
+        _currentPath = keyPath;
 
         _registryValues.Clear();
 
-        var hive = rootKey switch
+        var hive = keyPath switch
         {
-            @"HKEY_LOCAL_MACHINE\" => RegistryHive.LocalMachine,
-            @"HKEY_CURRENT_USER\" => RegistryHive.CurrentUser,
-            @"HKEY_CLASSES_ROOT\" => RegistryHive.ClassesRoot,
-            @"HKEY_USERS\" => RegistryHive.Users,
-            @"HKEY_CURRENT_CONFIG\" => RegistryHive.CurrentConfig,
+            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => RegistryHive.LocalMachine,
+            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => RegistryHive.CurrentUser,
+            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => RegistryHive.ClassesRoot,
+            string path when path.StartsWith(@"HKEY_USERS\") => RegistryHive.Users,
+            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => RegistryHive.CurrentConfig,
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
-        _ = FetchAllRegistryValues(hive, string.Empty);
+        _ = FetchAllRegistryValues(hive, keyPath[hive.ToString().Length..]);
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -109,8 +156,48 @@ public partial class Registry : IAsyncDisposable
             })
             .Build();
 
-        _connection.On<IEnumerable<string>>("ReceiveRootKeys", _rootKeys.AddRange);
-        _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", _registryValues.AddRange);
+        _connection.On<IEnumerable<string>>("ReceiveRootKeys", keys =>
+        {
+            _rootKeys.Clear();
+            _rootKeys.AddRange(keys);
+
+            _rootNodes.Clear();
+
+            foreach (var rootKey in _rootKeys)
+            {
+                _rootNodes.Add(new RegistryKeyNode
+                {
+                    KeyName = rootKey,
+                    SubKeys = []
+                });
+            }
+        });
+
+        _connection.On<IEnumerable<string>, string>("ReceiveSubKeyNames", async (subKeyNames, parentKey) =>
+        {
+            Logger.LogInformation("Received {SubKeyNamesCount} subkeys from server for key: {ParentKey}", subKeyNames.Count(), parentKey);
+
+            var node = FindNodeByKey(parentKey);
+
+            if (node != null)
+            {
+                Logger.LogInformation("Setting {SubKeyNamesCount} subkeys for node: {ParentKey}", subKeyNames.Count(), parentKey);
+
+                node.SetSubKeys(subKeyNames);
+
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                Logger.LogError("Node not found for: {ParentKey}", parentKey);
+            }
+        });
+
+        _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", values =>
+        {
+            _registryValues.Clear();
+            _registryValues.AddRange(values);
+        });
 
         _connection.Closed += async _ =>
         {

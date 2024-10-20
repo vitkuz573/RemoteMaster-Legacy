@@ -12,7 +12,7 @@ public interface IRegistryClient
     
     Task ReceiveRegistryValue(object? value);
     
-    Task ReceiveSubKeyNames(IEnumerable<string> subKeyNames);
+    Task ReceiveSubKeyNames(IEnumerable<string> subKeyNames, string keyPath);
     
     Task ReceiveOperationResult(string message);
 
