@@ -61,7 +61,6 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveSubKeyNames(subKeyNames, parentKey);
     }
 
-
     public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
     {
         var values = registryService.GetAllValues(hive, keyPath);

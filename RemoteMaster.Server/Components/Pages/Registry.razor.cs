@@ -33,9 +33,9 @@ public partial class Registry : IAsyncDisposable
     private ClaimsPrincipal? _user;
 
     private readonly List<string> _rootKeys = [];
-    private readonly List<RegistryNode> _rootNodes = new();
+    private readonly List<RegistryNode> _rootNodes = [];
     private string? _currentPath;
-    private readonly List<RegistryValueDto> _registryValues = new();
+    private readonly List<RegistryValueDto> _registryValues = [];
 
     private bool _firstRenderCompleted;
 
@@ -78,24 +78,30 @@ public partial class Registry : IAsyncDisposable
     {
         Logger.LogInformation("Loading subkeys for: {ParentKey}", parentKey);
 
-        var hive = parentKey switch
+        var hiveRoot = parentKey switch
         {
-            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => RegistryHive.LocalMachine,
-            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => RegistryHive.CurrentUser,
-            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => RegistryHive.ClassesRoot,
-            string path when path.StartsWith(@"HKEY_USERS\") => RegistryHive.Users,
-            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => RegistryHive.CurrentConfig,
+            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
+            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
+            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
+            string path when path.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
+            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
-        var keyPath = parentKey switch
+        var keyPath = parentKey.Equals(hiveRoot, StringComparison.OrdinalIgnoreCase)
+            ? null
+            : parentKey[(hiveRoot.Length + 1)..].TrimStart('\\');
+
+        Logger.LogInformation("Fetching subkeys for hive: {Hive}, keyPath: {KeyPath}", hiveRoot, keyPath ?? "<root>");
+
+        var hive = hiveRoot switch
         {
-            @"HKEY_LOCAL_MACHINE\" => null,
-            @"HKEY_CURRENT_USER\" => null,
-            @"HKEY_CLASSES_ROOT\" => null,
-            @"HKEY_USERS\" => null,
-            @"HKEY_CURRENT_CONFIG\" => null,
-            _ => parentKey[(hive.ToString().Length + 1)..]
+            "HKEY_LOCAL_MACHINE" => RegistryHive.LocalMachine,
+            "HKEY_CURRENT_USER" => RegistryHive.CurrentUser,
+            "HKEY_CLASSES_ROOT" => RegistryHive.ClassesRoot,
+            "HKEY_USERS" => RegistryHive.Users,
+            "HKEY_CURRENT_CONFIG" => RegistryHive.CurrentConfig,
+            _ => throw new InvalidOperationException("Unknown root key")
         };
 
         await _connection!.InvokeAsync("GetSubKeyNames", hive, keyPath, parentKey);
