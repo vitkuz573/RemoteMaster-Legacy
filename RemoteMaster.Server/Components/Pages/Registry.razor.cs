@@ -324,6 +324,18 @@ public partial class Registry : IAsyncDisposable
         builder.CloseElement();
     };
 
+    private static bool IsRgbString(string str)
+    {
+        var parts = str.Split(' ');
+
+        return parts.Length == 3 && parts.All(p => byte.TryParse(p, out _));
+    }
+
+    private static string GetRgbColorFromString(string str)
+    {
+        return str.Replace(" ", ",");
+    }
+
     [JSInvokable]
     public async Task OnBeforeUnload()
     {

@@ -61,14 +61,23 @@
                                 <td class="px-4 py-2 text-sm text-gray-700">@registryValue.Name</td>
                                 <td class="px-4 py-2 text-sm text-gray-500">@registryValue.ValueType</td>
                                 <td class="px-4 py-2 text-sm text-gray-500">
-                                    @if (registryValue.Value is byte[] byteArray)
+                                    @switch (registryValue.Value)
                                     {
-                                        var hexValue = BitConverter.ToString(byteArray).Replace("-", " ");
-                                        <span>@hexValue</span>
-                                    }
-                                    else
-                                    {
-                                        <span>@registryValue.Value</span>
+                                        case byte[] byteArray:
+                                        {
+                                            var hexValue = BitConverter.ToString(byteArray).Replace("-", " ");
+                                            <span>@hexValue</span>
+                                            break;
+                                        }
+                                        case string strValue when IsRgbString(strValue):
+                                            <div style="display: flex; align-items: center;">
+                                                <span style="width: 16px; height: 16px; background-color: rgb(@GetRgbColorFromString(strValue)); margin-right: 8px;"></span>
+                                                <span>@strValue</span>
+                                            </div>
+                                            break;
+                                        default:
+                                            <span>@registryValue.Value</span>
+                                            break;
                                     }
                                 </td>
                             </tr>
