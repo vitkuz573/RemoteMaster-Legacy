@@ -80,11 +80,11 @@ public partial class Registry : IAsyncDisposable
 
         var hiveRoot = parentKey switch
         {
-            not null when parentKey.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
-            not null when parentKey.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
-            not null when parentKey.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
-            not null when parentKey.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
-            not null when parentKey.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
+            not null when parentKey.StartsWith("HKEY_LOCAL_MACHINE") => "HKEY_LOCAL_MACHINE",
+            not null when parentKey.StartsWith("HKEY_CURRENT_USER") => "HKEY_CURRENT_USER",
+            not null when parentKey.StartsWith("HKEY_CLASSES_ROOT") => "HKEY_CLASSES_ROOT",
+            not null when parentKey.StartsWith("HKEY_USERS") => "HKEY_USERS",
+            not null when parentKey.StartsWith("HKEY_CURRENT_CONFIG") => "HKEY_CURRENT_CONFIG",
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
@@ -145,11 +145,11 @@ public partial class Registry : IAsyncDisposable
 
         var hiveRoot = keyPath switch
         {
-            not null when keyPath.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
-            not null when keyPath.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
-            not null when keyPath.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
-            not null when keyPath.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
-            not null when keyPath.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
+            not null when keyPath.StartsWith("HKEY_LOCAL_MACHINE") => "HKEY_LOCAL_MACHINE",
+            not null when keyPath.StartsWith("HKEY_CURRENT_USER") => "HKEY_CURRENT_USER",
+            not null when keyPath.StartsWith("HKEY_CLASSES_ROOT") => "HKEY_CLASSES_ROOT",
+            not null when keyPath.StartsWith("HKEY_USERS") => "HKEY_USERS",
+            not null when keyPath.StartsWith("HKEY_CURRENT_CONFIG") => "HKEY_CURRENT_CONFIG",
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
@@ -200,7 +200,7 @@ public partial class Registry : IAsyncDisposable
 
             foreach (var rootKey in keys)
             {
-                _rootNodes.Add(new RegistryNode(rootKey));
+                _rootNodes.Add(new RegistryNode(rootKey.TrimEnd('\\')));
             }
 
             InvokeAsync(StateHasChanged);
@@ -375,8 +375,8 @@ public partial class Registry : IAsyncDisposable
         public bool IsExpanded { get; set; }
         
         public List<RegistryNode> SubKeys { get; } = [];
-        
-        public string KeyFullPath => ParentKey == null ? KeyName : $"{ParentKey}\\{KeyName}";
+
+        public string KeyFullPath => ParentKey == null ? KeyName : $"{ParentKey}\\{KeyName}".TrimEnd('\\');
 
         private string? ParentKey { get; } = parentKey;
     }
