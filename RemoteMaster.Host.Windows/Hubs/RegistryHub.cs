@@ -43,14 +43,6 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         logger.LogInformation("Fetching subkeys for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
 
         using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
-        
-        if (baseKey == null)
-        {
-            logger.LogError("Failed to open base key: {Hive}", hive);
-            await Clients.Caller.ReceiveSubKeyNames([], parentKey);
-
-            return;
-        }
 
         using var key = string.IsNullOrEmpty(keyPath) ? baseKey : baseKey.OpenSubKey(keyPath);
         
@@ -73,11 +65,11 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     {
         logger.LogInformation("Fetching all registry values for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath);
 
-        var values = registryService.GetAllValues(hive, keyPath);
+        var values = registryService.GetAllValues(hive, keyPath).ToList();
 
         if (values.Any())
         {
-            logger.LogInformation("Fetched {ValuesCount} registry values for keyPath: {KeyPath}", values.Count(), keyPath);
+            logger.LogInformation("Fetched {ValuesCount} registry values for keyPath: {KeyPath}", values.Count, keyPath);
         }
         else
         {
@@ -183,6 +175,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
             foreach (var subKeyName in key.GetSubKeyNames())
             {
                 using var subKey = key.OpenSubKey(subKeyName);
+
                 if (subKey != null)
                 {
                     ExportKey(writer, subKey, $"{path}\\{subKeyName}");
