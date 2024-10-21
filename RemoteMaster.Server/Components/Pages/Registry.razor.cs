@@ -289,10 +289,7 @@ public partial class Registry : IAsyncDisposable
         builder.OpenElement(4, "span");
         builder.AddAttribute(5, "class", "material-icons cursor-pointer");
         builder.AddEventStopPropagationAttribute(6, "onclick", true);
-        builder.AddAttribute(7, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async e =>
-        {
-            await ToggleExpand(node);
-        }));
+        builder.AddAttribute(7, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ToggleExpand(node)));
         builder.AddContent(8, node.IsExpanded ? "expand_more" : "chevron_right");
         builder.CloseElement();
 
