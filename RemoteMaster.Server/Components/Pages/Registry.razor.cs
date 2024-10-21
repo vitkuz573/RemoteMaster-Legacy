@@ -63,7 +63,7 @@ public partial class Registry : IAsyncDisposable
     {
         node.IsExpanded = !node.IsExpanded;
 
-        if (node.IsExpanded && node.SubKeys.Count == 0)
+        if (node is { IsExpanded: true, SubKeys.Count: 0 })
         {
             await LoadSubKeys(node.KeyFullPath);
         }
@@ -80,11 +80,11 @@ public partial class Registry : IAsyncDisposable
 
         var hiveRoot = parentKey switch
         {
-            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
-            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
-            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
-            string path when path.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
-            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
+            not null when parentKey.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
+            not null when parentKey.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
+            not null when parentKey.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
+            not null when parentKey.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
+            not null when parentKey.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
@@ -109,17 +109,7 @@ public partial class Registry : IAsyncDisposable
 
     private RegistryNode? FindNodeByKey(string fullPath)
     {
-        foreach (var rootNode in _rootNodes)
-        {
-            var foundNode = FindNodeRecursive(rootNode, fullPath);
-
-            if (foundNode != null)
-            {
-                return foundNode;
-            }
-        }
-
-        return null;
+        return _rootNodes.Select(rootNode => FindNodeRecursive(rootNode, fullPath)).OfType<RegistryNode>().FirstOrDefault();
     }
 
     private static RegistryNode? FindNodeRecursive(RegistryNode currentNode, string fullPath)
@@ -155,11 +145,11 @@ public partial class Registry : IAsyncDisposable
 
         var hiveRoot = keyPath switch
         {
-            string path when path.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
-            string path when path.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
-            string path when path.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
-            string path when path.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
-            string path when path.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
+            not null when keyPath.StartsWith(@"HKEY_LOCAL_MACHINE\") => "HKEY_LOCAL_MACHINE",
+            not null when keyPath.StartsWith(@"HKEY_CURRENT_USER\") => "HKEY_CURRENT_USER",
+            not null when keyPath.StartsWith(@"HKEY_CLASSES_ROOT\") => "HKEY_CLASSES_ROOT",
+            not null when keyPath.StartsWith(@"HKEY_USERS\") => "HKEY_USERS",
+            not null when keyPath.StartsWith(@"HKEY_CURRENT_CONFIG\") => "HKEY_CURRENT_CONFIG",
             _ => throw new InvalidOperationException("Unknown root key")
         };
 
@@ -294,10 +284,10 @@ public partial class Registry : IAsyncDisposable
 
         builder.OpenElement(1, "div");
         builder.AddAttribute(2, "class", $"flex items-center space-x-2 cursor-pointer {selectedClass}");
-        builder.AddAttribute(3, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath))); // Переносим сюда
+        builder.AddAttribute(3, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath)));
         builder.OpenElement(4, "span");
         builder.AddAttribute(5, "class", "material-icons");
-        builder.AddAttribute(6, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node))); // Сохраняем отдельно для раскрытия
+        builder.AddAttribute(6, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node)));
         builder.AddContent(7, node.IsExpanded ? "expand_more" : "chevron_right");
         builder.CloseElement();
 
@@ -306,23 +296,26 @@ public partial class Registry : IAsyncDisposable
         builder.CloseElement();
         builder.CloseElement();
 
-        if (node.IsExpanded && node.SubKeys.Count != 0)
+        switch (node.IsExpanded)
         {
-            builder.OpenElement(10, "ul");
-            builder.AddAttribute(11, "class", "ml-4 whitespace-nowrap");
-
-            foreach (var subNode in node.SubKeys)
+            case true when node.SubKeys.Count != 0:
             {
-                builder.AddContent(12, RenderRegistryNode(subNode));
-            }
+                builder.OpenElement(10, "ul");
+                builder.AddAttribute(11, "class", "ml-4 whitespace-nowrap");
 
-            builder.CloseElement();
-        }
-        else if (node.IsExpanded && node.SubKeys.Count == 0)
-        {
-            builder.OpenElement(13, "p");
-            builder.AddContent(14, "No subkeys available");
-            builder.CloseElement();
+                foreach (var subNode in node.SubKeys)
+                {
+                    builder.AddContent(12, RenderRegistryNode(subNode));
+                }
+
+                builder.CloseElement();
+                break;
+            }
+            case true when node.SubKeys.Count == 0:
+                builder.OpenElement(13, "p");
+                builder.AddContent(14, "No subkeys available");
+                builder.CloseElement();
+                break;
         }
 
         builder.CloseElement();
@@ -361,6 +354,6 @@ public partial class Registry : IAsyncDisposable
         
         public string KeyFullPath => ParentKey == null ? KeyName : $"{ParentKey}\\{KeyName}";
 
-        public string? ParentKey { get; } = parentKey;
+        private string? ParentKey { get; } = parentKey;
     }
 }
