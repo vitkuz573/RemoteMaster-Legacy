@@ -690,6 +690,8 @@ public partial class Home
 
     private async Task OpenFileManager() => await OpenHostWindow("filemanager", 1120);
 
+    private async Task OpenRegistryEditor() => await OpenHostWindow("registry", 1120);
+
     private async Task OpenLogsManager() => await OpenHostWindow("logs", 1120);
 
     private async Task OpenChat() => await OpenHostWindow("chat");

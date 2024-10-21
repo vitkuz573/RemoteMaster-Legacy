@@ -12,7 +12,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> logger) : Hub<IRegistryClient>
 {
     public async Task GetRootKeys()
