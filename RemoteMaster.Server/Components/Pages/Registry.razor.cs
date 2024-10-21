@@ -345,6 +345,45 @@ public partial class Registry : IAsyncDisposable
         return str.Replace(" ", ",");
     }
 
+    private async Task ExportRegistryBranch()
+    {
+        if (_currentPath == null)
+        {
+            return;
+        }
+
+        var hiveRoot = _currentPath switch
+        {
+            _ when _currentPath.StartsWith("HKEY_LOCAL_MACHINE") => "HKEY_LOCAL_MACHINE",
+            _ when _currentPath.StartsWith("HKEY_CURRENT_USER") => "HKEY_CURRENT_USER",
+            _ when _currentPath.StartsWith("HKEY_CLASSES_ROOT") => "HKEY_CLASSES_ROOT",
+            _ when _currentPath.StartsWith("HKEY_USERS") => "HKEY_USERS",
+            _ when _currentPath.StartsWith("HKEY_CURRENT_CONFIG") => "HKEY_CURRENT_CONFIG",
+            _ => throw new InvalidOperationException("Unknown registry hive")
+        };
+
+        var keyPathWithoutHive = _currentPath.Equals(hiveRoot, StringComparison.OrdinalIgnoreCase)
+            ? null
+            : _currentPath[(hiveRoot.Length + 1)..].TrimStart('\\');
+
+        var hive = hiveRoot switch
+        {
+            "HKEY_LOCAL_MACHINE" => RegistryHive.LocalMachine,
+            "HKEY_CURRENT_USER" => RegistryHive.CurrentUser,
+            "HKEY_CLASSES_ROOT" => RegistryHive.ClassesRoot,
+            "HKEY_USERS" => RegistryHive.Users,
+            "HKEY_CURRENT_CONFIG" => RegistryHive.CurrentConfig,
+            _ => throw new InvalidOperationException("Unknown registry hive")
+        };
+
+        var exportResult = await _connection!.InvokeAsync<byte[]>("ExportRegistryBranch", hive, keyPathWithoutHive);
+        var exportResultBase64 = Convert.ToBase64String(exportResult);
+        var fileName = $"{_currentPath.Replace("\\", "_")}.reg";
+
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+        await module.InvokeVoidAsync("downloadDataAsFile", exportResultBase64, fileName, "application/octet-stream;base64");
+    }
+
     [JSInvokable]
     public async Task OnBeforeUnload()
     {
