@@ -38,6 +38,8 @@ public partial class Registry : IAsyncDisposable
     private double _contextMenuPositionX;
     private double _contextMenuPositionY;
 
+    private bool _menuAlreadyOpened = false;
+
     private string? _currentPath;
     private readonly List<RegistryNode> _rootNodes = [];
     private readonly List<RegistryValueDto> _registryValues = [];
@@ -68,28 +70,57 @@ public partial class Registry : IAsyncDisposable
         }
     }
 
-    private void SelectValue(RegistryValueDto registryValue)
+    private void SelectValue(RegistryValueDto? registryValue)
     {
         _selectedValue = registryValue.Name;
 
         StateHasChanged();
     }
 
-    private void ShowContextMenu(MouseEventArgs e, RegistryValueDto registryValue)
+    private void ShowContextMenuForAdd(MouseEventArgs e)
     {
-        SelectValue(registryValue);
+        if (_menuAlreadyOpened)
+        {
+            return;
+        }
 
-        _contextMenuVisible = true;
+        _selectedValue = null;
         _contextMenuPositionX = e.ClientX;
         _contextMenuPositionY = e.ClientY;
+
+        _contextMenuVisible = true;
+        _menuAlreadyOpened = true;
+
+        StateHasChanged();
+    }
+
+    private void ShowContextMenuForEdit(MouseEventArgs e, RegistryValueDto registryValue)
+    {
+        _menuAlreadyOpened = true;
+
+        _selectedValue = registryValue.Name;
+        _contextMenuPositionX = e.ClientX;
+        _contextMenuPositionY = e.ClientY;
+
+        _contextMenuVisible = true;
+
+        StateHasChanged();
     }
 
     [JSInvokable]
     public void HideContextMenu()
     {
         _contextMenuVisible = false;
+        _menuAlreadyOpened = false;
 
-        InvokeAsync(StateHasChanged);
+        StateHasChanged();
+    }
+
+    private Task AddNewValue()
+    {
+        HideContextMenu();
+
+        return Task.CompletedTask;
     }
 
     private Task EditValue()
@@ -161,12 +192,7 @@ public partial class Registry : IAsyncDisposable
 
     private static RegistryNode? FindNodeRecursive(RegistryNode currentNode, string fullPath)
     {
-        if (currentNode.KeyFullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
-        {
-            return currentNode;
-        }
-
-        return currentNode.SubKeys.Select(subKey => FindNodeRecursive(subKey, fullPath)).OfType<RegistryNode>().FirstOrDefault();
+        return currentNode.KeyFullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase) ? currentNode : currentNode.SubKeys.Select(subKey => FindNodeRecursive(subKey, fullPath)).OfType<RegistryNode>().FirstOrDefault();
     }
 
     private async Task FetchAllRegistryValues(RegistryHive hive, string keyPath)
@@ -374,8 +400,7 @@ public partial class Registry : IAsyncDisposable
         builder.AddAttribute(1, "class", $"cursor-pointer border-t {selectedClass}");
 
         builder.AddEventPreventDefaultAttribute(2, "oncontextmenu", true);
-
-        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, e => ShowContextMenu(e, registryValue)));
+        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, e => ShowContextMenuForEdit(e, registryValue)));
         builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => SelectValue(registryValue)));
 
         builder.OpenElement(5, "td");
@@ -416,6 +441,109 @@ public partial class Registry : IAsyncDisposable
                 break;
         }
 
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderContextMenu() => builder =>
+    {
+        if (!_contextMenuVisible)
+        {
+            return;
+        }
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "id", "context-menu");
+        builder.AddAttribute(2, "class", "absolute z-50 rounded border border-gray-200 bg-white p-2 shadow-md");
+        builder.AddAttribute(3, "style", $"top:{_contextMenuPositionY}px; left:{_contextMenuPositionX}px;");
+
+        builder.AddEventPreventDefaultAttribute(4, "oncontextmenu", true);
+
+        builder.OpenElement(5, "ul");
+
+        if (_selectedValue != null)
+        {
+            builder.OpenElement(6, "li");
+            builder.AddAttribute(7, "class", "cursor-pointer px-4 py-2 hover:bg-gray-100");
+            builder.AddAttribute(8, "onclick", EventCallback.Factory.Create(this, EditValue));
+            builder.AddContent(9, "Edit");
+            builder.CloseElement();
+
+            builder.OpenElement(10, "li");
+            builder.AddAttribute(11, "class", "cursor-pointer px-4 py-2 hover:bg-gray-100");
+            builder.AddAttribute(12, "onclick", EventCallback.Factory.Create(this, DeleteValue));
+            builder.AddContent(13, "Delete");
+            builder.CloseElement();
+        }
+        else
+        {
+            builder.OpenElement(14, "li");
+            builder.AddAttribute(15, "class", "cursor-pointer px-4 py-2 hover:bg-gray-100");
+            builder.AddAttribute(16, "onclick", EventCallback.Factory.Create(this, AddNewValue));
+            builder.AddContent(17, "Add New Value");
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderRegistryTable() => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "flex-1 overflow-auto");
+
+        builder.AddEventPreventDefaultAttribute(2, "oncontextmenu", true);
+        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuForAdd));
+
+        builder.OpenElement(4, "table");
+        builder.AddAttribute(5, "class", "min-w-full table-auto");
+
+        builder.OpenElement(6, "thead");
+        builder.AddAttribute(7, "class", "z-10 sticky top-0 bg-gray-100");
+
+        builder.OpenElement(8, "tr");
+
+        builder.OpenElement(9, "th");
+        builder.AddAttribute(10, "class", "px-4 py-2 text-left text-xs font-semibold text-gray-500");
+        builder.AddContent(11, "Name");
+        builder.CloseElement();
+
+        builder.OpenElement(12, "th");
+        builder.AddAttribute(13, "class", "px-4 py-2 text-left text-xs font-semibold text-gray-500");
+        builder.AddContent(14, "Type");
+        builder.CloseElement();
+
+        builder.OpenElement(15, "th");
+        builder.AddAttribute(16, "class", "px-4 py-2 text-left text-xs font-semibold text-gray-500");
+        builder.AddContent(17, "Value");
+        builder.CloseElement();
+
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.OpenElement(18, "tbody");
+        builder.AddAttribute(19, "class", "bg-white");
+
+        if (_registryValues.Any())
+        {
+            foreach (var registryValue in _registryValues)
+            {
+                builder.AddContent(20, RenderRegistryValue(registryValue));
+            }
+        }
+        else
+        {
+            builder.OpenElement(21, "tr");
+            builder.OpenElement(22, "td");
+            builder.AddAttribute(23, "colspan", 3);
+            builder.AddAttribute(24, "class", "px-4 py-2 text-center text-sm text-gray-400");
+            builder.AddContent(25, "No values to display");
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
         builder.CloseElement();
 
         builder.CloseElement();
