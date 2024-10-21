@@ -400,16 +400,19 @@ public partial class Registry : IAsyncDisposable
 
             case string strValue when IsRgbString(strValue):
                 builder.OpenElement(14, "div");
-                builder.AddAttribute(15, "style", "display: flex; align-items: center;");
+                builder.AddAttribute(15, "class", "flex items-center");
+
                 builder.OpenElement(16, "span");
-                builder.AddAttribute(17, "style", $"width: 16px; height: 16px; background-color: rgb({GetRgbColorFromString(strValue)}); margin-right: 8px;");
+                builder.AddAttribute(17, "class", "w-4 h-4 mr-2");
+                builder.AddAttribute(18, "style", $"background-color: rgb({GetRgbColorFromString(strValue)});");
                 builder.CloseElement();
-                builder.AddContent(18, strValue);
+
+                builder.AddContent(19, strValue);
                 builder.CloseElement();
                 break;
 
             default:
-                builder.AddContent(19, registryValue.Value?.ToString());
+                builder.AddContent(20, registryValue.Value?.ToString());
                 break;
         }
 
