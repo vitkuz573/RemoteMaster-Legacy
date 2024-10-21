@@ -7,5 +7,6 @@ using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.JsonContexts;
 
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(ModuleInfo))]
 public partial class ModuleInfoJsonSerializerContext : JsonSerializerContext;
