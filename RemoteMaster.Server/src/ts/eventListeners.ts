@@ -31,3 +31,14 @@ export function preventDefaultForKeydownWhenDrawerClosed(drawerOpen: boolean): v
         }
     });
 }
+
+export function registerOutsideClick(dotNetHelper: DotNet.DotNetObject): void {
+    document.addEventListener('click', function handleClickOutside(event) {
+        const contextMenu = document.getElementById('context-menu');
+        const target = event.target as Node;
+
+        if (contextMenu && target && !contextMenu.contains(target)) {
+            dotNetHelper.invokeMethodAsync('HideContextMenu');
+        }
+    });
+}

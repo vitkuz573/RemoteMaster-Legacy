@@ -27,4 +27,13 @@ export function preventDefaultForKeydownWhenDrawerClosed(drawerOpen) {
         }
     });
 }
+export function registerOutsideClick(dotNetHelper) {
+    document.addEventListener('click', function handleClickOutside(event) {
+        const contextMenu = document.getElementById('context-menu');
+        const target = event.target;
+        if (contextMenu && target && !contextMenu.contains(target)) {
+            dotNetHelper.invokeMethodAsync('HideContextMenu');
+        }
+    });
+}
 //# sourceMappingURL=eventListeners.js.map

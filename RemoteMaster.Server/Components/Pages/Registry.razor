@@ -52,6 +52,18 @@
                 </button>
             }
         </div>
+        
+        <!-- Context Menu -->
+        @if (_contextMenuVisible)
+        {
+            <div id="context-menu" class="absolute z-50 rounded border border-gray-200 bg-white p-2 shadow-md" 
+                 style="top:@($"{_contextMenuPositionY}px"); left:@($"{_contextMenuPositionX}px");">
+                <ul>
+                    <li class="cursor-pointer px-4 py-2 hover:bg-gray-100" @onclick="EditValue">Edit</li>
+                    <li class="cursor-pointer px-4 py-2 hover:bg-gray-100" @onclick="DeleteValue">Delete</li>
+                </ul>
+            </div>
+        }
 
         <div class="flex-1 overflow-auto">
             <table class="min-w-full table-auto">
@@ -67,7 +79,7 @@
                 {
                     @foreach (var registryValue in _registryValues)
                     {
-                        <tr class="border-t">
+                        <tr class="border-t" @oncontextmenu:preventDefault="true" @oncontextmenu="e => ShowContextMenu(e, registryValue)">
                             <td class="px-4 py-2 text-sm text-gray-700">@registryValue.Name</td>
                             <td class="px-4 py-2 text-sm text-gray-500">@registryValue.ValueType</td>
                             <td class="px-4 py-2 text-sm text-gray-500">

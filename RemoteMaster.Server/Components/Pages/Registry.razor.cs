@@ -33,17 +33,26 @@ public partial class Registry : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
 
+    private bool _contextMenuVisible;
+    private string? _selectedValue;
+    private double _contextMenuPositionX;
+    private double _contextMenuPositionY;
+
     private string? _currentPath;
     private readonly List<RegistryNode> _rootNodes = [];
     private readonly List<RegistryValueDto> _registryValues = [];
 
     private bool _firstRenderCompleted;
 
-    protected override void OnAfterRender(bool firstRender)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             _firstRenderCompleted = true;
+
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
+
+            await module.InvokeVoidAsync("registerOutsideClick", DotNetObjectReference.Create(this));
         }
     }
 
@@ -57,6 +66,36 @@ public partial class Registry : IAsyncDisposable
             await InitializeHostConnectionAsync();
             await FetchRootKeys();
         }
+    }
+
+    private void ShowContextMenu(MouseEventArgs e, RegistryValueDto registryValue)
+    {
+        _contextMenuVisible = true;
+        _contextMenuPositionX = e.ClientX;
+        _contextMenuPositionY = e.ClientY;
+        _selectedValue = registryValue.Name;
+    }
+
+    [JSInvokable]
+    public void HideContextMenu()
+    {
+        _contextMenuVisible = false;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private Task EditValue()
+    {
+        HideContextMenu();
+
+        return Task.CompletedTask;
+    }
+
+    private Task DeleteValue()
+    {
+        HideContextMenu();
+
+        return Task.CompletedTask;
     }
 
     private async Task ToggleExpand(RegistryNode node)
@@ -119,17 +158,7 @@ public partial class Registry : IAsyncDisposable
             return currentNode;
         }
 
-        foreach (var subKey in currentNode.SubKeys)
-        {
-            var foundNode = FindNodeRecursive(subKey, fullPath);
-
-            if (foundNode != null)
-            {
-                return foundNode;
-            }
-        }
-
-        return null;
+        return currentNode.SubKeys.Select(subKey => FindNodeRecursive(subKey, fullPath)).OfType<RegistryNode>().FirstOrDefault();
     }
 
     private async Task FetchAllRegistryValues(RegistryHive hive, string keyPath)
