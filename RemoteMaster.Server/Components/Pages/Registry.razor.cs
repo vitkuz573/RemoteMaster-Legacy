@@ -33,12 +33,7 @@ public partial class Registry : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
 
-    private bool _contextMenuVisible;
     private string? _selectedValue;
-    private double _contextMenuPositionX;
-    private double _contextMenuPositionY;
-
-    private bool _menuAlreadyOpened;
 
     private string? _currentPath;
     private readonly List<RegistryNode> _rootNodes = [];
@@ -46,15 +41,11 @@ public partial class Registry : IAsyncDisposable
 
     private bool _firstRenderCompleted;
 
-    protected async override Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
             _firstRenderCompleted = true;
-
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
-
-            await module.InvokeVoidAsync("registerOutsideClick", DotNetObjectReference.Create(this));
         }
     }
 
@@ -75,66 +66,6 @@ public partial class Registry : IAsyncDisposable
         _selectedValue = registryValue.Name;
 
         StateHasChanged();
-    }
-
-    private void ShowContextMenuForAdd(MouseEventArgs e)
-    {
-        if (_menuAlreadyOpened)
-        {
-            return;
-        }
-
-        _selectedValue = null;
-        _contextMenuPositionX = e.ClientX;
-        _contextMenuPositionY = e.ClientY;
-
-        _contextMenuVisible = true;
-        _menuAlreadyOpened = true;
-
-        StateHasChanged();
-    }
-
-    private void ShowContextMenuForEdit(MouseEventArgs e, RegistryValueDto registryValue)
-    {
-        _menuAlreadyOpened = true;
-
-        _selectedValue = registryValue.Name;
-        _contextMenuPositionX = e.ClientX;
-        _contextMenuPositionY = e.ClientY;
-
-        _contextMenuVisible = true;
-
-        StateHasChanged();
-    }
-
-    [JSInvokable]
-    public void HideContextMenu()
-    {
-        _contextMenuVisible = false;
-        _menuAlreadyOpened = false;
-
-        StateHasChanged();
-    }
-
-    private Task AddNewValue()
-    {
-        HideContextMenu();
-
-        return Task.CompletedTask;
-    }
-
-    private Task EditValue()
-    {
-        HideContextMenu();
-
-        return Task.CompletedTask;
-    }
-
-    private Task DeleteValue()
-    {
-        HideContextMenu();
-
-        return Task.CompletedTask;
     }
 
     private async Task ToggleExpand(RegistryNode node)
@@ -400,7 +331,6 @@ public partial class Registry : IAsyncDisposable
         builder.AddAttribute(1, "class", $"cursor-pointer border-t {selectedClass}");
 
         builder.AddEventPreventDefaultAttribute(2, "oncontextmenu", true);
-        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, e => ShowContextMenuForEdit(e, registryValue)));
         builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => SelectValue(registryValue)));
 
         builder.OpenElement(5, "td");
@@ -445,56 +375,10 @@ public partial class Registry : IAsyncDisposable
         builder.CloseElement();
     };
 
-    private RenderFragment RenderContextMenu() => builder =>
-    {
-        if (!_contextMenuVisible)
-        {
-            return;
-        }
-
-        builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "id", "context-menu");
-        builder.AddAttribute(2, "class", "absolute z-50 rounded border border-gray-200 bg-white p-2 shadow-md");
-        builder.AddAttribute(3, "style", $"top:{_contextMenuPositionY}px; left:{_contextMenuPositionX}px;");
-
-        builder.AddEventPreventDefaultAttribute(4, "oncontextmenu", true);
-
-        builder.OpenElement(5, "ul");
-
-        if (_selectedValue != null)
-        {
-            builder.OpenElement(6, "li");
-            builder.AddAttribute(7, "class", "cursor-pointer px-4 py-2 hover:bg-gray-100");
-            builder.AddAttribute(8, "onclick", EventCallback.Factory.Create(this, EditValue));
-            builder.AddContent(9, "Edit");
-            builder.CloseElement();
-
-            builder.OpenElement(10, "li");
-            builder.AddAttribute(11, "class", "cursor-pointer px-4 py-2 hover:bg-gray-100");
-            builder.AddAttribute(12, "onclick", EventCallback.Factory.Create(this, DeleteValue));
-            builder.AddContent(13, "Delete");
-            builder.CloseElement();
-        }
-        else
-        {
-            builder.OpenElement(14, "li");
-            builder.AddAttribute(15, "class", "cursor-pointer px-4 py-2 hover:bg-gray-100");
-            builder.AddAttribute(16, "onclick", EventCallback.Factory.Create(this, AddNewValue));
-            builder.AddContent(17, "Add New Value");
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
-        builder.CloseElement();
-    };
-
     private RenderFragment RenderRegistryTable() => builder =>
     {
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "flex-1 overflow-auto");
-
-        builder.AddEventPreventDefaultAttribute(2, "oncontextmenu", true);
-        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuForAdd));
 
         builder.OpenElement(4, "table");
         builder.AddAttribute(5, "class", "min-w-full table-auto");
