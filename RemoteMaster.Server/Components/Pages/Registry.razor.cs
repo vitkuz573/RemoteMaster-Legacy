@@ -335,43 +335,95 @@ public partial class Registry : IAsyncDisposable
 
         builder.OpenElement(5, "td");
         builder.AddAttribute(6, "class", "px-4 py-2 text-sm text-gray-700");
-        builder.AddContent(7, registryValue.Name);
-        builder.CloseElement();
+        builder.OpenElement(7, "input");
+        builder.AddAttribute(8, "class", "w-full px-2 py-1");
+        builder.AddAttribute(9, "value", registryValue.Name);
 
-        builder.OpenElement(8, "td");
-        builder.AddAttribute(9, "class", "px-4 py-2 text-sm text-gray-500");
-        builder.AddContent(10, registryValue.ValueType);
+        builder.AddAttribute(10, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+        {
+            registryValue.Name = e.Value.ToString();
+        }));
+
+        builder.CloseElement();
         builder.CloseElement();
 
         builder.OpenElement(11, "td");
         builder.AddAttribute(12, "class", "px-4 py-2 text-sm text-gray-500");
-
-        switch (registryValue.Value)
+        builder.OpenElement(13, "select");
+        builder.AddAttribute(14, "class", "w-full px-2 py-1");
+        builder.AddAttribute(15, "value", registryValue.ValueType.ToString());
+        builder.AddAttribute(16, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
         {
-            case byte[] byteArray:
-                var hexValue = BitConverter.ToString(byteArray).Replace("-", " ");
-                builder.AddContent(13, hexValue);
+            if (Enum.TryParse(typeof(RegistryValueKind), e.Value.ToString(), out var result))
+            {
+                registryValue.ValueType = (RegistryValueKind)result;
+            }
+        }));
+
+        foreach (RegistryValueKind kind in Enum.GetValues(typeof(RegistryValueKind)))
+        {
+            builder.OpenElement(17, "option");
+            builder.AddAttribute(18, "value", kind.ToString());
+            builder.AddContent(19, kind.ToString());
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.OpenElement(20, "td");
+        builder.AddAttribute(21, "class", "px-4 py-2 text-sm text-gray-500");
+
+        switch (registryValue.ValueType)
+        {
+            case RegistryValueKind.Binary:
+                var hexValue = BitConverter.ToString((byte[])registryValue.Value!).Replace("-", " ");
+                builder.OpenElement(22, "input");
+                builder.AddAttribute(23, "class", "w-full px-2 py-1");
+                builder.AddAttribute(24, "value", hexValue);
+                builder.AddAttribute(25, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+                {
+                    registryValue.Value = e.Value.ToString().Split(" ").Select(hex => Convert.ToByte(hex, 16)).ToArray();
+                }));
+                builder.CloseElement();
                 break;
 
-            case string strValue when IsRgbString(strValue):
-                builder.OpenElement(14, "div");
-                builder.AddAttribute(15, "class", "flex items-center");
+            case RegistryValueKind.String when IsRgbString(registryValue.Value.ToString()):
+                var strValue = registryValue.Value.ToString();
+                builder.OpenElement(26, "div");
+                builder.AddAttribute(27, "class", "flex items-center");
 
-                builder.OpenElement(16, "span");
-                builder.AddAttribute(17, "class", "w-4 h-4 mr-2");
-                builder.AddAttribute(18, "style", $"background-color: rgb({GetRgbColorFromString(strValue)});");
+                builder.OpenElement(28, "span");
+                builder.AddAttribute(29, "class", "w-4 h-4 mr-2");
+                builder.AddAttribute(30, "style", $"background-color: rgb({GetRgbColorFromString(strValue)});");
                 builder.CloseElement();
 
-                builder.AddContent(19, strValue);
+                builder.OpenElement(31, "input");
+                builder.AddAttribute(32, "class", "w-full px-2 py-1");
+                builder.AddAttribute(33, "value", strValue);
+                builder.AddAttribute(34, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+                {
+                    registryValue.Value = e.Value.ToString();
+                }));
+                builder.CloseElement();
+
                 builder.CloseElement();
                 break;
 
             default:
-                builder.AddContent(20, registryValue.Value?.ToString());
+                builder.OpenElement(35, "input");
+                builder.AddAttribute(36, "class", "w-full px-2 py-1");
+                builder.AddAttribute(37, "value", registryValue.Value?.ToString());
+                builder.AddAttribute(38, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+                {
+                    registryValue.Value = e.Value.ToString();
+                }));
+                builder.CloseElement();
                 break;
         }
 
         builder.CloseElement();
+
         builder.CloseElement();
     };
 
@@ -432,6 +484,41 @@ public partial class Registry : IAsyncDisposable
 
         builder.CloseElement();
     };
+
+    private void AddRegistryValue()
+    {
+        var newRegistryValue = new RegistryValueDto
+        {
+            Name = "New Value",
+            ValueType = RegistryValueKind.String,
+            Value = string.Empty
+        };
+
+        _registryValues.Add(newRegistryValue);
+        _selectedValue = newRegistryValue.Name;
+
+        StateHasChanged();
+    }
+
+    private void RemoveSelectedValue()
+    {
+        if (_selectedValue == null)
+        {
+            return;
+        }
+
+        var valueToRemove = _registryValues.FirstOrDefault(v => v.Name == _selectedValue);
+
+        if (valueToRemove == null)
+        {
+            return;
+        }
+
+        _registryValues.Remove(valueToRemove);
+        _selectedValue = null;
+
+        StateHasChanged();
+    }
 
     private static bool IsRgbString(string str)
     {
