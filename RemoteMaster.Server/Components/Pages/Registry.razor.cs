@@ -200,7 +200,7 @@ public partial class Registry : IAsyncDisposable
 
             foreach (var rootKey in keys)
             {
-                _rootNodes.Add(new RegistryNode(rootKey, null));
+                _rootNodes.Add(new RegistryNode(rootKey));
             }
 
             InvokeAsync(StateHasChanged);
@@ -208,17 +208,19 @@ public partial class Registry : IAsyncDisposable
 
         _connection.On<IEnumerable<string>, string>("ReceiveSubKeyNames", async (subKeyNames, parentKey) =>
         {
-            Logger.LogInformation("Received {SubKeyNamesCount} subkeys from server for key: {ParentKey}", subKeyNames.Count(), parentKey);
+            var subKeyNameList = subKeyNames.ToList();
+
+            Logger.LogInformation("Received {SubKeyNamesCount} subkeys from server for key: {ParentKey}", subKeyNameList.Count, parentKey);
 
             var node = FindNodeByKey(parentKey);
 
             if (node != null)
             {
-                Logger.LogInformation("Setting {SubKeyNamesCount} subkeys for node: {ParentKey}", subKeyNames.Count(), parentKey);
+                Logger.LogInformation("Setting {SubKeyNamesCount} subkeys for node: {ParentKey}", subKeyNameList.Count, parentKey);
 
                 node.SubKeys.Clear();
 
-                foreach (var subKeyName in subKeyNames)
+                foreach (var subKeyName in subKeyNameList)
                 {
                     node.SubKeys.Add(new RegistryNode(subKeyName, parentKey));
                 }
@@ -233,10 +235,12 @@ public partial class Registry : IAsyncDisposable
 
         _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", async values =>
         {
-            Logger.LogInformation("Received {ValuesCount} registry values", values.Count());
+            var valueList = values.ToList();
+
+            Logger.LogInformation("Received {ValuesCount} registry values", valueList.Count);
 
             _registryValues.Clear();
-            _registryValues.AddRange(values);
+            _registryValues.AddRange(valueList);
 
             await InvokeAsync(StateHasChanged);
         });
