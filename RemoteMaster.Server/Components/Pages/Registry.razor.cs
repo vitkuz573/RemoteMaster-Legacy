@@ -330,8 +330,13 @@ public partial class Registry : IAsyncDisposable
 
     private static bool IsRgbString(string str)
     {
-        var parts = str.Split(' ');
+        if (string.IsNullOrWhiteSpace(str))
+        {
+            return false;
+        }
 
+        var parts = str.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        
         return parts.Length == 3 && parts.All(p => byte.TryParse(p, out _));
     }
 
