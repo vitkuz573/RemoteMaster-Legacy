@@ -68,12 +68,20 @@ public partial class Registry : IAsyncDisposable
         }
     }
 
+    private void SelectValue(RegistryValueDto registryValue)
+    {
+        _selectedValue = registryValue.Name;
+
+        StateHasChanged();
+    }
+
     private void ShowContextMenu(MouseEventArgs e, RegistryValueDto registryValue)
     {
+        SelectValue(registryValue);
+
         _contextMenuVisible = true;
         _contextMenuPositionX = e.ClientX;
         _contextMenuPositionY = e.ClientY;
-        _selectedValue = registryValue.Name;
     }
 
     [JSInvokable]
