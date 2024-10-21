@@ -284,18 +284,22 @@ public partial class Registry : IAsyncDisposable
 
         builder.OpenElement(1, "div");
         builder.AddAttribute(2, "class", $"flex items-center space-x-2 cursor-pointer {selectedClass}");
+        builder.AddAttribute(3, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath)));
 
-        builder.OpenElement(3, "span");
-        builder.AddAttribute(4, "class", "material-icons cursor-pointer");
-        builder.AddAttribute(5, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node)));
-        builder.AddContent(6, node.IsExpanded ? "expand_more" : "chevron_right");
+        builder.OpenElement(4, "span");
+        builder.AddAttribute(5, "class", "material-icons cursor-pointer");
+        builder.AddEventStopPropagationAttribute(6, "onclick", true);
+        builder.AddAttribute(7, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async e =>
+        {
+            await ToggleExpand(node);
+        }));
+        builder.AddContent(8, node.IsExpanded ? "expand_more" : "chevron_right");
         builder.CloseElement();
 
-        builder.OpenElement(7, "span");
-        builder.AddAttribute(8, "class", "cursor-pointer");
-        builder.AddAttribute(9, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath)));
+        builder.OpenElement(9, "span");
         builder.AddContent(10, node.KeyName);
         builder.CloseElement();
+
         builder.CloseElement();
 
         switch (node.IsExpanded)
@@ -350,7 +354,7 @@ public partial class Registry : IAsyncDisposable
     {
         public string KeyName { get; } = keyName;
         
-        public bool IsExpanded { get; set; } = false;
+        public bool IsExpanded { get; set; }
         
         public List<RegistryNode> SubKeys { get; } = [];
         
