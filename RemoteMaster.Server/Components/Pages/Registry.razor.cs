@@ -365,6 +365,59 @@ public partial class Registry : IAsyncDisposable
         builder.CloseElement();
     };
 
+    private RenderFragment RenderRegistryValue(RegistryValueDto registryValue) => builder =>
+    {
+        var isSelected = _selectedValue == registryValue.Name;
+        var selectedClass = isSelected ? "bg-blue-100" : "";
+
+        builder.OpenElement(0, "tr");
+        builder.AddAttribute(1, "class", $"cursor-pointer border-t {selectedClass}");
+
+        builder.AddEventPreventDefaultAttribute(2, "oncontextmenu", true);
+
+        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, e => ShowContextMenu(e, registryValue)));
+        builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => SelectValue(registryValue)));
+
+        builder.OpenElement(5, "td");
+        builder.AddAttribute(6, "class", "px-4 py-2 text-sm text-gray-700");
+        builder.AddContent(7, registryValue.Name);
+        builder.CloseElement();
+
+        builder.OpenElement(8, "td");
+        builder.AddAttribute(9, "class", "px-4 py-2 text-sm text-gray-500");
+        builder.AddContent(10, registryValue.ValueType);
+        builder.CloseElement();
+
+        builder.OpenElement(11, "td");
+        builder.AddAttribute(12, "class", "px-4 py-2 text-sm text-gray-500");
+
+        switch (registryValue.Value)
+        {
+            case byte[] byteArray:
+                var hexValue = BitConverter.ToString(byteArray).Replace("-", " ");
+                builder.AddContent(13, hexValue);
+                break;
+
+            case string strValue when IsRgbString(strValue):
+                builder.OpenElement(14, "div");
+                builder.AddAttribute(15, "style", "display: flex; align-items: center;");
+                builder.OpenElement(16, "span");
+                builder.AddAttribute(17, "style", $"width: 16px; height: 16px; background-color: rgb({GetRgbColorFromString(strValue)}); margin-right: 8px;");
+                builder.CloseElement();
+                builder.AddContent(18, strValue);
+                builder.CloseElement();
+                break;
+
+            default:
+                builder.AddContent(19, registryValue.Value?.ToString());
+                break;
+        }
+
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+
     private static bool IsRgbString(string str)
     {
         if (string.IsNullOrWhiteSpace(str))
