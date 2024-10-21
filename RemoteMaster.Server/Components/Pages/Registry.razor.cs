@@ -38,7 +38,7 @@ public partial class Registry : IAsyncDisposable
     private double _contextMenuPositionX;
     private double _contextMenuPositionY;
 
-    private bool _menuAlreadyOpened = false;
+    private bool _menuAlreadyOpened;
 
     private string? _currentPath;
     private readonly List<RegistryNode> _rootNodes = [];
@@ -70,7 +70,7 @@ public partial class Registry : IAsyncDisposable
         }
     }
 
-    private void SelectValue(RegistryValueDto? registryValue)
+    private void SelectValue(RegistryValueDto registryValue)
     {
         _selectedValue = registryValue.Name;
 
