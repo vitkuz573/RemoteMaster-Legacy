@@ -284,15 +284,17 @@ public partial class Registry : IAsyncDisposable
 
         builder.OpenElement(1, "div");
         builder.AddAttribute(2, "class", $"flex items-center space-x-2 cursor-pointer {selectedClass}");
-        builder.AddAttribute(3, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath)));
-        builder.OpenElement(4, "span");
-        builder.AddAttribute(5, "class", "material-icons");
-        builder.AddAttribute(6, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node)));
-        builder.AddContent(7, node.IsExpanded ? "expand_more" : "chevron_right");
+
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "material-icons cursor-pointer");
+        builder.AddAttribute(5, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleExpand(node)));
+        builder.AddContent(6, node.IsExpanded ? "expand_more" : "chevron_right");
         builder.CloseElement();
 
-        builder.OpenElement(8, "span");
-        builder.AddContent(9, node.KeyName);
+        builder.OpenElement(7, "span");
+        builder.AddAttribute(8, "class", "cursor-pointer");
+        builder.AddAttribute(9, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectKey(node.KeyFullPath)));
+        builder.AddContent(10, node.KeyName);
         builder.CloseElement();
         builder.CloseElement();
 
@@ -300,20 +302,20 @@ public partial class Registry : IAsyncDisposable
         {
             case true when node.SubKeys.Count != 0:
             {
-                builder.OpenElement(10, "ul");
-                builder.AddAttribute(11, "class", "ml-4 whitespace-nowrap");
+                builder.OpenElement(11, "ul");
+                builder.AddAttribute(12, "class", "ml-4 whitespace-nowrap");
 
                 foreach (var subNode in node.SubKeys)
                 {
-                    builder.AddContent(12, RenderRegistryNode(subNode));
+                    builder.AddContent(13, RenderRegistryNode(subNode));
                 }
 
                 builder.CloseElement();
                 break;
             }
             case true when node.SubKeys.Count == 0:
-                builder.OpenElement(13, "p");
-                builder.AddContent(14, "No subkeys available");
+                builder.OpenElement(14, "p");
+                builder.AddContent(15, "No subkeys available");
                 builder.CloseElement();
                 break;
         }
