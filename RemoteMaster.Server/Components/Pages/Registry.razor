@@ -29,10 +29,10 @@
         <!-- Current selected registry path -->
         <div>
             <h3 class="text-sm font-semibold text-gray-500">Current Path:</h3>
-            <div class="select-text text-lg text-gray-900">
+            <div class="text-lg text-gray-900">
                 @if (_currentPath != null)
                 {
-                    @_currentPath
+                    <span class="select-text">@_currentPath</span>
                 }
                 else
                 {
