@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -86,17 +87,17 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveAllRegistryValues(values);
     }
 
-    public async Task<byte[]> ExportRegistryBranch(RegistryHive hive, string keyPath)
+    public async Task<byte[]> ExportRegistryBranch(RegistryHive hive, string? keyPath)
     {
-        logger.LogInformation("Exporting registry branch for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath);
+        logger.LogInformation("Exporting registry branch for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
 
         using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
 
-        using var key = baseKey.OpenSubKey(keyPath);
+        using var key = string.IsNullOrEmpty(keyPath) ? baseKey : baseKey.OpenSubKey(keyPath);
 
         if (key == null)
         {
-            logger.LogError("Failed to open key for export: {KeyPath}", keyPath);
+            logger.LogError("Failed to open key for export: {KeyPath}", keyPath ?? "<root>");
 
             return [];
         }
@@ -107,7 +108,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await writer.WriteLineAsync("Windows Registry Editor Version 5.00");
         await writer.WriteLineAsync();
 
-        ExportKey(writer, key, keyPath);
+        ExportKey(writer, key, key.Name);
 
         await writer.FlushAsync();
 
@@ -116,61 +117,85 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
 
     private void ExportKey(StreamWriter writer, RegistryKey key, string path)
     {
-        writer.WriteLine($"[{path}]");
-
-        foreach (var valueName in key.GetValueNames())
+        try
         {
-            var value = key.GetValue(valueName);
-            var valueKind = key.GetValueKind(valueName);
+            writer.WriteLine($"[{path}]");
 
-            switch (valueKind)
+            foreach (var valueName in key.GetValueNames())
             {
-                case RegistryValueKind.String:
-                    writer.WriteLine($"\"{valueName}\"=\"{value}\"");
-                    break;
+                var value = key.GetValue(valueName);
+                var valueKind = key.GetValueKind(valueName);
 
-                case RegistryValueKind.ExpandString:
-                    writer.WriteLine($"\"{valueName}\"=hex(2):{ToHexString((string)value)}");
-                    break;
+                switch (valueKind)
+                {
+                    case RegistryValueKind.String:
+                        if (value is string stringValue)
+                        {
+                            writer.WriteLine($"\"{valueName}\"=\"{stringValue}\"");
+                        }
+                        break;
+                    case RegistryValueKind.ExpandString:
+                        if (value is string expandStringValue)
+                        {
+                            writer.WriteLine($"\"{valueName}\"=hex(2):{ToHexString(expandStringValue)}");
+                        }
+                        break;
+                    case RegistryValueKind.DWord:
+                        if (value is int dwordValue)
+                        {
+                            writer.WriteLine($"\"{valueName}\"=dword:{dwordValue:x8}");
+                        }
+                        break;
+                    case RegistryValueKind.QWord:
+                        if (value is long qwordValue)
+                        {
+                            writer.WriteLine($"\"{valueName}\"=qword:{qwordValue:x16}");
+                        }
+                        break;
+                    case RegistryValueKind.Binary:
+                        if (value is byte[] byteArrayValue)
+                        {
+                            var hex = BitConverter.ToString(byteArrayValue).Replace("-", ",");
+                            writer.WriteLine($"\"{valueName}\"=hex:{hex}");
+                        }
+                        break;
+                    case RegistryValueKind.MultiString:
+                        if (value is string[] multiStringValue)
+                        {
+                            var multiStringHex = ToMultiStringHex(multiStringValue);
+                            writer.WriteLine($"\"{valueName}\"=hex(7):{multiStringHex}");
+                        }
+                        break;
+                    case RegistryValueKind.None:
+                        // logger.LogWarning($"Registry value kind 'None' for valueName: {valueName}");
+                        break;
+                    case RegistryValueKind.Unknown:
+                        // logger.LogWarning($"Registry value kind 'Unknown' for valueName: {valueName}");
+                        break;
+                    default:
+                        logger.LogWarning("Unsupported registry value type: {ValueKind} for valueName: {ValueName}", valueKind, valueName);
+                        break;
+                }
+            }
 
-                case RegistryValueKind.DWord:
-                    writer.WriteLine($"\"{valueName}\"=dword:{(int)value:x8}");
-                    break;
+            writer.WriteLine();
 
-                case RegistryValueKind.QWord:
-                    writer.WriteLine($"\"{valueName}\"=qword:{(long)value:x16}");
-                    break;
-
-                case RegistryValueKind.Binary:
-                    var bytes = (byte[])value;
-                    var hex = BitConverter.ToString(bytes).Replace("-", ",");
-                    writer.WriteLine($"\"{valueName}\"=hex:{hex}");
-                    break;
-
-                case RegistryValueKind.MultiString:
-                    var strings = (string[])value;
-                    var multiStringHex = ToMultiStringHex(strings);
-                    writer.WriteLine($"\"{valueName}\"=hex(7):{multiStringHex}");
-                    break;
-
-                case RegistryValueKind.None:
-                case RegistryValueKind.Unknown:
-                default:
-                    logger.LogWarning("Unsupported registry value type: {ValueKind} for valueName: {ValueName}", valueKind, valueName);
-                    break;
+            foreach (var subKeyName in key.GetSubKeyNames())
+            {
+                using var subKey = key.OpenSubKey(subKeyName);
+                if (subKey != null)
+                {
+                    ExportKey(writer, subKey, $"{path}\\{subKeyName}");
+                }
             }
         }
-
-        writer.WriteLine();
-
-        foreach (var subKeyName in key.GetSubKeyNames())
+        catch (UnauthorizedAccessException ex)
         {
-            using var subKey = key.OpenSubKey(subKeyName);
-
-            if (subKey != null)
-            {
-                ExportKey(writer, subKey, $"{path}\\{subKeyName}");
-            }
+            logger.LogWarning("Access denied to registry key: {Path}. Exception: {Message}", path, ex.Message);
+        }
+        catch (SecurityException ex)
+        {
+            logger.LogWarning("Security exception for registry key: {Path}. Exception: {Message}", path, ex.Message);
         }
     }
 
