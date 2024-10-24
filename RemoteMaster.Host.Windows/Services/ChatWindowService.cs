@@ -13,6 +13,7 @@ using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
@@ -51,6 +52,11 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             })
             .Build();
 
+        _connection.On<ChatMessageDto>("ReceiveMessage", chatMessageDto =>
+        {
+            AddMessageToChatDisplay(chatMessageDto.User, chatMessageDto.Message);
+        });
+
         _connection.Closed += async (error) =>
         {
             UpdateConnectionStatus("Disconnected");
@@ -78,6 +84,26 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         catch (Exception ex)
         {
             UpdateConnectionStatus($"Failed to connect: {ex.Message}");
+        }
+    }
+
+    private void AddMessageToChatDisplay(string user, string message)
+    {
+        var chatDisplay = GetDlgItem(_hwnd, IDC_CHAT_DISPLAY);
+
+        if (!chatDisplay.IsNull)
+        {
+            var formattedMessage = $"{user}: {message}";
+
+            var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
+
+            SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
+
+            Marshal.FreeHGlobal(messagePtr);
+        }
+        else
+        {
+            logger.LogError("Failed to access chat display window.");
         }
     }
 
