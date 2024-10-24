@@ -37,6 +37,11 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
     private readonly List<ChatMessageDto> _chatMessages = [];
 
+    private Timer? _typingTimer;
+    private readonly TimeSpan TypingTimeout = TimeSpan.FromSeconds(2);
+    private bool _isTyping = false;
+    private const string UserName = "User";
+
     private async Task InitializeSignalRConnectionAsync()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
@@ -95,6 +100,51 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         catch (Exception ex)
         {
             UpdateConnectionStatus($"Failed to connect: {ex.Message}");
+        }
+    }
+
+    private async Task NotifyTypingAsync()
+    {
+        if (_connection == null)
+        {
+            return;
+        }
+
+        _typingTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+
+        if (!_isTyping)
+        {
+            _isTyping = true;
+
+            try
+            {
+                await _connection.SendAsync("Typing", UserName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Error sending typing notification. Exception: {ExceptionMessage}", ex.Message);
+            }
+        }
+
+        _typingTimer = new Timer(async _ => await NotifyStopTypingAsync(), null, TypingTimeout, Timeout.InfiniteTimeSpan);
+    }
+
+    private async Task NotifyStopTypingAsync()
+    {
+        if (_connection == null || !_isTyping)
+        {
+            return;
+        }
+
+        _isTyping = false;
+
+        try
+        {
+            await _connection.SendAsync("StopTyping", UserName);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error sending stop typing notification. Exception: {ExceptionMessage}", ex.Message);
         }
     }
 
@@ -364,7 +414,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                     }
                 }
 
-                var chatMessageDto = new ChatMessageDto("User", message);
+                var chatMessageDto = new ChatMessageDto(UserName, message);
 
                 try
                 {
@@ -385,6 +435,8 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             logger.LogError("Failed to access chat input window.");
         }
     }
+
+    private static int HIWORD(nint n) => (int)((n >> 16) & 0xFFFF);
 
     private static unsafe LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
@@ -414,10 +466,13 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
             case WM_COMMAND:
                 var wmId = (int)wParam.Value & 0xffff;
-
                 if (wmId == IDC_SEND_BUTTON)
                 {
                     _ = service.HandleSendButtonAsync(hwnd);
+                }
+                else if (wmId == IDC_CHAT_INPUT && HIWORD((nint)wParam.Value) == EN_CHANGE)
+                {
+                    _ = service.NotifyTypingAsync();
                 }
                 break;
 
