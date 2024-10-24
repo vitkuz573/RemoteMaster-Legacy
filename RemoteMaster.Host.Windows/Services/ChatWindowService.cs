@@ -188,6 +188,12 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
     private void InitializeWindow()
     {
+        if (!_hwnd.IsNull)
+        {
+            logger.LogInformation("Window already exists, skipping initialization.");
+            return;
+        }
+
         if (!TryRegisterClass())
         {
             logger.LogError("Failed to register the window class.");
@@ -211,6 +217,11 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
 
+        InitializeControls();
+    }
+
+    private void InitializeControls()
+    {
         using var safeChatDisplayHandle = new SafeFileHandle(IDC_CHAT_DISPLAY, false);
 
         unsafe
@@ -308,16 +319,14 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         return hwnd;
     }
 
-    private void StartMessageLoop()
+    private static unsafe void StartMessageLoop()
     {
-        while (GetMessage(out var msg, _hwnd, 0, 0))
-        {
-            unsafe
-            {
-                TranslateMessage(&msg);
-            }
+        MSG msg;
 
-            DispatchMessage(in msg);
+        while (GetMessage(&msg, HWND.Null, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
     }
 
@@ -378,6 +387,15 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             throw new InvalidOperationException("Handle is not initialized.");
         }
 
+        var serviceHandle = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
+
+        if (serviceHandle == IntPtr.Zero)
+        {
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+        }
+
+        var service = (ChatWindowService)GCHandle.FromIntPtr(serviceHandle).Target!;
+
         switch (msg)
         {
             case WM_SETFOCUS:
@@ -393,22 +411,13 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
                 if (wmId == IDC_SEND_BUTTON)
                 {
-                    var serviceHandle = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
-
-                    if (serviceHandle != nint.Zero)
-                    {
-                        var service = (ChatWindowService)GCHandle.FromIntPtr(serviceHandle).Target;
-                        _ = service.HandleSendButtonAsync(hwnd);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Service handle is not initialized.");
-                    }
+                    _ = service.HandleSendButtonAsync(hwnd);
                 }
                 break;
 
             case WM_CLOSE:
                 DestroyWindow(hwnd);
+                service._hwnd = HWND.Null;
                 return new LRESULT(0);
 
             case WM_DESTROY:
