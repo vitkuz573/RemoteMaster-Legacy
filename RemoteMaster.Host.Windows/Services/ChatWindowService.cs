@@ -19,7 +19,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ChatWindowService(IHostConfigurationService hostConfigurationService, ILogger<ChatWindowService> logger) : IHostedService
+public class ChatWindowService(IHostConfigurationService hostConfigurationService, IHostApplicationLifetime applicationLifetime, ILogger<ChatWindowService> logger) : IHostedService
 {
     private const string ClassName = "ChatWindowClass";
 
@@ -161,11 +161,20 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        InitializeWindow();
+        var uiThread = new Thread(() =>
+        {
+            InitializeWindow();
+            StartMessageLoop();
+
+            applicationLifetime.StopApplication();
+
+        });
+
+        uiThread.SetApartmentState(ApartmentState.STA);
+        uiThread.IsBackground = true;
+        uiThread.Start();
 
         _ = Task.Run(InitializeSignalRConnectionAsync, cancellationToken);
-
-        StartMessageLoop();
 
         return Task.CompletedTask;
     }
@@ -182,8 +191,6 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         {
             _gch.Free();
         }
-
-        PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
     }
 
     private void InitializeWindow()
@@ -417,7 +424,6 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
             case WM_CLOSE:
                 DestroyWindow(hwnd);
-                PostQuitMessage(0);
                 service._hwnd = HWND.Null;
                 return new LRESULT(0);
 
