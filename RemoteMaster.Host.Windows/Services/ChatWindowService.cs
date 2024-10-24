@@ -106,7 +106,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     {
         if (_connection != null)
         {
-            await _connection.StopAsync();
+            await _connection.StopAsync(cancellationToken);
             await _connection.DisposeAsync();
         }
 
