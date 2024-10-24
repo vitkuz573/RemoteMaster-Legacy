@@ -32,7 +32,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     private GCHandle _gch;
     private readonly WNDPROC _wndProcDelegate = WndProc;
 
-    private HubConnection _connection;
+    private HubConnection? _connection;
 
     private async Task InitializeSignalRConnectionAsync()
     {
