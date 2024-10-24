@@ -3,33 +3,99 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Runtime.InteropServices;
+using MessagePack;
+using MessagePack.Resolvers;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Formatters;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ChatWindowService(ILogger<ChatWindowService> logger) : IHostedService
+public class ChatWindowService(IHostConfigurationService hostConfigurationService, ILogger<ChatWindowService> logger) : IHostedService
 {
     private const string ClassName = "ChatWindowClass";
 
     private const int IDC_CHAT_DISPLAY = 101;
     private const int IDC_CHAT_INPUT = 102;
     private const int IDC_SEND_BUTTON = 103;
+    private const int IDC_CONNECTION_STATUS = 104;
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate = WndProc;
 
+    private HubConnection _connection;
+
+    private async Task InitializeSignalRConnectionAsync()
+    {
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat", options =>
+            {
+                options.Headers.Add("X-Service-Flag", "true");
+            })
+            .AddMessagePackProtocol(options =>
+            {
+                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+            })
+            .Build();
+
+        _connection.Closed += async (error) =>
+        {
+            UpdateConnectionStatus("Disconnected");
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            await _connection.StartAsync();
+        };
+
+        _connection.Reconnected += (connectionId) =>
+        {
+            UpdateConnectionStatus("Connected");
+            return Task.CompletedTask;
+        };
+
+        _connection.Reconnecting += (error) =>
+        {
+            UpdateConnectionStatus("Reconnecting...");
+            return Task.CompletedTask;
+        };
+
+        try
+        {
+            await _connection.StartAsync();
+            UpdateConnectionStatus("Connected");
+        }
+        catch (Exception ex)
+        {
+            UpdateConnectionStatus($"Failed to connect: {ex.Message}");
+        }
+    }
+
+    private void UpdateConnectionStatus(string status)
+    {
+        var connectionStatus = GetDlgItem(_hwnd, IDC_CONNECTION_STATUS);
+
+        if (!connectionStatus.IsNull)
+        {
+            SetWindowText(connectionStatus, $"Status: {status}");
+        }
+    }
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        Task.Run(() =>
-        {
-            InitializeWindow();
-            StartMessageLoop();
-        }, cancellationToken);
+        InitializeWindow();
+
+        _ = Task.Run(InitializeSignalRConnectionAsync, cancellationToken);
+
+        StartMessageLoop();
 
         return Task.CompletedTask;
     }
@@ -78,6 +144,13 @@ public class ChatWindowService(ILogger<ChatWindowService> logger) : IHostedServi
         unsafe
         {
             CreateWindowEx(0, "BUTTON", "Send", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 220, 220, 80, 20, _hwnd, safeSendButtonHandle, null, null);
+        }
+
+        using var safeConnectionStatusHandle = new SafeFileHandle(IDC_CONNECTION_STATUS, false);
+
+        unsafe
+        {
+            CreateWindowEx(0, "STATIC", "Status: Disconnected", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 10, 250, 200, 20, _hwnd, safeConnectionStatusHandle, null, null);
         }
     }
 
