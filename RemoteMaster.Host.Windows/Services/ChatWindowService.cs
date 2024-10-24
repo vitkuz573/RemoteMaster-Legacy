@@ -358,8 +358,8 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
     private static unsafe HWND CreateChatWindow()
     {
-        const int windowWidth = 500;
-        const int windowHeight = 400;
+        const int windowWidth = 335;
+        const int windowHeight = 350;
 
         var hwnd = CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
 
