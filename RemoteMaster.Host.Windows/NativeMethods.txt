@@ -148,3 +148,6 @@ WM_CLOSE
 WM_DESTROY
 PostQuitMessage
 DestroyWindow
+BS_CENTER
+SetWindowLongPtr
+GetWindowLongPtr

@@ -127,6 +127,10 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             logger.LogError("Failed to create hidden window.");
         }
 
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) | (int)WINDOW_STYLE.WS_SYSMENU));
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_MAXIMIZEBOX));
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_THICKFRAME));
+
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
 
         using var safeChatDisplayHandle = new SafeFileHandle(IDC_CHAT_DISPLAY, false);
@@ -140,14 +144,14 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         unsafe
         {
-            CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_AUTOHSCROLL, 10, 220, 200, 20, _hwnd, safeChatInputHandle, null, null);
+            CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_AUTOHSCROLL | WINDOW_STYLE.WS_BORDER, 10, 220, 200, 20, _hwnd, safeChatInputHandle, null, null);
         }
 
         using var safeSendButtonHandle = new SafeFileHandle(IDC_SEND_BUTTON, false);
 
         unsafe
         {
-            CreateWindowEx(0, "BUTTON", "Send", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 220, 220, 80, 20, _hwnd, safeSendButtonHandle, null, null);
+            CreateWindowEx(0, "BUTTON", "Send", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)BS_CENTER, 220, 220, 80, 20, _hwnd, safeSendButtonHandle, null, null);
         }
 
         using var safeConnectionStatusHandle = new SafeFileHandle(IDC_CONNECTION_STATUS, false);
@@ -187,7 +191,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         const int windowWidth = 500;
         const int windowHeight = 400;
 
-        return CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
+        return CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
     }
 
     private void StartMessageLoop()
