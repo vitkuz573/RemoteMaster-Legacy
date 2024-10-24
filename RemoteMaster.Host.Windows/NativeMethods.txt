@@ -151,3 +151,5 @@ DestroyWindow
 BS_CENTER
 SetWindowLongPtr
 GetWindowLongPtr
+LBS_NOTIFY
+LB_ADDSTRING

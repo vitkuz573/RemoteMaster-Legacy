@@ -147,7 +147,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         unsafe
         {
-            CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_MULTILINE | (WINDOW_STYLE)ES_AUTOVSCROLL | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)ES_READONLY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
+            CreateWindowEx(0, "LISTBOX", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)LBS_NOTIFY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
         }
 
         using var safeChatInputHandle = new SafeFileHandle(IDC_CHAT_INPUT, false);
@@ -266,27 +266,13 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                     return;
                 }
 
-                var displayLength = GetWindowTextLength(chatDisplay);
-                string chatContent;
+                var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}";
 
-                unsafe
-                {
-                    var displayBuffer = stackalloc char[displayLength + 1];
+                var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
 
-                    if (GetWindowText(chatDisplay, new PWSTR(displayBuffer), displayLength + 1) > 0)
-                    {
-                        chatContent = new string(displayBuffer, 0, displayLength);
-                    }
-                    else
-                    {
-                        logger.LogError("Failed to retrieve text from the chat display.");
+                SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
 
-                        return;
-                    }
-                }
-
-                var updatedChatContent = chatContent + "\r\n" + message;
-                SetWindowText(chatDisplay, updatedChatContent);
+                Marshal.FreeHGlobal(messagePtr);
 
                 SetWindowText(chatInput, "");
             }
