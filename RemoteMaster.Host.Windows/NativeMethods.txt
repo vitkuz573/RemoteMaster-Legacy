@@ -139,3 +139,8 @@ RtlGetVersion
 
 UpdateDriverForPlugAndPlayDevices
 SETUP_DI_DEVICE_CONFIGURATION_FLAGS
+WM_COMMAND
+GetWindowTextLength
+GetWindowText
+SetWindowText
+GetDlgItem

@@ -13,41 +13,41 @@ using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Services;
 
-public class RsaTokenValidationService : ITokenValidationService
+public class RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptions> options, ILogger<RsaTokenValidationService> logger) : ITokenValidationService
 {
-    private readonly IFileSystem _fileSystem;
-    private readonly JwtOptions _options;
-    private readonly ILogger<RsaTokenValidationService> _logger;
-    
-    private readonly RSA _validationRsa;
+    private readonly JwtOptions _options = options.Value;
+    private RSA? _validationRsa;
 
-    public RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptions> options, ILogger<RsaTokenValidationService> logger)
+    private RSA GetValidationRsa()
     {
-        ArgumentNullException.ThrowIfNull(options);
-
-        _fileSystem = fileSystem;
-        _options = options.Value;
-        _logger = logger;
-
-        _validationRsa = RSA.Create();
-
-        InitializeValidationRsaKey();
-    }
-
-    private void InitializeValidationRsaKey()
-    {
-        try
+        if (_validationRsa == null)
         {
-            var publicKeyPath = _fileSystem.Path.Combine(_options.KeysDirectory, "public_key.der");
-            var publicKeyBytes = _fileSystem.File.ReadAllBytes(publicKeyPath);
+            try
+            {
+                var publicKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "public_key.der");
+                var publicKeyBytes = fileSystem.File.ReadAllBytes(publicKeyPath);
 
-            _validationRsa.ImportRSAPublicKey(publicKeyBytes, out _);
+                _validationRsa = RSA.Create();
+                _validationRsa.ImportRSAPublicKey(publicKeyBytes, out _);
+            }
+            catch (FileNotFoundException ex)
+            {
+                logger.LogError("Public key file not found: {Message}", ex.Message);
+                throw;
+            }
+            catch (CryptographicException ex)
+            {
+                logger.LogError("Failed to import the public key: {Message}", ex.Message);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Unknown error occurred during public key initialization: {Message}", ex.Message);
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError("Failed to load the public key for validation: {Message}", ex.Message);
-            throw;
-        }
+
+        return _validationRsa;
     }
 
     public Result ValidateToken(string accessToken)
@@ -61,7 +61,7 @@ public class RsaTokenValidationService : ITokenValidationService
         var validationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new RsaSecurityKey(_validationRsa),
+            IssuerSigningKey = new RsaSecurityKey(GetValidationRsa()),
             ValidateIssuer = true,
             ValidIssuer = "RemoteMaster Server",
             ValidateAudience = true,
@@ -78,13 +78,13 @@ public class RsaTokenValidationService : ITokenValidationService
         }
         catch (SecurityTokenException ex)
         {
-            _logger.LogError("Token validation failed: {Message}.", ex.Message);
+            logger.LogError("Token validation failed: {Message}.", ex.Message);
 
             return Result.Fail("Token validation failed.").WithError(ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Unknown error occurred during token validation: {Message}.", ex.Message);
+            logger.LogError("Unknown error occurred during token validation: {Message}.", ex.Message);
 
             return Result.Fail("Unknown error occurred during token validation.");
         }
@@ -92,6 +92,6 @@ public class RsaTokenValidationService : ITokenValidationService
 
     public void Dispose()
     {
-        _validationRsa.Dispose();
+        _validationRsa?.Dispose();
     }
 }

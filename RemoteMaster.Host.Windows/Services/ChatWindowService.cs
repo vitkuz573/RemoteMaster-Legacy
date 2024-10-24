@@ -126,18 +126,49 @@ public class ChatWindowService(ILogger<ChatWindowService> logger) : IHostedServi
         }
     }
 
-    private static LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
+    private static unsafe LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         switch (msg)
         {
             case WM_SETFOCUS:
-                var inputField = FindWindowEx(hwnd, HWND.Null, "EDIT", null);
+                var inputField = GetDlgItem(hwnd, IDC_CHAT_INPUT);
 
                 if (!inputField.IsNull)
                 {
                     SetFocus(inputField);
                 }
+                break;
 
+            case WM_COMMAND:
+                var wmId = (int)wParam.Value & 0xffff;
+
+                if (wmId == IDC_SEND_BUTTON)
+                {
+                    var chatInput = GetDlgItem(hwnd, IDC_CHAT_INPUT);
+                    var chatDisplay = GetDlgItem(hwnd, IDC_CHAT_DISPLAY);
+
+                    if (!chatInput.IsNull && !chatDisplay.IsNull)
+                    {
+                        var length = GetWindowTextLength(chatInput);
+
+                        if (length > 0)
+                        {
+                            var inputBuffer = stackalloc char[length + 1];
+                            GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1);
+                            var message = new string(inputBuffer, 0, length);
+
+                            var displayLength = GetWindowTextLength(chatDisplay);
+                            var displayBuffer = stackalloc char[displayLength + 1];
+                            GetWindowText(chatDisplay, new PWSTR(displayBuffer), displayLength + 1);
+                            var chatContent = new string(displayBuffer, 0, displayLength);
+
+                            var updatedChatContent = chatContent + "\r\n" + message;
+                            SetWindowText(chatDisplay, updatedChatContent);
+
+                            SetWindowText(chatInput, "");
+                        }
+                    }
+                }
                 break;
         }
 
