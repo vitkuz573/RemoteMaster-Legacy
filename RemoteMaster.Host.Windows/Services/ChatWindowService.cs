@@ -167,7 +167,6 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             StartMessageLoop();
 
             applicationLifetime.StopApplication();
-
         });
 
         uiThread.SetApartmentState(ApartmentState.STA);
