@@ -144,3 +144,7 @@ GetWindowTextLength
 GetWindowText
 SetWindowText
 GetDlgItem
+WM_CLOSE
+WM_DESTROY
+PostQuitMessage
+DestroyWindow

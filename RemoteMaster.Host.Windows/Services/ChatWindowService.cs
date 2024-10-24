@@ -100,11 +100,15 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         return Task.CompletedTask;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
+        if (_connection != null)
+        {
+            await _connection.StopAsync();
+            await _connection.DisposeAsync();
+        }
 
-        return Task.CompletedTask;
+        PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
     }
 
     private void InitializeWindow()
@@ -243,6 +247,14 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                     }
                 }
                 break;
+
+            case WM_CLOSE:
+                DestroyWindow(hwnd);
+                return new LRESULT(0);
+
+            case WM_DESTROY:
+                PostQuitMessage(0);
+                return new LRESULT(0);
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);
