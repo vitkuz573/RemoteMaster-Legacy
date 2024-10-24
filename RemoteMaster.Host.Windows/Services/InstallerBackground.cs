@@ -41,16 +41,12 @@ public class InstallerBackground(IConfiguration configuration, IHostApplicationL
                 throw new ArgumentNullException(organizationalUnit, "Configuration 'organizational-unit' cannot be null or empty");
             }
 
-            var modulesPath = configuration["modules-path"];
             var username = configuration["username"];
             var password = configuration["password"];
 
             await Task.Delay(2000, cancellationToken);
 
-            var installRequest = new HostInstallRequest(server, organization, organizationalUnit)
-            {
-                ModulesPath = modulesPath,
-            };
+            var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
 
             if (username != null && password != null)
             {

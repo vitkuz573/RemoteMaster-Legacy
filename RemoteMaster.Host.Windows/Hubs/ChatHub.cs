@@ -5,12 +5,13 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
+public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient>
 {
     private static readonly ConcurrentQueue<ChatMessage> Messages = new();
 
@@ -18,11 +19,9 @@ public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
     {
         ArgumentNullException.ThrowIfNull(chatMessageDto);
 
-        var chatModule = moduleService.GetModule("Chat");
-
-        if (chatModule != null && !chatModule.IsRunning())
+        if (!chatInstanceService.IsRunning)
         {
-            chatModule.Start();
+            chatInstanceService.Start();
         }
 
         var id = Guid.NewGuid().ToString();

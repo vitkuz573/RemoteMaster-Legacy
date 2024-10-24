@@ -3,12 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using System.IO.Compression;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.JsonContexts;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Abstractions;
@@ -17,7 +13,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInstaller(INetworkDriveService networkDriveService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
+public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -27,48 +23,6 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
         try
         {
-            if (installRequest.ModulesPath != null)
-            {
-                var isNetworkPath = installRequest.ModulesPath.StartsWith(@"\\");
-
-                if (isNetworkPath)
-                {
-                    if (!MapNetworkDriveAsync(installRequest.ModulesPath, installRequest.UserCredentials))
-                    {
-                        logger.LogInformation("Install aborted.");
-
-                        return;
-                    }
-                }
-
-                var modulesDirectory = Path.Combine(installRequest.ModulesPath, "Modules");
-
-                if (!Directory.Exists(modulesDirectory))
-                {
-                    logger.LogError("Modules directory not found at path: {ModulesDirectory}", modulesDirectory);
-                    return;
-                }
-
-                var modulesFolderPath = Path.Combine(_applicationDirectory, "Modules");
-
-                if (!Directory.Exists(modulesFolderPath))
-                {
-                    Directory.CreateDirectory(modulesFolderPath);
-                }
-
-                var zipFiles = Directory.GetFiles(modulesDirectory, "*.zip");
-
-                foreach (var zipFile in zipFiles)
-                {
-                    await InstallOrUpdateModuleAsync(zipFile, modulesFolderPath);
-                }
-
-                if (isNetworkPath)
-                {
-                    UnmapNetworkDriveAsync(installRequest.ModulesPath);
-                }
-            }
-
             var hostInformation = hostInformationService.GetHostInformation();
 
             logger.LogInformation("Starting installation...");
@@ -112,91 +66,6 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
     }
 
-    private async Task InstallOrUpdateModuleAsync(string zipFilePath, string modulesFolderPath)
-    {
-        try
-        {
-            var moduleInfo = await GetModuleInfoFromZipAsync(zipFilePath);
-
-            if (moduleInfo == null)
-            {
-                logger.LogError("No module info found in zip file: {ZipFilePath}", zipFilePath);
-                
-                return;
-            }
-
-            using (var zipArchive = ZipFile.OpenRead(zipFilePath))
-            {
-                var entryPoint = zipArchive.GetEntry(moduleInfo.EntryPoint);
-
-                if (entryPoint == null)
-                {
-                    logger.LogError("Module {ModuleName} does not contain the required entry point: {EntryPoint}", moduleInfo.Name, moduleInfo.EntryPoint);
-                    
-                    return;
-                }
-            }
-
-            var moduleTargetPath = Path.Combine(modulesFolderPath, moduleInfo.Name);
-            var installedModuleInfo = await GetInstalledModuleInfoAsync(moduleTargetPath);
-
-            if (installedModuleInfo != null && moduleInfo.Version <= installedModuleInfo.Version)
-            {
-                logger.LogInformation("Module {ModuleName} is already up-to-date. Skipping.", moduleInfo.Name);
-                
-                return;
-            }
-
-            if (Directory.Exists(moduleTargetPath))
-            {
-                Directory.Delete(moduleTargetPath, true);
-            }
-
-            ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
-            
-            logger.LogInformation("Module {ModuleName} extracted to {TargetPath}", moduleInfo.Name, moduleTargetPath);
-            logger.LogInformation("Module {ModuleName} installed successfully with entry point {Executable}.", moduleInfo.Name, moduleInfo.EntryPoint);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Failed to install module from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
-        }
-    }
-
-    private bool MapNetworkDriveAsync(string folderPath, Credentials? userCredentials)
-    {
-        logger.LogInformation("Attempting to map network drive with remote path: {FolderPath}", folderPath);
-
-        var isMapped = networkDriveService.MapNetworkDrive(folderPath, userCredentials?.UserName, userCredentials?.Password);
-
-        if (!isMapped)
-        {
-            logger.LogError("Failed to map network drive with remote path {FolderPath}.", folderPath);
-            logger.LogError("Unable to map network drive with the provided credentials.");
-        }
-        else
-        {
-            logger.LogInformation("Successfully mapped network drive with remote path: {FolderPath}", folderPath);
-        }
-
-        return isMapped;
-    }
-
-    private void UnmapNetworkDriveAsync(string folderPath)
-    {
-        logger.LogInformation("Attempting to unmap network drive with remote path: {FolderPath}", folderPath);
-        var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
-
-        if (!isCancelled)
-        {
-            logger.LogError("Failed to unmap network drive with remote path {FolderPath}.", folderPath);
-        }
-        else
-        {
-            logger.LogInformation("Successfully unmapped network drive with remote path: {FolderPath}", folderPath);
-        }
-    }
-
     private void CopyToTargetPath(string targetDirectoryPath)
     {
         if (!fileSystem.Directory.Exists(targetDirectoryPath))
@@ -221,43 +90,5 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         {
             fileSystem.File.Copy(sourceDirectoryPath, targetDirectoryPath, true);
         }
-    }
-
-    private async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
-    {
-        try
-        {
-            using var zipArchive = ZipFile.OpenRead(zipFilePath);
-            var entry = zipArchive.GetEntry("module-info.json");
-
-            if (entry == null)
-            {
-                return null;
-            }
-
-            await using var stream = entry.Open();
-
-            return await JsonSerializer.DeserializeAsync(stream, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
-
-            return null;
-        }
-    }
-
-    private static async Task<ModuleInfo?> GetInstalledModuleInfoAsync(string installedModulePath)
-    {
-        var moduleInfoPath = Path.Combine(installedModulePath, "module-info.json");
-
-        if (!File.Exists(moduleInfoPath))
-        {
-            return null;
-        }
-
-        var json = await File.ReadAllTextAsync(moduleInfoPath);
-
-        return JsonSerializer.Deserialize(json, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
     }
 }

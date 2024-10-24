@@ -3,16 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Reflection;
 using System.Security.Cryptography;
-using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Host.Core.JsonContexts;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
@@ -84,8 +80,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             }
 
             await PerformUpdate();
-
-            await UpdateModulesAsync(folderPath, force);
         }
         catch (Exception ex)
         {
@@ -557,149 +551,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             {
                 await Notify($"Failed to delete directory {directory}: {ex.Message}", MessageType.Error);
             }
-        }
-    }
-
-    private async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
-    {
-        try
-        {
-            using var zipArchive = ZipFile.OpenRead(zipFilePath);
-            var entry = zipArchive.GetEntry("module-info.json");
-
-            if (entry == null)
-            {
-                return null;
-            }
-
-            await using var stream = entry.Open();
-
-            return await JsonSerializer.DeserializeAsync(stream, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
-            
-            return null;
-        }
-    }
-
-    private static async Task<ModuleInfo?> GetInstalledModuleInfoAsync(string installedModulePath)
-    {
-        var moduleInfoPath = Path.Combine(installedModulePath, "module-info.json");
-
-        if (!File.Exists(moduleInfoPath))
-        {
-            return null;
-        }
-
-        var json = await File.ReadAllTextAsync(moduleInfoPath);
-
-        return JsonSerializer.Deserialize(json, ModuleInfoJsonSerializerContext.Default.ModuleInfo);
-    }
-
-    private async Task UpdateModulesAsync(string folderPath, bool force)
-    {
-        var modulesDirectory = Path.Combine(folderPath, "Host", "Modules");
-
-        if (!Directory.Exists(modulesDirectory))
-        {
-            await Notify("Modules directory not found. Skipping module update.", MessageType.Warning);
-
-            return;
-        }
-
-        var installedModulesPath = Path.Combine(BaseFolderPath, "Modules");
-
-        var zipFiles = Directory.GetFiles(modulesDirectory, "*.zip");
-
-        foreach (var zipFile in zipFiles)
-        {
-            var moduleInfo = await GetModuleInfoFromZipAsync(zipFile);
-
-            if (moduleInfo == null)
-            {
-                await Notify($"Module info not found in {zipFile}. Skipping.", MessageType.Warning);
-                continue;
-            }
-
-            var installedModulePath = Path.Combine(installedModulesPath, moduleInfo.Name);
-            var installedModuleInfo = await GetInstalledModuleInfoAsync(installedModulePath);
-
-            if (installedModuleInfo == null)
-            {
-                await Notify($"Module {moduleInfo.Name} is not installed. Installing...", MessageType.Information);
-
-                var copiedZipFile = Path.Combine(installedModulesPath, Path.GetFileName(zipFile));
-                File.Copy(zipFile, copiedZipFile, true);
-                await InstallModuleAsync(copiedZipFile, installedModulesPath);
-
-                continue;
-            }
-
-            if (force || moduleInfo.Version > installedModuleInfo.Version)
-            {
-                await Notify($"Updating module {moduleInfo.Name}...", MessageType.Information);
-                var copiedZipFile = Path.Combine(installedModulesPath, Path.GetFileName(zipFile));
-                File.Copy(zipFile, copiedZipFile, true);
-
-                await InstallModuleAsync(copiedZipFile, installedModulesPath);
-            }
-            else
-            {
-                await Notify($"Module {moduleInfo.Name} is up-to-date. Skipping update.", MessageType.Information);
-            }
-        }
-    }
-
-    private async Task InstallModuleAsync(string zipFilePath, string modulesFolderPath)
-    {
-        try
-        {
-            var moduleInfo = await GetModuleInfoFromZipAsync(zipFilePath);
-
-            if (moduleInfo == null)
-            {
-                await Notify($"Module info not found in {zipFilePath}. Skipping.", MessageType.Warning);
-                
-                return;
-            }
-
-            var moduleName = moduleInfo.Name;
-
-            using (var zipArchive = ZipFile.OpenRead(zipFilePath))
-            {
-                var entryPoint = zipArchive.GetEntry(moduleInfo.EntryPoint);
-
-                if (entryPoint == null)
-                {
-                    await Notify($"Module {moduleName} does not contain the required entry point: {moduleInfo.EntryPoint}. Skipping installation.", MessageType.Warning);
-                    
-                    return;
-                }
-            }
-
-            var moduleTargetPath = Path.Combine(modulesFolderPath, moduleName);
-
-            if (Directory.Exists(moduleTargetPath))
-            {
-                Directory.Delete(moduleTargetPath, true);
-            }
-
-            ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
-
-            await Notify($"Module {moduleName} installed successfully with entry point {moduleInfo.EntryPoint}.", MessageType.Information);
-
-            if (File.Exists(zipFilePath))
-            {
-                File.Delete(zipFilePath);
-
-                await Notify($"Zip file {zipFilePath} has been deleted after installation.", MessageType.Information);
-            }
-        }
-        catch (Exception ex)
-        {
-            await Notify($"Failed to install module from {zipFilePath}: {ex.Message}", MessageType.Error);
         }
     }
 }

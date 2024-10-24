@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Host.Core.Abstractions;
+namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IModuleService
+public interface IChatInstanceService
 {
-    IModule? GetModule(string name);
+    bool IsRunning { get; }
+
+    void Start();
 }

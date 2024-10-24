@@ -14,7 +14,5 @@ public class HostInstallRequest(string server, string organization, string organ
 
     public string OrganizationalUnit { get; } = organizationalUnit;
 
-    public string? ModulesPath { get; init; }
-
     public Credentials? UserCredentials { get; set; }
 }

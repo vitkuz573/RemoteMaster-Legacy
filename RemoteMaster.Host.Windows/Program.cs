@@ -111,6 +111,7 @@ internal class Program
         services.AddSingleton<AbstractService, HostService>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
         services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
+        services.AddSingleton<IChatInstanceService, ChatInstanceService>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
         services.AddSingleton<IHostUninstaller, HostUninstaller>();
         services.AddSingleton<IScreenCapturingService, GdiCapturing>();
@@ -141,7 +142,6 @@ internal class Program
         services.AddSingleton<ICommandExecutor, CommandExecutor>();
         services.AddSingleton<IDeviceManagerService, DeviceManagerService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
-        services.AddSingleton<IModuleService, ModuleService>();
         services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
