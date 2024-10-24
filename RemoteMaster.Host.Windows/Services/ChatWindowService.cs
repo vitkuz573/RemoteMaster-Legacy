@@ -60,19 +60,14 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             .Build();
 
         _connection.On<ChatMessageDto>("ReceiveMessage", AddMessageToChatDisplay);
-
         _connection.On<string>("MessageDeleted", RemoveMessageFromChatDisplay);
-
         _connection.On<string>("UserTyping", ShowTypingIndicator);
-
-        _connection.On<string>("UserStopTyping", _ =>
-        {
-            HideTypingIndicator();
-        });
+        _connection.On<string>("UserStopTyping", _ => HideTypingIndicator());
 
         _connection.Closed += async (error) =>
         {
             UpdateConnectionStatus("Disconnected");
+
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
         };
@@ -80,18 +75,21 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         _connection.Reconnected += (connectionId) =>
         {
             UpdateConnectionStatus("Connected");
+
             return Task.CompletedTask;
         };
 
         _connection.Reconnecting += (error) =>
         {
             UpdateConnectionStatus("Reconnecting...");
+
             return Task.CompletedTask;
         };
 
         try
         {
             await _connection.StartAsync();
+
             UpdateConnectionStatus("Connected");
         }
         catch (Exception ex)
