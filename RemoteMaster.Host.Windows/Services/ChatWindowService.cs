@@ -13,7 +13,6 @@ using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
-using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
@@ -34,6 +33,8 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     private readonly WNDPROC _wndProcDelegate = WndProc;
 
     private HubConnection? _connection;
+
+    private readonly List<ChatMessageDto> _chatMessages = [];
 
     private async Task InitializeSignalRConnectionAsync()
     {
@@ -56,6 +57,8 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         {
             AddMessageToChatDisplay(chatMessageDto.User, chatMessageDto.Message);
         });
+
+        _connection.On<string>("MessageDeleted", RemoveMessageFromChatDisplay);
 
         _connection.Closed += async (error) =>
         {
@@ -93,13 +96,44 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         if (!chatDisplay.IsNull)
         {
-            var formattedMessage = $"{user}: {message}";
+            var chatMessageDto = new ChatMessageDto(user, message);
+            _chatMessages.Add(chatMessageDto);
 
+            var formattedMessage = $"{user}: {message}";
             var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
 
             SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
 
             Marshal.FreeHGlobal(messagePtr);
+        }
+        else
+        {
+            logger.LogError("Failed to access chat display window.");
+        }
+    }
+
+    private void RemoveMessageFromChatDisplay(string messageId)
+    {
+        var chatDisplay = GetDlgItem(_hwnd, IDC_CHAT_DISPLAY);
+
+        if (!chatDisplay.IsNull)
+        {
+            var messageToRemove = _chatMessages.FirstOrDefault(m => m.Id == messageId);
+
+            if (messageToRemove != null)
+            {
+                _chatMessages.Remove(messageToRemove);
+
+                SendMessage(chatDisplay, LB_RESETCONTENT, new WPARAM(), new LPARAM());
+
+                foreach (var message in _chatMessages)
+                {
+                    var formattedMessage = $"{message.User}: {message.Message}";
+                    var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
+                    SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
+                    Marshal.FreeHGlobal(messagePtr);
+                }
+            }
         }
         else
         {
@@ -253,9 +287,8 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     private async Task HandleSendButtonAsync(HWND hwnd)
     {
         var chatInput = GetDlgItem(hwnd, IDC_CHAT_INPUT);
-        var chatDisplay = GetDlgItem(hwnd, IDC_CHAT_DISPLAY);
 
-        if (!chatInput.IsNull && !chatDisplay.IsNull)
+        if (!chatInput.IsNull)
         {
             var length = GetWindowTextLength(chatInput);
 
@@ -292,20 +325,12 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                     return;
                 }
 
-                var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}";
-
-                var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
-
-                SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
-
-                Marshal.FreeHGlobal(messagePtr);
-
                 SetWindowText(chatInput, "");
             }
         }
         else
         {
-            logger.LogError("Failed to access window elements.");
+            logger.LogError("Failed to access chat input window.");
         }
     }
 
