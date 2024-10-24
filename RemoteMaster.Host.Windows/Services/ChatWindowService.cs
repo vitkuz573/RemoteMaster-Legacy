@@ -417,6 +417,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
             case WM_CLOSE:
                 DestroyWindow(hwnd);
+                PostQuitMessage(0);
                 service._hwnd = HWND.Null;
                 return new LRESULT(0);
 

@@ -30,6 +30,30 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
         }
     }
 
+    public void Stop()
+    {
+        var processes = processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath));
+
+        foreach (var process in processes)
+        {
+            if (!processService.HasProcessArgument(process, Argument))
+            {
+                continue;
+            }
+
+            try
+            {
+                logger.LogInformation("Attempting to kill process with ID: {ProcessId}.", process.Id);
+                process.Kill();
+                logger.LogInformation("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error stopping instance of the host. Process ID: {ProcessId}. Message: {Message}", process.Id, ex.Message);
+            }
+        }
+    }
+
     private int StartNewInstance()
     {
         var startInfo = new NativeProcessStartInfo
