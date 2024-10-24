@@ -59,10 +59,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             })
             .Build();
 
-        _connection.On<ChatMessageDto>("ReceiveMessage", chatMessageDto =>
-        {
-            AddMessageToChatDisplay(chatMessageDto.User, chatMessageDto.Message);
-        });
+        _connection.On<ChatMessageDto>("ReceiveMessage", AddMessageToChatDisplay);
 
         _connection.On<string>("MessageDeleted", RemoveMessageFromChatDisplay);
 
@@ -148,16 +145,15 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         }
     }
 
-    private void AddMessageToChatDisplay(string user, string message)
+    private void AddMessageToChatDisplay(ChatMessageDto chatMessageDto)
     {
         var chatDisplay = GetDlgItem(_hwnd, IDC_CHAT_DISPLAY);
 
         if (!chatDisplay.IsNull)
         {
-            var chatMessageDto = new ChatMessageDto(user, message);
             _chatMessages.Add(chatMessageDto);
 
-            var formattedMessage = $"{user}: {message}";
+            var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}";
             var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
 
             SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
