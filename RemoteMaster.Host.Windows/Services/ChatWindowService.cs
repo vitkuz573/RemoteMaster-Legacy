@@ -27,6 +27,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     private const int IDC_CHAT_INPUT = 102;
     private const int IDC_SEND_BUTTON = 103;
     private const int IDC_CONNECTION_STATUS = 104;
+    private const int IDC_TYPING_STATUS = 105;
 
     private HWND _hwnd;
     private GCHandle _gch;
@@ -59,6 +60,13 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         });
 
         _connection.On<string>("MessageDeleted", RemoveMessageFromChatDisplay);
+
+        _connection.On<string>("UserTyping", ShowTypingIndicator);
+
+        _connection.On<string>("UserStopTyping", _ =>
+        {
+            HideTypingIndicator();
+        });
 
         _connection.Closed += async (error) =>
         {
@@ -229,6 +237,35 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         unsafe
         {
             CreateWindowEx(0, "STATIC", "Status: Disconnected", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 10, 250, 200, 20, _hwnd, safeConnectionStatusHandle, null, null);
+        }
+
+        using var safeTypingStatusHandle = new SafeFileHandle(IDC_TYPING_STATUS, false);
+
+        unsafe
+        {
+            CreateWindowEx(0, "STATIC", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 10, 280, 200, 20, _hwnd, safeTypingStatusHandle, null, null);
+        }
+    }
+
+    private void ShowTypingIndicator(string user)
+    {
+        var typingStatus = GetDlgItem(_hwnd, IDC_TYPING_STATUS);
+
+        if (!typingStatus.IsNull)
+        {
+            SetWindowText(typingStatus, $"{user} is typing...");
+            ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_SHOW);
+        }
+    }
+
+    private void HideTypingIndicator()
+    {
+        var typingStatus = GetDlgItem(_hwnd, IDC_TYPING_STATUS);
+
+        if (!typingStatus.IsNull)
+        {
+            SetWindowText(typingStatus, "");
+            ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_HIDE);
         }
     }
 
