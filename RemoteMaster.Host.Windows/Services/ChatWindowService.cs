@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -28,6 +29,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     private const int IDC_CONNECTION_STATUS = 104;
 
     private HWND _hwnd;
+    private GCHandle _gch;
     private readonly WNDPROC _wndProcDelegate = WndProc;
 
     private HubConnection _connection;
@@ -108,6 +110,11 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             await _connection.DisposeAsync();
         }
 
+        if (_gch.IsAllocated)
+        {
+            _gch.Free();
+        }
+
         PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
     }
 
@@ -116,16 +123,19 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         if (!TryRegisterClass())
         {
             logger.LogError("Failed to register the window class.");
-
-            return;
+            throw new InvalidOperationException("Window class registration failed.");
         }
 
         _hwnd = CreateChatWindow();
 
         if (_hwnd.IsNull)
         {
-            logger.LogError("Failed to create hidden window.");
+            logger.LogError("Failed to create the window.");
+            throw new InvalidOperationException("Window creation failed.");
         }
+
+        _gch = GCHandle.Alloc(this);
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, GCHandle.ToIntPtr(_gch));
 
         SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) | (int)WINDOW_STYLE.WS_SYSMENU));
         SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_MAXIMIZEBOX));
@@ -191,7 +201,14 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         const int windowWidth = 500;
         const int windowHeight = 400;
 
-        return CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
+        var hwnd = CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
+
+        if (hwnd.IsNull)
+        {
+            throw new InvalidOperationException("Failed to create window. Handle is not initialized.");
+        }
+
+        return hwnd;
     }
 
     private void StartMessageLoop()
@@ -207,13 +224,59 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         }
     }
 
+    private async Task HandleSendButtonAsync(HWND hwnd)
+    {
+        var chatInput = GetDlgItem(hwnd, IDC_CHAT_INPUT);
+        var chatDisplay = GetDlgItem(hwnd, IDC_CHAT_DISPLAY);
+
+        if (!chatInput.IsNull && !chatDisplay.IsNull)
+        {
+            var length = GetWindowTextLength(chatInput);
+
+            if (length > 0)
+            {
+                string message;
+
+                unsafe
+                {
+                    var inputBuffer = stackalloc char[length + 1];
+                    GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1);
+                    message = new string(inputBuffer, 0, length);
+                }
+
+                var chatMessageDto = new ChatMessageDto("User", message);
+
+                await _connection.SendAsync("SendMessage", chatMessageDto);
+
+                var displayLength = GetWindowTextLength(chatDisplay);
+                string chatContent;
+
+                unsafe
+                {
+                    var displayBuffer = stackalloc char[displayLength + 1];
+                    GetWindowText(chatDisplay, new PWSTR(displayBuffer), displayLength + 1);
+                    chatContent = new string(displayBuffer, 0, displayLength);
+                }
+
+                var updatedChatContent = chatContent + "\r\n" + message;
+                SetWindowText(chatDisplay, updatedChatContent);
+
+                SetWindowText(chatInput, "");
+            }
+        }
+    }
+
     private static unsafe LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
+        if (hwnd.IsNull)
+        {
+            throw new InvalidOperationException("Handle is not initialized.");
+        }
+
         switch (msg)
         {
             case WM_SETFOCUS:
                 var inputField = GetDlgItem(hwnd, IDC_CHAT_INPUT);
-
                 if (!inputField.IsNull)
                 {
                     SetFocus(inputField);
@@ -225,29 +288,15 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
                 if (wmId == IDC_SEND_BUTTON)
                 {
-                    var chatInput = GetDlgItem(hwnd, IDC_CHAT_INPUT);
-                    var chatDisplay = GetDlgItem(hwnd, IDC_CHAT_DISPLAY);
-
-                    if (!chatInput.IsNull && !chatDisplay.IsNull)
+                    var serviceHandle = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
+                    if (serviceHandle != IntPtr.Zero)
                     {
-                        var length = GetWindowTextLength(chatInput);
-
-                        if (length > 0)
-                        {
-                            var inputBuffer = stackalloc char[length + 1];
-                            GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1);
-                            var message = new string(inputBuffer, 0, length);
-
-                            var displayLength = GetWindowTextLength(chatDisplay);
-                            var displayBuffer = stackalloc char[displayLength + 1];
-                            GetWindowText(chatDisplay, new PWSTR(displayBuffer), displayLength + 1);
-                            var chatContent = new string(displayBuffer, 0, displayLength);
-
-                            var updatedChatContent = chatContent + "\r\n" + message;
-                            SetWindowText(chatDisplay, updatedChatContent);
-
-                            SetWindowText(chatInput, "");
-                        }
+                        var service = (ChatWindowService)GCHandle.FromIntPtr(serviceHandle).Target;
+                        _ = service.HandleSendButtonAsync(hwnd);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Service handle is not initialized.");
                     }
                 }
                 break;
