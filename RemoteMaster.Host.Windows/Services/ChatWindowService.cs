@@ -240,13 +240,31 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                 unsafe
                 {
                     var inputBuffer = stackalloc char[length + 1];
-                    GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1);
-                    message = new string(inputBuffer, 0, length);
+
+                    if (GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1) > 0)
+                    {
+                        message = new string(inputBuffer, 0, length);
+                    }
+                    else
+                    {
+                        logger.LogError("Failed to retrieve text from the input field.");
+
+                        return;
+                    }
                 }
 
                 var chatMessageDto = new ChatMessageDto("User", message);
 
-                await _connection.SendAsync("SendMessage", chatMessageDto);
+                try
+                {
+                    await _connection.SendAsync("SendMessage", chatMessageDto);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
+
+                    return;
+                }
 
                 var displayLength = GetWindowTextLength(chatDisplay);
                 string chatContent;
@@ -254,8 +272,17 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                 unsafe
                 {
                     var displayBuffer = stackalloc char[displayLength + 1];
-                    GetWindowText(chatDisplay, new PWSTR(displayBuffer), displayLength + 1);
-                    chatContent = new string(displayBuffer, 0, displayLength);
+
+                    if (GetWindowText(chatDisplay, new PWSTR(displayBuffer), displayLength + 1) > 0)
+                    {
+                        chatContent = new string(displayBuffer, 0, displayLength);
+                    }
+                    else
+                    {
+                        logger.LogError("Failed to retrieve text from the chat display.");
+
+                        return;
+                    }
                 }
 
                 var updatedChatContent = chatContent + "\r\n" + message;
@@ -263,6 +290,10 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
                 SetWindowText(chatInput, "");
             }
+        }
+        else
+        {
+            logger.LogError("Failed to access window elements.");
         }
     }
 
