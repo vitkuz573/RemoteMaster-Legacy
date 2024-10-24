@@ -137,9 +137,9 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         _gch = GCHandle.Alloc(this);
         SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, GCHandle.ToIntPtr(_gch));
 
-        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) | (int)WINDOW_STYLE.WS_SYSMENU));
-        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_MAXIMIZEBOX));
-        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new IntPtr(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_THICKFRAME));
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new nint(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) | (int)WINDOW_STYLE.WS_SYSMENU));
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new nint(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_MAXIMIZEBOX));
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, new nint(GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE) & ~(int)WINDOW_STYLE.WS_THICKFRAME));
 
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
 
@@ -289,7 +289,8 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                 if (wmId == IDC_SEND_BUTTON)
                 {
                     var serviceHandle = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
-                    if (serviceHandle != IntPtr.Zero)
+
+                    if (serviceHandle != nint.Zero)
                     {
                         var service = (ChatWindowService)GCHandle.FromIntPtr(serviceHandle).Target;
                         _ = service.HandleSendButtonAsync(hwnd);
