@@ -153,11 +153,14 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         {
             _chatMessages.Add(chatMessageDto);
 
-            var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}";
+            var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}\r\n";
+
+            var currentLength = SendMessage(chatDisplay, WM_GETTEXTLENGTH, new WPARAM(), new LPARAM());
+
+            SendMessage(chatDisplay, EM_SETSEL, new WPARAM((nuint)currentLength.Value), new LPARAM(currentLength.Value));
+
             var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
-
-            SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
-
+            SendMessage(chatDisplay, EM_REPLACESEL, new WPARAM(0), new LPARAM(messagePtr));
             Marshal.FreeHGlobal(messagePtr);
         }
         else
@@ -178,13 +181,17 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             {
                 _chatMessages.Remove(messageToRemove);
 
-                SendMessage(chatDisplay, LB_RESETCONTENT, new WPARAM(), new LPARAM());
+                SetWindowText(chatDisplay, "");
 
                 foreach (var message in _chatMessages)
                 {
-                    var formattedMessage = $"{message.User}: {message.Message}";
+                    var formattedMessage = $"{message.User}: {message.Message}\r\n";
+
+                    var currentLength = SendMessage(chatDisplay, WM_GETTEXTLENGTH, new WPARAM(), new LPARAM());
+                    SendMessage(chatDisplay, EM_SETSEL, new WPARAM((nuint)currentLength.Value), new LPARAM((nint)currentLength.Value));
+
                     var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
-                    SendMessage(chatDisplay, LB_ADDSTRING, new WPARAM(), new LPARAM(messagePtr));
+                    SendMessage(chatDisplay, EM_REPLACESEL, new WPARAM(0), new LPARAM(messagePtr));
                     Marshal.FreeHGlobal(messagePtr);
                 }
             }
@@ -280,7 +287,26 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         unsafe
         {
-            var chatDisplay = CreateWindowEx(0, "LISTBOX", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)LBS_NOTIFY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
+            var chatDisplay = CreateWindowEx(
+                0,
+                "EDIT",
+                "",
+                WINDOW_STYLE.WS_CHILD |
+                WINDOW_STYLE.WS_VISIBLE |
+                WINDOW_STYLE.WS_BORDER |
+                WINDOW_STYLE.WS_VSCROLL |
+                (WINDOW_STYLE)ES_MULTILINE |
+                (WINDOW_STYLE)ES_AUTOVSCROLL |
+                (WINDOW_STYLE)ES_READONLY,
+                10,
+                10,
+                300,
+                200,
+                _hwnd,
+                safeChatDisplayHandle,
+                null,
+                null
+            );
 
             SendMessage(chatDisplay, WM_SETFONT, new WPARAM((nuint)font.DangerousGetHandle()), new LPARAM(1));
         }
