@@ -67,10 +67,7 @@ public class ChatWindowService : IHostedService
         var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat", options =>
-            {
-                options.Headers.Add("X-Service-Flag", "true");
-            })
+            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat")
             .AddMessagePackProtocol(options =>
             {
                 var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
