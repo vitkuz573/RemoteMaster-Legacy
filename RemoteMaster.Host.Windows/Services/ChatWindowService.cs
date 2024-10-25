@@ -391,14 +391,17 @@ public class ChatWindowService : IHostedService
 
     private bool TryRegisterClass()
     {
-#pragma warning disable CA2000
-        var wc = new WNDCLASSEXW
+        WNDCLASSEXW wc;
+
+        using (var moduleHandle = GetModuleHandle((string)null!))
         {
-            cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-            lpfnWndProc = _wndProcDelegate,
-            hInstance = (HINSTANCE)GetModuleHandle((string)null!).DangerousGetHandle(),
-        };
-#pragma warning restore CA2000
+            wc = new WNDCLASSEXW
+            {
+                cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
+                lpfnWndProc = _wndProcDelegate,
+                hInstance = (HINSTANCE)moduleHandle.DangerousGetHandle(),
+            };
+        }
 
         unsafe
         {
