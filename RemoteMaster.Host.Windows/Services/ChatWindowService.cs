@@ -304,7 +304,7 @@ public class ChatWindowService : IHostedService
             case WM_KEYDOWN:
                 if (wParam.Value == (nuint)VIRTUAL_KEY.VK_RETURN)
                 {
-                    _ = HandleSendButtonAsync(hwnd);
+                    _ = HandleSendButtonAsync();
                     
                     return new LRESULT(0);
                 }
@@ -437,12 +437,13 @@ public class ChatWindowService : IHostedService
         }
     }
 
-    private async Task HandleSendButtonAsync(HWND chatInput)
+    private async Task HandleSendButtonAsync()
     {
+        var chatInput = GetDlgItem(_hwnd, IDC_CHAT_INPUT);
+
         if (chatInput.IsNull)
         {
             _logger.LogError("Failed to access chat input window.");
-
             return;
         }
 
@@ -463,7 +464,6 @@ public class ChatWindowService : IHostedService
                 else
                 {
                     _logger.LogError("Failed to retrieve text from the input field.");
-
                     return;
                 }
             }
@@ -477,7 +477,6 @@ public class ChatWindowService : IHostedService
             catch (Exception ex)
             {
                 _logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
-
                 return;
             }
 
@@ -517,7 +516,7 @@ public class ChatWindowService : IHostedService
                 var wmId = (int)wParam.Value & 0xffff;
                 if (wmId == IDC_SEND_BUTTON)
                 {
-                    _ = service.HandleSendButtonAsync(hwnd);
+                    _ = service.HandleSendButtonAsync();
                 }
                 else if (wmId == IDC_CHAT_INPUT && HIWORD((nint)wParam.Value) == EN_CHANGE)
                 {
