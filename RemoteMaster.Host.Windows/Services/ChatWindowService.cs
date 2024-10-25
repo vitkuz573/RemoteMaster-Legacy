@@ -413,7 +413,7 @@ public class ChatWindowService : IHostedService
         const int windowWidth = 335;
         const int windowHeight = 350;
 
-        var hwnd = CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
+        var hwnd = CreateWindowEx(WINDOW_EX_STYLE.WS_EX_TOPMOST, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
 
         if (hwnd.IsNull)
         {
