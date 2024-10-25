@@ -171,3 +171,4 @@ EM_REPLACESEL
 WM_KEYDOWN
 SetWindowSubclass
 DefSubclassProc
+GetKeyState
