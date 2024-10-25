@@ -13,7 +13,9 @@ using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
+using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
@@ -272,11 +274,15 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
     private void InitializeControls()
     {
+        using var font = CreateDefaultFont();
+
         using var safeChatDisplayHandle = new SafeFileHandle(IDC_CHAT_DISPLAY, false);
 
         unsafe
         {
-            CreateWindowEx(0, "LISTBOX", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)LBS_NOTIFY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
+            var chatDisplay = CreateWindowEx(0, "LISTBOX", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)LBS_NOTIFY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
+
+            SendMessage(chatDisplay, WM_SETFONT, new WPARAM((nuint)font.DangerousGetHandle()), new LPARAM(1));
         }
 
         using var safeChatInputHandle = new SafeFileHandle(IDC_CHAT_INPUT, false);
@@ -306,6 +312,11 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         {
             CreateWindowEx(0, "STATIC", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 10, 280, 200, 20, _hwnd, safeTypingStatusHandle, null, null);
         }
+    }
+
+    private static DeleteObjectSafeHandle CreateDefaultFont()
+    {
+        return CreateFont(18, 0, 0, 0, (int)FONT_WEIGHT.FW_NORMAL, 0, 0, 0, (uint)FONT_CHARSET.ANSI_CHARSET, (uint)FONT_OUTPUT_PRECISION.OUT_DEFAULT_PRECIS, (uint)FONT_CLIP_PRECISION.CLIP_DEFAULT_PRECIS, (uint)FONT_QUALITY.CLEARTYPE_QUALITY, (uint)FONT_PITCH.DEFAULT_PITCH | (uint)FONT_FAMILY.FF_SWISS, "Segoe UI");
     }
 
     private void ShowTypingIndicator(string user)
