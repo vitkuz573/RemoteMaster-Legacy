@@ -441,7 +441,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         var serviceHandle = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
 
-        if (serviceHandle == IntPtr.Zero)
+        if (serviceHandle == nint.Zero)
         {
             return DefWindowProc(hwnd, msg, wParam, lParam);
         }
