@@ -16,12 +16,14 @@ using RemoteMaster.Shared.Formatters;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ChatWindowService(IHostConfigurationService hostConfigurationService, IHostApplicationLifetime applicationLifetime, ILogger<ChatWindowService> logger) : IHostedService
+public class ChatWindowService : IHostedService
 {
     private const string ClassName = "ChatWindowClass";
 
@@ -33,7 +35,6 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
     private HWND _hwnd;
     private GCHandle _gch;
-    private readonly WNDPROC _wndProcDelegate = WndProc;
 
     private HubConnection? _connection;
 
@@ -44,9 +45,26 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     private bool _isTyping = false;
     private const string UserName = "User";
 
+    private readonly IHostConfigurationService _hostConfigurationService;
+    private readonly IHostApplicationLifetime _applicationLifetime;
+    private readonly ILogger<ChatWindowService> _logger;
+
+    private readonly SUBCLASSPROC _inputWndProc;
+    private readonly WNDPROC _wndProcDelegate;
+
+    public ChatWindowService(IHostConfigurationService hostConfigurationService, IHostApplicationLifetime applicationLifetime, ILogger<ChatWindowService> logger)
+    {
+        _hostConfigurationService = hostConfigurationService;
+        _applicationLifetime = applicationLifetime;
+        _logger = logger;
+
+        _inputWndProc = new SUBCLASSPROC(InputProc);
+        _wndProcDelegate = new WNDPROC(WndProc);
+    }
+
     private async Task InitializeSignalRConnectionAsync()
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat", options =>
@@ -119,7 +137,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             }
             catch (Exception ex)
             {
-                logger.LogError("Error sending typing notification. Exception: {ExceptionMessage}", ex.Message);
+                _logger.LogError("Error sending typing notification. Exception: {ExceptionMessage}", ex.Message);
             }
         }
 
@@ -141,7 +159,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         }
         catch (Exception ex)
         {
-            logger.LogError("Error sending stop typing notification. Exception: {ExceptionMessage}", ex.Message);
+            _logger.LogError("Error sending stop typing notification. Exception: {ExceptionMessage}", ex.Message);
         }
     }
 
@@ -165,7 +183,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         }
         else
         {
-            logger.LogError("Failed to access chat display window.");
+            _logger.LogError("Failed to access chat display window.");
         }
     }
 
@@ -198,7 +216,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         }
         else
         {
-            logger.LogError("Failed to access chat display window.");
+            _logger.LogError("Failed to access chat display window.");
         }
     }
 
@@ -219,7 +237,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             InitializeWindow();
             StartMessageLoop();
 
-            applicationLifetime.StopApplication();
+            _applicationLifetime.StopApplication();
         });
 
         uiThread.SetApartmentState(ApartmentState.STA);
@@ -249,13 +267,13 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     {
         if (!_hwnd.IsNull)
         {
-            logger.LogInformation("Window already exists, skipping initialization.");
+            _logger.LogInformation("Window already exists, skipping initialization.");
             return;
         }
 
         if (!TryRegisterClass())
         {
-            logger.LogError("Failed to register the window class.");
+            _logger.LogError("Failed to register the window class.");
             throw new InvalidOperationException("Window class registration failed.");
         }
 
@@ -263,7 +281,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         if (_hwnd.IsNull)
         {
-            logger.LogError("Failed to create the window.");
+            _logger.LogError("Failed to create the window.");
             throw new InvalidOperationException("Window creation failed.");
         }
 
@@ -279,6 +297,24 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         InitializeControls();
     }
 
+    private LRESULT InputProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
+    {
+        switch (msg)
+        {
+            case WM_KEYDOWN:
+                if (wParam.Value == (nuint)VIRTUAL_KEY.VK_RETURN)
+                {
+                    _ = HandleSendButtonAsync(hwnd);
+                    
+                    return new LRESULT(0);
+                }
+
+                break;
+        }
+
+        return DefSubclassProc(hwnd, msg, wParam, lParam);
+    }
+
     private void InitializeControls()
     {
         using var font = CreateDefaultFont();
@@ -287,26 +323,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         unsafe
         {
-            var chatDisplay = CreateWindowEx(
-                0,
-                "EDIT",
-                "",
-                WINDOW_STYLE.WS_CHILD |
-                WINDOW_STYLE.WS_VISIBLE |
-                WINDOW_STYLE.WS_BORDER |
-                WINDOW_STYLE.WS_VSCROLL |
-                (WINDOW_STYLE)ES_MULTILINE |
-                (WINDOW_STYLE)ES_AUTOVSCROLL |
-                (WINDOW_STYLE)ES_READONLY,
-                10,
-                10,
-                300,
-                200,
-                _hwnd,
-                safeChatDisplayHandle,
-                null,
-                null
-            );
+            var chatDisplay = CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)ES_MULTILINE | (WINDOW_STYLE)ES_AUTOVSCROLL | (WINDOW_STYLE)ES_READONLY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
 
             SendMessage(chatDisplay, WM_SETFONT, new WPARAM((nuint)font.DangerousGetHandle()), new LPARAM(1));
         }
@@ -315,7 +332,10 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
 
         unsafe
         {
-            CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_AUTOHSCROLL | WINDOW_STYLE.WS_BORDER, 10, 220, 200, 20, _hwnd, safeChatInputHandle, null, null);
+            var chatInput = CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_AUTOHSCROLL | WINDOW_STYLE.WS_BORDER, 10, 220, 200, 20, _hwnd, safeChatInputHandle, null, null);
+
+            SetWindowSubclass(chatInput, _inputWndProc, 0, 0);
+            _logger.LogInformation("Subclass applied to chat input.");
         }
 
         using var safeSendButtonHandle = new SafeFileHandle(IDC_SEND_BUTTON, false);
@@ -417,53 +437,51 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         }
     }
 
-    private async Task HandleSendButtonAsync(HWND hwnd)
+    private async Task HandleSendButtonAsync(HWND chatInput)
     {
-        var chatInput = GetDlgItem(hwnd, IDC_CHAT_INPUT);
-
-        if (!chatInput.IsNull)
+        if (chatInput.IsNull)
         {
-            var length = GetWindowTextLength(chatInput);
+            _logger.LogError("Failed to access chat input window.");
 
-            if (length > 0)
+            return;
+        }
+
+        var length = GetWindowTextLength(chatInput);
+
+        if (length > 0)
+        {
+            string message;
+
+            unsafe
             {
-                string message;
+                var inputBuffer = stackalloc char[length + 1];
 
-                unsafe
+                if (GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1) > 0)
                 {
-                    var inputBuffer = stackalloc char[length + 1];
-
-                    if (GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1) > 0)
-                    {
-                        message = new string(inputBuffer, 0, length);
-                    }
-                    else
-                    {
-                        logger.LogError("Failed to retrieve text from the input field.");
-
-                        return;
-                    }
+                    message = new string(inputBuffer, 0, length);
                 }
-
-                var chatMessageDto = new ChatMessageDto(UserName, message);
-
-                try
+                else
                 {
-                    await _connection.SendAsync("SendMessage", chatMessageDto);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
+                    _logger.LogError("Failed to retrieve text from the input field.");
 
                     return;
                 }
-
-                SetWindowText(chatInput, "");
             }
-        }
-        else
-        {
-            logger.LogError("Failed to access chat input window.");
+
+            var chatMessageDto = new ChatMessageDto(UserName, message);
+
+            try
+            {
+                await _connection.SendAsync("SendMessage", chatMessageDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
+
+                return;
+            }
+
+            SetWindowText(chatInput, "");
         }
     }
 
