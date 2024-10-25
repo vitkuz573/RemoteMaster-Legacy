@@ -602,6 +602,8 @@ public partial class Home
 
     private async Task MessageBox() => await ExecuteAction<MessageBoxDialog>("Message Box");
 
+    private async Task SendMessage() => await ExecuteAction<SendMessageDialog>("Send Message", hubPath: "hubs/chat");
+
     private async Task RenewCertificate() => await ExecuteAction<RenewCertificateDialog>("Renew Certificate", hubPath: "hubs/certificate");
 
     private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true) where TDialog : ComponentBase

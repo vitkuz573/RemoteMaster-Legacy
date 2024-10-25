@@ -1,0 +1,14 @@
+﻿@using RemoteMaster.Server.Abstractions
+
+@inherits CommonDialogBase
+
+@inject IHostCommandService HostCommandService
+
+<CommonDialog>
+    <Content>
+        <MudTextField Label="Message" @bind-Value="_message" />
+    </Content>
+    <Actions>
+        <MudButton Color="Color.Primary" OnClick="Send" Disabled="HasConnectionIssues">Send</MudButton>
+    </Actions>
+</CommonDialog>

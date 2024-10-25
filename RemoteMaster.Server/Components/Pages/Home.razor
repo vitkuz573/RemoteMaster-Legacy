@@ -210,6 +210,7 @@
 
                                 @if (context.User.HasClaim("Communication", "Chat"))
                                 {
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SendMessage" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Send Message</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenChat" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Chat</MudButton>
                                 }
 
