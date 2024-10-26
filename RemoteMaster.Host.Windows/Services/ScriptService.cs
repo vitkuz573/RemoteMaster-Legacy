@@ -43,7 +43,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
             Shell.Cmd => new UTF8Encoding(false),
             Shell.PowerShell => new UTF8Encoding(true),
             Shell.Pwsh => new UTF8Encoding(true),
-            _ => Encoding.UTF8
+            _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
         };
 
         var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? $"@echo off\r\n{scriptExecutionRequest.Content}" : scriptExecutionRequest.Content;
@@ -64,7 +64,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
                 Shell.Cmd => $"cmd /c \"{tempFilePath}\"",
                 Shell.PowerShell => $"powershell -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
                 Shell.Pwsh => $"pwsh -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => throw new ArgumentOutOfRangeException(nameof(scriptExecutionRequest))
+                _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
             };
 
             using var process = new NativeProcess();
