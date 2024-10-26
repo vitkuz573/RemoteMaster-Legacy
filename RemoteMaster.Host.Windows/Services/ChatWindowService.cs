@@ -168,7 +168,7 @@ public class ChatWindowService : IHostedService
         {
             _chatMessages.Add(chatMessageDto);
 
-            var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}\r\n";
+            var formattedMessage = $"{chatMessageDto.User}: {chatMessageDto.Message}\r\n\r\n";
 
             var currentLength = SendMessage(chatDisplay, WM_GETTEXTLENGTH, new WPARAM(), new LPARAM());
 
