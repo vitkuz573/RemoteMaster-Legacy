@@ -62,6 +62,39 @@ public class ChatWindowService : IHostedService
         _wndProcDelegate = new WNDPROC(WndProc);
     }
 
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        var uiThread = new Thread(() =>
+        {
+            InitializeWindow();
+            StartMessageLoop();
+
+            _applicationLifetime.StopApplication();
+        });
+
+        uiThread.SetApartmentState(ApartmentState.STA);
+        uiThread.IsBackground = true;
+        uiThread.Start();
+
+        _ = Task.Run(InitializeSignalRConnectionAsync, cancellationToken);
+
+        return Task.CompletedTask;
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        if (_connection != null)
+        {
+            await _connection.StopAsync(cancellationToken);
+            await _connection.DisposeAsync();
+        }
+
+        if (_gch.IsAllocated)
+        {
+            _gch.Free();
+        }
+    }
+
     private async Task InitializeSignalRConnectionAsync()
     {
         var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
@@ -224,39 +257,6 @@ public class ChatWindowService : IHostedService
         if (!connectionStatus.IsNull)
         {
             SetWindowText(connectionStatus, $"Status: {status}");
-        }
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        var uiThread = new Thread(() =>
-        {
-            InitializeWindow();
-            StartMessageLoop();
-
-            _applicationLifetime.StopApplication();
-        });
-
-        uiThread.SetApartmentState(ApartmentState.STA);
-        uiThread.IsBackground = true;
-        uiThread.Start();
-
-        _ = Task.Run(InitializeSignalRConnectionAsync, cancellationToken);
-
-        return Task.CompletedTask;
-    }
-
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        if (_connection != null)
-        {
-            await _connection.StopAsync(cancellationToken);
-            await _connection.DisposeAsync();
-        }
-
-        if (_gch.IsAllocated)
-        {
-            _gch.Free();
         }
     }
 
