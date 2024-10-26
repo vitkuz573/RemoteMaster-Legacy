@@ -19,27 +19,13 @@ public static class ProcessExtensions
     {
         ArgumentNullException.ThrowIfNull(process);
 
-        var processHandle = OpenProcess(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION, false, (uint)process.Id);
+        using var processHandle = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION, false, (uint)process.Id);
 
-        if (processHandle == HANDLE.Null)
+        if (processHandle.IsInvalid)
         {
             throw new InvalidOperationException($"Unable to open process with ID {process.Id}. Error code: {Marshal.GetLastWin32Error()}");
         }
 
-        try
-        {
-            var commandLine = GetCommandLineFromProcess(processHandle);
-
-            return commandLine ?? string.Empty;
-        }
-        finally
-        {
-            CloseHandle(processHandle);
-        }
-    }
-
-    private static string? GetCommandLineFromProcess(HANDLE processHandle)
-    {
         var buffer = new byte[4096];
         uint returnLength = 0;
 
@@ -49,7 +35,7 @@ public static class ProcessExtensions
         {
             fixed (byte* bufferPtr = buffer)
             {
-                status = NtQueryInformationProcess(processHandle, PROCESSINFOCLASS.ProcessCommandLineInformation, bufferPtr, (uint)buffer.Length, ref returnLength);
+                status = NtQueryInformationProcess((HANDLE)processHandle.DangerousGetHandle(), PROCESSINFOCLASS.ProcessCommandLineInformation, bufferPtr, (uint)buffer.Length, ref returnLength);
             }
         }
 
