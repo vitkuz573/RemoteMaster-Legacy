@@ -26,25 +26,53 @@ public class HostInformationService : IHostInformationService
     {
         var interfaces = NetworkInterface.GetAllNetworkInterfaces()
             .Where(nic => nic.OperationalStatus == OperationalStatus.Up)
-            .Where(nic => nic.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet)
-            .Where(nic => !IsVpnAdapter(nic))
+            .Where(nic => IsSupportedNetworkInterfaceType(nic.NetworkInterfaceType))
+            .Where(nic => !IsVpnAdapter(nic) || IsTrustedVpnAdapter(nic))
             .Where(nic => !IsVirtualAdapter(nic))
             .Where(nic => nic.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork && !ua.Address.ToString().StartsWith("169.254")))
             .Select(nic => new
             {
                 Interface = nic,
-                Priority = nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet ? 1 : 2
+                Priority = GetInterfacePriority(nic.NetworkInterfaceType)
             }).MinBy(nic => nic.Priority)?.Interface;
 
         return interfaces ?? throw new InvalidOperationException("Active network interface not found. Network might be disabled or not properly configured");
+    }
+
+    private static bool IsSupportedNetworkInterfaceType(NetworkInterfaceType type)
+    {
+        return type == NetworkInterfaceType.Wireless80211 ||
+               type == NetworkInterfaceType.Tunnel ||
+               type == NetworkInterfaceType.Ethernet ||
+               type == NetworkInterfaceType.FastEthernetT ||
+               type == NetworkInterfaceType.FastEthernetFx ||
+               type == NetworkInterfaceType.GigabitEthernet ||
+               type == NetworkInterfaceType.Ethernet3Megabit;
+    }
+
+    private static int GetInterfacePriority(NetworkInterfaceType type)
+    {
+        return type switch
+        {
+            NetworkInterfaceType.Ethernet or NetworkInterfaceType.FastEthernetT or NetworkInterfaceType.FastEthernetFx or NetworkInterfaceType.GigabitEthernet => 1,
+            NetworkInterfaceType.Wireless80211 => 2,
+            NetworkInterfaceType.Tunnel => 3,
+            _ => 4
+        };
     }
 
     private static bool IsVpnAdapter(NetworkInterface nic)
     {
         var descriptionLower = nic.Description.ToLower();
 
-        return descriptionLower.Contains("vpn") ||
-               descriptionLower.Contains("tun");
+        return descriptionLower.Contains("vpn") || descriptionLower.Contains("tun");
+    }
+
+    private static bool IsTrustedVpnAdapter(NetworkInterface nic)
+    {
+        var descriptionLower = nic.Description.ToLower();
+
+        return descriptionLower.Contains("trustedvpn");
     }
 
     private static bool IsVirtualAdapter(NetworkInterface nic)
