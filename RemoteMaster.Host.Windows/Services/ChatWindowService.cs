@@ -418,12 +418,17 @@ public class ChatWindowService : IHostedService
         return classAtom != 0;
     }
 
-    private static unsafe HWND CreateChatWindow()
+    private static HWND CreateChatWindow()
     {
         const int windowWidth = 335;
         const int windowHeight = 350;
 
-        var hwnd = CreateWindowEx(WINDOW_EX_STYLE.WS_EX_TOPMOST, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
+        HWND hwnd;
+
+        unsafe
+        {
+            hwnd = CreateWindowEx(WINDOW_EX_STYLE.WS_EX_TOPMOST, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
+        }
 
         if (hwnd.IsNull)
         {
@@ -433,14 +438,17 @@ public class ChatWindowService : IHostedService
         return hwnd;
     }
 
-    private static unsafe void StartMessageLoop()
+    private static void StartMessageLoop()
     {
         MSG msg;
 
-        while (GetMessage(&msg, HWND.Null, 0, 0))
+        unsafe
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            while (GetMessage(&msg, HWND.Null, 0, 0))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
     }
 
@@ -493,7 +501,7 @@ public class ChatWindowService : IHostedService
 
     private static int HIWORD(nint n) => (int)((n >> 16) & 0xFFFF);
 
-    private static unsafe LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
+    private static LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         if (hwnd.IsNull)
         {
