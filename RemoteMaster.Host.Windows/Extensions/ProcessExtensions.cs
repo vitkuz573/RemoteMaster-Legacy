@@ -26,24 +26,37 @@ public static class ProcessExtensions
             throw new InvalidOperationException($"Unable to open process with ID {process.Id}. Error code: {Marshal.GetLastWin32Error()}");
         }
 
-        var buffer = new byte[4096];
+        uint bufferSize = 256;
+        byte[] buffer;
         uint returnLength = 0;
 
         NTSTATUS status;
 
-        unsafe
+        while (true)
         {
-            fixed (byte* bufferPtr = buffer)
-            {
-                status = NtQueryInformationProcess((HANDLE)processHandle.DangerousGetHandle(), PROCESSINFOCLASS.ProcessCommandLineInformation, bufferPtr, (uint)buffer.Length, ref returnLength);
-            }
-        }
+            buffer = new byte[bufferSize];
 
-        if (status.SeverityCode != NTSTATUS.Severity.Success)
-        {
+            unsafe
+            {
+                fixed (byte* bufferPtr = buffer)
+                {
+                    status = NtQueryInformationProcess((HANDLE)processHandle.DangerousGetHandle(), PROCESSINFOCLASS.ProcessCommandLineInformation, bufferPtr, (uint)buffer.Length, ref returnLength);
+                }
+            }
+
+            if (status.SeverityCode == NTSTATUS.Severity.Success)
+            {
+                return Encoding.Unicode.GetString(buffer, 0, (int)returnLength);
+            }
+
+            if (status == NTSTATUS.STATUS_BUFFER_OVERFLOW || status == NTSTATUS.STATUS_INFO_LENGTH_MISMATCH)
+            {
+                bufferSize = returnLength;
+
+                continue;
+            }
+
             throw new InvalidOperationException($"NtQueryInformationProcess failed with status code: {status}");
         }
-
-        return Encoding.Unicode.GetString(buffer, 0, (int)returnLength);
     }
 }
