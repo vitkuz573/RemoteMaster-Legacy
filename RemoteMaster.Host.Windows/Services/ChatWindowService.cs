@@ -284,11 +284,11 @@ public class ChatWindowService : IHostedService
 
         _gch = GCHandle.Alloc(this);
 
-        var style = GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+        var style = (WINDOW_STYLE)GetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
 
-        style = (style | (int)WINDOW_STYLE.WS_SYSMENU) & ~((int)WINDOW_STYLE.WS_MAXIMIZEBOX | (int)WINDOW_STYLE.WS_THICKFRAME);
+        style = (style | WINDOW_STYLE.WS_SYSMENU) & ~(WINDOW_STYLE.WS_MAXIMIZEBOX | WINDOW_STYLE.WS_THICKFRAME);
 
-        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, (nint)style);
         SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, GCHandle.ToIntPtr(_gch));
 
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
