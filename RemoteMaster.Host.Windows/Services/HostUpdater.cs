@@ -372,10 +372,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         {
             var hostService = serviceFactory.GetService("RCHost");
 
-            if (hostService.IsRunning)
-            {
-                hostService.Stop();
-            }
+            StopServiceWithRetry(hostService, "Host");
 
             if (userInstanceService.IsRunning)
             {
@@ -387,15 +384,88 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
             var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
 
-            File.Copy(sourceExePath, destinationExePath, true);
+            if (!File.Exists(sourceExePath))
+            {
+                await Notify("Source executable for recovery not found. Unable to proceed with recovery.", MessageSeverity.Error);
+                
+                return;
+            }
 
+            CopyFileWithRetry(sourceExePath, destinationExePath, true);
+            
             await Notify("Emergency recovery completed successfully. Attempting to restart services...", MessageSeverity.Information);
 
-            hostService.Start();
+            StartServiceWithRetry(hostService, "Host");
         }
         catch (Exception ex)
         {
             await Notify($"Emergency recovery failed: {ex.Message}", MessageSeverity.Error);
+        }
+    }
+
+    private static void CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 3)
+    {
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                File.Copy(sourceFile, destinationFile, overwrite);
+
+                return;
+            }
+            catch (IOException)
+            {
+                if (attempt == maxAttempts)
+                {
+                    throw;
+                }
+
+                Thread.Sleep(1000);
+            }
+        }
+    }
+
+    private static void StopServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
+    {
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                service.Stop();
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                if (attempt == maxAttempts)
+                {
+                    throw new Exception($"Failed to stop {serviceName} service after {maxAttempts} attempts: {ex.Message}");
+                }
+
+                Thread.Sleep(1000);
+            }
+        }
+    }
+
+    private static void StartServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
+    {
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                service.Start();
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                if (attempt == maxAttempts)
+                {
+                    throw new Exception($"Failed to start {serviceName} service after {maxAttempts} attempts: {ex.Message}");
+                }
+
+                Thread.Sleep(1000);
+            }
         }
     }
 
