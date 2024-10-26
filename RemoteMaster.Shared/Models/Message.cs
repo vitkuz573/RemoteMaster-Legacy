@@ -6,15 +6,15 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Shared.Models;
 
-public class Message(string text, MessageType type)
+public class Message(string text, MessageSeverity severity)
 {
     public string Text { get; } = text;
 
-    public MessageType Type { get; } = type;
+    public MessageSeverity Severity { get; } = severity;
 
     public string? Meta { get; init; }
 
-    public enum MessageType
+    public enum MessageSeverity
     {
         Information,
         Error,

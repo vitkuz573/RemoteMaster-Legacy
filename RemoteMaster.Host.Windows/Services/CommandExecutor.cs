@@ -27,13 +27,13 @@ public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext,
 
             using var process = processService.Start(processStartInfo);
 
-            await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageType.Service)
+            await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageSeverity.Service)
             {
                 Meta = "pid"
             });
 
-            var readErrorTask = ReadStreamAsync(process.StandardError, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Information);
+            var readErrorTask = ReadStreamAsync(process.StandardError, MessageSeverity.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageSeverity.Information);
 
             processService.WaitForExit(process);
 
@@ -45,7 +45,7 @@ public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext,
         }
     }
 
-    private async Task ReadStreamAsync(TextReader streamReader, MessageType messageType)
+    private async Task ReadStreamAsync(TextReader streamReader, MessageSeverity messageType)
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {
