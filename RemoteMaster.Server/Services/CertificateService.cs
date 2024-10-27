@@ -142,13 +142,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
     {
         try
         {
-            var certRequestPkcs10 = CreateInstance<IX509CertificateRequestPkcs10>("728AB342-217D-11DA-B2A4-000E7BBB2B09");
-
-            if (certRequestPkcs10 == null)
-            {
-                throw new InvalidOperationException("Failed to create IX509CertificateRequestPkcs10 instance.");
-            }
-
+            var certRequestPkcs10 = CreateInstance<IX509CertificateRequestPkcs10>("728AB342-217D-11DA-B2A4-000E7BBB2B09") ?? throw new InvalidOperationException("Failed to create IX509CertificateRequestPkcs10 instance.");
             var csrBase64 = Convert.ToBase64String(csrBytes);
             var bstrCsr = Marshal.StringToBSTR(csrBase64);
 
@@ -161,13 +155,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
                 Marshal.FreeBSTR(bstrCsr);
             }
 
-            var enrollment = CreateInstance<IX509Enrollment>("728AB340-217D-11DA-B2A4-000E7BBB2B09");
-
-            if (enrollment == null)
-            {
-                throw new InvalidOperationException("Failed to create IX509Enrollment instance.");
-            }
-
+            var enrollment = CreateInstance<IX509Enrollment>("728AB340-217D-11DA-B2A4-000E7BBB2B09") ?? throw new InvalidOperationException("Failed to create IX509Enrollment instance.");
             enrollment.InitializeFromRequest(certRequestPkcs10);
             enrollment.Enroll();
 
