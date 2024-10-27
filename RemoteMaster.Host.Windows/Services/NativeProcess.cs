@@ -19,8 +19,6 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-#pragma warning disable CA2000
-
 public class NativeProcess : INativeProcess
 {
     private static readonly object _createProcessLock = new();
@@ -140,7 +138,9 @@ public class NativeProcess : INativeProcess
         STARTUPINFOW startupInfo = default;
         PROCESS_INFORMATION processInfo = default;
         SECURITY_ATTRIBUTES securityAttributes = default;
+#pragma warning disable CA2000
         var procSH = new SafeProcessHandle();
+#pragma warning restore CA2000
 
         SafeFileHandle? parentInputPipeHandle = null;
         SafeFileHandle? childInputPipeHandle = null;
@@ -159,7 +159,9 @@ public class NativeProcess : INativeProcess
                 {
                     if (startInfo.RedirectStandardInput)
                     {
+#pragma warning disable CA2000
                         CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
+#pragma warning restore CA2000
                     }
                     else
                     {
@@ -168,7 +170,9 @@ public class NativeProcess : INativeProcess
 
                     if (startInfo.RedirectStandardOutput)
                     {
+#pragma warning disable CA2000
                         CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
+#pragma warning restore CA2000
                     }
                     else
                     {
@@ -177,7 +181,9 @@ public class NativeProcess : INativeProcess
 
                     if (startInfo.RedirectStandardError)
                     {
+#pragma warning disable CA2000
                         CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
+#pragma warning restore CA2000
                     }
                     else
                     {
