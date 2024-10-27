@@ -440,15 +440,10 @@ public class ChatWindowService : IHostedService
 
     private static void StartMessageLoop()
     {
-        MSG msg;
-
-        unsafe
+        while (GetMessage(out var msg, HWND.Null, 0, 0))
         {
-            while (GetMessage(&msg, HWND.Null, 0, 0))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
+            TranslateMessage(msg);
+            DispatchMessage(msg);
         }
     }
 
