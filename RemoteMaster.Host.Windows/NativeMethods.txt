@@ -1,17 +1,4 @@
-﻿// Process and Privilege Management
-AdjustTokenPrivileges
-CreateProcessAsUser
-DuplicateTokenEx
-GENERIC_ACCESS_RIGHTS
-GetCurrentProcess
-GetHandleInformation
-InitiateSystemShutdown
-LookupPrivilegeValue
-OpenProcess
-OpenProcessToken
-SE_SHUTDOWN_NAME
-
-// Display and Monitor Management
+﻿// Display and Monitor Management
 BitBlt
 CreateDC
 DeleteDC
@@ -22,14 +9,33 @@ MONITORINFOEXW
 MONITORINFOF_PRIMARY
 ReleaseDC
 
-// Input Management
-DispatchMessage
-GetCursorInfo
-GetMessage
-GetMessageExtraInfo
-GetSystemMetrics
-SendInput
-TranslateMessage
+// DirectX and Graphics Management
+CreateDXGIFactory1
+D3D11CreateDevice
+D3D11_SDK_VERSION
+DXGI_ERROR_NOT_FOUND
+ID3D11Device
+ID3D11Texture2D
+IDXGIAdapter1
+IDXGIOutput1
+IDXGIOutputDuplication
+IDXGIFactory1
+
+// Device, Hardware, and Driver Management
+CM_DISABLE_PERSIST
+CM_Disable_DevNode
+CM_Enable_DevNode
+CM_Get_DevNode_Status
+CM_Locate_DevNode
+CM_Reenumerate_DevNode
+CM_Request_Device_Eject
+SetupDiClassNameFromGuid
+SetupDiEnumDeviceInfo
+SetupDiGetClassDevs
+SetupDiGetDeviceInstanceId
+SetupDiGetDeviceRegistryProperty
+SETUP_DI_DEVICE_CONFIGURATION_FLAGS
+UpdateDriverForPlugAndPlayDevices
 
 // Desktop and User Session Management
 NOTIFY_FOR_ALL_SESSIONS
@@ -48,6 +54,23 @@ WTSRegisterSessionNotification
 WTSUnRegisterSessionNotification
 WM_WTSSESSION_CHANGE
 
+// Firewall and Network Policy Management
+INetFwPolicy2
+NET_FW_IP_PROTOCOL
+
+// Input Management
+DispatchMessage
+GetCursorInfo
+GetMessage
+GetMessageExtraInfo
+GetSystemMetrics
+SendInput
+TranslateMessage
+
+// Input and Key Management
+BlockInput
+VkKeyScan
+
 // Message Sending and Window Management
 CreateWindowEx
 DefWindowProc
@@ -55,123 +78,93 @@ HWND_BROADCAST
 HWND_MESSAGE
 PostMessage
 RegisterClassEx
+SC_MONITORPOWER
 SendMessage
 WM_QUIT
 WM_SYSCOMMAND
-SC_MONITORPOWER
-
-// Network Connection Management
-WNetAddConnection2W
-WNetCancelConnection2W
 
 // Miscellaneous System and Process Management
 CreatePipe
+DuplicateHandle
+GetConsoleCP
+GetConsoleOutputCP
+GetExitCodeProcess
+NtQueryInformationProcess
 WaitForSingleObject
-NetJoinDomain
-NetUnjoinDomain
-NETSETUP_ACCT_DELETE
 WTS_REMOTE_CONNECT
 WTS_REMOTE_DISCONNECT
 WTS_SESSION_LOGON
 WTS_SESSION_LOGOFF
 WTS_SESSION_LOCK
-WTS_SESSION_UNLOCK
 WTS_SESSION_REMOTE_CONTROL
-GetConsoleOutputCP
-GetConsoleCP
-DuplicateHandle
-GetStdHandle
-GetExitCodeProcess
-NtQueryInformationProcess
+WTS_SESSION_UNLOCK
 
-// Input and Key Management
-VkKeyScan
-BlockInput
+// Network Connection Management
+WNetAddConnection2W
+WNetCancelConnection2W
 
-// Firewall and Network Policy Management
-INetFwPolicy2
-NET_FW_IP_PROTOCOL
+// Process and Privilege Management
+AdjustTokenPrivileges
+CreateProcessAsUser
+DuplicateTokenEx
+GENERIC_ACCESS_RIGHTS
+GetCurrentProcess
+GetHandleInformation
+InitiateSystemShutdown
+LookupPrivilegeValue
+OpenProcess
+OpenProcessToken
+SE_SHUTDOWN_NAME
 
 // Session Locking and Shutdown
-LockWorkStation
 ExitWindowsEx
-
-// DirectX and Graphics Management
-IDXGIAdapter1
-ID3D11Device
-IDXGIOutputDuplication
-ID3D11Texture2D
-DXGI_ERROR_NOT_FOUND
-IDXGIFactory1
-CreateDXGIFactory1
-D3D11CreateDevice
-IDXGIOutput1
-D3D11_SDK_VERSION
-
-// Device and Hardware Management
-SetupDiGetClassDevs
-SetupDiEnumDeviceInfo
-SetupDiGetDeviceRegistryProperty
-SetupDiClassNameFromGuid
-SetupDiGetDeviceInstanceId
-CM_Get_DevNode_Status
-CM_Request_Device_Eject
-CM_Reenumerate_DevNode
-CM_Locate_DevNode
-CM_Disable_DevNode
-CM_Enable_DevNode
-CM_DISABLE_PERSIST
-
-// Window and UI Management
-CW_USEDEFAULT
-ShowWindow
-GetModuleHandle
-ES_MULTILINE
-ES_AUTOVSCROLL
-ES_AUTOHSCROLL
-ES_READONLY
-WM_SETFOCUS
-FindWindowEx
-SetFocus
+LockWorkStation
 
 // System Information and Status
 RtlGetVersion
-
-UpdateDriverForPlugAndPlayDevices
-SETUP_DI_DEVICE_CONFIGURATION_FLAGS
-WM_COMMAND
-GetWindowTextLength
-GetWindowText
-SetWindowText
-GetDlgItem
-WM_CLOSE
-WM_DESTROY
-PostQuitMessage
-DestroyWindow
-BS_CENTER
-SetWindowLongPtr
-GetWindowLongPtr
-LBS_NOTIFY
-LB_ADDSTRING
-LB_RESETCONTENT
-EN_CHANGE
-WM_SETFONT
-CreateFont
-FONT_WEIGHT
-FONT_CHARSET
-FONT_OUTPUT_PRECISION
-FONT_CLIP_PRECISION
-FONT_QUALITY
-FONT_PITCH
-FONT_FAMILY
-
-WM_GETTEXTLENGTH
-EM_SETSEL
-EM_REPLACESEL
-WM_KEYDOWN
-SetWindowSubclass
-DefSubclassProc
-GetKeyState
-
 STATUS_BUFFER_OVERFLOW
 STATUS_INFO_LENGTH_MISMATCH
+
+// Window and UI Management
+BS_CENTER
+CW_USEDEFAULT
+CreateFont
+DefSubclassProc
+DestroyWindow
+EN_CHANGE
+EM_REPLACESEL
+EM_SETSEL
+ES_AUTOVSCROLL
+ES_AUTOHSCROLL
+ES_MULTILINE
+ES_READONLY
+FindWindowEx
+FONT_CHARSET
+FONT_CLIP_PRECISION
+FONT_FAMILY
+FONT_OUTPUT_PRECISION
+FONT_PITCH
+FONT_QUALITY
+FONT_WEIGHT
+GetDlgItem
+GetKeyState
+GetModuleHandle
+GetWindowLongPtr
+GetWindowText
+GetWindowTextLength
+LB_ADDSTRING
+LB_RESETCONTENT
+LBS_NOTIFY
+PostQuitMessage
+SetFocus
+SetWindowLongPtr
+SetWindowSubclass
+SetWindowText
+ShowWindow
+WM_CLOSE
+WM_COMMAND
+WM_DESTROY
+WM_GETTEXTLENGTH
+WM_KEYDOWN
+WM_SETFONT
+WM_SETFOCUS
