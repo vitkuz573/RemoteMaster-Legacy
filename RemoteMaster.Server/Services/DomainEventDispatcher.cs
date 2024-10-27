@@ -6,8 +6,32 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<DomainEventDispatcher> logger) : IDomainEventDispatcher
+public partial class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<DomainEventDispatcher> logger) : IDomainEventDispatcher
 {
+    [LoggerMessage(EventId = 1001, Level = LogLevel.Information, Message = "Dispatching event of type: {DomainEventType}")]
+    static partial void LogDispatchingEvent(ILogger logger, string domainEventType);
+
+    [LoggerMessage(EventId = 1002, Level = LogLevel.Warning, Message = "No handler found for event: {DomainEventType}")]
+    static partial void LogNoHandlerFound(ILogger logger, string domainEventType);
+
+    [LoggerMessage(EventId = 1003, Level = LogLevel.Information, Message = "Successfully handled event: {DomainEventType} by handler: {HandlerType}")]
+    static partial void LogSuccessfullyHandled(ILogger logger, string domainEventType, string handlerType);
+
+    [LoggerMessage(EventId = 1004, Level = LogLevel.Error, Message = "Error occurred while handling event: {DomainEventType} by handler: {HandlerType}")]
+    static partial void LogErrorOccurred(ILogger logger, Exception exception, string domainEventType, string handlerType);
+
+    [LoggerMessage(EventId = 1005, Level = LogLevel.Warning, Message = "Handler is null for event: {DomainEventType}")]
+    static partial void LogHandlerIsNull(ILogger logger, string domainEventType);
+
+    [LoggerMessage(EventId = 1006, Level = LogLevel.Information, Message = "Found handler of type: {HandlerType} for event: {DomainEventType}")]
+    static partial void LogFoundHandler(ILogger logger, string handlerType, string domainEventType);
+
+    [LoggerMessage(EventId = 1007, Level = LogLevel.Warning, Message = "Handle method returned null or non-task result for event: {DomainEventType} by handler: {HandlerType}")]
+    static partial void LogNonTaskResult(ILogger logger, string domainEventType, string handlerType);
+
+    [LoggerMessage(EventId = 1008, Level = LogLevel.Warning, Message = "No 'Handle' method found on handler: {HandlerType} for event: {DomainEventType}")]
+    static partial void LogNoHandleMethod(ILogger logger, string handlerType, string domainEventType);
+
     public async Task DispatchAsync(IEnumerable<IDomainEvent> domainEvents)
     {
         ArgumentNullException.ThrowIfNull(domainEvents);
@@ -15,14 +39,14 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
         foreach (var domainEvent in domainEvents)
         {
             var eventType = domainEvent.GetType();
-            logger.LogInformation("Dispatching event of type: {DomainEventType}", eventType.Name);
+            LogDispatchingEvent(logger, eventType.Name);
 
             var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(eventType);
             var handlers = serviceProvider.GetServices(handlerType).ToList();
 
             if (handlers.Count == 0)
             {
-                logger.LogWarning("No handler found for event: {DomainEventType}", eventType.Name);
+                LogNoHandlerFound(logger, eventType.Name);
                 continue;
             }
 
@@ -30,11 +54,12 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
             {
                 if (handler == null)
                 {
-                    logger.LogWarning("Handler is null for event: {DomainEventType}", eventType.Name);
+                    LogHandlerIsNull(logger, eventType.Name);
                     continue;
                 }
 
-                logger.LogInformation("Found handler of type: {HandlerType} for event: {DomainEventType}", handler.GetType().Name, eventType.Name);
+                var handlerName = handler.GetType().Name;
+                LogFoundHandler(logger, handlerName, eventType.Name);
 
                 try
                 {
@@ -47,21 +72,21 @@ public class DomainEventDispatcher(IServiceProvider serviceProvider, ILogger<Dom
                         if (result is Task task)
                         {
                             await task;
-                            logger.LogInformation("Successfully handled event: {DomainEventType} by handler: {HandlerType}", eventType.Name, handler.GetType().Name);
+                            LogSuccessfullyHandled(logger, eventType.Name, handlerName);
                         }
                         else
                         {
-                            logger.LogWarning("Handle method returned null or non-task result for event: {DomainEventType} by handler: {HandlerType}", eventType.Name, handler.GetType().Name);
+                            LogNonTaskResult(logger, eventType.Name, handlerName);
                         }
                     }
                     else
                     {
-                        logger.LogWarning("No 'Handle' method found on handler: {HandlerType} for event: {DomainEventType}", handler.GetType().Name, eventType.Name);
+                        LogNoHandleMethod(logger, handlerName, eventType.Name);
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error occurred while handling event: {DomainEventType} by handler: {HandlerType}", eventType.Name, handler.GetType().Name);
+                    LogErrorOccurred(logger, ex, eventType.Name, handlerName);
                     throw;
                 }
             }
