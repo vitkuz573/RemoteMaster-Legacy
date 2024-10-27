@@ -233,7 +233,7 @@ public class ChatWindowService : IHostedService
 
                 foreach (var message in _chatMessages)
                 {
-                    var formattedMessage = $"{message.User}: {message.Message}\r\n";
+                    var formattedMessage = $"{message.User}: {message.Message}\r\n\r\n";
 
                     var currentLength = SendMessage(chatDisplay, WM_GETTEXTLENGTH, new WPARAM(), new LPARAM());
                     SendMessage(chatDisplay, EM_SETSEL, new WPARAM((nuint)currentLength.Value), new LPARAM((nint)currentLength.Value));
