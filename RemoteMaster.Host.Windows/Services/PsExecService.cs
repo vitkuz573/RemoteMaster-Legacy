@@ -88,10 +88,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
 
     private static string ConvertToCidrNotation(IPAddress? ipAddress)
     {
-        if (ipAddress == null)
-        {
-            throw new ArgumentNullException(nameof(ipAddress));
-        }
+        ArgumentNullException.ThrowIfNull(ipAddress);
 
         var prefixLength = ipAddress.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
 
