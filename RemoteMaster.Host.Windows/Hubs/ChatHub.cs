@@ -15,6 +15,25 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
 {
     private static readonly ConcurrentQueue<ChatMessage> Messages = new();
 
+    public async override Task OnConnectedAsync()
+    {
+        foreach (var message in Messages)
+        {
+            var chatMessageDto = new ChatMessageDto(message.User, message.Message)
+            {
+                Id = message.Id,
+                Timestamp = message.Timestamp,
+                ReplyToId = message.ReplyToId,
+            };
+
+            chatMessageDto.Attachments.AddRange(message.Attachments.Select(a => new AttachmentDto(a.FileName, a.Data, a.MimeType)));
+
+            await Clients.Caller.ReceiveMessage(chatMessageDto);
+        }
+
+        await base.OnConnectedAsync();
+    }
+
     public async Task SendMessage(ChatMessageDto chatMessageDto)
     {
         ArgumentNullException.ThrowIfNull(chatMessageDto);
@@ -61,25 +80,6 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
 
             await Clients.All.MessageDeleted(id);
         }
-    }
-
-    public async override Task OnConnectedAsync()
-    {
-        foreach (var message in Messages)
-        {
-            var chatMessageDto = new ChatMessageDto(message.User, message.Message)
-            {
-                Id = message.Id,
-                Timestamp = message.Timestamp,
-                ReplyToId = message.ReplyToId,
-            };
-
-            chatMessageDto.Attachments.AddRange(message.Attachments.Select(a => new AttachmentDto(a.FileName, a.Data, a.MimeType)));
-
-            await Clients.Caller.ReceiveMessage(chatMessageDto);
-        }
-
-        await base.OnConnectedAsync();
     }
 
     public async Task Typing(string user)
