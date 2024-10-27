@@ -109,12 +109,8 @@ public class MessageLoopService : IHostedService
     {
         while (GetMessage(out var msg, _hwnd, 0, 0))
         {
-            unsafe
-            {
-                TranslateMessage(&msg);
-            }
-
-            DispatchMessage(in msg);
+            TranslateMessage(msg);
+            DispatchMessage(msg);
         }
     }
 
