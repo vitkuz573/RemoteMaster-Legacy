@@ -16,6 +16,4 @@ public interface IFirewallService
     void EnableRuleGroup(string groupName);
 
     void DisableRuleGroup(string groupName);
-
-    bool RuleExists(string name);
 }

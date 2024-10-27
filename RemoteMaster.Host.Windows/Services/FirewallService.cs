@@ -16,7 +16,7 @@ public class FirewallService : IFirewallService
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
 
-        var existingRule = RuleExists(name) ? fwPolicy2.Rules.Item((BSTR)Marshal.StringToBSTR(name)) : null;
+        var existingRule = GetRule(name);
 
         if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, direction, applicationPath, localAddress, localPort, remoteAddress, remotePort, service, description, interfaceTypes, edgeTraversal, icmpTypesAndCodes, interfaces, grouping))
         {
@@ -100,21 +100,6 @@ public class FirewallService : IFirewallService
         fwPolicy2.Rules.Remove((BSTR)Marshal.StringToBSTR(name));
     }
 
-    public bool RuleExists(string name)
-    {
-        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
-
-        try
-        {
-            var rule = fwPolicy2.Rules.Item((BSTR)Marshal.StringToBSTR(name));
-            return rule != null;
-        }
-        catch (FileNotFoundException)
-        {
-            return false;
-        }
-    }
-
     public void EnableRuleGroup(string groupName)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
@@ -158,6 +143,7 @@ public class FirewallService : IFirewallService
         try
         {
             var type = Type.GetTypeFromCLSID(new Guid(clsid));
+
             return type == null
                 ? throw new InvalidOperationException($"The type for CLSID {clsid} could not be found.")
                 : (T?)Activator.CreateInstance(type);
@@ -186,5 +172,19 @@ public class FirewallService : IFirewallService
                !Equals(existingRule.IcmpTypesAndCodes, icmpTypesAndCodes) ||
                !Equals(existingRule.Interfaces, interfaces) ||
                !Equals(existingRule.Grouping, grouping);
+    }
+
+    private static INetFwRule? GetRule(string name)
+    {
+        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
+
+        try
+        {
+            return fwPolicy2.Rules.Item((BSTR)Marshal.StringToBSTR(name));
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
     }
 }
