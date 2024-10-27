@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -20,7 +21,8 @@ public class SecureAttentionSequenceServiceTests
     {
         _mockRegistryService = new Mock<IRegistryService>();
         _mockRegistryKey = new Mock<IRegistryKey>();
-        _service = new SecureAttentionSequenceService(_mockRegistryService.Object);
+        var _mockLogger = new Mock<ILogger<SecureAttentionSequenceService>>();
+        _service = new SecureAttentionSequenceService(_mockRegistryService.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -31,7 +33,7 @@ public class SecureAttentionSequenceServiceTests
         _mockRegistryKey.Setup(k => k.GetValue("SoftwareSASGeneration", null)).Returns((int)SoftwareSasOption.Services);
 
         // Act
-        var result = _service.SasOption;
+        var result = _service.GetSasOption();
 
         // Assert
         Assert.Equal(SoftwareSasOption.Services, result);
@@ -45,7 +47,7 @@ public class SecureAttentionSequenceServiceTests
         _mockRegistryKey.Setup(k => k.GetValue("SoftwareSASGeneration", null)).Returns(999);
 
         // Act
-        var result = _service.SasOption;
+        var result = _service.GetSasOption();
 
         // Assert
         Assert.Equal(SoftwareSasOption.None, result);
@@ -58,7 +60,7 @@ public class SecureAttentionSequenceServiceTests
         _mockRegistryService.Setup(r => r.OpenSubKey(RegistryHive.LocalMachine, It.IsAny<string>(), true)).Returns(_mockRegistryKey.Object);
 
         // Act
-        _service.SasOption = SoftwareSasOption.EaseOfAccessApplications;
+        _service.SetSasOption(SoftwareSasOption.EaseOfAccessApplications);
 
         // Assert
         _mockRegistryKey.Verify(k => k.SetValue("SoftwareSASGeneration", (int)SoftwareSasOption.EaseOfAccessApplications, RegistryValueKind.DWord), Times.Once);

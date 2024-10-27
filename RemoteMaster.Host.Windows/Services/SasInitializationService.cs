@@ -12,9 +12,9 @@ public class SasInitializationService(ISecureAttentionSequenceService secureAtte
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
+        if (secureAttentionSequenceService.GetSasOption() != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
         {
-            secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
+            secureAttentionSequenceService.SetSasOption(SoftwareSasOption.ServicesAndEaseOfAccessApplications);
         }
 
         return Task.CompletedTask;
