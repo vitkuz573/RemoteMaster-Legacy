@@ -19,7 +19,7 @@ public static class ProcessExtensions
     {
         ArgumentNullException.ThrowIfNull(process);
 
-        using var processHandle = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION, false, (uint)process.Id);
+        using var processHandle = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION, false, (uint)process.Id);
 
         if (processHandle.IsInvalid)
         {
