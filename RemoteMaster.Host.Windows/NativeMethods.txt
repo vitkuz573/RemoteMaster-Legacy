@@ -9,18 +9,6 @@ MONITORINFOEXW
 MONITORINFOF_PRIMARY
 ReleaseDC
 
-// DirectX and Graphics Management
-CreateDXGIFactory1
-D3D11CreateDevice
-D3D11_SDK_VERSION
-DXGI_ERROR_NOT_FOUND
-ID3D11Device
-ID3D11Texture2D
-IDXGIAdapter1
-IDXGIOutput1
-IDXGIOutputDuplication
-IDXGIFactory1
-
 // Device, Hardware, and Driver Management
 CM_DISABLE_PERSIST
 CM_Disable_DevNode
@@ -168,3 +156,8 @@ WM_GETTEXTLENGTH
 WM_KEYDOWN
 WM_SETFONT
 WM_SETFOCUS
+
+NetJoinDomain
+NetUnjoinDomain
+GetStdHandle
+NETSETUP_ACCT_DELETE
