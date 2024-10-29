@@ -33,7 +33,6 @@ public partial class Home
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private OrganizationalUnit? _selectedNode;
     private List<TreeItemData<object>> _treeItems = [];
 
     private readonly List<HostDto> _selectedHosts = [];
@@ -155,7 +154,6 @@ public partial class Home
             case Organization:
                 break;
             case OrganizationalUnit orgUnit:
-                _selectedNode = orgUnit;
                 await LoadHosts(orgUnit);
                 break;
         }
