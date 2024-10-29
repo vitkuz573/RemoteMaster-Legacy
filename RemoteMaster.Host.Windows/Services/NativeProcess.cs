@@ -69,7 +69,7 @@ public class NativeProcess : INativeProcess
             if (!StartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
-                using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_ACCESS_RIGHTS.PROCESS_DUP_HANDLE, false, winlogonPid);
+                using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
 
                 if (!hProcess.IsInvalid && !hProcess.IsClosed)
                 {
@@ -77,7 +77,7 @@ public class NativeProcess : INativeProcess
                     {
                         using (hPToken)
                         {
-                            DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE | TOKEN_ACCESS_MASK.TOKEN_ASSIGN_PRIMARY, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
+                            DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
                         }
                     }
                 }
