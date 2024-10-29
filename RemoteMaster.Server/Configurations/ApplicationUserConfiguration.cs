@@ -15,12 +15,12 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)
     {
         builder.HasMany(u => u.UserOrganizations)
-            .WithOne(uo => uo.ApplicationUser)
+            .WithOne()
             .HasForeignKey(uo => uo.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(u => u.UserOrganizationalUnits)
-            .WithOne(uou => uou.ApplicationUser)
+            .WithOne()
             .HasForeignKey(uou => uou.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 

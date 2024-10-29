@@ -14,7 +14,7 @@ public class ServiceFactory : IServiceFactory
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        _serviceInstances = new Dictionary<string, AbstractService>();
+        _serviceInstances = [];
 
         foreach (var service in services)
         {

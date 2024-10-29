@@ -21,11 +21,6 @@ public class UserOrganizationConfiguration : IEntityTypeConfiguration<UserOrgani
             .HasForeignKey(uo => uo.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(uo => uo.ApplicationUser)
-            .WithMany(u => u.UserOrganizations)
-            .HasForeignKey(uo => uo.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.ToTable("UserOrganizations");
     }
 }
