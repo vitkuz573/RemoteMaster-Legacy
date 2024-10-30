@@ -188,7 +188,7 @@ public static class Program
         services.AddHostedService<DatabaseCleanerService>();
         services.AddHostedService<CertificateRenewalTaskService>();
 
-        services.Configure<ApplicationSettings>(configurationManager);
+        services.Configure<UpdateOptions>(configurationManager.GetSection("update"));
         services.Configure<TelegramBotOptions>(configurationManager.GetSection("telegramBot"));
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateAuthorityOptions>(configurationManager.GetSection("certificateAuthority"));

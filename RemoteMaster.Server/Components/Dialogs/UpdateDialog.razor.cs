@@ -32,7 +32,11 @@ public partial class UpdateDialog
 
     protected override void OnInitialized()
     {
-        _folderPath = ApplicationSettings.Value.ExecutablesRoot;
+        _folderPath = UpdateOptions.Value.ExecutablesRoot;
+        _username = UpdateOptions.Value.UserName;
+        _password = UpdateOptions.Value.Password;
+        _forceUpdate = UpdateOptions.Value.ForceUpdate;
+        _allowDowngrade = UpdateOptions.Value.AllowDowngrade;
     }
 
     private async Task Confirm()
