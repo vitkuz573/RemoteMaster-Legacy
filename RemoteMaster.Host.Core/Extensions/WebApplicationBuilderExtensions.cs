@@ -64,9 +64,10 @@ public static class WebApplicationBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         var serviceProvider = builder.Services.BuildServiceProvider();
-        
+
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host.log");
+        var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host-.log");
+        var errorLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host_Error-.log");
 
         string server;
 
@@ -91,20 +92,29 @@ public static class WebApplicationBuilderExtensions
             configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
 
 #if DEBUG
-            configuration.MinimumLevel.Debug();
+        configuration.MinimumLevel.Debug();
 #else
-        configuration.MinimumLevel.Information();
-        
-        configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
-        configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
-        configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
-        configuration.MinimumLevel.Override("Microsoft.AspNetCore.SignalR", LogEventLevel.Warning);
-        configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
+            configuration.MinimumLevel.Information();
+
+            configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+            configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
+            configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
+            configuration.MinimumLevel.Override("Microsoft.AspNetCore.SignalR", LogEventLevel.Warning);
+            configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
 #endif
-            configuration.WriteTo.Console();
+
+            configuration.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
             configuration.WriteTo.Seq($"http://{server}:5341");
-            configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
+
+            configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day,
+                                       outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+
+            configuration.WriteTo.File(errorLog, restrictedToMinimumLevel: LogEventLevel.Error,
+                                       rollingInterval: RollingInterval.Day,
+                                       outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
+            configuration.Filter.ByIncludingOnly(logEvent => logEvent.Level >= LogEventLevel.Warning);
         });
     }
 }
