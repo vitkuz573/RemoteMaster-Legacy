@@ -41,8 +41,8 @@ public class ChatWindowService : IHostedService
     private readonly List<ChatMessageDto> _chatMessages = [];
 
     private Timer? _typingTimer;
-    private readonly TimeSpan TypingTimeout = TimeSpan.FromSeconds(2);
-    private bool _isTyping = false;
+    private readonly TimeSpan _typingTimeout = TimeSpan.FromSeconds(2);
+    private bool _isTyping;
     private const string UserName = "User";
 
     private readonly IHostConfigurationService _hostConfigurationService;
@@ -58,8 +58,8 @@ public class ChatWindowService : IHostedService
         _applicationLifetime = applicationLifetime;
         _logger = logger;
 
-        _inputWndProc = new SUBCLASSPROC(InputProc);
-        _wndProcDelegate = new WNDPROC(WndProc);
+        _inputWndProc = InputProc;
+        _wndProcDelegate = WndProc;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -114,7 +114,7 @@ public class ChatWindowService : IHostedService
         _connection.On<string>("UserTyping", ShowTypingIndicator);
         _connection.On<string>("UserStopTyping", _ => HideTypingIndicator());
 
-        _connection.Closed += async (error) =>
+        _connection.Closed += async _ =>
         {
             UpdateConnectionStatus("Disconnected");
 
@@ -122,14 +122,14 @@ public class ChatWindowService : IHostedService
             await _connection.StartAsync();
         };
 
-        _connection.Reconnected += (connectionId) =>
+        _connection.Reconnected += _ =>
         {
             UpdateConnectionStatus("Connected");
 
             return Task.CompletedTask;
         };
 
-        _connection.Reconnecting += (error) =>
+        _connection.Reconnecting += _ =>
         {
             UpdateConnectionStatus("Reconnecting...");
 
@@ -171,7 +171,7 @@ public class ChatWindowService : IHostedService
             }
         }
 
-        _typingTimer = new Timer(async _ => await NotifyStopTypingAsync(), null, TypingTimeout, Timeout.InfiniteTimeSpan);
+        _typingTimer = new Timer(async _ => await NotifyStopTypingAsync(), null, _typingTimeout, Timeout.InfiniteTimeSpan);
     }
 
     private async Task NotifyStopTypingAsync()
@@ -225,23 +225,25 @@ public class ChatWindowService : IHostedService
         {
             var messageToRemove = _chatMessages.FirstOrDefault(m => m.Id == messageId);
 
-            if (messageToRemove != null)
+            if (messageToRemove == null)
             {
-                _chatMessages.Remove(messageToRemove);
+                return;
+            }
 
-                SetWindowText(chatDisplay, "");
+            _chatMessages.Remove(messageToRemove);
 
-                foreach (var message in _chatMessages)
-                {
-                    var formattedMessage = $"{message.User}: {message.Message}\r\n\r\n";
+            SetWindowText(chatDisplay, "");
 
-                    var currentLength = SendMessage(chatDisplay, WM_GETTEXTLENGTH, new WPARAM(), new LPARAM());
-                    SendMessage(chatDisplay, EM_SETSEL, new WPARAM((nuint)currentLength.Value), new LPARAM((nint)currentLength.Value));
+            foreach (var message in _chatMessages)
+            {
+                var formattedMessage = $"{message.User}: {message.Message}\r\n\r\n";
 
-                    var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
-                    SendMessage(chatDisplay, EM_REPLACESEL, new WPARAM(0), new LPARAM(messagePtr));
-                    Marshal.FreeHGlobal(messagePtr);
-                }
+                var currentLength = SendMessage(chatDisplay, WM_GETTEXTLENGTH, new WPARAM(), new LPARAM());
+                SendMessage(chatDisplay, EM_SETSEL, new WPARAM((nuint)currentLength.Value), new LPARAM(currentLength.Value));
+
+                var messagePtr = Marshal.StringToHGlobalUni(formattedMessage);
+                SendMessage(chatDisplay, EM_REPLACESEL, new WPARAM(0), new LPARAM(messagePtr));
+                Marshal.FreeHGlobal(messagePtr);
             }
         }
         else
@@ -373,22 +375,26 @@ public class ChatWindowService : IHostedService
     {
         var typingStatus = GetDlgItem(_hwnd, IDC_TYPING_STATUS);
 
-        if (!typingStatus.IsNull)
+        if (typingStatus.IsNull)
         {
-            SetWindowText(typingStatus, $"{user} is typing...");
-            ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_SHOW);
+            return;
         }
+
+        SetWindowText(typingStatus, $"{user} is typing...");
+        ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_SHOW);
     }
 
     private void HideTypingIndicator()
     {
         var typingStatus = GetDlgItem(_hwnd, IDC_TYPING_STATUS);
 
-        if (!typingStatus.IsNull)
+        if (typingStatus.IsNull)
         {
-            SetWindowText(typingStatus, "");
-            ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_HIDE);
+            return;
         }
+
+        SetWindowText(typingStatus, "");
+        ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_HIDE);
     }
 
     private bool TryRegisterClass()
@@ -524,13 +530,14 @@ public class ChatWindowService : IHostedService
 
             case WM_COMMAND:
                 var wmId = (int)wParam.Value & 0xffff;
-                if (wmId == IDC_SEND_BUTTON)
+                switch (wmId)
                 {
-                    _ = service.HandleSendButtonAsync();
-                }
-                else if (wmId == IDC_CHAT_INPUT && HIWORD((nint)wParam.Value) == EN_CHANGE)
-                {
-                    _ = service.NotifyTypingAsync();
+                    case IDC_SEND_BUTTON:
+                        _ = service.HandleSendButtonAsync();
+                        break;
+                    case IDC_CHAT_INPUT when HIWORD((nint)wParam.Value) == EN_CHANGE:
+                        _ = service.NotifyTypingAsync();
+                        break;
                 }
                 break;
 

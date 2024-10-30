@@ -53,21 +53,7 @@ public class RegistryService(IRegistryKeyFactory registryKeyFactory) : IRegistry
         }
 
         var valueNames = key.GetValueNames();
-        var values = new List<RegistryValueDto>();
 
-        foreach (var valueName in valueNames)
-        {
-            var value = key.GetValue(valueName, null);
-            var valueType = key.GetValueKind(valueName);
-
-            values.Add(new RegistryValueDto
-            {
-                Name = valueName,
-                Value = value,
-                ValueType = valueType
-            });
-        }
-
-        return values;
+        return (from valueName in valueNames let value = key.GetValue(valueName, null) let valueType = key.GetValueKind(valueName) select new RegistryValueDto { Name = valueName, Value = value, ValueType = valueType }).ToList();
     }
 }

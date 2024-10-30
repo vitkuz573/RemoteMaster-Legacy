@@ -92,7 +92,7 @@ public static class WebApplicationBuilderExtensions
             configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
 
 #if DEBUG
-        configuration.MinimumLevel.Debug();
+    configuration.MinimumLevel.Debug();
 #else
             configuration.MinimumLevel.Information();
 
@@ -103,18 +103,19 @@ public static class WebApplicationBuilderExtensions
             configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
 #endif
 
-            configuration.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+            configuration.WriteTo.Console(
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+
             configuration.WriteTo.Seq($"http://{server}:5341");
 
             configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day,
-                                       outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+                outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
 
             configuration.WriteTo.File(errorLog, restrictedToMinimumLevel: LogEventLevel.Error,
-                                       rollingInterval: RollingInterval.Day,
-                                       outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+                rollingInterval: RollingInterval.Day,
+                outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
 
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
-            configuration.Filter.ByIncludingOnly(logEvent => logEvent.Level >= LogEventLevel.Warning);
         });
     }
 }

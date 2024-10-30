@@ -115,7 +115,7 @@ public class FirewallService : IFirewallService
         }
         finally
         {
-            Marshal.FreeBSTR((nint)bstrGroupName);
+            Marshal.FreeBSTR(bstrGroupName);
         }
     }
 
@@ -134,7 +134,7 @@ public class FirewallService : IFirewallService
         }
         finally
         {
-            Marshal.FreeBSTR((nint)bstrGroupName);
+            Marshal.FreeBSTR(bstrGroupName);
         }
     }
 
@@ -160,7 +160,7 @@ public class FirewallService : IFirewallService
                existingRule.Protocol != (int)protocol ||
                existingRule.Profiles != (int)profiles ||
                existingRule.Direction != direction ||
-               !string.Equals(Marshal.PtrToStringBSTR((nint)existingRule.InterfaceTypes), interfaceTypes.ToString(), StringComparison.Ordinal) ||
+               !string.Equals(Marshal.PtrToStringBSTR(existingRule.InterfaceTypes), interfaceTypes.ToString(), StringComparison.Ordinal) ||
                existingRule.EdgeTraversal != edgeTraversal ||
                !Equals(existingRule.ApplicationName, appPath) ||
                !Equals(existingRule.LocalAddresses, localAddress) ||
