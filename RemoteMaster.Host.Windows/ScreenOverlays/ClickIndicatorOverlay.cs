@@ -7,13 +7,16 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.ScreenOverlays;
 
-public class ClickIndicatorOverlay : IScreenOverlay
+public class ClickIndicatorOverlay(int initialSize = 20, Color? indicatorColor = null, int animationDuration = 800) : IScreenOverlay
 {
     private Point? _lastClickPosition;
+    private DateTime _clickTimestamp;
+    private readonly Color _indicatorColor = indicatorColor ?? Color.Yellow;
 
     public void RegisterClick(Point position)
     {
         _lastClickPosition = position;
+        _clickTimestamp = DateTime.Now;
     }
 
     public void Draw(Graphics graphics, Rectangle screenBounds)
@@ -25,11 +28,22 @@ public class ClickIndicatorOverlay : IScreenOverlay
             return;
         }
 
-        using var brush = new SolidBrush(Color.FromArgb(128, Color.Yellow));
-        var drawPosition = new Point(_lastClickPosition.Value.X - 10, _lastClickPosition.Value.Y - 10);
+        var elapsed = (DateTime.Now - _clickTimestamp).TotalMilliseconds;
+        var progress = Math.Min(1.0, elapsed / animationDuration);
 
-        graphics.FillEllipse(brush, drawPosition.X, drawPosition.Y, 20, 20);
+        if (progress >= 1.0)
+        {
+            _lastClickPosition = null;
 
-        _lastClickPosition = null;
+            return;
+        }
+
+        var size = (int)(initialSize + progress * 20);
+        var alpha = (int)(128 * (1 - progress));
+
+        using var brush = new SolidBrush(Color.FromArgb(alpha, _indicatorColor));
+        var drawPosition = new Point(_lastClickPosition.Value.X - size / 2, _lastClickPosition.Value.Y - size / 2);
+
+        graphics.FillEllipse(brush, drawPosition.X, drawPosition.Y, size, size);
     }
 }
