@@ -65,7 +65,7 @@ public class FileManagerServiceTests
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
-        var tempFile = Path.Combine(tempDir, Guid.NewGuid().ToString() + ".txt");
+        var tempFile = Path.Combine(tempDir, $"{Guid.NewGuid()}.txt");
         File.WriteAllText(tempFile, "Test file content");
 
         var subDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
