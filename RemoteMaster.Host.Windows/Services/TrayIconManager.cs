@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -65,6 +65,31 @@ public class TrayIconManager : ITrayIconManager
         _iconAdded = false;
     }
 
+    public void UpdateIcon(string iconPath, uint iconIndex = 0)
+    {
+        _iconHandle.Dispose();
+
+        using var newIconHandle = ExtractIcon(iconPath, iconIndex);
+
+        if (newIconHandle.IsInvalid)
+        {
+            _logger.LogError($"Failed to load icon from {iconPath}.");
+
+            throw new InvalidOperationException("Icon update failed.");
+        }
+
+        _notifyIconData.hIcon = (HICON)newIconHandle.DangerousGetHandle();
+
+        if (Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData))
+        {
+            _logger.LogInformation("Tray icon updated successfully.");
+        }
+        else
+        {
+            _logger.LogError("Failed to update tray icon. Shell_NotifyIcon returned false.");
+        }
+    }
+
     public void UpdateTooltip(string newTooltipText)
     {
         if (!_iconAdded)
@@ -74,11 +99,25 @@ public class TrayIconManager : ITrayIconManager
             return;
         }
 
-        _notifyIconData.szTip = newTooltipText;
+        _notifyIconData.szTip = $"Name: {_hostInformationService.GetHostInformation().Name}\n" +
+                                $"IP Address: {_hostInformationService.GetHostInformation().IpAddress}\n" +
+                                $"MAC Address: {_hostInformationService.GetHostInformation().MacAddress}\n" +
+                                $"{newTooltipText}";
 
         Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData);
-
         _logger.LogInformation("Tray icon tooltip updated to: " + newTooltipText);
+    }
+
+    public void UpdateConnectionCount(int activeConnections)
+    {
+        if (!_iconAdded)
+        {
+            _logger.LogWarning("Tray icon is not added yet. Cannot update connection count.");
+            return;
+        }
+
+        _notifyIconData.szTip = GetTooltipText(activeConnections);
+        Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData);
     }
 
     private void InitializeWindow()
@@ -126,8 +165,6 @@ public class TrayIconManager : ITrayIconManager
 
     private void AddTrayIcon()
     {
-        var hostInformation = _hostInformationService.GetHostInformation();
-
         _notifyIconData = new NOTIFYICONDATAW
         {
             cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATAW>(),
@@ -136,7 +173,7 @@ public class TrayIconManager : ITrayIconManager
             uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE | NOTIFY_ICON_DATA_FLAGS.NIF_ICON | NOTIFY_ICON_DATA_FLAGS.NIF_TIP,
             uCallbackMessage = 0x400,
             hIcon = (HICON)_iconHandle.DangerousGetHandle(),
-            szTip = $"Name: {hostInformation.Name}\r\nIP Address: {hostInformation.IpAddress}\r\nMAC Address: {hostInformation.MacAddress}"
+            szTip = GetTooltipText(0)
         };
 
         _iconAdded = Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, _notifyIconData);
@@ -149,6 +186,18 @@ public class TrayIconManager : ITrayIconManager
         {
             _logger.LogError("Failed to add tray icon. Shell_NotifyIcon returned false.");
         }
+    }
+
+    private string GetBaseTooltipText()
+    {
+        var hostInfo = _hostInformationService.GetHostInformation();
+
+        return $"Name: {hostInfo.Name}\nIP Address: {hostInfo.IpAddress}\nMAC Address: {hostInfo.MacAddress}";
+    }
+
+    private string GetTooltipText(int activeConnections)
+    {
+        return $"{GetBaseTooltipText()}\nActive Connections: {activeConnections}";
     }
 
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)

@@ -11,8 +11,10 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogger<AppState> logger) : IAppState
+public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayIconManager trayIconManager, ILogger<AppState> logger) : IAppState
 {
+    private readonly HashSet<string> _ignoredUsers = ["RCHost"];
+
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
     private static readonly object Lock = new();
 
@@ -55,6 +57,8 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
             ViewerAdded?.Invoke(this, viewer);
             NotifyViewersChanged();
 
+            UpdateTrayIcon();
+
             logger.LogInformation("Viewer with connection ID {ConnectionId} added successfully.", viewer.ConnectionId);
 
             return result;
@@ -87,6 +91,8 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
                 viewer?.Dispose();
             }
 
+            UpdateTrayIcon();
+
             logger.LogInformation("Viewer with connection ID {ConnectionId} removed successfully.", connectionId);
 
             return result;
@@ -111,5 +117,16 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
         }
 
         hubContext.Clients.All.ReceiveAllViewers(viewers);
+
+        var activeConnections = viewers.Count(v => !_ignoredUsers.Contains(v.UserName));
+
+        trayIconManager.UpdateConnectionCount(activeConnections);
+    }
+
+    private void UpdateTrayIcon()
+    {
+        var activeConnections = _viewers.Values.Count(v => !_ignoredUsers.Contains(v.UserName));
+
+        trayIconManager.UpdateIcon(@"%SystemRoot%\System32\shell32.dll", activeConnections > 0 ? 16 : (uint)15);
     }
 }
