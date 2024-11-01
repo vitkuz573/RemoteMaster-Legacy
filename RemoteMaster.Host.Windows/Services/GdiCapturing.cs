@@ -28,7 +28,7 @@ public class GdiCapturing : ScreenCapturingService
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
         _memoryGraphics = Graphics.FromImage(_bitmap);
 
-        // AddOverlay(clickIndicatorOverlay);
+        AddOverlay(clickIndicatorOverlay);
     }
 
     protected override void Init()

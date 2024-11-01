@@ -25,7 +25,7 @@ public class ClickIndicatorOverlay : IScreenOverlay
             return;
         }
 
-        using var brush = new SolidBrush(Color.Red);
+        using var brush = new SolidBrush(Color.FromArgb(128, Color.Yellow));
         var drawPosition = new Point(_lastClickPosition.Value.X - 10, _lastClickPosition.Value.Y - 10);
 
         graphics.FillEllipse(brush, drawPosition.X, drawPosition.Y, 20, 20);
