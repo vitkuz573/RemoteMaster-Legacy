@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Resources;
 using RemoteMaster.Shared.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -35,14 +36,9 @@ public class TrayIconManager : ITrayIconManager
 
         _wndProcDelegate = WndProc;
 
-        _iconHandle = ExtractIcon(@"%SystemRoot%\System32\shell32.dll", 15);
+        var defaultIcon = Icons.without_connections;
 
-        if (_iconHandle.IsInvalid)
-        {
-            _logger.LogError("Failed to load icon from shell32.dll.");
-
-            throw new InvalidOperationException("Icon initialization failed.");
-        }
+        _iconHandle = new DestroyIconSafeHandle(defaultIcon.Handle);
 
         InitializeWindow();
     }
