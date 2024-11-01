@@ -113,10 +113,10 @@ public class RegistryServiceTests
         _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
 
         // Act
-        var result = _registryService.GetAllValues(hive, keyPath);
+        var result = _registryService.GetAllValues(hive, keyPath).ToList();
 
         // Assert
-        Assert.Equal(2, result.Count());
+        Assert.Equal(2, result.Count);
         Assert.Contains(result, r => r.Name == "TestValue1" && (string)r.Value! == "Test1" && r.ValueType == RegistryValueKind.String);
         Assert.Contains(result, r => r.Name == "TestValue2" && (int)r.Value! == 2 && r.ValueType == RegistryValueKind.DWord);
     }

@@ -14,7 +14,6 @@ public class UserInstanceServiceTests
 {
     private readonly Mock<IInstanceManagerService> _instanceStarterServiceMock;
     private readonly Mock<IProcessService> _processServiceMock;
-    private readonly Mock<ILogger<UserInstanceService>> _loggerMock;
     private readonly UserInstanceService _userInstanceService;
 
     public UserInstanceServiceTests()
@@ -22,15 +21,15 @@ public class UserInstanceServiceTests
         Mock<ISessionChangeEventService> sessionChangeEventServiceMock = new();
         _instanceStarterServiceMock = new Mock<IInstanceManagerService>();
         _processServiceMock = new Mock<IProcessService>();
-        _loggerMock = new Mock<ILogger<UserInstanceService>>();
-        _userInstanceService = new UserInstanceService(sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object, _loggerMock.Object);
+        Mock<ILogger<UserInstanceService>> loggerMock = new();
+        _userInstanceService = new UserInstanceService(sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object, loggerMock.Object);
     }
 
     [Fact]
     public void Start_ShouldStartNewInstance()
     {
         // Arrange
-        var processId = 1234;
+        const int processId = 1234;
         _instanceStarterServiceMock
             .Setup(x => x.StartNewInstance(It.IsAny<string>(), It.IsAny<NativeProcessStartInfo>()))
             .Returns(processId);
@@ -63,10 +62,7 @@ public class UserInstanceServiceTests
         _userInstanceService.Stop();
 
         // Assert
-        foreach (var process in processes)
-        {
-            processMock.Verify(p => p.Kill(), Times.Once);
-        }
+        processMock.Verify(p => p.Kill(), Times.Once);
     }
 
     [Fact]

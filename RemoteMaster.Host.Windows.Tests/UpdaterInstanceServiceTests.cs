@@ -16,15 +16,14 @@ public class UpdaterInstanceServiceTests
 {
     private readonly Mock<IArgumentBuilderService> _mockArgumentBuilderService;
     private readonly Mock<IInstanceManagerService> _mockInstanceStarterService;
-    private readonly Mock<ILogger<UpdaterInstanceService>> _mockLogger;
     private readonly UpdaterInstanceService _service;
 
     public UpdaterInstanceServiceTests()
     {
         _mockArgumentBuilderService = new Mock<IArgumentBuilderService>();
         _mockInstanceStarterService = new Mock<IInstanceManagerService>();
-        _mockLogger = new Mock<ILogger<UpdaterInstanceService>>();
-        _service = new UpdaterInstanceService(_mockArgumentBuilderService.Object, _mockInstanceStarterService.Object, _mockLogger.Object);
+        Mock<ILogger<UpdaterInstanceService>> mockLogger = new();
+        _service = new UpdaterInstanceService(_mockArgumentBuilderService.Object, _mockInstanceStarterService.Object, mockLogger.Object);
     }
 
     [Fact]

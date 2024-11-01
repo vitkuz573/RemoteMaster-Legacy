@@ -15,15 +15,14 @@ public class WoLConfiguratorServiceTests
 {
     private readonly Mock<IRegistryService> _mockRegistryService;
     private readonly Mock<IProcessService> _mockProcessService;
-    private readonly Mock<ILogger<WoLConfiguratorService>> _mockLogger;
     private readonly WoLConfiguratorService _service;
 
     public WoLConfiguratorServiceTests()
     {
         _mockRegistryService = new Mock<IRegistryService>();
         _mockProcessService = new Mock<IProcessService>();
-        _mockLogger = new Mock<ILogger<WoLConfiguratorService>>();
-        _service = new WoLConfiguratorService(_mockRegistryService.Object, _mockProcessService.Object, _mockLogger.Object);
+        Mock<ILogger<WoLConfiguratorService>> mockLogger = new();
+        _service = new WoLConfiguratorService(_mockRegistryService.Object, _mockProcessService.Object, mockLogger.Object);
     }
 
     [Fact]

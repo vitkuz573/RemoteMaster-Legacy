@@ -21,8 +21,8 @@ public class SecureAttentionSequenceServiceTests
     {
         _mockRegistryService = new Mock<IRegistryService>();
         _mockRegistryKey = new Mock<IRegistryKey>();
-        var _mockLogger = new Mock<ILogger<SecureAttentionSequenceService>>();
-        _service = new SecureAttentionSequenceService(_mockRegistryService.Object, _mockLogger.Object);
+        var mockLogger = new Mock<ILogger<SecureAttentionSequenceService>>();
+        _service = new SecureAttentionSequenceService(_mockRegistryService.Object, mockLogger.Object);
     }
 
     [Fact]
