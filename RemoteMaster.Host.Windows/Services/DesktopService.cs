@@ -28,14 +28,7 @@ public class DesktopService(ILogger<DesktopService> logger) : IDesktopService
             var result = SetThreadDesktop(inputDesktop) && SwitchDesktop(inputDesktop);
             _lastInputDesktop = inputDesktop;
 
-            if (result)
-            {
-                logger.LogInformation("Successfully switched to input desktop.");
-            }
-            else
-            {
-                logger.LogWarning("Failed to switch to input desktop.");
-            }
+            logger.LogDebug(result ? "Successfully switched to input desktop." : "Failed to switch to input desktop.");
 
             return result;
         }
