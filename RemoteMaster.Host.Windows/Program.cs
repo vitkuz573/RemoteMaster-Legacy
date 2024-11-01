@@ -230,6 +230,7 @@ internal class Program
                 services.AddHostedService<FirewallInitializationService>();
                 services.AddHostedService<SasInitializationService>();
                 services.AddHostedService<InputBackgroundService>();
+                services.AddHostedService<TrayIconHostedService>();
                 break;
             case ServiceMode:
                 services.AddHostedService<CommandListenerService>();
