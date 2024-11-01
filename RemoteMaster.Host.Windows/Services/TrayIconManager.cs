@@ -19,10 +19,10 @@ namespace RemoteMaster.Host.Windows.Services;
 public class TrayIconManager : ITrayIconManager
 {
     private const string ClassName = "TrayIconWindowClass";
-
+    
     private readonly IHostInformationService _hostInformationService;
     private readonly ILogger<TrayIconManager> _logger;
-
+    
     private DestroyIconSafeHandle _iconHandle;
     private HWND _hwnd;
     private NOTIFYICONDATAW _notifyIconData;
@@ -33,52 +33,57 @@ public class TrayIconManager : ITrayIconManager
     {
         _hostInformationService = hostInformationService;
         _logger = logger;
-
+        
         _wndProcDelegate = WndProc;
 
         var defaultIcon = Icons.without_connections;
-
+        
         _iconHandle = new DestroyIconSafeHandle(defaultIcon.Handle);
 
         InitializeWindow();
+        ShowTrayIcon();
     }
 
     public void ShowTrayIcon()
     {
-        AddTrayIcon();
+        if (!_iconAdded)
+        {
+            AddTrayIcon();
+        }
     }
 
     public void HideTrayIcon()
     {
-        if (!_iconAdded)
+        if (_iconAdded && Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, _notifyIconData))
         {
-            return;
+            _logger.LogInformation("Tray icon removed successfully.");
+            _iconAdded = false;
         }
-
-        _logger.LogInformation("Removing tray icon...");
-
-        Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, _notifyIconData);
-
-        _iconAdded = false;
+        else
+        {
+            _logger.LogWarning("Failed to remove tray icon.");
+        }
     }
 
     public void UpdateIcon(Icon icon)
     {
         ArgumentNullException.ThrowIfNull(icon);
-
+        
         _iconHandle.Dispose();
-
+        
         _iconHandle = new DestroyIconSafeHandle(icon.Handle);
-
         _notifyIconData.hIcon = (HICON)_iconHandle.DangerousGetHandle();
 
-        if (Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData))
+        if (!Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData))
         {
-            _logger.LogInformation("Tray icon updated successfully.");
+            _logger.LogError("Failed to update tray icon. Shell_NotifyIcon returned false. Attempting to reinitialize.");
+            _iconAdded = false;
+
+            ShowTrayIcon();
         }
         else
         {
-            _logger.LogError("Failed to update tray icon. Shell_NotifyIcon returned false.");
+            _logger.LogInformation("Tray icon updated successfully.");
         }
     }
 
@@ -183,10 +188,10 @@ public class TrayIconManager : ITrayIconManager
     private string GetBaseTooltipText()
     {
         var hostInfo = _hostInformationService.GetHostInformation();
-
+        
         return $"Name: {hostInfo.Name}\nIP Address: {hostInfo.IpAddress}\nMAC Address: {hostInfo.MacAddress}";
     }
-
+    
     private string GetTooltipText(int activeConnections)
     {
         return $"{GetBaseTooltipText()}\nActive Connections: {activeConnections}";
@@ -206,7 +211,7 @@ public class TrayIconManager : ITrayIconManager
         DestroyWindow(_hwnd);
 
         using var moduleHandle = GetModuleHandle((string)null!);
-
+        
         UnregisterClass(ClassName, moduleHandle);
     }
 }
