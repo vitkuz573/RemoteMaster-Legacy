@@ -19,7 +19,7 @@ public class TrayIconHostedService(ITrayIconManager trayIconManager) : IHostedSe
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        // trayIconManager.HideTrayIcon();
+        trayIconManager.HideTrayIcon();
 
         return Task.CompletedTask;
     }
