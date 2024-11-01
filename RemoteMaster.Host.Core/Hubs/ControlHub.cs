@@ -212,6 +212,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         inputService.InputEnabled = inputEnabled;
     }
 
+    [Authorize(Policy = "ToggleClickIndicator")]
+    public void ToggleClickIndicator(bool clickIndicatorEnabled)
+    {
+        screenCapturingService.ShowClickIndicator = clickIndicatorEnabled;
+    }
+
     [Authorize(Policy = "BlockUserInputPolicy")]
     public void BlockUserInput(bool blockInput)
     {

@@ -196,6 +196,8 @@ internal class Program
                         policy.RequireClaim("Input", "KeyboardInput"))
                     .AddPolicy("ToggleInputPolicy", policy =>
                         policy.RequireClaim("Input", "ToggleInput"))
+                    .AddPolicy("ToggleClickIndicator", policy =>
+                        policy.RequireClaim("Input", "ToggleClickIndicator"))
                     .AddPolicy("BlockUserInputPolicy", policy =>
                         policy.RequireClaim("Input", "BlockUserInput"))
                     .AddPolicy("RebootHostPolicy", policy =>

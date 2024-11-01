@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
+using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -17,9 +18,11 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
     private readonly IDesktopService _desktopService;
+    private readonly ClickIndicatorOverlay _clickIndicatorOverlay;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly object _screenBoundsLock = new();
     private readonly List<IScreenOverlay> _overlays = [];
+    private bool _showClickIndicator;
 
     public bool DrawCursor { get; set; } = false;
 
@@ -37,11 +40,35 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
+    public bool ShowClickIndicator
+    {
+        get => _showClickIndicator;
+        set
+        {
+            if (_showClickIndicator == value)
+            {
+                return;
+            }
+
+            _showClickIndicator = value;
+
+            if (_showClickIndicator)
+            {
+                AddOverlay(_clickIndicatorOverlay);
+            }
+            else
+            {
+                RemoveOverlay(_clickIndicatorOverlay);
+            }
+        }
+    }
+
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    protected ScreenCapturingService(IDesktopService desktopService, ILogger<ScreenCapturingService> logger)
+    protected ScreenCapturingService(IDesktopService desktopService, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<ScreenCapturingService> logger)
     {
         _desktopService = desktopService;
+        _clickIndicatorOverlay = clickIndicatorOverlay;
         _logger = logger;
 
         Init();

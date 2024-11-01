@@ -23,6 +23,8 @@ public interface IScreenCapturingService : IDisposable
 
     string SelectedScreen { get; }
 
+    bool ShowClickIndicator { get; set; }
+
     byte[]? GetNextFrame();
 
     IEnumerable<Display> GetDisplays();
