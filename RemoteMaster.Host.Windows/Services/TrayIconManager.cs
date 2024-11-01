@@ -21,19 +21,27 @@ public class TrayIconManager : ITrayIconManager
     private readonly IHostInformationService _hostInformationService;
     private readonly ILogger<TrayIconManager> _logger;
 
+    private readonly DestroyIconSafeHandle _iconHandle;
     private HWND _hwnd;
-    private DestroyIconSafeHandle _iconHandle;
     private NOTIFYICONDATAW _notifyIconData;
     private readonly WNDPROC _wndProcDelegate;
     private bool _iconAdded;
-    private ushort _classAtom;
 
     public TrayIconManager(IHostInformationService hostInformationService, ILogger<TrayIconManager> logger)
     {
-        _hostInformationService = hostInformationService;   
+        _hostInformationService = hostInformationService;
         _logger = logger;
 
         _wndProcDelegate = WndProc;
+
+        _iconHandle = ExtractIcon(@"%SystemRoot%\System32\shell32.dll", 15);
+
+        if (_iconHandle.IsInvalid)
+        {
+            _logger.LogError("Failed to load icon from shell32.dll.");
+
+            throw new InvalidOperationException("Icon initialization failed.");
+        }
 
         InitializeWindow();
     }
@@ -106,9 +114,9 @@ public class TrayIconManager : ITrayIconManager
             }
         }
 
-        _classAtom = RegisterClassEx(wc);
+        var classAtom = RegisterClassEx(wc);
 
-        return _classAtom != 0;
+        return classAtom != 0;
     }
 
     private static unsafe HWND CreateHiddenWindow()
@@ -118,15 +126,6 @@ public class TrayIconManager : ITrayIconManager
 
     private void AddTrayIcon()
     {
-        _iconHandle = ExtractIcon(@"%SystemRoot%\System32\shell32.dll", 15);
-
-        if (_iconHandle.IsInvalid)
-        {
-            _logger.LogError("Failed to load icon from shell32.dll.");
-
-            return;
-        }
-
         var hostInformation = _hostInformationService.GetHostInformation();
 
         _notifyIconData = new NOTIFYICONDATAW
