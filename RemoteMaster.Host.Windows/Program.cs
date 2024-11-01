@@ -145,9 +145,6 @@ internal class Program
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<ClickIndicatorOverlay>();
         services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<ClickIndicatorOverlay>());
-        services.AddSingleton<TrialOverlay>();
-        services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<TrialOverlay>());
-
 
         if (launchModeInstance is not InstallMode)
         {
