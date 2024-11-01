@@ -8,21 +8,29 @@ using MessagePack.Formatters;
 
 namespace RemoteMaster.Shared.Formatters;
 
-public class PhysicalAddressFormatter : IMessagePackFormatter<PhysicalAddress>
+public class PhysicalAddressFormatter : IMessagePackFormatter<PhysicalAddress?>
 {
-    public void Serialize(ref MessagePackWriter writer, PhysicalAddress value, MessagePackSerializerOptions options)
+    public void Serialize(ref MessagePackWriter writer, PhysicalAddress? value, MessagePackSerializerOptions options)
     {
-        ArgumentNullException.ThrowIfNull(value);
-
-        writer.Write(value.ToString());
+        if (value is null)
+        {
+            writer.WriteNil();
+        }
+        else
+        {
+            writer.Write(value.ToString());
+        }
     }
 
-    public PhysicalAddress Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+    public PhysicalAddress? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
+        if (reader.TryReadNil())
+        {
+            return null;
+        }
+
         var macString = reader.ReadString();
 
-        return macString is null
-            ? throw new InvalidOperationException("PhysicalAddress cannot be null during deserialization.")
-            : PhysicalAddress.Parse(macString);
+        return PhysicalAddress.Parse(macString);
     }
 }

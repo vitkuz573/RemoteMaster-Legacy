@@ -8,21 +8,34 @@ using MessagePack.Formatters;
 
 namespace RemoteMaster.Shared.Formatters;
 
-public class IPAddressFormatter : IMessagePackFormatter<IPAddress>
+public class IPAddressFormatter : IMessagePackFormatter<IPAddress?>
 {
-    public void Serialize(ref MessagePackWriter writer, IPAddress value, MessagePackSerializerOptions options)
+    public void Serialize(ref MessagePackWriter writer, IPAddress? value, MessagePackSerializerOptions options)
     {
-        ArgumentNullException.ThrowIfNull(value);
-
-        writer.Write(value.ToString());
+        if (value is null)
+        {
+            writer.WriteNil();
+        }
+        else
+        {
+            writer.Write(value.ToString());
+        }
     }
 
-    public IPAddress Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+    public IPAddress? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
+        if (reader.TryReadNil())
+        {
+            return null;
+        }
+
         var ipString = reader.ReadString();
 
-        return ipString is null
-            ? throw new InvalidOperationException("IP address cannot be null during deserialization.")
-            : IPAddress.Parse(ipString);
+        if (IPAddress.TryParse(ipString, out var ipAddress))
+        {
+            return ipAddress;
+        }
+
+        throw new InvalidOperationException($"Invalid IP address format: '{ipString}'.");
     }
 }
