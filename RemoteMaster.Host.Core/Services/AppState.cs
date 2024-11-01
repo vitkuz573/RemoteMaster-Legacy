@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Host.Core.Resources;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -127,6 +128,10 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
     {
         var activeConnections = _viewers.Values.Count(v => !_ignoredUsers.Contains(v.UserName));
 
-        trayIconManager.UpdateIcon(@"%SystemRoot%\System32\shell32.dll", activeConnections > 0 ? 16 : (uint)15);
+        var icon = activeConnections > 0
+            ? Icons.with_connections
+            : Icons.without_connections;
+
+        trayIconManager.UpdateIcon(icon);
     }
 }

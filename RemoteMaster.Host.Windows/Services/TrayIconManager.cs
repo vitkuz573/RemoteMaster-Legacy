@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -21,7 +22,7 @@ public class TrayIconManager : ITrayIconManager
     private readonly IHostInformationService _hostInformationService;
     private readonly ILogger<TrayIconManager> _logger;
 
-    private readonly DestroyIconSafeHandle _iconHandle;
+    private DestroyIconSafeHandle _iconHandle;
     private HWND _hwnd;
     private NOTIFYICONDATAW _notifyIconData;
     private readonly WNDPROC _wndProcDelegate;
@@ -65,20 +66,15 @@ public class TrayIconManager : ITrayIconManager
         _iconAdded = false;
     }
 
-    public void UpdateIcon(string iconPath, uint iconIndex = 0)
+    public void UpdateIcon(Icon icon)
     {
+        ArgumentNullException.ThrowIfNull(icon);
+
         _iconHandle.Dispose();
 
-        using var newIconHandle = ExtractIcon(iconPath, iconIndex);
+        _iconHandle = new DestroyIconSafeHandle(icon.Handle);
 
-        if (newIconHandle.IsInvalid)
-        {
-            _logger.LogError($"Failed to load icon from {iconPath}.");
-
-            throw new InvalidOperationException("Icon update failed.");
-        }
-
-        _notifyIconData.hIcon = (HICON)newIconHandle.DangerousGetHandle();
+        _notifyIconData.hIcon = (HICON)_iconHandle.DangerousGetHandle();
 
         if (Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData))
         {
