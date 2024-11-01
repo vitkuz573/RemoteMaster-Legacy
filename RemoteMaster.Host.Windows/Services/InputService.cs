@@ -8,13 +8,14 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Shared.DTOs;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService(IDesktopService desktopService, ILogger<InputService> logger) : IInputService
+public sealed class InputService(IDesktopService desktopService, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<InputService> logger) : IInputService
 {
     private readonly ConcurrentQueue<Action> _operationQueue = new();
     private readonly ManualResetEvent _queueEvent = new(false);
@@ -156,7 +157,6 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
 
             var dx = 0;
             var dy = 0;
-
             uint mouseData = 0;
 
             if (dto.DeltaY.HasValue)
@@ -171,19 +171,36 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
                 dx = (int)(xyPercent.X * 65535F);
                 dy = (int)(xyPercent.Y * 65535F);
 
-                if (dto is { Button: not null, IsPressed: not null })
+                var pixelX = (int)(xyPercent.X * screenCapturing.CurrentScreenBounds.Width) + screenCapturing.CurrentScreenBounds.Left;
+                var pixelY = (int)(xyPercent.Y * screenCapturing.CurrentScreenBounds.Height) + screenCapturing.CurrentScreenBounds.Top;
+                var clickPosition = new Point(pixelX, pixelY);
+
+                switch (dto)
                 {
-                    mouseEventFlags |= dto.Button.Value switch
-                    {
-                        0 => dto.IsPressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
-                        1 => dto.IsPressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
-                        2 => dto.IsPressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
-                        _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
-                    };
-                }
-                else
-                {
-                    mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE;
+                    case { Button: not null, IsPressed: true }:
+                        clickIndicatorOverlay.RegisterClick(clickPosition);
+                        mouseEventFlags |= dto.Button.Value switch
+                        {
+                            0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                            1 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                            2 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                            _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                        };
+                        break;
+
+                    case { Button: not null, IsPressed: false }:
+                        mouseEventFlags |= dto.Button.Value switch
+                        {
+                            0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                            1 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                            2 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                            _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                        };
+                        break;
+
+                    default:
+                        mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE;
+                        break;
                 }
             }
 

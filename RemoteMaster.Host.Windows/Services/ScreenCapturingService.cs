@@ -19,6 +19,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     private readonly IDesktopService _desktopService;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly object _screenBoundsLock = new();
+    private readonly List<IScreenOverlay> _overlays = [];
 
     public bool DrawCursor { get; set; } = false;
 
@@ -49,6 +50,12 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected abstract void Init();
 
     protected abstract byte[]? GetFrame();
+
+    public void AddOverlay(IScreenOverlay overlay) => _overlays.Add(overlay);
+
+    public void RemoveOverlay(IScreenOverlay overlay) => _overlays.Remove(overlay);
+
+    protected IEnumerable<IScreenOverlay> GetOverlays() => _overlays;
 
     public IEnumerable<Display> GetDisplays()
     {

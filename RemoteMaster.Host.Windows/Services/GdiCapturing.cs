@@ -9,6 +9,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
+using RemoteMaster.Host.Windows.ScreenOverlays;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -20,12 +21,14 @@ public class GdiCapturing : ScreenCapturingService
     private readonly ICursorRenderService _cursorRenderService;
     private readonly ILogger<ScreenCapturingService> _logger;
 
-    public GdiCapturing(ICursorRenderService cursorRenderService, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, logger)
+    public GdiCapturing(ICursorRenderService cursorRenderService, ClickIndicatorOverlay clickIndicatorOverlay, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, logger)
     {
         _cursorRenderService = cursorRenderService;
         _logger = logger;
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
         _memoryGraphics = Graphics.FromImage(_bitmap);
+
+        // AddOverlay(clickIndicatorOverlay);
     }
 
     protected override void Init()
@@ -73,6 +76,15 @@ public class GdiCapturing : ScreenCapturingService
         if (DrawCursor)
         {
             _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
+        }
+
+        _logger.LogInformation("Attempting to draw overlays");
+
+        foreach (var overlay in GetOverlays())
+        {
+            _logger.LogInformation("Calling Draw for overlay of type: {OverlayType}", overlay.GetType().Name);
+
+            overlay.Draw(_memoryGraphics, CurrentScreenBounds);
         }
 
         return BitmapToByteArray(_bitmap, ImageQuality, SelectedCodec);

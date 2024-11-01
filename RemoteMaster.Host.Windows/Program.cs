@@ -25,6 +25,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows;
@@ -142,12 +143,11 @@ internal class Program
         services.AddSingleton<ICommandExecutor, CommandExecutor>();
         services.AddSingleton<IDeviceManagerService, DeviceManagerService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
-        services.AddSingleton(new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        services.AddSingleton<ClickIndicatorOverlay>();
+        services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<ClickIndicatorOverlay>());
+        services.AddSingleton<TrialOverlay>();
+        services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<TrialOverlay>());
+
 
         if (launchModeInstance is not InstallMode)
         {
