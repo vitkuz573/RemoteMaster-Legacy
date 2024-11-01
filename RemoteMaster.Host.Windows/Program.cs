@@ -6,8 +6,6 @@ using System.IO.Abstractions;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -143,6 +141,7 @@ internal class Program
         services.AddSingleton<ICommandExecutor, CommandExecutor>();
         services.AddSingleton<IDeviceManagerService, DeviceManagerService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
+        services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<ClickIndicatorOverlay>();
         services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<ClickIndicatorOverlay>());
 

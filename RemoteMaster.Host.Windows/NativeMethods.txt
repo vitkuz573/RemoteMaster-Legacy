@@ -165,3 +165,4 @@ NETSETUP_ACCT_DELETE
 Shell_NotifyIcon
 LoadIcon
 ExtractIcon
+UnregisterClass
