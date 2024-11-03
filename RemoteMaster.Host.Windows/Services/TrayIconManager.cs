@@ -264,7 +264,7 @@ public class TrayIconManager : ITrayIconManager
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
-    private static int LOWORD(IntPtr value)
+    private static int LOWORD(nint value)
     {
         return unchecked((short)(long)value);
     }
