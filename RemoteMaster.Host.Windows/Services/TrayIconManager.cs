@@ -29,19 +29,27 @@ public class TrayIconManager : ITrayIconManager
     private readonly WNDPROC _wndProcDelegate;
     private bool _iconAdded;
 
+    private static readonly uint WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+
     public TrayIconManager(IHostInformationService hostInformationService, ILogger<TrayIconManager> logger)
     {
         _hostInformationService = hostInformationService;
         _logger = logger;
-        
+
         _wndProcDelegate = WndProc;
 
         var defaultIcon = Icons.without_connections;
-        
         _iconHandle = new DestroyIconSafeHandle(defaultIcon.Handle);
 
-        InitializeWindow();
-        ShowTrayIcon();
+        var uiThread = new Thread(() =>
+        {
+            InitializeWindow();
+            StartMessageLoop();
+        });
+
+        uiThread.SetApartmentState(ApartmentState.STA);
+        uiThread.IsBackground = true;
+        uiThread.Start();
     }
 
     public void ShowTrayIcon()
@@ -67,18 +75,26 @@ public class TrayIconManager : ITrayIconManager
 
     public void UpdateIcon(Icon icon)
     {
+        if (_hwnd.IsNull)
+        {
+            _logger.LogWarning("Window handle is invalid. Reinitializing window and tray icon.");
+            InitializeWindow();
+            ShowTrayIcon();
+        }
+
         ArgumentNullException.ThrowIfNull(icon);
-        
+
         _iconHandle.Dispose();
-        
-        _iconHandle = new DestroyIconSafeHandle(icon.Handle);
+        _iconHandle = new DestroyIconSafeHandle(((Icon)icon.Clone()).Handle);
+
         _notifyIconData.hIcon = (HICON)_iconHandle.DangerousGetHandle();
+        _notifyIconData.dwState = 0;
+        _notifyIconData.dwStateMask = NOTIFY_ICON_STATE.NIS_HIDDEN;
 
         if (!Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData))
         {
             _logger.LogError("Failed to update tray icon. Shell_NotifyIcon returned false. Attempting to reinitialize.");
             _iconAdded = false;
-
             ShowTrayIcon();
         }
         else
@@ -130,6 +146,13 @@ public class TrayIconManager : ITrayIconManager
         if (_hwnd.IsNull)
         {
             _logger.LogError("Failed to create hidden window for tray icon.");
+
+            return;
+        }
+
+        unsafe
+        {
+            _logger.LogInformation("Hidden window created successfully with handle: {Handle}", (nint)_hwnd.Value);
         }
     }
 
@@ -167,21 +190,32 @@ public class TrayIconManager : ITrayIconManager
 
     private void AddTrayIcon()
     {
+        if (_hwnd.IsNull)
+        {
+            _logger.LogWarning("Window handle is invalid. Reinitializing window and tray icon.");
+            InitializeWindow();
+        }
+
         _notifyIconData = new NOTIFYICONDATAW
         {
             cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATAW>(),
             hWnd = _hwnd,
             uID = 1,
-            uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE | NOTIFY_ICON_DATA_FLAGS.NIF_ICON | NOTIFY_ICON_DATA_FLAGS.NIF_TIP,
+            uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_ICON | NOTIFY_ICON_DATA_FLAGS.NIF_TIP | NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE | NOTIFY_ICON_DATA_FLAGS.NIF_STATE | NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP | NOTIFY_ICON_DATA_FLAGS.NIF_INFO,
             uCallbackMessage = 0x400,
             hIcon = (HICON)_iconHandle.DangerousGetHandle(),
-            szTip = GetTooltipText(0)
+            szTip = GetTooltipText(0),
+            dwState = 0,
+            dwStateMask = NOTIFY_ICON_STATE.NIS_HIDDEN
         };
 
         _iconAdded = Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, _notifyIconData);
 
         if (_iconAdded)
         {
+            _notifyIconData.Anonymous.uVersion = 4;
+            Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, _notifyIconData);
+
             _logger.LogInformation("Tray icon successfully added.");
         }
         else
@@ -204,7 +238,38 @@ public class TrayIconManager : ITrayIconManager
 
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
+        _logger.LogInformation("Received message: {Message}", msg);
+
+        if (msg == WM_TASKBARCREATED)
+        {
+            _logger.LogInformation("Taskbar was recreated. Restoring tray icon.");
+            _iconAdded = false;
+            ShowTrayIcon();
+        }
+        else if (msg == WM_DESTROY || msg == WM_CLOSE)
+        {
+            _logger.LogWarning("Window handle is invalid. Reinitializing window and tray icon.");
+            InitializeWindow();
+            ShowTrayIcon();
+        }
+        else if (msg == WM_MOUSEMOVE || msg == WM_MOUSEHOVER)
+        {
+            if (!_iconAdded)
+            {
+                ShowTrayIcon();
+            }
+        }
+
         return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+
+    private static void StartMessageLoop()
+    {
+        while (GetMessage(out var msg, HWND.Null, 0, 0))
+        {
+            TranslateMessage(msg);
+            DispatchMessage(msg);
+        }
     }
 
     public void Dispose()

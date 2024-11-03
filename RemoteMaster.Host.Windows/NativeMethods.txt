@@ -165,3 +165,6 @@ NETSETUP_ACCT_DELETE
 Shell_NotifyIcon
 UnregisterClass
 LoadIcon
+RegisterWindowMessage
+WM_MOUSEMOVE
+WM_MOUSEHOVER
