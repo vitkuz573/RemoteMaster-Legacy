@@ -136,11 +136,17 @@ public class TrayIconManager : ITrayIconManager
 
     private bool TryRegisterClass()
     {
-        var wc = new WNDCLASSEXW
+        WNDCLASSEXW wc;
+
+        using (var moduleHandle = GetModuleHandle((string)null!))
         {
-            cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-            lpfnWndProc = _wndProcDelegate
-        };
+            wc = new WNDCLASSEXW
+            {
+                cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
+                lpfnWndProc = _wndProcDelegate,
+                hInstance = (HINSTANCE)moduleHandle.DangerousGetHandle(),
+            };
+        }
 
         unsafe
         {
@@ -150,7 +156,7 @@ public class TrayIconManager : ITrayIconManager
             }
         }
 
-        var classAtom = RegisterClassEx(wc);
+        var classAtom = RegisterClassEx(in wc);
 
         return classAtom != 0;
     }
