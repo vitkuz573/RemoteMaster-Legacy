@@ -3,10 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Resources;
+using RemoteMaster.Host.Windows.Enums;
 using RemoteMaster.Shared.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -23,10 +25,13 @@ public class TrayIconManager : ITrayIconManager
     private readonly IHostInformationService _hostInformationService;
     private readonly ILogger<TrayIconManager> _logger;
 
+    private readonly WNDPROC _wndProcDelegate;
+    private readonly SafeHandle _moduleHandle;
     private DestroyIconSafeHandle _iconHandle;
+    private DestroyMenuSafeHandle? _trayMenu;
+
     private HWND _hwnd;
     private NOTIFYICONDATAW _notifyIconData;
-    private readonly WNDPROC _wndProcDelegate;
     private bool _iconAdded;
 
     private static readonly uint WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
@@ -35,6 +40,8 @@ public class TrayIconManager : ITrayIconManager
     {
         _hostInformationService = hostInformationService;
         _logger = logger;
+
+        _moduleHandle = GetModuleHandle((string)null!) ?? throw new InvalidOperationException("Failed to retrieve module handle.");
 
         _wndProcDelegate = WndProc;
 
@@ -158,17 +165,12 @@ public class TrayIconManager : ITrayIconManager
 
     private bool TryRegisterClass()
     {
-        WNDCLASSEXW wc;
-
-        using (var moduleHandle = GetModuleHandle((string)null!))
+        var wc = new WNDCLASSEXW
         {
-            wc = new WNDCLASSEXW
-            {
-                cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-                lpfnWndProc = _wndProcDelegate,
-                hInstance = (HINSTANCE)moduleHandle.DangerousGetHandle(),
-            };
-        }
+            cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
+            lpfnWndProc = _wndProcDelegate,
+            hInstance = (HINSTANCE)_moduleHandle.DangerousGetHandle(),
+        };
 
         unsafe
         {
@@ -202,7 +204,7 @@ public class TrayIconManager : ITrayIconManager
             hWnd = _hwnd,
             uID = 1,
             uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_ICON | NOTIFY_ICON_DATA_FLAGS.NIF_TIP | NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE | NOTIFY_ICON_DATA_FLAGS.NIF_STATE | NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP | NOTIFY_ICON_DATA_FLAGS.NIF_INFO,
-            uCallbackMessage = 0x400,
+            uCallbackMessage = WM_RBUTTONUP,
             hIcon = (HICON)_iconHandle.DangerousGetHandle(),
             szTip = GetTooltipText(0),
             dwState = 0,
@@ -244,21 +246,81 @@ public class TrayIconManager : ITrayIconManager
             _iconAdded = false;
             ShowTrayIcon();
         }
-        else if (msg == WM_DESTROY || msg == WM_CLOSE)
+        else if (msg == WM_RBUTTONUP)
         {
-            _logger.LogWarning("Window handle is invalid. Reinitializing window and tray icon.");
-            InitializeWindow();
-            ShowTrayIcon();
-        }
-        else if (msg == WM_MOUSEMOVE || msg == WM_MOUSEHOVER)
-        {
-            if (!_iconAdded)
+            var eventCode = (uint)LOWORD(lParam);
+
+            switch (eventCode)
             {
-                ShowTrayIcon();
+                case WM_CONTEXTMENU:
+                    _logger.LogInformation("Right-click event received, showing context menu.");
+                    ShowContextMenu();
+                    break;
+                default:
+                    break;
             }
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+
+    private static int LOWORD(IntPtr value)
+    {
+        return unchecked((short)(long)value);
+    }
+
+    private void CreateContextMenu()
+    {
+        _trayMenu = CreatePopupMenu_SafeHandle();
+
+        var versionText = $"Version: {GetApplicationVersion()}";
+        AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING | MENU_ITEM_FLAGS.MF_DISABLED | MENU_ITEM_FLAGS.MF_GRAYED, 0, versionText);
+
+        // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
+        // 
+        // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING, (uint)TrayIconCommands.Open, "Open");
+        // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING, (uint)TrayIconCommands.Restart, "Restart");
+        // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING, (uint)TrayIconCommands.Exit, "Exit");
+    }
+
+    private static string GetApplicationVersion()
+    {
+        return Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
+    }
+
+    private void ShowContextMenu()
+    {
+        if (_trayMenu == null || _trayMenu.IsInvalid)
+        {
+            CreateContextMenu();
+        }
+
+        GetCursorPos(out var cursorPos);
+        SetForegroundWindow(_hwnd);
+
+        var command = (uint)(int)TrackPopupMenu(_trayMenu, TRACK_POPUP_MENU_FLAGS.TPM_LEFTALIGN | TRACK_POPUP_MENU_FLAGS.TPM_RETURNCMD, cursorPos.X, cursorPos.Y, _hwnd, null);
+
+        PostMessage(_hwnd, WM_NULL, 0, 0);
+
+        if (command != 0)
+        {
+            HandleMenuCommand((TrayIconCommands)command);
+        }
+    }
+
+    private static void HandleMenuCommand(TrayIconCommands command)
+    {
+        switch (command)
+        {
+            case TrayIconCommands.Open:
+                break;
+            case TrayIconCommands.Restart:
+                break;
+            case TrayIconCommands.Exit:
+                // Dispose();
+                // Environment.Exit(0);
+                break;
+        }
     }
 
     private static void StartMessageLoop()
@@ -278,8 +340,11 @@ public class TrayIconManager : ITrayIconManager
 
         DestroyWindow(_hwnd);
 
-        using var moduleHandle = GetModuleHandle((string)null!);
-        
-        UnregisterClass(ClassName, moduleHandle);
+        if (!_moduleHandle.IsInvalid)
+        {
+            UnregisterClass(ClassName, _moduleHandle);
+        }
+
+        _moduleHandle.Dispose();
     }
 }

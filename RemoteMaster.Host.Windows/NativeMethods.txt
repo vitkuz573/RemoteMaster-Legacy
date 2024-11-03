@@ -168,3 +168,12 @@ LoadIcon
 RegisterWindowMessage
 WM_MOUSEMOVE
 WM_MOUSEHOVER
+WM_RBUTTONUP
+AppendMenu
+CreatePopupMenu
+GetCursorPos
+SetForegroundWindow
+TrackPopupMenu
+WM_NULL
+WM_CONTEXTMENU
+WM_LBUTTONDBLCLK
