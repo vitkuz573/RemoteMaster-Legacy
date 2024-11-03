@@ -22,7 +22,7 @@ public class TrayIconManager : ITrayIconManager
     
     private readonly IHostInformationService _hostInformationService;
     private readonly ILogger<TrayIconManager> _logger;
-    
+
     private DestroyIconSafeHandle _iconHandle;
     private HWND _hwnd;
     private NOTIFYICONDATAW _notifyIconData;
@@ -238,8 +238,6 @@ public class TrayIconManager : ITrayIconManager
 
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
-        _logger.LogInformation("Received message: {Message}", msg);
-
         if (msg == WM_TASKBARCREATED)
         {
             _logger.LogInformation("Taskbar was recreated. Restoring tray icon.");
