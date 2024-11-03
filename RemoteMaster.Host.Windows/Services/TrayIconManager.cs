@@ -102,7 +102,6 @@ public class TrayIconManager : ITrayIconManager
                                 $"{newTooltipText}";
 
         Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData);
-        _logger.LogInformation("Tray icon tooltip updated to: " + newTooltipText);
     }
 
     public void UpdateConnectionCount(int activeConnections)
@@ -163,7 +162,7 @@ public class TrayIconManager : ITrayIconManager
 
     private static unsafe HWND CreateHiddenWindow()
     {
-        return CreateWindowEx(0, ClassName, string.Empty, 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
+        return CreateWindowEx(0, ClassName, string.Empty, 0, 0, 0, 0, 0, HWND.Null, null, null, null);
     }
 
     private void AddTrayIcon()
