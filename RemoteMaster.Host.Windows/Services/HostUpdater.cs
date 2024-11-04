@@ -16,7 +16,7 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger) : IHostUpdater
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -93,6 +93,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         var hostService = serviceFactory.GetService("RCHost");
 
         hostService.Stop();
+        chatInstanceService.Stop();
         userInstanceService.Stop();
 
         await WaitForFileRelease(BaseFolderPath);
