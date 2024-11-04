@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
@@ -14,5 +15,14 @@ public class UninstallMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
+    }
+
+    public async override Task ExecuteAsync(IServiceProvider serviceProvider)
+    {
+        var hostUninstaller = serviceProvider.GetRequiredService<IHostUninstaller>();
+
+        await hostUninstaller.UninstallAsync();
+
+        Environment.Exit(0);
     }
 }

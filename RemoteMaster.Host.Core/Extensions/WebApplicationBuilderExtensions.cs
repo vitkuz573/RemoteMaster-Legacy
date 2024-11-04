@@ -73,7 +73,7 @@ public static class WebApplicationBuilderExtensions
 
         if (launchModeInstance is InstallMode)
         {
-            server = builder.Configuration["server"] ?? throw new InvalidOperationException("Server is required.");
+            server = launchModeInstance.GetParameterValue("server") ?? throw new InvalidOperationException("Server is required.");
         }
         else
         {
@@ -92,7 +92,7 @@ public static class WebApplicationBuilderExtensions
             configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
 
 #if DEBUG
-    configuration.MinimumLevel.Debug();
+        configuration.MinimumLevel.Debug();
 #else
             configuration.MinimumLevel.Information();
 

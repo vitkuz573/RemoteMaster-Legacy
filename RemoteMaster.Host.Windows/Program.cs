@@ -34,7 +34,13 @@ internal class Program
     {
         var launchModeInstance = ParseArguments(args);
 
-        if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folder-path"].Value))
+        if (launchModeInstance == null)
+        {
+            PrintHelp(null);
+            return;
+        }
+
+        if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.GetParameterValue("folder-path")))
         {
             PrintHelp(launchModeInstance);
             return;
@@ -46,7 +52,6 @@ internal class Program
         };
 
         var builder = WebApplication.CreateSlimBuilder(options);
-
         builder.Configuration.AddCommandLine(args);
 
         if (launchModeInstance is ServiceMode)
@@ -57,22 +62,14 @@ internal class Program
         ConfigureServices(builder.Services, launchModeInstance);
 
         await builder.ConfigureSerilog(launchModeInstance);
-
         builder.ConfigureCoreUrls(launchModeInstance);
 
-        builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts => opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));
+        builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts =>
+            opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));
 
         var app = builder.Build();
 
         app.UseCors();
-
-        switch (launchModeInstance)
-        {
-            case UninstallMode:
-                var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
-                await hostUninstaller.UninstallAsync();
-                return;
-        }
 
         if (!app.Environment.IsDevelopment())
         {
@@ -93,6 +90,12 @@ internal class Program
             app.MapHub<ServiceHub>("/hubs/service");
             app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
             app.MapHub<RegistryHub>("/hubs/registry");
+        }
+
+        if (launchModeInstance is InstallMode || launchModeInstance is UpdaterMode || launchModeInstance is UninstallMode)
+        {
+            await launchModeInstance.ExecuteAsync(app.Services);
+            Environment.Exit(0);
         }
 
         await app.RunAsync();
@@ -238,15 +241,6 @@ internal class Program
                 services.AddHostedService<HostRegistrationMonitorService>();
                 services.AddHostedService<MessageLoopService>();
                 break;
-            case InstallMode:
-                services.AddHostedService<InstallerBackground>();
-                break;
-            case UpdaterMode:
-                services.AddHostedService<UpdaterBackground>();
-                break;
-            case ChatMode:
-                services.AddHostedService<ChatWindowService>();
-                break;
         }
     }
 
@@ -360,12 +354,21 @@ internal class Program
             Console.ResetColor();
 
             Console.WriteLine($"  {specificMode.Description}");
-
             Console.WriteLine();
 
-            foreach (var param in specificMode.Parameters)
+            var uniqueParameters = specificMode.Parameters
+                .GroupBy(p => p.Value)
+                .Select(g => g.First().Key)
+                .ToList();
+
+            foreach (var key in uniqueParameters)
             {
-                Console.WriteLine($"  --{param.Key}: {param.Value.Description} {(param.Value.IsRequired ? "(Required)" : "(Optional)")}");
+                var param = specificMode.Parameters[key];
+                var aliases = param is LaunchParameter launchParam && launchParam.Aliases.Any()
+                    ? $" (Aliases: {string.Join(", ", launchParam.Aliases.Select(alias => $"--{alias}"))})"
+                    : string.Empty;
+
+                Console.WriteLine($"  --{key}: {param.Description} {(param.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
             }
         }
         else

@@ -11,4 +11,6 @@ public interface ILaunchParameter
     bool IsRequired { get; }
 
     string? Value { get; set; }
+
+    IReadOnlyList<string> Aliases { get; }
 }

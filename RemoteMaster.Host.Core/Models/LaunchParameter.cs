@@ -6,11 +6,13 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class LaunchParameter(string description, bool isRequired) : ILaunchParameter
+public class LaunchParameter(string description, bool isRequired, params string[] aliases) : ILaunchParameter
 {
     public string Description { get; } = description;
 
     public bool IsRequired { get; } = isRequired;
 
     public string? Value { get; set; }
+
+    public IReadOnlyList<string> Aliases { get; } = aliases;
 }

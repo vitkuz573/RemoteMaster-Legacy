@@ -15,4 +15,9 @@ public class ChatMode : LaunchModeBase
     protected override void InitializeParameters()
     {
     }
+
+    public async override Task ExecuteAsync(IServiceProvider serviceProvider)
+    {
+        await Task.CompletedTask;
+    }
 }
