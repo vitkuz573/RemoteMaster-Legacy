@@ -15,9 +15,9 @@ public class InstallMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
-        Parameters.Add("server", new LaunchParameter("Specifies the server where the host will be registered.", false, "srv"));
-        Parameters.Add("organization", new LaunchParameter("Specifies the name of the organization where the host is registered.", false, "org"));
-        Parameters.Add("organizational-unit", new LaunchParameter("Specifies the organizational unit where the host is registered.", false, "ou"));
+        Parameters.Add("server", new LaunchParameter("Specifies the server where the host will be registered.", true, "srv"));
+        Parameters.Add("organization", new LaunchParameter("Specifies the name of the organization where the host is registered.", true, "org"));
+        Parameters.Add("organizational-unit", new LaunchParameter("Specifies the organizational unit where the host is registered.", true, "ou"));
     }
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider)

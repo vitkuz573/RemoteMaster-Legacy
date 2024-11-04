@@ -46,6 +46,12 @@ internal class Program
             return;
         }
 
+        if (HasMissingRequiredParameters(launchModeInstance))
+        {
+            PrintHelp(launchModeInstance);
+            Environment.Exit(1);
+        }
+
         var options = new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory
@@ -99,6 +105,31 @@ internal class Program
         }
 
         await app.RunAsync();
+    }
+
+    private static bool HasMissingRequiredParameters(LaunchModeBase launchModeInstance)
+    {
+        var missingRequiredParameters = launchModeInstance.Parameters
+            .Where(p => p.Value.IsRequired && string.IsNullOrEmpty(p.Value.Value))
+            .ToList();
+
+        if (missingRequiredParameters.Count != 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error: Missing required parameters for {launchModeInstance.Name} mode.");
+            Console.ResetColor();
+
+            foreach (var param in missingRequiredParameters)
+            {
+                Console.WriteLine($"  --{param.Key}: {launchModeInstance.Parameters[param.Key].Description}");
+            }
+
+            Console.WriteLine();
+
+            return true;
+        }
+
+        return false;
     }
 
     private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
@@ -310,6 +341,27 @@ internal class Program
             {
                 parameter.Value = value;
             }
+        }
+
+        var missingRequiredParameters = launchModeInstance.Parameters
+            .Where(p => p.Value.IsRequired && string.IsNullOrEmpty(p.Value.Value))
+            .Select(p => p.Key)
+            .ToList();
+
+        if (missingRequiredParameters.Count != 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error: Missing required parameters for {launchModeInstance.Name} mode.");
+            Console.ResetColor();
+
+            foreach (var param in missingRequiredParameters)
+            {
+                Console.WriteLine($"  --{param}: {launchModeInstance.Parameters[param].Description}");
+            }
+
+            Console.WriteLine();
+            PrintHelp(launchModeInstance);
+            Environment.Exit(1);
         }
 
         if (!helpRequested)
