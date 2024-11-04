@@ -241,6 +241,9 @@ internal class Program
                 services.AddHostedService<HostRegistrationMonitorService>();
                 services.AddHostedService<MessageLoopService>();
                 break;
+            case ChatMode:
+                services.AddHostedService<ChatWindowService>();
+                break;
         }
     }
 
