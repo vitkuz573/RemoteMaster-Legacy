@@ -7,7 +7,7 @@ namespace RemoteMaster.Host.Windows.Helpers;
 /// <summary>
 /// Provides a method to compute the Levenshtein distance between two strings.
 /// </summary>
-public static class LevenshteinDistanceUtility
+public static class LevenshteinDistance
 {
     /// <summary>
     /// Computes the Levenshtein distance between two strings.
@@ -16,7 +16,7 @@ public static class LevenshteinDistanceUtility
     /// <param name="source2">The second string to compare.</param>
     /// <returns>The Levenshtein distance between the two strings.</returns>
     /// <exception cref="ArgumentNullException">Thrown when either source1 or source2 is null.</exception>
-    public static int ComputeLevenshteinDistance(string source1, string source2)
+    public static int Compute(string source1, string source2)
     {
         ArgumentNullException.ThrowIfNull(source1);
         ArgumentNullException.ThrowIfNull(source2);
