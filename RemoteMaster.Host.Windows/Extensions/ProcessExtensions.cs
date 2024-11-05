@@ -27,14 +27,13 @@ public static class ProcessExtensions
         }
 
         uint bufferSize = 256;
-        byte[] buffer;
         uint returnLength = 0;
-
-        NTSTATUS status;
 
         while (true)
         {
-            buffer = new byte[bufferSize];
+            var buffer = new byte[bufferSize];
+
+            NTSTATUS status;
 
             unsafe
             {
