@@ -86,7 +86,7 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
                 logger.LogInformation("Checking server availability, attempt {Attempt} of {MaxAttempts}...", attempt, MaxConnectionAttempts);
 
                 using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(server, 5253);
+                await tcpClient.ConnectAsync(server, 5254);
 
                 logger.LogInformation("Server {Server} is available.", server);
                 
