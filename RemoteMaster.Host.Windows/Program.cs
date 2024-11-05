@@ -34,12 +34,6 @@ internal class Program
     {
         var launchModeInstance = ParseArguments(args);
 
-        if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.GetParameterValue("folder-path")))
-        {
-            PrintHelp(launchModeInstance);
-            return;
-        }
-
         if (HasMissingRequiredParameters(launchModeInstance))
         {
             PrintHelp(launchModeInstance);
