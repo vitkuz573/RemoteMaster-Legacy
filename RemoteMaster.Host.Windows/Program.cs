@@ -34,12 +34,6 @@ internal class Program
     {
         var launchModeInstance = ParseArguments(args);
 
-        if (launchModeInstance == null)
-        {
-            PrintHelp(null);
-            return;
-        }
-
         if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.GetParameterValue("folder-path")))
         {
             PrintHelp(launchModeInstance);
@@ -109,23 +103,24 @@ internal class Program
             .Where(p => p.Value.IsRequired && string.IsNullOrEmpty(p.Value.Value))
             .ToList();
 
-        if (missingRequiredParameters.Count != 0)
+        if (missingRequiredParameters.Count == 0)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Error: Missing required parameters for {launchModeInstance.Name} mode.");
-            Console.ResetColor();
-
-            foreach (var param in missingRequiredParameters)
-            {
-                Console.WriteLine($"  --{param.Key}: {launchModeInstance.Parameters[param.Key].Description}");
-            }
-
-            Console.WriteLine();
-
-            return true;
+            return false;
         }
 
-        return false;
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Error: Missing required parameters for {launchModeInstance.Name} mode.");
+        Console.ResetColor();
+
+        foreach (var param in missingRequiredParameters)
+        {
+            Console.WriteLine($"  --{param.Key}: {launchModeInstance.Parameters[param.Key].Description}");
+        }
+
+        Console.WriteLine();
+
+        return true;
+
     }
 
     private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
