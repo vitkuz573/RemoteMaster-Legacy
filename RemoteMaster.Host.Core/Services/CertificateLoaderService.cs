@@ -36,7 +36,7 @@ public class CertificateLoaderService : ICertificateLoaderService
 
             _logger.LogInformation("Attempting to load certificates from store {StoreName} in {StoreLocation}.", store.Name, store.Location);
 
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), validOnly: false);
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
             _logger.LogInformation("Found {Count} certificates with hostname {Hostname}.", certificates.Count, Dns.GetHostName());
 
             var newCertificate = certificates
