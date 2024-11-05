@@ -44,16 +44,10 @@ public static class WebApplicationBuilderExtensions
                     });
                     break;
                 case ChatMode:
-                    options.ListenAnyIP(7001, listenOptions =>
-                    {
-                        listenOptions.UseHttps(adapterOptions =>
-                        {
-                            adapterOptions.ServerCertificateSelector = (_, _) => certLoaderService.GetCurrentCertificate();
-                        });
-                    });
+                    options.ListenLocalhost(7001);
                     break;
                 case ServiceMode:
-                    options.ListenLocalhost(35456);
+                    options.ListenLocalhost(7002);
                     break;
             }
         });

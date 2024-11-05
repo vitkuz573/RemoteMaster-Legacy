@@ -31,7 +31,9 @@ public abstract class LaunchModeBase
     /// </summary>
     private void MapAliases()
     {
-        foreach (var parameter in Parameters.Values)
+        var parametersSnapshot = Parameters.Values.ToList();
+
+        foreach (var parameter in parametersSnapshot)
         {
             if (parameter is not LaunchParameter launchParameter)
             {
