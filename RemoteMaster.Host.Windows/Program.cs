@@ -98,11 +98,7 @@ internal class Program
             app.MapHub<RegistryHub>("/hubs/registry");
         }
 
-        if (launchModeInstance is InstallMode || launchModeInstance is UpdaterMode || launchModeInstance is UninstallMode)
-        {
-            await launchModeInstance.ExecuteAsync(app.Services);
-            Environment.Exit(0);
-        }
+        await launchModeInstance.ExecuteAsync(app.Services);
 
         await app.RunAsync();
     }

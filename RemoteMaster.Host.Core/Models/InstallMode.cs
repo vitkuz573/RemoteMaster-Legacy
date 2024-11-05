@@ -30,5 +30,7 @@ public class InstallMode : LaunchModeBase
         var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
 
         await hostInstaller.InstallAsync(installRequest);
+
+        Environment.Exit(0);
     }
 }
