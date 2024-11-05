@@ -92,7 +92,7 @@ public static class WebApplicationBuilderExtensions
             configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
 
 #if DEBUG
-        configuration.MinimumLevel.Debug();
+            configuration.MinimumLevel.Debug();
 #else
             configuration.MinimumLevel.Information();
 
@@ -114,8 +114,6 @@ public static class WebApplicationBuilderExtensions
             configuration.WriteTo.File(errorLog, restrictedToMinimumLevel: LogEventLevel.Error,
                 rollingInterval: RollingInterval.Day,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
-
-            configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
         });
     }
 }
