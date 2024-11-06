@@ -7,7 +7,7 @@
     <DialogContent>
         <MudTextField T="string" Label="Host" @bind-Value="@_host" />
         <MudTextField T="string" Label="Local File Path" @bind-Value="@_localFilePath"/>
-        <MudSelect T="string" Label="Launch Mode" @bind-Value="@_launchMode">
+        <MudSelect T="string" Label="Launch Mode" @bind-Value="@_launchMode" Dense="true">
             <MudSelectItem Value="@("install")">Install</MudSelectItem>
             <MudSelectItem Value="@("uninstall")">Uninstall</MudSelectItem>
         </MudSelect>
