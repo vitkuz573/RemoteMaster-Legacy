@@ -12,20 +12,14 @@ public partial class RemoteCommandDialog
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
-    private string _localFilePath = string.Empty;
-    private string _remoteFilePath = string.Empty;
     private string _host = string.Empty;
-    private string _username = string.Empty;
-    private string _password = string.Empty;
+    private string _localFilePath = string.Empty;
     private string _launchMode = "install";
-
-    private bool _isShowPassword;
-    private InputType _passwordInput = InputType.Password;
-    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private string _arguments = string.Empty;
 
     private void Confirm()
     {
-        var result = RemoteSchtasksService.CopyAndExecuteRemoteFile(_localFilePath, _host, _remoteFilePath, _username, _password, $"--launch-mode={_launchMode}");
+        var result = RemoteExecutionService.ExecuteApplication(_host, _localFilePath, $"--launch-mode={_launchMode} {_arguments}");
 
         if (result.IsSuccess)
         {
@@ -36,22 +30,6 @@ public partial class RemoteCommandDialog
         {
             var errorMessage = result.Errors.FirstOrDefault()?.Message ?? "Unknown error occurred.";
             Snackbar.Add($"Failed to execute remote command: {errorMessage}", Severity.Error);
-        }
-    }
-
-    private void TogglePasswordVisibility()
-    {
-        if (_isShowPassword)
-        {
-            _isShowPassword = false;
-            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-            _passwordInput = InputType.Password;
-        }
-        else
-        {
-            _isShowPassword = true;
-            _passwordInputIcon = Icons.Material.Filled.Visibility;
-            _passwordInput = InputType.Text;
         }
     }
 

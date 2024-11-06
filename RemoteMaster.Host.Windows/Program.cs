@@ -48,10 +48,7 @@ internal class Program
         var builder = WebApplication.CreateSlimBuilder(options);
         builder.Configuration.AddCommandLine(args);
 
-        if (launchModeInstance is ServiceMode)
-        {
-            builder.Host.UseWindowsService();
-        }
+        builder.Host.UseWindowsService();
 
         ConfigureServices(builder.Services, launchModeInstance);
 

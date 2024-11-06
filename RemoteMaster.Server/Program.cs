@@ -169,7 +169,7 @@ public static class Program
         services.AddSingleton<IPacketSender, UdpPacketSender>();
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-        services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
+        services.AddSingleton<IRemoteExecutionService, RemoteExecutionService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();

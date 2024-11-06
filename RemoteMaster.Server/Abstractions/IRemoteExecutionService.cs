@@ -6,8 +6,7 @@ using FluentResults;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IRemoteSchtasksService
-{
-    Result CopyAndExecuteRemoteFile(string sourceFilePath, string remoteMachineName, string destinationFolderPath, string? username = null, string? password = null, string? arguments = null);
+public interface IRemoteExecutionService
+{ 
+    Result ExecuteApplication(string remoteMachineName, string localExecutablePath, string? args = null);
 }
-

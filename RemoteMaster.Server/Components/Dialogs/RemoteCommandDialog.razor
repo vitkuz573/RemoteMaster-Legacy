@@ -1,19 +1,17 @@
 ﻿@using RemoteMaster.Server.Abstractions
 
-@inject IRemoteSchtasksService RemoteSchtasksService
+@inject IRemoteExecutionService RemoteExecutionService
 @inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
-        <MudTextField T="string" Label="Local File Path" @bind-Value="@_localFilePath" />
-        <MudTextField T="string" Label="Remote File Path" @bind-Value="@_remoteFilePath" />
         <MudTextField T="string" Label="Host" @bind-Value="@_host" />
-        <MudTextField T="string" Label="Username" @bind-Value="@_username" />
-        <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+        <MudTextField T="string" Label="Local File Path" @bind-Value="@_localFilePath"/>
         <MudSelect T="string" Label="Launch Mode" @bind-Value="@_launchMode">
             <MudSelectItem Value="@("install")">Install</MudSelectItem>
             <MudSelectItem Value="@("uninstall")">Uninstall</MudSelectItem>
         </MudSelect>
+        <MudTextField T="string" Label="Arguments" @bind-Value="@_arguments"/>
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>

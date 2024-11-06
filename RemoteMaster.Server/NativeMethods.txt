@@ -3,3 +3,11 @@ WNetCancelConnection2W
 
 IX509CertificateRequestPkcs10 
 IX509Enrollment
+
+OpenSCManager
+SC_MANAGER_CREATE_SERVICE
+OpenService
+SERVICE_ALL_ACCESS
+DeleteService
+CreateService
+StartService
