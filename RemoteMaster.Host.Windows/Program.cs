@@ -83,7 +83,19 @@ internal class Program
             app.MapHub<RegistryHub>("/hubs/registry");
         }
 
-        await launchModeInstance.ExecuteAsync(app.Services);
+        if (launchModeInstance is UpdaterMode updaterMode)
+        {
+            async void Callback()
+            {
+                await updaterMode.ExecuteAsync(app.Services);
+            }
+
+            app.Lifetime.ApplicationStarted.Register(Callback);
+        }
+        else
+        {
+            await launchModeInstance.ExecuteAsync(app.Services);
+        }
 
         await app.RunAsync();
     }

@@ -10,6 +10,7 @@ namespace RemoteMaster.Host.Core.Models;
 public class UpdaterMode : LaunchModeBase
 {
     public override string Name => "Updater";
+
     public override string Description => "Updates the program to the latest version.";
 
     protected override void InitializeParameters()
