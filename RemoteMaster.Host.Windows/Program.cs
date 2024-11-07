@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using RemoteMaster.Host.Core;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.Extensions;
@@ -52,8 +53,13 @@ internal class Program
 
         ConfigureServices(builder.Services, launchModeInstance);
 
-        await builder.ConfigureSerilog(launchModeInstance);
-        builder.ConfigureCoreUrls(launchModeInstance);
+        var serviceProvider = builder.Services.BuildServiceProvider();
+        var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
+        var hostInfoEnricher = serviceProvider.GetRequiredService<HostInfoEnricher>();
+        var certificateLoaderService = serviceProvider.GetRequiredService<ICertificateLoaderService>();
+
+        await builder.ConfigureSerilog(launchModeInstance, hostConfigurationService, hostInfoEnricher);
+        builder.ConfigureCoreUrls(launchModeInstance, certificateLoaderService);
 
         builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts =>
             opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));

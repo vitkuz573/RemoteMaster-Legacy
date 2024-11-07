@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using Serilog;
@@ -14,12 +13,9 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {
-    public static void ConfigureCoreUrls(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance)
+    public static void ConfigureCoreUrls(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance, ICertificateLoaderService certificateLoaderService)
     {
         ArgumentNullException.ThrowIfNull(builder);
-
-        var serviceProvider = builder.Services.BuildServiceProvider();
-        var certLoaderService = serviceProvider.GetRequiredService<ICertificateLoaderService>();
 
         builder.WebHost.ConfigureKestrel(options =>
         {
@@ -30,7 +26,7 @@ public static class WebApplicationBuilderExtensions
                     {
                         listenOptions.UseHttps(adapterOptions =>
                         {
-                            adapterOptions.ServerCertificateSelector = (_, _) => certLoaderService.GetCurrentCertificate();
+                            adapterOptions.ServerCertificateSelector = (_, _) => certificateLoaderService.GetCurrentCertificate();
                         });
                     });
                     break;
@@ -39,7 +35,7 @@ public static class WebApplicationBuilderExtensions
                     {
                         listenOptions.UseHttps(adapterOptions =>
                         {
-                            adapterOptions.ServerCertificateSelector = (_, _) => certLoaderService.GetCurrentCertificate();
+                            adapterOptions.ServerCertificateSelector = (_, _) => certificateLoaderService.GetCurrentCertificate();
                         });
                     });
                     break;
@@ -53,11 +49,10 @@ public static class WebApplicationBuilderExtensions
         });
     }
 
-    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance)
+    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance, IHostConfigurationService hostConfigurationService, HostInfoEnricher hostInfoEnricher)
     {
         ArgumentNullException.ThrowIfNull(builder);
-
-        var serviceProvider = builder.Services.BuildServiceProvider();
+        ArgumentNullException.ThrowIfNull(hostConfigurationService);
 
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host-.log");
@@ -71,7 +66,6 @@ public static class WebApplicationBuilderExtensions
         }
         else
         {
-            var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
             server = hostConfiguration.Server;
 
@@ -83,7 +77,7 @@ public static class WebApplicationBuilderExtensions
 
         builder.Host.UseSerilog((_, configuration) =>
         {
-            configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
+            configuration.Enrich.With(hostInfoEnricher);
 
 #if DEBUG
             configuration.MinimumLevel.Debug();
