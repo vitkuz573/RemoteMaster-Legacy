@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -18,11 +17,9 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.LaunchModes;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.ScreenOverlays;
@@ -34,11 +31,19 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var launchModeInstance = ParseArguments(args);
+        var minimalServices = new ServiceCollection();
+        ConfigureMinimalServices(minimalServices);
+        var minimalServiceProvider = minimalServices.BuildServiceProvider();
 
-        if (HasMissingRequiredParameters(launchModeInstance))
+        var helpService = minimalServiceProvider.GetRequiredService<IHelpService>();
+
+        var launchModeInstance = ParseArguments(args, helpService);
+
+        var missingParameters = GetMissingRequiredParameters(launchModeInstance);
+
+        if (missingParameters.Count != 0)
         {
-            PrintHelp(launchModeInstance);
+            helpService.PrintMissingParametersError(launchModeInstance.Name, missingParameters);
             Environment.Exit(1);
         }
 
@@ -102,30 +107,16 @@ internal class Program
         }
     }
 
-    private static bool HasMissingRequiredParameters(LaunchModeBase launchModeInstance)
+    private static List<KeyValuePair<string, ILaunchParameter>> GetMissingRequiredParameters(LaunchModeBase launchModeInstance)
     {
-        var missingRequiredParameters = launchModeInstance.Parameters
+        return launchModeInstance.Parameters
             .Where(p => p.Value.IsRequired && string.IsNullOrEmpty(p.Value.Value))
             .ToList();
+    }
 
-        if (missingRequiredParameters.Count == 0)
-        {
-            return false;
-        }
-
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"Error: Missing required parameters for {launchModeInstance.Name} mode.");
-        Console.ResetColor();
-
-        foreach (var param in missingRequiredParameters)
-        {
-            Console.WriteLine($"  --{param.Key}: {launchModeInstance.Parameters[param.Key].Description}");
-        }
-
-        Console.WriteLine();
-
-        return true;
-
+    private static void ConfigureMinimalServices(IServiceCollection services)
+    {
+        services.AddSingleton<IHelpService, HelpService>();
     }
 
     private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
@@ -274,41 +265,48 @@ internal class Program
         }
     }
 
-    private static LaunchModeBase ParseArguments(string[] args)
+    private static LaunchModeBase ParseArguments(string[] args, IHelpService helpService)
     {
-        LaunchModeBase? launchModeInstance = null!;
+        LaunchModeBase? launchModeInstance = null;
 
         var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
         var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode="))?.Split('=')[1];
 
         if (args.Length == 0 || (helpRequested && string.IsNullOrEmpty(modeArgument)))
         {
-            PrintHelp(null);
+            helpService.PrintHelp(null);
             Environment.Exit(0);
         }
 
         var availableModes = new Dictionary<string, LaunchModeBase>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "User", new UserMode() },
-            { "Service", new ServiceMode() },
-            { "Install", new InstallMode() },
-            { "Updater", new UpdaterMode() },
-            { "Uninstall", new UninstallMode() },
-            { "Chat", new ChatMode() }
-        };
+    {
+        { "User", new UserMode() },
+        { "Service", new ServiceMode() },
+        { "Install", new InstallMode() },
+        { "Updater", new UpdaterMode() },
+        { "Uninstall", new UninstallMode() },
+        { "Chat", new ChatMode() }
+    };
 
         if (string.IsNullOrEmpty(modeArgument) || !availableModes.TryGetValue(modeArgument, out launchModeInstance))
         {
             if (modeArgument is null)
             {
-                PrintHelp(null);
+                helpService.PrintHelp(null);
             }
             else
             {
-                SuggestSimilarModes(modeArgument, availableModes.Keys.ToArray());
+                helpService.SuggestSimilarModes(modeArgument, availableModes.Keys);
             }
 
             Environment.Exit(1);
+        }
+
+        // Если включен режим справки, сразу выводим справку и выходим
+        if (helpRequested)
+        {
+            helpService.PrintHelp(launchModeInstance);
+            Environment.Exit(0);
         }
 
         foreach (var arg in args)
@@ -339,126 +337,6 @@ internal class Program
             }
         }
 
-        var missingRequiredParameters = launchModeInstance.Parameters
-            .Where(p => p.Value.IsRequired && string.IsNullOrEmpty(p.Value.Value))
-            .Select(p => p.Key)
-            .ToList();
-
-        if (missingRequiredParameters.Count != 0)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Error: Missing required parameters for {launchModeInstance.Name} mode.");
-            Console.ResetColor();
-
-            foreach (var param in missingRequiredParameters)
-            {
-                Console.WriteLine($"  --{param}: {launchModeInstance.Parameters[param].Description}");
-            }
-
-            Console.WriteLine();
-            PrintHelp(launchModeInstance);
-            Environment.Exit(1);
-        }
-
-        if (!helpRequested)
-        {
-            return launchModeInstance;
-        }
-
-        PrintHelp(launchModeInstance);
-        Environment.Exit(0);
-
         return launchModeInstance;
-    }
-
-    private static void SuggestSimilarModes(string inputMode, string[] availableModes)
-    {
-        if (string.IsNullOrEmpty(inputMode))
-        {
-            Console.WriteLine("No launch mode provided.");
-
-            return;
-        }
-
-        var suggestions = availableModes.Select(mode => new
-            {
-                Name = mode,
-                Distance = LevenshteinDistance.Compute(inputMode.ToLower(), mode.ToLower())
-            })
-            .OrderBy(x => x.Distance)
-            .Take(3);
-
-        Console.WriteLine("Did you mean one of these modes?");
-
-        foreach (var suggestion in suggestions)
-        {
-            Console.WriteLine($"- {suggestion.Name}");
-        }
-    }
-
-    private static void PrintHelp(LaunchModeBase? specificMode)
-    {
-        if (specificMode != null)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"{specificMode.Name} Mode Options:");
-            Console.ResetColor();
-
-            Console.WriteLine($"  {specificMode.Description}");
-            Console.WriteLine();
-
-            var uniqueParameters = specificMode.Parameters
-                .GroupBy(p => p.Value)
-                .Select(g => g.First().Key)
-                .ToList();
-
-            foreach (var key in uniqueParameters)
-            {
-                var param = specificMode.Parameters[key];
-                var aliases = param is LaunchParameter launchParam && launchParam.Aliases.Any()
-                    ? $" (Aliases: {string.Join(", ", launchParam.Aliases.Select(alias => $"--{alias}"))})"
-                    : string.Empty;
-
-                Console.WriteLine($"  --{key}: {param.Description} {(param.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
-            }
-        }
-        else
-        {
-            var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
-
-            if (assembly == null)
-            {
-                return;
-            }
-
-            var launchModes = assembly.GetTypes()
-                .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(LaunchModeBase)))
-                .Select(t => Activator.CreateInstance(t) as LaunchModeBase)
-                .Where(instance => instance != null);
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"Usage: {Assembly.GetExecutingAssembly().GetName().Name} [OPTIONS]");
-            Console.ResetColor();
-            Console.WriteLine();
-
-            foreach (var mode in launchModes)
-            {
-                if (mode == null)
-                {
-                    continue;
-                }
-
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"{mode.Name} Mode:");
-                Console.ResetColor();
-
-                Console.WriteLine($"  {mode.Description}");
-                Console.WriteLine();
-            }
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Use \"--help --launch-mode=<MODE>\" for more details on a specific mode.");
-            Console.ResetColor();
-        }
     }
 }

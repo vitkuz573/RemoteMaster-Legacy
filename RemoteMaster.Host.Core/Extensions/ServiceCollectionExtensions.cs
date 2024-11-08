@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddSharedServices();
         services.AddTransient<HostInfoEnricher>();
         services.AddTransient<CustomHttpClientHandler>();
+        services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
