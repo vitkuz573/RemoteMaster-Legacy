@@ -441,7 +441,7 @@ public partial class Access : IAsyncDisposable
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
             _connection.On<string>("ReceiveOperatingSystemVersion", operatingSystem => _operatingSystem = operatingSystem);
             _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion.ToString());
-            _connection.On<Version>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion.ToString());
+            _connection.On<string>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
             _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
 
             _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers =>

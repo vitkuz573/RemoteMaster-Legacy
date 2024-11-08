@@ -143,9 +143,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Caller.ReceiveOperatingSystemVersion($"{operatingSystemInformationService.GetName()} ({osBitness})");
 
         var assembly = Assembly.GetEntryAssembly();
-        var version = assembly?.GetName().Version ?? new Version();
+        var fileVersion = assembly?
+            .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+            .Version ?? string.Empty;
 
-        await Clients.Caller.ReceiveHostVersion(version);
+        await Clients.Caller.ReceiveHostVersion(fileVersion);
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)

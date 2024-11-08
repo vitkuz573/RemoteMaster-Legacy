@@ -23,7 +23,7 @@ public interface IControlClient
 
     Task ReceiveCommand(string command);
 
-    Task ReceiveHostVersion(Version version);
+    Task ReceiveHostVersion(string version);
 
     Task ReceiveCloseConnection();
 

@@ -285,7 +285,12 @@ public class TrayIconManager : ITrayIconManager
 
     private static string GetApplicationVersion()
     {
-        return Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
+        var assembly = Assembly.GetEntryAssembly();
+        var fileVersion = assembly?
+            .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+            .Version;
+
+        return fileVersion ?? "Unknown";
     }
 
     private void ShowContextMenu()
