@@ -90,21 +90,16 @@ internal class Program
             app.MapHub<RegistryHub>("/hubs/registry");
         }
 
-        if (launchModeInstance is UpdaterMode updaterMode)
-        {
-            async void Callback()
-            {
-                await updaterMode.ExecuteAsync(app.Services);
-            }
+        app.Lifetime.ApplicationStarted.Register(Callback);
 
-            app.Lifetime.ApplicationStarted.Register(Callback);
-        }
-        else
+        await app.RunAsync();
+
+        return;
+
+        async void Callback()
         {
             await launchModeInstance.ExecuteAsync(app.Services);
         }
-
-        await app.RunAsync();
     }
 
     private static bool HasMissingRequiredParameters(LaunchModeBase launchModeInstance)
