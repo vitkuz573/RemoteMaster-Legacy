@@ -82,5 +82,5 @@ public abstract class LaunchModeBase
     /// Asynchronously executes the main action for this launch mode.
     /// </summary>
     /// <param name="serviceProvider">Service provider for dependencies.</param>
-    public abstract Task ExecuteAsync(IServiceProvider serviceProvider);
+    public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default);
 }

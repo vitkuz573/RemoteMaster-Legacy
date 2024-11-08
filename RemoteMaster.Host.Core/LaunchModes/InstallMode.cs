@@ -21,7 +21,7 @@ public class InstallMode : LaunchModeBase
         Parameters.Add("organizational-unit", new LaunchParameter("Specifies the organizational unit where the host is registered.", true, "ou"));
     }
 
-    public async override Task ExecuteAsync(IServiceProvider serviceProvider)
+    public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         var server = GetParameterValue("server");
         var organization = GetParameterValue("organization");

@@ -17,7 +17,7 @@ public class UninstallMode : LaunchModeBase
     {
     }
 
-    public async override Task ExecuteAsync(IServiceProvider serviceProvider)
+    public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         var hostUninstaller = serviceProvider.GetRequiredService<IHostUninstaller>();
 

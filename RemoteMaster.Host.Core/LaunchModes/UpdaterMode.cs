@@ -23,7 +23,7 @@ public class UpdaterMode : LaunchModeBase
         Parameters.Add("allow-downgrade", new LaunchParameter("Allows the update operation to proceed with a lower version than the current one.", false, "downgrade", "ad"));
     }
 
-    public async override Task ExecuteAsync(IServiceProvider serviceProvider)
+    public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         var folderPath = GetParameterValue("folder-path");
         var username = GetParameterValue("username");

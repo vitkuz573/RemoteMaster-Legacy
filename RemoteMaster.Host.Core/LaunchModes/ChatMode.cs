@@ -16,7 +16,7 @@ public class ChatMode : LaunchModeBase
     {
     }
 
-    public async override Task ExecuteAsync(IServiceProvider serviceProvider)
+    public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
     }
