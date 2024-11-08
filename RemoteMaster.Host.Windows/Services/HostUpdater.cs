@@ -494,7 +494,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
     private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
     {
-        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        var currentVersion = new Version(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "0.0.0.0");
         var updateVersion = GetVersionFromExecutable(Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
 
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
@@ -554,7 +554,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     {
         if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException("Update executable file not found.", filePath);
+            throw new FileNotFoundException("Executable file not found.", filePath);
         }
 
         var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
@@ -565,7 +565,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             throw new InvalidOperationException("The file version information is missing or invalid.");
         }
 
-        return new Version(NormalizeVersionString(fileVersion));
+        try
+        {
+            return new Version(fileVersion);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException($"Invalid file version format: {fileVersion}", ex);
+        }
     }
 
     private static string NormalizeVersionString(string version)
