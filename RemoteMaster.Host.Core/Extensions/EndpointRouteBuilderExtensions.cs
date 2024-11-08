@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Extensions;

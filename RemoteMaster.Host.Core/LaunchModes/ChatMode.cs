@@ -4,13 +4,13 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Core.Models;
+namespace RemoteMaster.Host.Core.LaunchModes;
 
-public class UserMode : LaunchModeBase
+public class ChatMode : LaunchModeBase
 {
-    public override string Name => "User";
+    public override string Name => "Chat";
 
-    public override string Description => "Runs the program in user mode.";
+    public override string Description => "Runs the program in chat mode, enabling communication features.";
 
     protected override void InitializeParameters()
     {

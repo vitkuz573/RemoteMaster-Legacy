@@ -4,13 +4,13 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Core.Models;
+namespace RemoteMaster.Host.Core.LaunchModes;
 
-public class ServiceMode : LaunchModeBase
+public class UserMode : LaunchModeBase
 {
-    public override string Name => "Service";
+    public override string Name => "User";
 
-    public override string Description => "Runs the program as a service.";
+    public override string Description => "Runs the program in user mode.";
 
     protected override void InitializeParameters()
     {

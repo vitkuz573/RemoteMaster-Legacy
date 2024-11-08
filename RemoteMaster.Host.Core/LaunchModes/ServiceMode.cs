@@ -4,13 +4,13 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Core.Models;
+namespace RemoteMaster.Host.Core.LaunchModes;
 
-public class ChatMode : LaunchModeBase
+public class ServiceMode : LaunchModeBase
 {
-    public override string Name => "Chat";
+    public override string Name => "Service";
 
-    public override string Description => "Runs the program in chat mode, enabling communication features.";
+    public override string Description => "Runs the program as a service.";
 
     protected override void InitializeParameters()
     {

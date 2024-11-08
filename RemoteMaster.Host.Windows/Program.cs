@@ -17,6 +17,7 @@ using RemoteMaster.Host.Core;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Host.Core.Services;

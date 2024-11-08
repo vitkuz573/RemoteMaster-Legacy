@@ -5,7 +5,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Core.Models;
+namespace RemoteMaster.Host.Core.LaunchModes;
 
 public class UninstallMode : LaunchModeBase
 {

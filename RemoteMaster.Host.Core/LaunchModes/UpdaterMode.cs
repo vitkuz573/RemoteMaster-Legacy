@@ -4,8 +4,9 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 
-namespace RemoteMaster.Host.Core.Models;
+namespace RemoteMaster.Host.Core.LaunchModes;
 
 public class UpdaterMode : LaunchModeBase
 {

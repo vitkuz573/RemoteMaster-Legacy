@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.Models;
 using Serilog;
 using Serilog.Events;
