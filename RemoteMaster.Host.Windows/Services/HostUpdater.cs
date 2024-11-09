@@ -575,19 +575,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
-    private static string NormalizeVersionString(string version)
-    {
-        var parts = version.Split('.');
-
-        while (parts.Length < 4)
-        {
-            version += ".0";
-            parts = version.Split('.');
-        }
-
-        return version;
-    }
-
     private async Task Notify(string message, MessageSeverity messageType)
     {
         switch (messageType)
