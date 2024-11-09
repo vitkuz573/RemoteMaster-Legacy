@@ -179,8 +179,8 @@ public class HelpServiceTests
 
         // Assert
         var output = writer.ToString();
-        Assert.Contains("No similar modes found.", output);
-        Assert.DoesNotContain("-", output); // No suggestions listed
+        Assert.Contains($"No similar modes found for input: \"{inputMode}\".", output);
+        Assert.DoesNotContain("Did you mean one of these modes?", output);
     }
 
     private class TestLaunchMode(string name, string description, Dictionary<string, ILaunchParameter> parameters) : LaunchModeBase

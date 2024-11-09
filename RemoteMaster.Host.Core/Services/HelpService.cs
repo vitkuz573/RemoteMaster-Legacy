@@ -122,22 +122,23 @@ public class HelpService : IHelpService
             return;
         }
 
+        var dynamicDistanceThreshold = Math.Max(2, inputMode.Length / 2);
+        const double SimilarityThreshold = 0.6;
+
         var suggestions = availableModes
-            .Select(mode => new
-            {
-                Mode = mode,
-                Distance = LevenshteinDistance.Compute(inputMode.ToLower(), mode.Name.ToLower())
-            })
-            .OrderBy(s => s.Distance)
+            .Select(mode => new ModeSuggestionResult(new ModeSuggestion(mode, LevenshteinDistance.Compute(inputMode.ToLower(), mode.Name.ToLower())), 1.0 - ((double)LevenshteinDistance.Compute(inputMode.ToLower(), mode.Name.ToLower()) / Math.Max(inputMode.Length, mode.Name.Length))))
+            .Where(result => result.Suggestion.Distance <= dynamicDistanceThreshold && result.Similarity >= SimilarityThreshold)
+            .OrderBy(result => result.Suggestion.Distance)
             .Take(3)
-            .Select(s => s.Mode)
+            .Select(result => result.Suggestion)
             .ToList();
 
         if (suggestions.Count == 0)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("No similar modes found.");
+            Console.WriteLine($"No similar modes found for input: \"{inputMode}\".");
             Console.ResetColor();
+            Console.WriteLine("Make sure you have typed the launch mode correctly or use \"--help\" for available modes.");
 
             return;
         }
@@ -149,10 +150,10 @@ public class HelpService : IHelpService
         foreach (var suggestion in suggestions)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"- {suggestion.Name}");
+            Console.WriteLine($"- {suggestion.Mode.Name}");
             Console.ResetColor();
 
-            Console.WriteLine($"  {suggestion.Description}");
+            Console.WriteLine($"  {suggestion.Mode.Description}");
         }
 
         Console.WriteLine();
