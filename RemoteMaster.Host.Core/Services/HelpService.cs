@@ -38,7 +38,7 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
         foreach (var group in groupedParameters)
         {
             var mainKey = group.Keys.First();
-            var aliases = group.Keys.Skip(1).ToList();
+            var aliases = group.Parameter.Aliases.Where(alias => alias != mainKey).ToList();
 
             var aliasText = aliases.Count != 0
                 ? $" (Aliases: {string.Join(", ", aliases.Select(alias => $"--{alias}"))})"
