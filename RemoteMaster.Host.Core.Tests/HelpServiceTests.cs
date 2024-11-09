@@ -55,8 +55,8 @@ public class HelpServiceTests
         // Arrange
         var specificMode = new TestLaunchMode("TestMode", "Test mode description", new Dictionary<string, ILaunchParameter>
         {
-            { "param1", new LaunchParameter("Parameter 1", true, "p1") },
-            { "param2", new LaunchParameter("Parameter 2", false) }
+            { "param1", new LaunchParameter("param1", "Parameter 1", true, "p1") },
+            { "param2", new LaunchParameter("param2", "Parameter 2", false) }
         });
 
         var helpService = CreateHelpService();
@@ -102,8 +102,8 @@ public class HelpServiceTests
         // Arrange
         var missingParameters = new List<KeyValuePair<string, ILaunchParameter>>
         {
-            new("param1", new LaunchParameter("Parameter 1", true, "p1")),
-            new("param2", new LaunchParameter("Parameter 2", true, "p2"))
+            new("param1", new LaunchParameter("param1", "Parameter 1", true, "p1")),
+            new("param2", new LaunchParameter("param2", "Parameter 2", true, "p2"))
         };
 
         var helpService = CreateHelpService();

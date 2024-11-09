@@ -6,6 +6,8 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ILaunchParameter
 {
+    string Name { get; }
+
     string Description { get; }
 
     bool IsRequired { get; }

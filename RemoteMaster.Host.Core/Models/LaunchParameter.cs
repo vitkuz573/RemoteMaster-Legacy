@@ -6,8 +6,10 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class LaunchParameter(string description, bool isRequired, params string[] aliases) : ILaunchParameter
+public class LaunchParameter(string name, string description, bool isRequired, params string[] aliases) : ILaunchParameter
 {
+    public string Name { get; } = name;
+
     public string Description { get; } = description;
 
     public bool IsRequired { get; } = isRequired;
@@ -24,14 +26,14 @@ public class LaunchParameter(string description, bool isRequired, params string[
     public string? GetValue(string[] args)
     {
         var paramArg = args.FirstOrDefault(arg =>
-            arg.StartsWith($"--{Description}=", StringComparison.OrdinalIgnoreCase) ||
+            arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase) ||
             Aliases.Any(alias => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
 
         return paramArg?[(paramArg.IndexOf('=') + 1)..].Trim();
     }
 
     /// <summary>
-    /// Sets the value of the parameter, optionally validating or transforming it.
+    /// Sets the value of the parameter.
     /// </summary>
     /// <param name="value">The value to set.</param>
     /// <exception cref="ArgumentException">Thrown if the value is invalid.</exception>
@@ -39,7 +41,7 @@ public class LaunchParameter(string description, bool isRequired, params string[
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException($"Value for parameter '{Description}' cannot be null or empty.", nameof(value));
+            throw new ArgumentException($"Value for parameter '{Name}' cannot be null or empty.", nameof(value));
         }
 
         Value = value;

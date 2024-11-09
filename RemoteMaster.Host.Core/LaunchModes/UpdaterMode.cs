@@ -16,11 +16,11 @@ public class UpdaterMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
-        Parameters.Add("folder-path", new LaunchParameter("Specifies the folder path for the update operation.", true, "path", "fp"));
-        Parameters.Add("username", new LaunchParameter("Specifies the username for authentication.", false, "user"));
-        Parameters.Add("password", new LaunchParameter("Specifies the password for authentication.", false, "pass"));
-        Parameters.Add("force", new LaunchParameter("Forces the update operation to proceed, even if no update is needed.", false, "f"));
-        Parameters.Add("allow-downgrade", new LaunchParameter("Allows the update operation to proceed with a lower version than the current one.", false, "downgrade", "ad"));
+        Parameters.Add("folder-path", new LaunchParameter("folder-path", "Specifies the folder path for the update operation.", true, "path", "fp"));
+        Parameters.Add("username", new LaunchParameter("username", "Specifies the username for authentication.", false, "user"));
+        Parameters.Add("password", new LaunchParameter("password", "Specifies the password for authentication.", false, "pass"));
+        Parameters.Add("force", new LaunchParameter("force", "Forces the update operation to proceed, even if no update is needed.", false, "f"));
+        Parameters.Add("allow-downgrade", new LaunchParameter("allow-downgrade", "Allows the update operation to proceed with a lower version than the current one.", false, "downgrade", "ad"));
     }
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
