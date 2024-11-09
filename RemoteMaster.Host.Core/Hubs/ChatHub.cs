@@ -5,11 +5,10 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Windows.Hubs;
+namespace RemoteMaster.Host.Core.Hubs;
 
 public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient>
 {
