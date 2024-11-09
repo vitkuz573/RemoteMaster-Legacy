@@ -111,25 +111,53 @@ public class HelpService : IHelpService
         Console.WriteLine();
     }
 
-    public void SuggestSimilarModes(string inputMode, IEnumerable<string> availableModes)
+    public void SuggestSimilarModes(string inputMode, IEnumerable<LaunchModeBase> availableModes)
     {
         if (string.IsNullOrEmpty(inputMode))
         {
-            Console.WriteLine("No launch mode provided.");
-            
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("You haven't provided a launch mode.");
+            Console.ResetColor();
+
             return;
         }
 
         var suggestions = availableModes
-            .Select(mode => new ModeSuggestion(mode, LevenshteinDistance.Compute(inputMode.ToLower(), mode.ToLower())))
+            .Select(mode => new
+            {
+                Mode = mode,
+                Distance = LevenshteinDistance.Compute(inputMode.ToLower(), mode.Name.ToLower())
+            })
             .OrderBy(s => s.Distance)
-            .Take(3);
+            .Take(3)
+            .Select(s => s.Mode)
+            .ToList();
 
+        if (suggestions.Count == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("No similar modes found.");
+            Console.ResetColor();
+
+            return;
+        }
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("Did you mean one of these modes?");
+        Console.ResetColor();
 
         foreach (var suggestion in suggestions)
         {
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"- {suggestion.Name}");
+            Console.ResetColor();
+
+            Console.WriteLine($"  {suggestion.Description}");
         }
+
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("Use \"--help --launch-mode=<MODE>\" for more details on a specific mode.");
+        Console.ResetColor();
     }
 }

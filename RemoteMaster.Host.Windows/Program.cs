@@ -57,7 +57,7 @@ internal class Program
 
         builder.Host.UseWindowsService();
 
-        ConfigureServices(builder.Services, launchModeInstance);
+        await ConfigureServices(builder.Services, launchModeInstance);
 
         var serviceProvider = builder.Services.BuildServiceProvider();
         var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
@@ -118,7 +118,7 @@ internal class Program
         services.AddSingleton<IHelpService, HelpService>();
     }
 
-    private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
+    private static async Task ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
     {
         services.AddHttpContextAccessor();
 
@@ -172,7 +172,7 @@ internal class Program
 
             if (File.Exists(publicKeyPath))
             {
-                var publicKey = File.ReadAllBytesAsync(publicKeyPath).Result;
+                var publicKey = await File.ReadAllBytesAsync(publicKeyPath);
 
 #pragma warning disable CA2000
                 var rsa = RSA.Create();
@@ -295,7 +295,7 @@ internal class Program
             }
             else
             {
-                helpService.SuggestSimilarModes(modeArgument, availableModes.Keys);
+                helpService.SuggestSimilarModes(modeArgument, availableModes.Values);
             }
 
             Environment.Exit(1);

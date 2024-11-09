@@ -119,7 +119,12 @@ public class HelpServiceTests
     {
         // Arrange
         var inputMode = "TesMode";
-        var availableModes = new[] { "TestMode", "ProdMode", "DevMode" };
+        var availableModes = new[]
+        {
+            new TestLaunchMode("TestMode", "Test mode description", []),
+            new TestLaunchMode("ProdMode", "Production mode description", []),
+            new TestLaunchMode("DevMode", "Development mode description", [])
+        };
 
         var helpService = new HelpService();
         using var writer = new StringWriter();
@@ -132,13 +137,19 @@ public class HelpServiceTests
         var output = writer.ToString();
         Assert.Contains("Did you mean one of these modes?", output);
         Assert.Contains("- TestMode", output);
+        Assert.Contains("Test mode description", output);
     }
 
     [Fact]
     public void SuggestSimilarModes_Should_Handle_Empty_InputMode()
     {
         // Arrange
-        var availableModes = new[] { "TestMode", "ProdMode", "DevMode" };
+        var availableModes = new[]
+        {
+            new TestLaunchMode("TestMode", "Test mode description", []),
+            new TestLaunchMode("ProdMode", "Production mode description", []),
+            new TestLaunchMode("DevMode", "Development mode description", [])
+        };
 
         var helpService = new HelpService();
         using var writer = new StringWriter();
@@ -149,7 +160,7 @@ public class HelpServiceTests
 
         // Assert
         var output = writer.ToString();
-        Assert.Contains("No launch mode provided.", output);
+        Assert.Contains("You haven't provided a launch mode.", output);
     }
 
     [Fact]
@@ -157,17 +168,18 @@ public class HelpServiceTests
     {
         // Arrange
         var inputMode = "TesMode";
+        var availableModes = Array.Empty<LaunchModeBase>();
 
         var helpService = new HelpService();
         using var writer = new StringWriter();
         Console.SetOut(writer);
 
         // Act
-        helpService.SuggestSimilarModes(inputMode, []);
+        helpService.SuggestSimilarModes(inputMode, availableModes);
 
         // Assert
         var output = writer.ToString();
-        Assert.Contains("Did you mean one of these modes?", output);
+        Assert.Contains("No similar modes found.", output);
         Assert.DoesNotContain("-", output); // No suggestions listed
     }
 
