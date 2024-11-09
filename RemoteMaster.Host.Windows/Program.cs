@@ -35,14 +35,19 @@ internal class Program
         ConfigureMinimalServices(minimalServices);
         var minimalServiceProvider = minimalServices.BuildServiceProvider();
 
-        var helpService = minimalServiceProvider.GetRequiredService<IHelpService>();
+        var argumentParser = minimalServiceProvider.GetRequiredService<IArgumentParser>();
+        var launchModeInstance = argumentParser.ParseArguments(args);
 
-        var launchModeInstance = ParseArguments(args, helpService);
+        if (launchModeInstance == null)
+        {
+            Environment.Exit(1);
+        }
 
         var missingParameters = GetMissingRequiredParameters(launchModeInstance);
 
-        if (missingParameters.Count != 0)
+        if (missingParameters.Count > 0)
         {
+            var helpService = minimalServiceProvider.GetRequiredService<IHelpService>();
             helpService.PrintMissingParametersError(launchModeInstance.Name, missingParameters);
             Environment.Exit(1);
         }
@@ -98,8 +103,6 @@ internal class Program
 
         await app.RunAsync();
 
-        return;
-
         async void Callback()
         {
             await launchModeInstance.ExecuteAsync(app.Services);
@@ -116,6 +119,8 @@ internal class Program
     private static void ConfigureMinimalServices(IServiceCollection services)
     {
         services.AddSingleton<IHelpService, HelpService>();
+        services.AddSingleton<IArgumentParser, ArgumentParser>();
+        services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
     }
 
     private static async Task ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
@@ -262,79 +267,5 @@ internal class Program
                 services.AddHostedService<ChatWindowService>();
                 break;
         }
-    }
-
-    private static LaunchModeBase ParseArguments(string[] args, IHelpService helpService)
-    {
-        LaunchModeBase? launchModeInstance = null;
-
-        var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
-        var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode="))?.Split('=')[1];
-
-        if (args.Length == 0 || (helpRequested && string.IsNullOrEmpty(modeArgument)))
-        {
-            helpService.PrintHelp(null);
-            Environment.Exit(0);
-        }
-
-        var availableModes = new Dictionary<string, LaunchModeBase>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "User", new UserMode() },
-            { "Service", new ServiceMode() },
-            { "Install", new InstallMode() },
-            { "Updater", new UpdaterMode() },
-            { "Uninstall", new UninstallMode() },
-            { "Chat", new ChatMode() }
-        };
-
-        if (string.IsNullOrEmpty(modeArgument) || !availableModes.TryGetValue(modeArgument, out launchModeInstance))
-        {
-            if (modeArgument is null)
-            {
-                helpService.PrintHelp(null);
-            }
-            else
-            {
-                helpService.SuggestSimilarModes(modeArgument, availableModes.Values);
-            }
-
-            Environment.Exit(1);
-        }
-
-        if (helpRequested)
-        {
-            helpService.PrintHelp(launchModeInstance);
-            Environment.Exit(0);
-        }
-
-        foreach (var arg in args)
-        {
-            if (!arg.StartsWith("--"))
-            {
-                continue;
-            }
-
-            var equalIndex = arg.IndexOf('=');
-            string key;
-            string value;
-
-            if (equalIndex >= 0)
-            {
-                key = arg[2..equalIndex];
-                value = arg[(equalIndex + 1)..];
-            }
-            else
-            {
-                key = arg[2..];
-                value = "true";
-            }
-
-            if (launchModeInstance.Parameters.TryGetValue(key, out var parameter))
-            {
-                parameter.Value = value;
-            }
-        }
-
-        return launchModeInstance;
     }
 }

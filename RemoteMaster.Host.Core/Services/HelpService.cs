@@ -2,83 +2,22 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Helpers;
-using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HelpService : IHelpService
+public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
 {
-    private readonly Assembly _assembly;
-
-    public HelpService()
-    {
-        _assembly = Assembly.GetExecutingAssembly();
-    }
-
-    public void PrintHelp(LaunchModeBase? specificMode)
+    public void PrintHelp(LaunchModeBase? specificMode = null)
     {
         if (specificMode != null)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"{specificMode.Name} Mode Options:");
-            Console.ResetColor();
-
-            Console.WriteLine($"  {specificMode.Description}");
-            Console.WriteLine();
-
-            var uniqueParameters = specificMode.Parameters
-                .GroupBy(p => p.Value)
-                .Select(g => g.First().Key)
-                .ToList();
-
-            foreach (var key in uniqueParameters)
-            {
-                var param = specificMode.Parameters[key];
-                var aliases = param is LaunchParameter launchParam && launchParam.Aliases.Any()
-                    ? $" (Aliases: {string.Join(", ", launchParam.Aliases.Select(alias => $"--{alias}"))})"
-                    : string.Empty;
-
-                Console.WriteLine($"  --{key}: {param.Description} {(param.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
-            }
+            PrintModeHelp(specificMode);
         }
         else
         {
-            if (_assembly == null)
-            {
-                return;
-            }
-
-            var launchModes = _assembly.GetTypes()
-                .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(LaunchModeBase)))
-                .Select(t => Activator.CreateInstance(t) as LaunchModeBase)
-                .Where(instance => instance != null);
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"Usage: {_assembly.GetName().Name} [OPTIONS]");
-            Console.ResetColor();
-            Console.WriteLine();
-
-            foreach (var mode in launchModes)
-            {
-                if (mode == null)
-                {
-                    continue;
-                }
-
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"{mode.Name} Mode:");
-                Console.ResetColor();
-
-                Console.WriteLine($"  {mode.Description}");
-                Console.WriteLine();
-            }
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Use \"--help --launch-mode=<MODE>\" for more details on a specific mode.");
-            Console.ResetColor();
+            PrintGeneralHelp();
         }
     }
 
@@ -86,79 +25,134 @@ public class HelpService : IHelpService
     {
         ArgumentNullException.ThrowIfNull(missingParameters);
 
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"Error: Missing required parameters for {modeName} mode.");
-        Console.ResetColor();
+        PrintMessage($"Error: Missing required parameters for {modeName} mode.", ConsoleColor.Red);
 
         var groupedParameters = missingParameters
             .GroupBy(p => p.Value)
-            .Select(g => new
+            .Select(group => new
             {
-                MainKey = g.First().Key,
-                Parameter = g.Key,
-                Aliases = g.SelectMany(p => p.Value.Aliases).Distinct()
+                Parameter = group.Key,
+                Keys = group.Select(p => p.Key).ToList()
             });
 
-        foreach (var param in groupedParameters)
+        foreach (var group in groupedParameters)
         {
-            var aliases = param.Aliases.Any()
-                ? $" (Aliases: {string.Join(", ", param.Aliases.Select(alias => $"--{alias}"))})"
+            var mainKey = group.Keys.First();
+            var aliases = group.Keys.Skip(1).ToList();
+
+            var aliasText = aliases.Count != 0
+                ? $" (Aliases: {string.Join(", ", aliases.Select(alias => $"--{alias}"))})"
                 : string.Empty;
 
-            Console.WriteLine($"  --{param.MainKey}: {param.Parameter.Description} (Required){aliases}");
+            Console.WriteLine($"  --{mainKey}: {group.Parameter.Description} (Required){aliasText}");
+        }
+    }
+
+    public void SuggestSimilarModes(string inputMode)
+    {
+        var availableModes = modeProvider.GetAvailableModes().Values;
+
+        if (string.IsNullOrEmpty(inputMode))
+        {
+            PrintMessage("You haven't provided a launch mode.", ConsoleColor.Yellow);
+
+            return;
+        }
+
+        const double SimilarityThreshold = 0.6;
+
+        var suggestions = availableModes
+            .Select(mode => new
+            {
+                Mode = mode,
+                Similarity = ComputeSimilarity(inputMode.ToLower(), mode.Name.ToLower())
+            })
+            .Where(result => result.Similarity >= SimilarityThreshold)
+            .OrderByDescending(result => result.Similarity)
+            .Take(3)
+            .Select(result => result.Mode)
+            .ToList();
+
+        if (suggestions.Count == 0)
+        {
+            PrintMessage($"No similar modes found for input: \"{inputMode}\".", ConsoleColor.Red);
+            PrintMessage("Make sure you have typed the launch mode correctly or use \"--help\" for available modes.", ConsoleColor.Yellow);
+            
+            return;
+        }
+
+        PrintMessage("Did you mean one of these modes?", ConsoleColor.Yellow);
+
+        foreach (var suggestion in suggestions)
+        {
+            PrintModeSummary(suggestion);
+        }
+    }
+
+    private static void PrintParameterDetails(IEnumerable<dynamic> parameters)
+    {
+        foreach (var param in parameters)
+        {
+            var aliases = param.Aliases is IEnumerable<string> aliasCollection && aliasCollection.Any()
+                ? $" (Aliases: {string.Join(", ", aliasCollection.Select(alias => $"--{alias}"))})"
+                : string.Empty;
+
+            Console.WriteLine($"  --{param.MainKey}: {param.Parameter.Description} {(param.Parameter.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
         }
 
         Console.WriteLine();
     }
 
-    public void SuggestSimilarModes(string inputMode, IEnumerable<LaunchModeBase> availableModes)
+    private void PrintGeneralHelp()
     {
-        if (string.IsNullOrEmpty(inputMode))
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("You haven't provided a launch mode.");
-            Console.ResetColor();
+        var availableModes = modeProvider.GetAvailableModes().Values;
 
-            return;
+        PrintMessage("Available Modes:", ConsoleColor.Green);
+
+        foreach (var mode in availableModes)
+        {
+            PrintModeSummary(mode);
         }
 
-        var dynamicDistanceThreshold = Math.Max(2, inputMode.Length / 2);
-        const double SimilarityThreshold = 0.6;
+        PrintMessage("Use \"--help --launch-mode=<MODE>\" for more details on a specific mode.", ConsoleColor.Yellow);
+    }
 
-        var suggestions = availableModes
-            .Select(mode => new ModeSuggestionResult(new ModeSuggestion(mode, LevenshteinDistance.Compute(inputMode.ToLower(), mode.Name.ToLower())), 1.0 - ((double)LevenshteinDistance.Compute(inputMode.ToLower(), mode.Name.ToLower()) / Math.Max(inputMode.Length, mode.Name.Length))))
-            .Where(result => result.Suggestion.Distance <= dynamicDistanceThreshold && result.Similarity >= SimilarityThreshold)
-            .OrderBy(result => result.Suggestion.Distance)
-            .Take(3)
-            .Select(result => result.Suggestion)
-            .ToList();
+    private static void PrintModeHelp(LaunchModeBase mode)
+    {
+        PrintMessage($"{mode.Name} Mode Options:", ConsoleColor.Yellow);
 
-        if (suggestions.Count == 0)
+        Console.WriteLine($"  {mode.Description}\n");
+
+        foreach (var paramPair in mode.Parameters)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"No similar modes found for input: \"{inputMode}\".");
-            Console.ResetColor();
-            Console.WriteLine("Make sure you have typed the launch mode correctly or use \"--help\" for available modes.");
+            var key = paramPair.Key;
+            var param = paramPair.Value;
 
-            return;
+            var aliases = param.Aliases.Any()
+                ? $" (Aliases: {string.Join(", ", param.Aliases.Select(alias => $"--{alias}"))})"
+                : string.Empty;
+
+            Console.WriteLine($"  --{key}: {param.Description} {(param.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
         }
+    }
 
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("Did you mean one of these modes?");
+    private static void PrintModeSummary(LaunchModeBase mode)
+    {
+        PrintMessage($"{mode.Name} Mode:", ConsoleColor.Yellow);
+        Console.WriteLine($"  {mode.Description}\n");
+    }
+
+    private static void PrintMessage(string message, ConsoleColor color)
+    {
+        Console.ForegroundColor = color;
+        Console.WriteLine(message);
         Console.ResetColor();
+    }
 
-        foreach (var suggestion in suggestions)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"- {suggestion.Mode.Name}");
-            Console.ResetColor();
+    private static double ComputeSimilarity(string input, string target)
+    {
+        var distance = LevenshteinDistance.Compute(input, target);
 
-            Console.WriteLine($"  {suggestion.Mode.Description}");
-        }
-
-        Console.WriteLine();
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("Use \"--help --launch-mode=<MODE>\" for more details on a specific mode.");
-        Console.ResetColor();
+        return 1.0 - (double)distance / Math.Max(input.Length, target.Length);
     }
 }

@@ -51,24 +51,6 @@ public abstract class LaunchModeBase
     }
 
     /// <summary>
-    /// Sets the value of a parameter by its name or alias.
-    /// </summary>
-    /// <param name="nameOrAlias">The name or alias of the parameter.</param>
-    /// <param name="value">The value to set.</param>
-    /// <exception cref="ArgumentException">Thrown if the parameter is not found.</exception>
-    public void SetParameterValue(string nameOrAlias, string value)
-    {
-        if (Parameters.TryGetValue(nameOrAlias, out var parameter))
-        {
-            parameter.Value = value;
-        }
-        else
-        {
-            throw new ArgumentException($"Parameter '{nameOrAlias}' not found.");
-        }
-    }
-
-    /// <summary>
     /// Retrieves the value of a parameter by its name, if it exists.
     /// </summary>
     /// <param name="name">The name of the parameter.</param>

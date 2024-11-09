@@ -12,7 +12,22 @@ public class LaunchParameter(string description, bool isRequired, params string[
 
     public bool IsRequired { get; } = isRequired;
 
-    public string? Value { get; set; }
+    public string? Value { get; private set; }
 
     public IReadOnlyList<string> Aliases { get; } = aliases;
+
+    /// <summary>
+    /// Sets the value of the parameter, optionally validating or transforming it.
+    /// </summary>
+    /// <param name="value">The value to set.</param>
+    /// <exception cref="ArgumentException">Thrown if the value is invalid.</exception>
+    public void SetValue(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException($"Value for parameter '{Description}' cannot be null or empty.", nameof(value));
+        }
+
+        Value = value;
+    }
 }

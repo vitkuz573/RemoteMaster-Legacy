@@ -4,15 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface ILaunchParameter
+public interface IArgumentParser
 {
-    string Description { get; }
-
-    bool IsRequired { get; }
-
-    string? Value { get; }
-
-    IReadOnlyList<string> Aliases { get; }
-
-    void SetValue(string value);
+    LaunchModeBase? ParseArguments(string[] args);
 }

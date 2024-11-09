@@ -4,15 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface ILaunchParameter
+public interface ILaunchModeProvider
 {
-    string Description { get; }
-
-    bool IsRequired { get; }
-
-    string? Value { get; }
-
-    IReadOnlyList<string> Aliases { get; }
-
-    void SetValue(string value);
+    IReadOnlyDictionary<string, LaunchModeBase> GetAvailableModes();
 }

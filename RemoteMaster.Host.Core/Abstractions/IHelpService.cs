@@ -10,5 +10,5 @@ public interface IHelpService
 
     void PrintMissingParametersError(string modeName, IEnumerable<KeyValuePair<string, ILaunchParameter>> missingParameters);
 
-    void SuggestSimilarModes(string inputMode, IEnumerable<LaunchModeBase> availableModes);
+    void SuggestSimilarModes(string inputMode);
 }
