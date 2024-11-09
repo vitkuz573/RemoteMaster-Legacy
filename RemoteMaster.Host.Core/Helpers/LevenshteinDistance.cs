@@ -21,41 +21,38 @@ public static class LevenshteinDistance
         ArgumentNullException.ThrowIfNull(source1);
         ArgumentNullException.ThrowIfNull(source2);
 
-        var len1 = source1.Length;
-        var len2 = source2.Length;
-
-        if (len1 == 0)
+        if (source1.Length == 0)
         {
-            return len2;
+            return source2.Length;
         }
 
-        if (len2 == 0)
+        if (source2.Length == 0)
         {
-            return len1;
+            return source1.Length;
         }
 
-        var previousDistances = new int[len2 + 1];
+        Span<int> distances = stackalloc int[source2.Length + 1];
 
-        for (var j = 0; j <= len2; j++)
+        for (var j = 0; j <= source2.Length; j++)
         {
-            previousDistances[j] = j;
+            distances[j] = j;
         }
 
-        for (var i = 1; i <= len1; i++)
+        for (var i = 1; i <= source1.Length; i++)
         {
-            var currentDistances = new int[len2 + 1];
-            currentDistances[0] = i;
+            var previousDistance = distances[0];
 
-            for (var j = 1; j <= len2; j++)
+            distances[0] = i;
+
+            for (var j = 1; j <= source2.Length; j++)
             {
-                var cost = source1[i - 1] == source2[j - 1] ? 0 : 1;
+                var temp = distances[j];
 
-                currentDistances[j] = Math.Min(Math.Min(previousDistances[j] + 1, currentDistances[j - 1] + 1), previousDistances[j - 1] + cost);
+                distances[j] = Math.Min(Math.Min(distances[j] + 1, distances[j - 1] + 1), previousDistance + (source1[i - 1] == source2[j - 1] ? 0 : 1));
+                previousDistance = temp;
             }
-
-            previousDistances = currentDistances;
         }
 
-        return previousDistances[len2];
+        return distances[source2.Length];
     }
 }
