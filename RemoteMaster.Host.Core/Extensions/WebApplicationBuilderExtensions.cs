@@ -61,9 +61,9 @@ public static class WebApplicationBuilderExtensions
 
         string server;
 
-        if (launchModeInstance is InstallMode)
+        if (launchModeInstance is InstallMode installMode)
         {
-            server = launchModeInstance.GetParameterValue("server") ?? throw new InvalidOperationException("Server is required.");
+            server = installMode.Parameters["server"].Value ?? throw new InvalidOperationException("Server is required.");
         }
         else
         {

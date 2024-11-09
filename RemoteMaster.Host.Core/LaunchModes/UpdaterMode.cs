@@ -25,12 +25,12 @@ public class UpdaterMode : LaunchModeBase
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
-        var folderPath = GetParameterValue("folder-path");
-        var username = GetParameterValue("username");
-        var password = GetParameterValue("password");
+        var folderPath = Parameters["folder-path"].Value;
+        var username = Parameters["username"].Value;
+        var password = Parameters["password"].Value;
 
-        var force = bool.TryParse(GetParameterValue("force"), out var forceUpdate) && forceUpdate;
-        var allowDowngrade = bool.TryParse(GetParameterValue("allow-downgrade"), out var allow) && allow;
+        var force = bool.TryParse(Parameters["force"].Value, out var forceUpdate) && forceUpdate;
+        var allowDowngrade = bool.TryParse(Parameters["allow-downgrade"].Value, out var allow) && allow;
 
         var hostUpdater = serviceProvider.GetRequiredService<IHostUpdater>();
 

@@ -51,16 +51,6 @@ public abstract class LaunchModeBase
     }
 
     /// <summary>
-    /// Retrieves the value of a parameter by its name, if it exists.
-    /// </summary>
-    /// <param name="name">The name of the parameter.</param>
-    /// <returns>The parameter value, or null if not found.</returns>
-    public string? GetParameterValue(string name)
-    {
-        return Parameters.TryGetValue(name, out var parameter) ? parameter.Value : null;
-    }
-
-    /// <summary>
     /// Asynchronously executes the main action for this launch mode.
     /// </summary>
     /// <param name="serviceProvider">Service provider for dependencies.</param>

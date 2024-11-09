@@ -23,9 +23,19 @@ public class InstallMode : LaunchModeBase
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
-        var server = GetParameterValue("server");
-        var organization = GetParameterValue("organization");
-        var organizationalUnit = GetParameterValue("organizational-unit");
+        var server = Parameters["server"].Value;
+        var organization = Parameters["organization"].Value;
+        var organizationalUnit = Parameters["organizational-unit"].Value;
+
+        if (string.IsNullOrWhiteSpace(server))
+        {
+            throw new InvalidOperationException("The 'server' parameter is required but was not provided.");
+        }
+
+        if (string.IsNullOrWhiteSpace(organization))
+        {
+            throw new InvalidOperationException("The 'organization' parameter is required but was not provided.");
+        }
 
         var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
         var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
