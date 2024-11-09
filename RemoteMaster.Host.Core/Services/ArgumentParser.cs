@@ -12,14 +12,21 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
     {
         var modeArg = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode=", StringComparison.OrdinalIgnoreCase));
 
-        if (modeArg == null)
+        if (modeArg == null || !modeArg.Contains('='))
         {
             helpService.PrintHelp(null);
 
             return null;
         }
 
-        var modeName = modeArg.Split('=')[1];
+        var modeName = modeArg[(modeArg.IndexOf('=') + 1)..].Trim();
+
+        if (string.IsNullOrEmpty(modeName))
+        {
+            helpService.PrintHelp(null);
+
+            return null;
+        }
 
         if (!modeProvider.GetAvailableModes().TryGetValue(modeName, out var mode))
         {
@@ -30,20 +37,23 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
 
         foreach (var paramPair in mode.Parameters)
         {
-            var key = paramPair.Key;
-            var param = paramPair.Value;
+            var value = GetArgumentValue(args, paramPair.Key, paramPair.Value.Aliases);
 
-            var paramArg = args.FirstOrDefault(arg =>
-                arg.StartsWith($"--{key}=", StringComparison.OrdinalIgnoreCase) ||
-                param.Aliases.Any(alias => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
-
-            if (paramArg != null)
+            if (value != null)
             {
-                var value = paramArg[(paramArg.IndexOf('=') + 1)..];
-                param.SetValue(value);
+                paramPair.Value.SetValue(value);
             }
         }
 
         return mode;
+    }
+
+    private static string? GetArgumentValue(string[] args, string key, IEnumerable<string> aliases)
+    {
+        var paramArg = args.FirstOrDefault(arg =>
+            arg.StartsWith($"--{key}=", StringComparison.OrdinalIgnoreCase) ||
+            aliases.Any(alias => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
+
+        return paramArg?[(paramArg.IndexOf('=') + 1)..].Trim();
     }
 }
