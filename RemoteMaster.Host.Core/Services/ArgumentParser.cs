@@ -35,25 +35,16 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
             return null;
         }
 
-        foreach (var paramPair in mode.Parameters)
+        foreach (var param in mode.Parameters.Values)
         {
-            var value = GetArgumentValue(args, paramPair.Key, paramPair.Value.Aliases);
+            var value = param.GetValue(args);
 
             if (value != null)
             {
-                paramPair.Value.SetValue(value);
+                param.SetValue(value);
             }
         }
 
         return mode;
-    }
-
-    private static string? GetArgumentValue(string[] args, string key, IEnumerable<string> aliases)
-    {
-        var paramArg = args.FirstOrDefault(arg =>
-            arg.StartsWith($"--{key}=", StringComparison.OrdinalIgnoreCase) ||
-            aliases.Any(alias => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
-
-        return paramArg?[(paramArg.IndexOf('=') + 1)..].Trim();
     }
 }

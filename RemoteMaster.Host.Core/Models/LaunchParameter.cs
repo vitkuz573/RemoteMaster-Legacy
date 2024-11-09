@@ -17,6 +17,20 @@ public class LaunchParameter(string description, bool isRequired, params string[
     public IReadOnlyList<string> Aliases { get; } = aliases;
 
     /// <summary>
+    /// Attempts to extract the value for this parameter from the provided arguments.
+    /// </summary>
+    /// <param name="args">The list of arguments.</param>
+    /// <returns>The extracted value or null if not found.</returns>
+    public string? GetValue(string[] args)
+    {
+        var paramArg = args.FirstOrDefault(arg =>
+            arg.StartsWith($"--{Description}=", StringComparison.OrdinalIgnoreCase) ||
+            Aliases.Any(alias => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
+
+        return paramArg?[(paramArg.IndexOf('=') + 1)..].Trim();
+    }
+
+    /// <summary>
     /// Sets the value of the parameter, optionally validating or transforming it.
     /// </summary>
     /// <param name="value">The value to set.</param>

@@ -14,5 +14,7 @@ public interface ILaunchParameter
 
     IReadOnlyList<string> Aliases { get; }
 
+    string? GetValue(string[] args);
+
     void SetValue(string value);
 }
