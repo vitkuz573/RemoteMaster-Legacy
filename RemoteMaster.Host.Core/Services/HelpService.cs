@@ -116,17 +116,14 @@ public class HelpService : IHelpService
         if (string.IsNullOrEmpty(inputMode))
         {
             Console.WriteLine("No launch mode provided.");
-
+            
             return;
         }
 
-        var suggestions = availableModes.Select(mode => new
-        {
-            Name = mode,
-            Distance = LevenshteinDistance.Compute(inputMode.ToLower(), mode.ToLower())
-        })
-        .OrderBy(x => x.Distance)
-        .Take(3);
+        var suggestions = availableModes
+            .Select(mode => new ModeSuggestion(mode, LevenshteinDistance.Compute(inputMode.ToLower(), mode.ToLower())))
+            .OrderBy(s => s.Distance)
+            .Take(3);
 
         Console.WriteLine("Did you mean one of these modes?");
 
