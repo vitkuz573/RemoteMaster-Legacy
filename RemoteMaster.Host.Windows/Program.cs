@@ -279,14 +279,14 @@ internal class Program
         }
 
         var availableModes = new Dictionary<string, LaunchModeBase>(StringComparer.OrdinalIgnoreCase)
-    {
-        { "User", new UserMode() },
-        { "Service", new ServiceMode() },
-        { "Install", new InstallMode() },
-        { "Updater", new UpdaterMode() },
-        { "Uninstall", new UninstallMode() },
-        { "Chat", new ChatMode() }
-    };
+        {
+            { "User", new UserMode() },
+            { "Service", new ServiceMode() },
+            { "Install", new InstallMode() },
+            { "Updater", new UpdaterMode() },
+            { "Uninstall", new UninstallMode() },
+            { "Chat", new ChatMode() }
+        };
 
         if (string.IsNullOrEmpty(modeArgument) || !availableModes.TryGetValue(modeArgument, out launchModeInstance))
         {
@@ -302,7 +302,6 @@ internal class Program
             Environment.Exit(1);
         }
 
-        // Если включен режим справки, сразу выводим справку и выходим
         if (helpRequested)
         {
             helpService.PrintHelp(launchModeInstance);
