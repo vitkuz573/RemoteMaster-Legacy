@@ -8,15 +8,19 @@ namespace RemoteMaster.Host.Core.Models;
 
 public class LaunchParameter(string name, string description, bool isRequired, params string[] aliases) : ILaunchParameter
 {
-    public string Name { get; } = name;
+    public string Name { get; } = string.IsNullOrWhiteSpace(name)
+        ? throw new ArgumentException("Parameter name cannot be null or empty.", nameof(name))
+        : name;
 
-    public string Description { get; } = description;
+    public string Description { get; } = string.IsNullOrWhiteSpace(description)
+        ? throw new ArgumentException("Description cannot be null or empty.", nameof(description))
+        : description;
 
     public bool IsRequired { get; } = isRequired;
 
     public string? Value { get; private set; }
 
-    public IReadOnlyList<string> Aliases { get; } = aliases;
+    public IReadOnlyList<string> Aliases { get; } = aliases ?? throw new ArgumentNullException(nameof(aliases));
 
     /// <summary>
     /// Attempts to extract the value for this parameter from the provided arguments.
@@ -25,32 +29,25 @@ public class LaunchParameter(string name, string description, bool isRequired, p
     /// <returns>The extracted value or null if not found.</returns>
     public string? GetValue(string[] args)
     {
-        var paramArg = args.FirstOrDefault(arg => arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase));
+        ArgumentNullException.ThrowIfNull(args);
 
-        if (paramArg is null)
+        foreach (var arg in args)
         {
+            if (arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase))
+            {
+                return arg[(arg.IndexOf('=') + 1)..].Trim();
+            }
+
             foreach (var alias in Aliases)
             {
-                paramArg = args.FirstOrDefault(arg => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase));
-                
-                if (paramArg != null)
+                if (arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase) || (alias.Length == 1 && arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase)))
                 {
-                    break;
-                }
-
-                if (alias.Length == 1)
-                {
-                    paramArg = args.FirstOrDefault(arg => arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase));
-                    
-                    if (paramArg != null)
-                    {
-                        break;
-                    }
+                    return arg[(arg.IndexOf('=') + 1)..].Trim();
                 }
             }
         }
 
-        return paramArg?[(paramArg.IndexOf('=') + 1)..].Trim();
+        return null;
     }
 
     /// <summary>
