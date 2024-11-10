@@ -2,17 +2,23 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Host.Core.Models;
+using System.Collections.Concurrent;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public abstract class LaunchModeBase
 {
     public abstract string Name { get; }
-    
+
     public abstract string Description { get; }
 
-    public readonly Dictionary<string, ILaunchParameter> Parameters = [];
+
+    private readonly ConcurrentDictionary<string, ILaunchParameter> _parameters = new();
+
+    /// <summary>
+    /// Retrieves all parameters as a read-only dictionary.
+    /// </summary>
+    public IReadOnlyDictionary<string, ILaunchParameter> Parameters => _parameters;
 
     protected LaunchModeBase()
     {
@@ -21,28 +27,41 @@ public abstract class LaunchModeBase
     }
 
     /// <summary>
-    /// Method to initialize parameters for each specific launch mode.
+    /// Initializes parameters for this specific launch mode.
     /// </summary>
     protected abstract void InitializeParameters();
 
     /// <summary>
+    /// Adds a typed parameter to the collection.
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter value.</typeparam>
+    /// <param name="parameter">The parameter to add.</param>
+    protected void AddParameter<T>(ILaunchParameter<T> parameter)
+    {
+        ArgumentNullException.ThrowIfNull(parameter);
+
+        if (!_parameters.TryAdd(parameter.Name, parameter))
+        {
+            throw new InvalidOperationException($"Parameter with name '{parameter.Name}' already exists.");
+        }
+    }
+
+    /// <summary>
     /// Maps parameter aliases to their primary names for simplified access.
-    /// Checks for alias conflicts to ensure uniqueness.
+    /// Ensures alias uniqueness.
     /// </summary>
     private void MapAliases()
     {
-        var parametersSnapshot = Parameters.Values.ToList();
-
-        foreach (var parameter in parametersSnapshot)
+        foreach (var parameterEntry in _parameters.ToList())
         {
-            if (parameter is not LaunchParameter launchParameter)
+            if (parameterEntry.Value is not ILaunchParameter parameter)
             {
                 continue;
             }
 
-            foreach (var alias in launchParameter.Aliases)
+            foreach (var alias in parameter.Aliases)
             {
-                if (!Parameters.TryAdd(alias, parameter))
+                if (!_parameters.TryAdd(alias, parameterEntry.Value))
                 {
                     throw new InvalidOperationException($"Alias conflict: The alias '{alias}' is already associated with another parameter.");
                 }
@@ -51,8 +70,25 @@ public abstract class LaunchModeBase
     }
 
     /// <summary>
-    /// Asynchronously executes the main action for this launch mode.
+    /// Retrieves a parameter by name or alias.
     /// </summary>
-    /// <param name="serviceProvider">Service provider for dependencies.</param>
+    /// <typeparam name="T">The expected type of the parameter.</typeparam>
+    /// <param name="name">The name or alias of the parameter.</param>
+    /// <returns>The parameter as <see cref="ILaunchParameter{T}"/>.</returns>
+    public ILaunchParameter<T>? GetParameter<T>(string name)
+    {
+        if (_parameters.TryGetValue(name, out var parameter) && parameter is ILaunchParameter<T> typedParameter)
+        {
+            return typedParameter;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Executes the main logic for this launch mode.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <param name="cancellationToken">Cancellation token for asynchronous execution.</param>
     public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default);
 }

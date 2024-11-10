@@ -37,11 +37,22 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
 
         foreach (var param in mode.Parameters.Values)
         {
-            var value = param.GetValue(args);
-
-            if (value != null)
+            if (param is ILaunchParameter parameter)
             {
-                param.SetValue(value);
+                var value = parameter.GetValue(args);
+
+                if (value != null)
+                {
+                    parameter.SetValue(Convert.ToString(value) ?? throw new InvalidCastException($"Cannot convert value of type {value.GetType()} to string."));
+                }
+                else if (parameter.IsRequired)
+                {
+                    throw new ArgumentException($"Missing required parameter: '{parameter.Name}'.");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unexpected parameter type: {param.GetType()}.");
             }
         }
 

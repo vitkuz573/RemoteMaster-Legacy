@@ -112,7 +112,7 @@ internal class Program
     private static List<KeyValuePair<string, ILaunchParameter>> GetMissingRequiredParameters(LaunchModeBase launchModeInstance)
     {
         return launchModeInstance.Parameters
-            .Where(p => p.Value.IsRequired && string.IsNullOrEmpty(p.Value.Value))
+            .Where(p => p.Value.IsRequired && p.Value.Value == null)
             .ToList();
     }
 

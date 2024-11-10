@@ -12,11 +12,11 @@ public interface ILaunchParameter
 
     bool IsRequired { get; }
 
-    string? Value { get; }
-
     IReadOnlyList<string> Aliases { get; }
 
-    string? GetValue(string[] args);
+    object? Value { get; }
+
+    object? GetValue(string[] args);
 
     void SetValue(string value);
 }

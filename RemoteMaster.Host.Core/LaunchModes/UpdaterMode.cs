@@ -16,21 +16,21 @@ public class UpdaterMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
-        Parameters.Add("folder-path", new LaunchParameter("folder-path", "Specifies the folder path for the update operation.", true, "path", "fp"));
-        Parameters.Add("username", new LaunchParameter("username", "Specifies the username for authentication.", false, "user"));
-        Parameters.Add("password", new LaunchParameter("password", "Specifies the password for authentication.", false, "pass"));
-        Parameters.Add("force", new LaunchParameter("force", "Forces the update operation to proceed, even if no update is needed.", false, "f"));
-        Parameters.Add("allow-downgrade", new LaunchParameter("allow-downgrade", "Allows the update operation to proceed with a lower version than the current one.", false, "downgrade", "ad"));
+        AddParameter(new LaunchParameter<string>("folder-path", "Specifies the folder path for the update operation.", true, "path", "fp"));
+        AddParameter(new LaunchParameter<string>("username", "Specifies the username for authentication.", false, "user"));
+        AddParameter(new LaunchParameter<string>("password", "Specifies the password for authentication.", false, "pass"));
+        AddParameter(new LaunchParameter<bool>("force", "Forces the update operation to proceed, even if no update is needed.", false, "f"));
+        AddParameter(new LaunchParameter<bool>("allow-downgrade", "Allows the update operation to proceed with a lower version than the current one.", false, "downgrade", "ad"));
     }
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
-        var folderPath = Parameters["folder-path"].Value;
-        var username = Parameters["username"].Value;
-        var password = Parameters["password"].Value;
+        var folderPath = GetParameter<string>("folder-path").Value;
+        var username = GetParameter<string>("username").Value;
+        var password = GetParameter<string>("password").Value;
 
-        var force = bool.TryParse(Parameters["force"].Value, out var forceUpdate) && forceUpdate;
-        var allowDowngrade = bool.TryParse(Parameters["allow-downgrade"].Value, out var allow) && allow;
+        var force = GetParameter<bool>("force").Value;
+        var allowDowngrade = GetParameter<bool>("allow-downgrade").Value;
 
         var hostUpdater = serviceProvider.GetRequiredService<IHostUpdater>();
 

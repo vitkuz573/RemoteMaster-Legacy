@@ -6,7 +6,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class LaunchParameter(string name, string description, bool isRequired, params string[] aliases) : ILaunchParameter
+public class LaunchParameter<T>(string name, string description, bool isRequired, params string[] aliases) : ILaunchParameter<T>
 {
     public string Name { get; } = string.IsNullOrWhiteSpace(name)
         ? throw new ArgumentException("Parameter name cannot be null or empty.", nameof(name))
@@ -18,16 +18,16 @@ public class LaunchParameter(string name, string description, bool isRequired, p
 
     public bool IsRequired { get; } = isRequired;
 
-    public string? Value { get; private set; }
+    public T? Value { get; private set; }
 
     public IReadOnlyList<string> Aliases { get; } = aliases ?? throw new ArgumentNullException(nameof(aliases));
 
     /// <summary>
-    /// Attempts to extract the value for this parameter from the provided arguments.
+    /// Attempts to extract the value for this parameter from the provided arguments and converts it to the expected type.
     /// </summary>
     /// <param name="args">The list of arguments.</param>
     /// <returns>The extracted value or null if not found.</returns>
-    public string? GetValue(string[] args)
+    public T? GetValue(string[] args)
     {
         ArgumentNullException.ThrowIfNull(args);
 
@@ -35,33 +35,47 @@ public class LaunchParameter(string name, string description, bool isRequired, p
         {
             if (arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase))
             {
-                return arg[(arg.IndexOf('=') + 1)..].Trim();
+                var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
+
+                return LaunchParameter<T>.ConvertValue(stringValue);
             }
 
             foreach (var alias in Aliases)
             {
                 if (arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase) || (alias.Length == 1 && arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase)))
                 {
-                    return arg[(arg.IndexOf('=') + 1)..].Trim();
+                    var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
+
+                    return LaunchParameter<T>.ConvertValue(stringValue);
                 }
             }
         }
 
-        return null;
+        return default;
     }
 
     /// <summary>
-    /// Sets the value of the parameter.
+    /// Sets the value of the parameter with type conversion.
     /// </summary>
-    /// <param name="value">The value to set.</param>
-    /// <exception cref="ArgumentException">Thrown if the value is invalid.</exception>
+    /// <param name="value">The value to set as a string.</param>
     public void SetValue(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException($"Value for parameter '{Name}' cannot be null or empty.", nameof(value));
-        }
-
-        Value = value;
+        Value = LaunchParameter<T>.ConvertValue(value);
     }
+
+    /// <summary>
+    /// Converts the string value to the expected type <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="stringValue">The value as a string.</param>
+    /// <returns>The converted value.</returns>
+    private static T ConvertValue(string stringValue)
+    {
+        return (T)Convert.ChangeType(stringValue, typeof(T));
+    }
+
+    object? ILaunchParameter.Value => Value;
+
+    object? ILaunchParameter.GetValue(string[] args) => GetValue(args);
+
+    void ILaunchParameter.SetValue(string value) => SetValue(value);
 }

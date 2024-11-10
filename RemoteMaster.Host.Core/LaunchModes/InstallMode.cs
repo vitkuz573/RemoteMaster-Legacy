@@ -16,16 +16,16 @@ public class InstallMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
-        Parameters.Add("server", new LaunchParameter("server", "Specifies the server where the host will be registered.", true, "srv"));
-        Parameters.Add("organization", new LaunchParameter("organization" ,"Specifies the name of the organization where the host is registered.", true, "org"));
-        Parameters.Add("organizational-unit", new LaunchParameter("organizational-unit", "Specifies the organizational unit where the host is registered.", true, "ou"));
+        AddParameter(new LaunchParameter<string>("server", "Specifies the server where the host will be registered.", true, "srv"));
+        AddParameter(new LaunchParameter<string>("organization" ,"Specifies the name of the organization where the host is registered.", true, "org"));
+        AddParameter(new LaunchParameter<string>("organizational-unit", "Specifies the organizational unit where the host is registered.", true, "ou"));
     }
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
-        var server = Parameters["server"].Value;
-        var organization = Parameters["organization"].Value;
-        var organizationalUnit = Parameters["organizational-unit"].Value;
+        var server = GetParameter<string>("server").Value;
+        var organization = GetParameter<string>("organization").Value;
+        var organizationalUnit = GetParameter<string>("organizational-unit").Value;
 
         if (string.IsNullOrWhiteSpace(server))
         {
