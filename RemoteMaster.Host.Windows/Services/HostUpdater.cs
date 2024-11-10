@@ -173,7 +173,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     private async Task NotifyNoUpdateNeeded()
     {
         await Notify("No update required. Files are identical.", MessageSeverity.Information);
-        await Notify("If you wish to force an update regardless, you can use --force=true to override this check.", MessageSeverity.Information);
+        await Notify("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
     }
 
     private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
@@ -517,7 +517,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 return true;
             }
 
-            await Notify($"Current version {currentVersion} is newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageSeverity.Information);
+            await Notify($"Current version {currentVersion} is newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade option.", MessageSeverity.Information);
 
             return false;
         }
@@ -533,7 +533,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 return true;
             }
 
-            await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force=true option.", MessageSeverity.Information);
+            await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force option.", MessageSeverity.Information);
 
             return false;
         }

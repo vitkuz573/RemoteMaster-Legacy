@@ -40,7 +40,7 @@ public class UpdaterInstanceServiceTests
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
-            .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true");
+            .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force --allow-downgrade");
 
         // Act
         _service.Start(updateRequest);
@@ -49,7 +49,7 @@ public class UpdaterInstanceServiceTests
         _mockInstanceStarterService.Verify(service => service.StartNewInstance(
             It.IsAny<string>(),
             It.Is<NativeProcessStartInfo>(info =>
-                info.Arguments == "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true"
+                info.Arguments == "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force --allow-downgrade"
                 && info.CreateNoWindow == true
             )), Times.Once);
     }
@@ -77,7 +77,7 @@ public class UpdaterInstanceServiceTests
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
-            .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true");
+            .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force --allow-downgrade");
 
         // Act
         var result = _mockArgumentBuilderService.Object.BuildArguments(arguments);
@@ -87,8 +87,8 @@ public class UpdaterInstanceServiceTests
         Assert.Contains("--folder-path=\"C:\\TestPath\"", result);
         Assert.Contains("--username=\"testuser\"", result);
         Assert.Contains("--password=\"testpassword\"", result);
-        Assert.Contains("--force=true", result);
-        Assert.Contains("--allow-downgrade=true", result);
+        Assert.Contains("--force", result);
+        Assert.Contains("--allow-downgrade", result);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class UpdaterInstanceServiceTests
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
-            .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --force=true --allow-downgrade=true");
+            .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --force --allow-downgrade");
 
         // Act
         var result = _mockArgumentBuilderService.Object.BuildArguments(arguments);
@@ -128,7 +128,7 @@ public class UpdaterInstanceServiceTests
             AllowDowngrade = true
         };
 
-        const string additionalArguments = "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true";
+        const string additionalArguments = "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force --allow-downgrade";
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))

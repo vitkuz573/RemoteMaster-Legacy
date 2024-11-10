@@ -21,10 +21,18 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
         var arguments = new Dictionary<string, object>
         {
             { "launch-mode", "updater" },
-            { "folder-path", updateRequest.FolderPath },
-            { "force", updateRequest.ForceUpdate.ToString().ToLower() },
-            { "allow-downgrade", updateRequest.AllowDowngrade.ToString().ToLower() }
+            { "folder-path", updateRequest.FolderPath }
         };
+
+        if (updateRequest.ForceUpdate)
+        {
+            arguments["force"] = string.Empty;
+        }
+
+        if (updateRequest.AllowDowngrade)
+        {
+            arguments["allow-downgrade"] = string.Empty;
+        }
 
         if (updateRequest.UserCredentials != null)
         {
