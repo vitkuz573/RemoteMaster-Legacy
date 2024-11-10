@@ -6,6 +6,7 @@ using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Exceptions;
 using RemoteMaster.Host.Core.Models;
+using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
 
 namespace RemoteMaster.Host.Core.Tests;
@@ -14,13 +15,21 @@ public class ArgumentParserTests
 {
     private readonly Mock<ILaunchModeProvider> _mockModeProvider;
     private readonly Mock<IHelpService> _mockHelpService;
+    private readonly List<IParameterHandler> _handlers;
     private readonly ArgumentParser _parser;
 
     public ArgumentParserTests()
     {
         _mockModeProvider = new Mock<ILaunchModeProvider>();
         _mockHelpService = new Mock<IHelpService>();
-        _parser = new ArgumentParser(_mockModeProvider.Object, _mockHelpService.Object);
+
+        _handlers =
+        [
+            new BooleanParameterHandler(),
+            new StringParameterHandler()
+        ];
+
+        _parser = new ArgumentParser(_mockModeProvider.Object, _mockHelpService.Object, _handlers);
     }
 
     [Fact]
