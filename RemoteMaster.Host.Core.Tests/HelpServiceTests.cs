@@ -55,8 +55,8 @@ public class HelpServiceTests
         // Arrange
         var specificMode = new TestLaunchMode("TestMode", "Test mode description", new Dictionary<string, ILaunchParameter>
         {
-            { "param1", new LaunchParameter("param1", "Parameter 1", true, "p1") },
-            { "param2", new LaunchParameter("param2", "Parameter 2", false) }
+            { "param1", new LaunchParameter<string>("param1", "Parameter 1", true, "p1") },
+            { "param2", new LaunchParameter<string>("param2", "Parameter 2", false) }
         });
 
         var helpService = CreateHelpService();
@@ -102,8 +102,8 @@ public class HelpServiceTests
         // Arrange
         var missingParameters = new List<KeyValuePair<string, ILaunchParameter>>
         {
-            new("param1", new LaunchParameter("param1", "Parameter 1", true, "p1")),
-            new("param2", new LaunchParameter("param2", "Parameter 2", true, "p2"))
+            new("param1", new LaunchParameter<string>("param1", "Parameter 1", true, "p1")),
+            new("param2", new LaunchParameter<string>("param2", "Parameter 2", true, "p2"))
         };
 
         var helpService = CreateHelpService();
@@ -210,24 +210,26 @@ public class HelpServiceTests
         Assert.DoesNotContain("Did you mean one of these modes?", output);
     }
 
-    private class TestLaunchMode : LaunchModeBase
+    private class TestLaunchMode(string name, string description, Dictionary<string, ILaunchParameter> parameters) : LaunchModeBase
     {
-        public TestLaunchMode(string name, string description, Dictionary<string, ILaunchParameter> parameters)
-        {
-            Name = name;
-            Description = description;
+        public override string Name { get; } = name;
 
-            foreach (var parameter in parameters)
+        public override string Description { get; } = description;
+
+        protected override void InitializeParameters()
+        {
+            foreach (var parameter in parameters.Values)
             {
-                Parameters.Add(parameter.Key, parameter.Value);
+                if (parameter is ILaunchParameter<string> stringParam)
+                {
+                    AddParameter(stringParam);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unsupported parameter type: {parameter.GetType()}");
+                }
             }
         }
-
-        public override string Name { get; }
-
-        public override string Description { get; }
-
-        protected override void InitializeParameters() { }
 
         public override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
