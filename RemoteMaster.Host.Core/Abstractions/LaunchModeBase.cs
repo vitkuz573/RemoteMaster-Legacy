@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Collections.Concurrent;
-
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public abstract class LaunchModeBase
@@ -13,17 +11,16 @@ public abstract class LaunchModeBase
     public abstract string Description { get; }
 
 
-    private readonly ConcurrentDictionary<string, ILaunchParameter> _parameters = new();
+    private readonly List<KeyValuePair<string, ILaunchParameter>> _parameters = [];
 
     /// <summary>
-    /// Retrieves all parameters as a read-only dictionary.
+    /// Retrieves all parameters as a read-only list while maintaining insertion order.
     /// </summary>
-    public IReadOnlyDictionary<string, ILaunchParameter> Parameters => _parameters;
+    public IReadOnlyList<KeyValuePair<string, ILaunchParameter>> Parameters => _parameters;
 
     protected LaunchModeBase()
     {
         InitializeParameters();
-        MapAliases();
     }
 
     /// <summary>
@@ -40,32 +37,21 @@ public abstract class LaunchModeBase
     {
         ArgumentNullException.ThrowIfNull(parameter);
 
-        if (!_parameters.TryAdd(parameter.Name, parameter))
+        if (_parameters.Any(p => string.Equals(p.Key, parameter.Name, StringComparison.OrdinalIgnoreCase)))
         {
-            throw new InvalidOperationException($"Parameter with name '{parameter.Name}' already exists.");
+            throw new InvalidOperationException($"Parameter name '{parameter.Name}' is already defined.");
         }
-    }
 
-    /// <summary>
-    /// Maps parameter aliases to their primary names for simplified access.
-    /// Ensures alias uniqueness.
-    /// </summary>
-    private void MapAliases()
-    {
-        foreach (var parameterEntry in _parameters.ToList())
+        _parameters.Add(new KeyValuePair<string, ILaunchParameter>(parameter.Name, parameter));
+
+        foreach (var alias in parameter.Aliases.Where(alias => alias != parameter.Name))
         {
-            if (parameterEntry.Value is not ILaunchParameter parameter)
+            if (_parameters.Any(p => string.Equals(p.Key, alias, StringComparison.OrdinalIgnoreCase)))
             {
-                continue;
+                throw new InvalidOperationException($"Alias '{alias}' is already associated with another parameter.");
             }
 
-            foreach (var alias in parameter.Aliases)
-            {
-                if (!_parameters.TryAdd(alias, parameterEntry.Value))
-                {
-                    throw new InvalidOperationException($"Alias conflict: The alias '{alias}' is already associated with another parameter.");
-                }
-            }
+            _parameters.Add(new KeyValuePair<string, ILaunchParameter>(alias, parameter));
         }
     }
 
@@ -77,7 +63,9 @@ public abstract class LaunchModeBase
     /// <returns>The parameter as <see cref="ILaunchParameter{T}"/>.</returns>
     public ILaunchParameter<T>? GetParameter<T>(string name)
     {
-        if (_parameters.TryGetValue(name, out var parameter) && parameter is ILaunchParameter<T> typedParameter)
+        var parameterEntry = _parameters.FirstOrDefault(p => string.Equals(p.Key, name, StringComparison.OrdinalIgnoreCase));
+
+        if (parameterEntry.Value is ILaunchParameter<T> typedParameter)
         {
             return typedParameter;
         }

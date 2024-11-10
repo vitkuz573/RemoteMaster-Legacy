@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Exceptions;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -35,24 +36,26 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
             return null;
         }
 
-        foreach (var param in mode.Parameters.Values)
+        foreach (var paramGroup in mode.Parameters.GroupBy(p => p.Value).Distinct())
         {
-            if (param is ILaunchParameter parameter)
-            {
-                var value = parameter.GetValue(args);
+            var mainParam = paramGroup.Key;
+            var aliases = paramGroup.Select(p => p.Key).ToList();
 
-                if (value != null)
-                {
-                    parameter.SetValue(Convert.ToString(value) ?? throw new InvalidCastException($"Cannot convert value of type {value.GetType()} to string."));
-                }
-                else if (parameter.IsRequired)
-                {
-                    throw new ArgumentException($"Missing required parameter: '{parameter.Name}'.");
-                }
-            }
-            else
+            var value = aliases
+                .Select(alias => mode.Parameters.FirstOrDefault(p => p.Key == alias).Value.GetValue(args))
+                .FirstOrDefault(v => v != null);
+
+            if (value != null)
             {
-                throw new InvalidOperationException($"Unexpected parameter type: {param.GetType()}.");
+                mainParam.SetValue(Convert.ToString(value) ?? throw new InvalidCastException($"Cannot convert value of type {value.GetType()} to string."));
+            }
+            else if (mainParam.IsRequired)
+            {
+                var missingParameters = mode.Parameters
+                    .Where(p => p.Value.IsRequired && p.Value.Value == null)
+                    .ToList();
+
+                throw new MissingParametersException(mode.Name, missingParameters);
             }
         }
 

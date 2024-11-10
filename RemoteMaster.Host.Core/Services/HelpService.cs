@@ -27,24 +27,24 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
 
         PrintMessage($"Error: Missing required parameters for {modeName} mode.", ConsoleColor.Red);
 
-        var groupedParameters = missingParameters
+        var uniqueParameters = missingParameters
             .GroupBy(p => p.Value)
-            .Select(group => new
-            {
-                Parameter = group.Key,
-                Keys = group.Select(p => p.Key).ToList()
-            });
+            .Select(g => g.First())
+            .ToList();
 
-        foreach (var group in groupedParameters)
+        foreach (var parameterPair in uniqueParameters)
         {
-            var mainKey = group.Keys.First();
-            var aliases = group.Parameter.Aliases.Where(alias => alias != mainKey).ToList();
+            var mainKey = parameterPair.Value.Name;
 
-            var aliasText = aliases.Count != 0
+            var aliases = parameterPair.Value.Aliases
+                .Where(alias => alias != mainKey)
+                .ToList();
+
+            var aliasText = aliases.Count > 0
                 ? $" (Aliases: {string.Join(", ", aliases.Select(alias => $"--{alias}"))})"
                 : string.Empty;
 
-            Console.WriteLine($"  --{mainKey}: {group.Parameter.Description} (Required){aliasText}");
+            Console.WriteLine($"  --{mainKey}: {parameterPair.Value.Description} (Required){aliasText}");
         }
     }
 

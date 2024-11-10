@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
+using RemoteMaster.Host.Core.Exceptions;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.Requirements;
@@ -31,89 +32,100 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var minimalServices = new ServiceCollection();
-        ConfigureMinimalServices(minimalServices);
-        var minimalServiceProvider = minimalServices.BuildServiceProvider();
-
-        var argumentParser = minimalServiceProvider.GetRequiredService<IArgumentParser>();
-        var launchModeInstance = argumentParser.ParseArguments(args);
-
-        if (launchModeInstance == null)
+        try
         {
+            var minimalServices = new ServiceCollection();
+            ConfigureMinimalServices(minimalServices);
+            var minimalServiceProvider = minimalServices.BuildServiceProvider();
+
+            var argumentParser = minimalServiceProvider.GetRequiredService<IArgumentParser>();
+            var launchModeInstance = argumentParser.ParseArguments(args);
+
+            if (launchModeInstance == null)
+            {
+                Environment.Exit(1);
+            }
+
+            var options = new WebApplicationOptions
+            {
+                ContentRootPath = AppContext.BaseDirectory
+            };
+
+            var builder = WebApplication.CreateSlimBuilder(options);
+            builder.Configuration.AddCommandLine(args);
+
+            builder.Host.UseWindowsService();
+
+            await ConfigureServices(builder.Services, launchModeInstance);
+
+            var serviceProvider = builder.Services.BuildServiceProvider();
+            var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
+            var hostInfoEnricher = serviceProvider.GetRequiredService<HostInfoEnricher>();
+            var certificateLoaderService = serviceProvider.GetRequiredService<ICertificateLoaderService>();
+
+            await builder.ConfigureSerilog(launchModeInstance, hostConfigurationService, hostInfoEnricher);
+            builder.ConfigureCoreUrls(launchModeInstance, certificateLoaderService);
+
+            builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts =>
+                opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));
+
+            var app = builder.Build();
+
+            app.UseCors();
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Error");
+            }
+
+            if (launchModeInstance is not InstallMode)
+            {
+                app.UseAuthentication();
+                app.UseAuthorization();
+            }
+
+            app.MapCoreHubs(launchModeInstance);
+
+            if (launchModeInstance is UserMode)
+            {
+                app.MapHub<ServiceHub>("/hubs/service");
+                app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
+                app.MapHub<RegistryHub>("/hubs/registry");
+            }
+
+            app.Lifetime.ApplicationStarted.Register(Callback);
+
+            await app.RunAsync();
+
+            async void Callback()
+            {
+                await launchModeInstance.ExecuteAsync(app.Services);
+            }
+        }
+        catch (MissingParametersException ex)
+        {
+            var helpService = new ServiceCollection()
+                .AddSingleton<ILaunchModeProvider, LaunchModeProvider>()
+                .AddSingleton<IHelpService, HelpService>()
+                .BuildServiceProvider()
+                .GetRequiredService<IHelpService>();
+
+            helpService.PrintMissingParametersError(ex.LaunchModeName, ex.MissingParameters);
+
             Environment.Exit(1);
         }
-
-        var missingParameters = GetMissingRequiredParameters(launchModeInstance);
-
-        if (missingParameters.Count > 0)
+        catch (ArgumentException ex)
         {
-            var helpService = minimalServiceProvider.GetRequiredService<IHelpService>();
-            helpService.PrintMissingParametersError(launchModeInstance.Name, missingParameters);
+            Console.Error.WriteLine($"Error: {ex.Message}");
+
             Environment.Exit(1);
         }
-
-        var options = new WebApplicationOptions
+        catch (Exception ex)
         {
-            ContentRootPath = AppContext.BaseDirectory
-        };
+            Console.Error.WriteLine($"An unexpected error occurred: {ex.Message}");
 
-        var builder = WebApplication.CreateSlimBuilder(options);
-        builder.Configuration.AddCommandLine(args);
-
-        builder.Host.UseWindowsService();
-
-        await ConfigureServices(builder.Services, launchModeInstance);
-
-        var serviceProvider = builder.Services.BuildServiceProvider();
-        var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
-        var hostInfoEnricher = serviceProvider.GetRequiredService<HostInfoEnricher>();
-        var certificateLoaderService = serviceProvider.GetRequiredService<ICertificateLoaderService>();
-
-        await builder.ConfigureSerilog(launchModeInstance, hostConfigurationService, hostInfoEnricher);
-        builder.ConfigureCoreUrls(launchModeInstance, certificateLoaderService);
-
-        builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts =>
-            opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));
-
-        var app = builder.Build();
-
-        app.UseCors();
-
-        if (!app.Environment.IsDevelopment())
-        {
-            app.UseExceptionHandler("/Error");
+            Environment.Exit(1);
         }
-
-        if (launchModeInstance is not InstallMode)
-        {
-            app.UseAuthentication();
-            app.UseAuthorization();
-        }
-
-        app.MapCoreHubs(launchModeInstance);
-
-        if (launchModeInstance is UserMode)
-        {
-            app.MapHub<ServiceHub>("/hubs/service");
-            app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
-            app.MapHub<RegistryHub>("/hubs/registry");
-        }
-
-        app.Lifetime.ApplicationStarted.Register(Callback);
-
-        await app.RunAsync();
-
-        async void Callback()
-        {
-            await launchModeInstance.ExecuteAsync(app.Services);
-        }
-    }
-
-    private static List<KeyValuePair<string, ILaunchParameter>> GetMissingRequiredParameters(LaunchModeBase launchModeInstance)
-    {
-        return launchModeInstance.Parameters
-            .Where(p => p.Value.IsRequired && p.Value.Value == null)
-            .ToList();
     }
 
     private static void ConfigureMinimalServices(IServiceCollection services)
