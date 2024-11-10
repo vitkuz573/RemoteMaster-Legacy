@@ -4,24 +4,21 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Exceptions;
-using RemoteMaster.Host.Core.Models;
+using RemoteMaster.Host.Core.ParameterHandlers;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpService) : IArgumentParser
 {
+    private readonly List<IParameterHandler> _handlers =
+    [
+        new BooleanParameterHandler(),
+        new StringParameterHandler()
+    ];
+
     public LaunchModeBase? ParseArguments(string[] args)
     {
-        var modeArg = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode=", StringComparison.OrdinalIgnoreCase));
-
-        if (modeArg == null || !modeArg.Contains('='))
-        {
-            helpService.PrintHelp(null);
-
-            return null;
-        }
-
-        var modeName = modeArg[(modeArg.IndexOf('=') + 1)..].Trim();
+        var modeName = ExtractLaunchModeName(args);
 
         if (string.IsNullOrEmpty(modeName))
         {
@@ -37,38 +34,55 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
             return null;
         }
 
-        foreach (var paramGroup in mode.Parameters.GroupBy(p => p.Value).Distinct())
-        {
-            var mainParam = paramGroup.Key;
-            var aliases = paramGroup.Select(p => p.Key).ToList();
-
-            if (mainParam is LaunchParameter<bool> boolParam)
-            {
-                var isPresent = aliases.Any(alias => args.Any(arg => arg.Equals($"--{alias}", StringComparison.OrdinalIgnoreCase)));
-
-                boolParam.SetValue(isPresent.ToString().ToLower());
-            }
-            else
-            {
-                var value = aliases
-                    .Select(alias => mode.Parameters.FirstOrDefault(p => p.Key == alias).Value.GetValue(args))
-                    .FirstOrDefault(v => v != null);
-
-                if (value != null)
-                {
-                    mainParam.SetValue(Convert.ToString(value) ?? throw new InvalidCastException($"Cannot convert value of type {value.GetType()} to string."));
-                }
-                else if (mainParam.IsRequired)
-                {
-                    var missingParameters = mode.Parameters
-                        .Where(p => p.Value.IsRequired && p.Value.Value == null)
-                        .ToList();
-
-                    throw new MissingParametersException(mode.Name, missingParameters);
-                }
-            }
-        }
+        ParseAndSetParameters(args, mode);
 
         return mode;
+    }
+
+    private static string? ExtractLaunchModeName(string[] args)
+    {
+        var modeArg = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode=", StringComparison.OrdinalIgnoreCase));
+        
+        return modeArg?[(modeArg.IndexOf('=') + 1)..].Trim();
+    }
+
+    private void ParseAndSetParameters(string[] args, LaunchModeBase mode)
+    {
+        foreach (var parameterEntry in mode.Parameters)
+        {
+            var name = parameterEntry.Key;
+            var parameter = parameterEntry.Value;
+
+            var handler = _handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}' of type {GetFriendlyTypeName(parameter.GetType())}.");
+
+            handler.Handle(args, parameter, name);
+        }
+
+        ValidateRequiredParameters(mode);
+    }
+
+    private static string GetFriendlyTypeName(Type type)
+    {
+        if (!type.IsGenericType)
+        {
+            return type.Name;
+        }
+
+        var genericTypeName = type.Name[..type.Name.IndexOf('`')];
+        var genericArgs = string.Join(", ", type.GetGenericArguments().Select(GetFriendlyTypeName));
+
+        return $"{genericTypeName}<{genericArgs}>";
+    }
+
+    private static void ValidateRequiredParameters(LaunchModeBase mode)
+    {
+        var missingParameters = mode.Parameters
+            .Where(p => p.Value.IsRequired && p.Value.Value == null)
+            .ToList();
+
+        if (missingParameters.Count != 0)
+        {
+            throw new MissingParametersException(mode.Name, missingParameters);
+        }
     }
 }
