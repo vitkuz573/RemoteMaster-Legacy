@@ -27,16 +27,6 @@ public class InstallMode : LaunchModeBase
         var organization = GetParameter<string>("organization").Value;
         var organizationalUnit = GetParameter<string>("organizational-unit").Value;
 
-        if (string.IsNullOrWhiteSpace(server))
-        {
-            throw new InvalidOperationException("The 'server' parameter is required but was not provided.");
-        }
-
-        if (string.IsNullOrWhiteSpace(organization))
-        {
-            throw new InvalidOperationException("The 'organization' parameter is required but was not provided.");
-        }
-
         var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
         var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
 
