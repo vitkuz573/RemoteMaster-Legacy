@@ -25,9 +25,30 @@ public class LaunchParameter(string name, string description, bool isRequired, p
     /// <returns>The extracted value or null if not found.</returns>
     public string? GetValue(string[] args)
     {
-        var paramArg = args.FirstOrDefault(arg =>
-            arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase) ||
-            Aliases.Any(alias => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
+        var paramArg = args.FirstOrDefault(arg => arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase));
+
+        if (paramArg is null)
+        {
+            foreach (var alias in Aliases)
+            {
+                paramArg = args.FirstOrDefault(arg => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase));
+                
+                if (paramArg != null)
+                {
+                    break;
+                }
+
+                if (alias.Length == 1)
+                {
+                    paramArg = args.FirstOrDefault(arg => arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase));
+                    
+                    if (paramArg != null)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
 
         return paramArg?[(paramArg.IndexOf('=') + 1)..].Trim();
     }
