@@ -4,6 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Exceptions;
+using RemoteMaster.Host.Core.Extensions;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -48,25 +49,12 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
             var name = parameterEntry.Key;
             var parameter = parameterEntry.Value;
 
-            var handler = _handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}' of type {GetFriendlyTypeName(parameter.GetType())}.");
+            var handler = _handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}' of type {parameter.GetType().GetFriendlyName()}.");
 
             handler.Handle(args, parameter, name);
         }
 
         ValidateRequiredParameters(mode);
-    }
-
-    private static string GetFriendlyTypeName(Type type)
-    {
-        if (!type.IsGenericType)
-        {
-            return type.Name;
-        }
-
-        var genericTypeName = type.Name[..type.Name.IndexOf('`')];
-        var genericArgs = string.Join(", ", type.GetGenericArguments().Select(GetFriendlyTypeName));
-
-        return $"{genericTypeName}<{genericArgs}>";
     }
 
     private static void ValidateRequiredParameters(LaunchModeBase mode)
