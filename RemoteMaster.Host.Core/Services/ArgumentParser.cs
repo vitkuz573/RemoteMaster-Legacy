@@ -4,17 +4,12 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Exceptions;
-using RemoteMaster.Host.Core.ParameterHandlers;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpService) : IArgumentParser
+public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpService, IEnumerable<IParameterHandler> handlers) : IArgumentParser
 {
-    private readonly List<IParameterHandler> _handlers =
-    [
-        new BooleanParameterHandler(),
-        new StringParameterHandler()
-    ];
+    private readonly IEnumerable<IParameterHandler> _handlers = handlers;
 
     public LaunchModeBase? ParseArguments(string[] args)
     {

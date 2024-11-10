@@ -32,12 +32,12 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        var minimalServices = new ServiceCollection();
+        ConfigureMinimalServices(minimalServices);
+        var minimalServiceProvider = minimalServices.BuildServiceProvider();
+
         try
         {
-            var minimalServices = new ServiceCollection();
-            ConfigureMinimalServices(minimalServices);
-            var minimalServiceProvider = minimalServices.BuildServiceProvider();
-
             var argumentParser = minimalServiceProvider.GetRequiredService<IArgumentParser>();
             var launchModeInstance = argumentParser.ParseArguments(args);
 
@@ -104,11 +104,7 @@ internal class Program
         }
         catch (MissingParametersException ex)
         {
-            var helpService = new ServiceCollection()
-                .AddSingleton<ILaunchModeProvider, LaunchModeProvider>()
-                .AddSingleton<IHelpService, HelpService>()
-                .BuildServiceProvider()
-                .GetRequiredService<IHelpService>();
+            var helpService = minimalServiceProvider.GetRequiredService<IHelpService>();
 
             helpService.PrintMissingParametersError(ex.LaunchModeName, ex.MissingParameters);
 
@@ -130,9 +126,7 @@ internal class Program
 
     private static void ConfigureMinimalServices(IServiceCollection services)
     {
-        services.AddSingleton<IHelpService, HelpService>();
-        services.AddSingleton<IArgumentParser, ArgumentParser>();
-        services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
+        services.AddMinimalCoreServices();
     }
 
     private static async Task ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
