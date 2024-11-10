@@ -8,15 +8,30 @@ namespace RemoteMaster.Host.Core.ParameterHandlers;
 
 public class BooleanParameterHandler : IParameterHandler
 {
-    public bool CanHandle(ILaunchParameter parameter) => parameter is ILaunchParameter<bool>;
+    public bool CanHandle(ILaunchParameter parameter)
+    {
+        return parameter == null ? throw new ArgumentNullException(nameof(parameter)) : parameter is ILaunchParameter<bool>;
+    }
 
     public void Handle(string[] args, ILaunchParameter parameter, string name)
     {
-        if (parameter is ILaunchParameter<bool> boolParam)
+        if (parameter != null)
         {
-            var isPresent = args.Any(arg => arg.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
+            }
 
-            boolParam.SetValue(isPresent.ToString().ToLower());
+            if (parameter is ILaunchParameter<bool> boolParam)
+            {
+                var isPresent = args.Any(arg => arg.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
+
+                boolParam.SetValue(isPresent.ToString().ToLower());
+            }
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(parameter));
         }
     }
 }

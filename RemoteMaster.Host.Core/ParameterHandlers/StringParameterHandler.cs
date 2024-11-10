@@ -8,20 +8,33 @@ namespace RemoteMaster.Host.Core.ParameterHandlers;
 
 public class StringParameterHandler : IParameterHandler
 {
-    public bool CanHandle(ILaunchParameter parameter) => parameter is ILaunchParameter<string>;
+    public bool CanHandle(ILaunchParameter parameter)
+    {
+        return parameter == null ? throw new ArgumentNullException(nameof(parameter)) : parameter is ILaunchParameter<string>;
+    }
 
     public void Handle(string[] args, ILaunchParameter parameter, string name)
     {
-        ArgumentNullException.ThrowIfNull(parameter);
-
-        var value = args
-            .Where(arg => arg.StartsWith($"--{name}=", StringComparison.OrdinalIgnoreCase))
-            .Select(arg => arg[(arg.IndexOf('=') + 1)..])
-            .FirstOrDefault();
-
-        if (!string.IsNullOrEmpty(value))
+        if (parameter != null)
         {
-            parameter.SetValue(value);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
+            }
+
+            var value = args
+                .Where(arg => arg.StartsWith($"--{name}=", StringComparison.OrdinalIgnoreCase))
+                .Select(arg => arg[(arg.IndexOf('=') + 1)..])
+                .FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                parameter.SetValue(value);
+            }
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(parameter));
         }
     }
 }
