@@ -11,12 +11,7 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class HelpServiceTests
 {
-    private readonly Mock<ILaunchModeProvider> _launchModeProviderMock;
-
-    public HelpServiceTests()
-    {
-        _launchModeProviderMock = new Mock<ILaunchModeProvider>();
-    }
+    private readonly Mock<ILaunchModeProvider> _launchModeProviderMock = new();
 
     private HelpService CreateHelpService(Dictionary<string, LaunchModeBase>? availableModes = null)
     {
@@ -194,7 +189,7 @@ public class HelpServiceTests
     public void SuggestSimilarModes_Should_Handle_Empty_AvailableModes()
     {
         // Arrange
-        var inputMode = "TesMode";
+        const string inputMode = "TesMode";
 
         var helpService = CreateHelpService();
 
