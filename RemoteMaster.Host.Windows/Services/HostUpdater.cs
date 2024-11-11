@@ -259,7 +259,7 @@ public class HostUpdater : IHostUpdater
     {
         try
         {
-            var dir = new DirectoryInfo(sourceDir);
+            var dir = _fileSystem.DirectoryInfo.New(sourceDir);
 
             if (!dir.Exists)
             {
@@ -379,7 +379,7 @@ public class HostUpdater : IHostUpdater
         return true;
     }
 
-    private static async Task WaitForFileRelease(string directory)
+    private async Task WaitForFileRelease(string directory)
     {
         var locked = true;
         var excludedFolders = new HashSet<string> { "Updater", "Update" };
@@ -388,7 +388,7 @@ public class HostUpdater : IHostUpdater
         {
             locked = false;
 
-            foreach (var file in new DirectoryInfo(directory).GetFiles("*", SearchOption.AllDirectories))
+            foreach (var file in _fileSystem.DirectoryInfo.New(directory).GetFiles("*", SearchOption.AllDirectories))
             {
                 var directoryName = file.DirectoryName;
 
