@@ -4,7 +4,6 @@
 
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -56,14 +55,10 @@ public class InstanceManagerServiceTests
     public void StartNewInstance_ShouldCopyExecutable_WhenDestinationPathIsProvided()
     {
         // Arrange
-        const string executablePath = @"C:\sourcePath\executable.exe";
+        var executablePath = Environment.ProcessPath!;
         const string destinationPath = @"C:\destinationPath\executable.exe";
         var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
         var startInfo = new NativeProcessStartInfo { FileName = executablePath };
-
-        typeof(InstanceManagerService)
-            .GetField("_executablePath", BindingFlags.NonPublic | BindingFlags.Instance)
-            ?.SetValue(_instanceManagerService, executablePath);
 
         _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
 
@@ -73,6 +68,7 @@ public class InstanceManagerServiceTests
         // Assert
         Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
         Assert.True(_mockFileSystem.File.Exists(destinationPath));
+        Assert.Equal("test content", _mockFileSystem.File.ReadAllText(destinationPath));
     }
 
     [Fact]

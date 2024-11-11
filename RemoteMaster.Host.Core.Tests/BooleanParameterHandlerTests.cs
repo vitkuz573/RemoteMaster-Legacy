@@ -10,11 +10,16 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class BooleanParameterHandlerTests
 {
-    private readonly BooleanParameterHandler _handler;
+    private readonly BooleanParameterHandler _handler = new();
 
-    public BooleanParameterHandlerTests()
+    private static void SetupMockParameterGetValue(Mock<ILaunchParameter<bool>> mockParameter, string parameterName)
     {
-        _handler = new BooleanParameterHandler();
+        mockParameter
+            .Setup(p => p.GetValue(It.IsAny<string[]>()))
+            .Returns((string[] inputArgs) =>
+            {
+                return inputArgs.Any(arg => arg.Equals($"--{parameterName}", StringComparison.OrdinalIgnoreCase));
+            });
     }
 
     #region CanHandle Tests
@@ -64,11 +69,13 @@ public class BooleanParameterHandlerTests
         var mockParameter = new Mock<ILaunchParameter<bool>>();
         mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
 
+        SetupMockParameterGetValue(mockParameter, "enable-feature");
+
         // Act
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("true"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(true), Times.Once);
     }
 
     [Fact]
@@ -83,7 +90,7 @@ public class BooleanParameterHandlerTests
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("false"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(false), Times.Once);
     }
 
     [Fact]
@@ -92,13 +99,14 @@ public class BooleanParameterHandlerTests
         // Arrange
         var args = new[] { "--Enable-Feature" };
         var mockParameter = new Mock<ILaunchParameter<bool>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "enable-feature");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("true"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(true), Times.Once);
     }
 
     [Fact]
@@ -107,13 +115,14 @@ public class BooleanParameterHandlerTests
         // Arrange
         var args = new[] { "--enable-feature", "--another-feature" };
         var mockParameter = new Mock<ILaunchParameter<bool>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "enable-feature");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("true"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(true), Times.Once);
     }
 
     [Fact]
@@ -180,7 +189,7 @@ public class BooleanParameterHandlerTests
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue(It.IsAny<string>()), Times.Once);
+        mockParameter.Verify(p => p.SetValue(false), Times.Once);
     }
 
     #endregion
@@ -193,13 +202,14 @@ public class BooleanParameterHandlerTests
         // Arrange
         var args = new[] { "--enable-feature", "--enable-feature" };
         var mockParameter = new Mock<ILaunchParameter<bool>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "enable-feature");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("true"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(true), Times.Once);
     }
 
     [Fact]
@@ -208,13 +218,14 @@ public class BooleanParameterHandlerTests
         // Arrange
         var args = new[] { "--enable-feature123" };
         var mockParameter = new Mock<ILaunchParameter<bool>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "enable-feature123");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "enable-feature123");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("true"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(true), Times.Once);
     }
 
     [Fact]
@@ -228,7 +239,7 @@ public class BooleanParameterHandlerTests
         _handler.Handle(args, mockParameter.Object, "enable-feature");
 
         // Assert
-        mockParameter.Verify(p => p.SetValue("false"), Times.Once);
+        mockParameter.Verify(p => p.SetValue(false), Times.Once);
     }
 
     #endregion

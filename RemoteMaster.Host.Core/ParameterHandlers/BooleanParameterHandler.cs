@@ -15,32 +15,35 @@ public class BooleanParameterHandler : IParameterHandler
 
     public void Handle(string[] args, ILaunchParameter parameter, string name)
     {
-        if (parameter != null)
+        if (args == null)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
-            }
+            throw new ArgumentNullException(nameof(args));
+        }
 
-            if (parameter is not ILaunchParameter<bool> boolParam)
-            {
-                return;
-            }
+        if (parameter == null)
+        {
+            throw new ArgumentNullException(nameof(parameter));
+        }
 
-            var value = parameter.GetValue(args);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
+        }
 
-            if (value != null)
-            {
-                boolParam.SetValue((bool)value);
-            }
-            else
-            {
-                boolParam.SetValue(false);
-            }
+        if (parameter is not ILaunchParameter<bool> boolParam)
+        {
+            return;
+        }
+
+        var value = parameter.GetValue(args);
+
+        if (value != null)
+        {
+            boolParam.SetValue((bool)value);
         }
         else
         {
-            throw new ArgumentNullException(nameof(parameter));
+            boolParam.SetValue(false);
         }
     }
 }

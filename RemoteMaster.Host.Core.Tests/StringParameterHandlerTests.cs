@@ -10,12 +10,7 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class StringParameterHandlerTests
 {
-    private readonly StringParameterHandler _handler;
-
-    public StringParameterHandlerTests()
-    {
-        _handler = new StringParameterHandler();
-    }
+    private readonly StringParameterHandler _handler = new();
 
     #region CanHandle Tests
 

@@ -30,15 +30,14 @@ public class StringParameterHandler : IParameterHandler
             return;
         }
 
-        var value = parameter.GetValue(args);
+        var value = args
+            .Where(arg => arg.StartsWith($"--{name}=", StringComparison.OrdinalIgnoreCase))
+            .Select(arg => arg[(arg.IndexOf('=') + 1)..])
+            .FirstOrDefault();
 
         if (value != null)
         {
-            stringParam.SetValue((string)value);
-        }
-        else if (parameter.IsRequired)
-        {
-            throw new ArgumentException($"Required parameter '{name}' is missing.");
+            stringParam.SetValue(value);
         }
     }
 }
