@@ -160,7 +160,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
         else
         {
-            logger.LogError("Failed to find a viewer for connection ID {ConnectionId} during disconnection.", Context.ConnectionId);
+            logger.LogDebug("Failed to find a viewer for connection ID {ConnectionId} during disconnection.", Context.ConnectionId);
         }
 
         await base.OnDisconnectedAsync(exception);
