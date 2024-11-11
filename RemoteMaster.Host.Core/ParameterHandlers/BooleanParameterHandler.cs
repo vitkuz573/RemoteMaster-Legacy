@@ -26,7 +26,7 @@ public class BooleanParameterHandler : IParameterHandler
             {
                 var isPresent = args.Any(arg => arg.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
 
-                boolParam.SetValue(isPresent.ToString().ToLower());
+                boolParam.SetValue(isPresent);
             }
         }
         else

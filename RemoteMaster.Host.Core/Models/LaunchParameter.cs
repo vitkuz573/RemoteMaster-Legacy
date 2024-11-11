@@ -36,8 +36,7 @@ public class LaunchParameter<T>(string name, string description, bool isRequired
             if (arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase))
             {
                 var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
-
-                return LaunchParameter<T>.ConvertValue(stringValue);
+                return ConvertValue(stringValue);
             }
 
             foreach (var alias in Aliases)
@@ -46,7 +45,7 @@ public class LaunchParameter<T>(string name, string description, bool isRequired
                 {
                     var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
 
-                    return LaunchParameter<T>.ConvertValue(stringValue);
+                    return ConvertValue(stringValue);
                 }
             }
         }
@@ -58,9 +57,24 @@ public class LaunchParameter<T>(string name, string description, bool isRequired
     /// Sets the value of the parameter with type conversion.
     /// </summary>
     /// <param name="value">The value to set as a string.</param>
-    public void SetValue(string value)
+    public void SetValue(T value)
     {
-        Value = LaunchParameter<T>.ConvertValue(value);
+        Value = value;
+    }
+
+    void ILaunchParameter.SetValue(object value)
+    {
+        switch (value)
+        {
+            case T typedValue:
+                SetValue(typedValue);
+                break;
+            case string stringValue:
+                Value = ConvertValue(stringValue);
+                break;
+            default:
+                throw new ArgumentException($"Invalid value type. Expected {typeof(T)}, got {value.GetType()}");
+        }
     }
 
     /// <summary>
@@ -70,12 +84,35 @@ public class LaunchParameter<T>(string name, string description, bool isRequired
     /// <returns>The converted value.</returns>
     private static T ConvertValue(string stringValue)
     {
-        return (T)Convert.ChangeType(stringValue, typeof(T));
+        try
+        {
+            if (typeof(T) == typeof(bool))
+            {
+                if (bool.TryParse(stringValue, out var boolResult))
+                {
+                    return (T)(object)boolResult;
+                }
+                else
+                {
+                    throw new FormatException($"Invalid boolean value: '{stringValue}'");
+                }
+            }
+            else if (typeof(T).IsEnum)
+            {
+                return (T)Enum.Parse(typeof(T), stringValue, true);
+            }
+            else
+            {
+                return (T)Convert.ChangeType(stringValue, typeof(T));
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException($"Failed to convert '{stringValue}' to type {typeof(T)}: {ex.Message}", ex);
+        }
     }
 
     object? ILaunchParameter.Value => Value;
 
     object? ILaunchParameter.GetValue(string[] args) => GetValue(args);
-
-    void ILaunchParameter.SetValue(string value) => SetValue(value);
 }

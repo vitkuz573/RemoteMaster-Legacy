@@ -7,4 +7,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface ILaunchParameter<T> : ILaunchParameter
 {
     new T? Value { get; }
+
+    void SetValue(T value);
 }

@@ -18,5 +18,5 @@ public interface ILaunchParameter
 
     object? GetValue(string[] args);
 
-    void SetValue(string value);
+    void SetValue(object value);
 }
