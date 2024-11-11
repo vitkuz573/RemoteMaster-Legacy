@@ -22,11 +22,20 @@ public class BooleanParameterHandler : IParameterHandler
                 throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
             }
 
-            if (parameter is ILaunchParameter<bool> boolParam)
+            if (parameter is not ILaunchParameter<bool> boolParam)
             {
-                var isPresent = args.Any(arg => arg.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
+                return;
+            }
 
-                boolParam.SetValue(isPresent);
+            var value = parameter.GetValue(args);
+
+            if (value != null)
+            {
+                boolParam.SetValue((bool)value);
+            }
+            else
+            {
+                boolParam.SetValue(false);
             }
         }
         else

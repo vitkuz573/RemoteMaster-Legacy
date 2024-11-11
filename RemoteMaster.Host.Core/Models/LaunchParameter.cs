@@ -33,20 +33,43 @@ public class LaunchParameter<T>(string name, string description, bool isRequired
 
         foreach (var arg in args)
         {
+            if (arg.Equals($"--{Name}", StringComparison.OrdinalIgnoreCase))
+            {
+                if (typeof(T) == typeof(bool))
+                {
+                    return (T)(object)true;
+                }
+
+                throw new ArgumentException($"Parameter '{Name}' expects a value.");
+            }
+
             if (arg.StartsWith($"--{Name}=", StringComparison.OrdinalIgnoreCase))
             {
                 var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
+
                 return ConvertValue(stringValue);
             }
 
             foreach (var alias in Aliases)
             {
-                if (arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase) || (alias.Length == 1 && arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase)))
+                if (arg.Equals($"--{alias}", StringComparison.OrdinalIgnoreCase) || (alias.Length == 1 && arg.Equals($"-{alias}", StringComparison.OrdinalIgnoreCase)))
                 {
-                    var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
+                    if (typeof(T) == typeof(bool))
+                    {
+                        return (T)(object)true;
+                    }
 
-                    return ConvertValue(stringValue);
+                    throw new ArgumentException($"Parameter '{Name}' expects a value.");
                 }
+
+                if (!arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase) && (alias.Length != 1 || !arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                var stringValue = arg[(arg.IndexOf('=') + 1)..].Trim();
+
+                return ConvertValue(stringValue);
             }
         }
 
@@ -92,19 +115,16 @@ public class LaunchParameter<T>(string name, string description, bool isRequired
                 {
                     return (T)(object)boolResult;
                 }
-                else
-                {
-                    throw new FormatException($"Invalid boolean value: '{stringValue}'");
-                }
+
+                throw new FormatException($"Invalid boolean value: '{stringValue}'");
             }
-            else if (typeof(T).IsEnum)
+
+            if (typeof(T).IsEnum)
             {
                 return (T)Enum.Parse(typeof(T), stringValue, true);
             }
-            else
-            {
-                return (T)Convert.ChangeType(stringValue, typeof(T));
-            }
+
+            return (T)Convert.ChangeType(stringValue, typeof(T));
         }
         catch (Exception ex)
         {

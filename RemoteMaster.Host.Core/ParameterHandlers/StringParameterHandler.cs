@@ -15,26 +15,30 @@ public class StringParameterHandler : IParameterHandler
 
     public void Handle(string[] args, ILaunchParameter parameter, string name)
     {
-        if (parameter != null)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
-            }
-
-            var value = args
-                .Where(arg => arg.StartsWith($"--{name}=", StringComparison.OrdinalIgnoreCase))
-                .Select(arg => arg[(arg.IndexOf('=') + 1)..])
-                .FirstOrDefault();
-
-            if (!string.IsNullOrEmpty(value))
-            {
-                parameter.SetValue(value);
-            }
-        }
-        else
+        if (parameter == null)
         {
             throw new ArgumentNullException(nameof(parameter));
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
+        }
+
+        if (parameter is not ILaunchParameter<string> stringParam)
+        {
+            return;
+        }
+
+        var value = parameter.GetValue(args);
+
+        if (value != null)
+        {
+            stringParam.SetValue((string)value);
+        }
+        else if (parameter.IsRequired)
+        {
+            throw new ArgumentException($"Required parameter '{name}' is missing.");
         }
     }
 }
