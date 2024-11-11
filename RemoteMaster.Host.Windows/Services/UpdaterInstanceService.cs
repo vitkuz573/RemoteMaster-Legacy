@@ -45,9 +45,9 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
         var startInfo = new NativeProcessStartInfo
         {
             Arguments = additionalArguments,
-            CreateNoWindow = false,
-            RedirectStandardOutput = false,
-            RedirectStandardError = false
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
 
         try

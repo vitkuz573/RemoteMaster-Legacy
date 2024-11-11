@@ -82,7 +82,7 @@ public sealed class UserInstanceService : IUserInstanceService
             Arguments = Argument,
             ForceConsoleSession = true,
             DesktopName = "Default",
-            CreateNoWindow = false,
+            CreateNoWindow = true,
             UseCurrentUserToken = false
         };
 
