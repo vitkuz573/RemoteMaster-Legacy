@@ -12,6 +12,23 @@ public class StringParameterHandlerTests
 {
     private readonly StringParameterHandler _handler = new();
 
+    private static void SetupMockParameterGetValue(Mock<ILaunchParameter<string>> mockParameter, string parameterName, string? returnValue = null)
+    {
+        mockParameter
+            .Setup(p => p.GetValue(It.IsAny<string[]>()))
+            .Returns((string[] inputArgs) =>
+            {
+                foreach (var arg in inputArgs)
+                {
+                    if (arg.StartsWith($"--{parameterName}=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return arg[(arg.IndexOf('=') + 1)..].Trim();
+                    }
+                }
+                return returnValue;
+            });
+    }
+
     #region CanHandle Tests
 
     [Fact]
@@ -57,10 +74,13 @@ public class StringParameterHandlerTests
         // Arrange
         var args = new[] { "--name=John" };
         var mockParameter = new Mock<ILaunchParameter<string>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "name");
+
+        var handler = new StringParameterHandler();
 
         // Act
-        _handler.Handle(args, mockParameter.Object, "name");
+        handler.Handle(args, mockParameter.Object, "name");
 
         // Assert
         mockParameter.Verify(p => p.SetValue("John"), Times.Once);
@@ -86,7 +106,8 @@ public class StringParameterHandlerTests
         // Arrange
         var args = new[] { "--Name=John" };
         var mockParameter = new Mock<ILaunchParameter<string>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "name");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "name");
@@ -158,7 +179,8 @@ public class StringParameterHandlerTests
         // Arrange
         var args = new[] { "--name_123=John" };
         var mockParameter = new Mock<ILaunchParameter<string>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "name_123");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "name_123");
@@ -173,7 +195,8 @@ public class StringParameterHandlerTests
         // Arrange
         var args = new[] { "--name=John_Doe@123" };
         var mockParameter = new Mock<ILaunchParameter<string>>();
-        mockParameter.Setup(p => p.SetValue(It.IsAny<string>()));
+
+        SetupMockParameterGetValue(mockParameter, "name");
 
         // Act
         _handler.Handle(args, mockParameter.Object, "name");

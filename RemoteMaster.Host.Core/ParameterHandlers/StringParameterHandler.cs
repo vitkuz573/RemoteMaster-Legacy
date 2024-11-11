@@ -15,6 +15,11 @@ public class StringParameterHandler : IParameterHandler
 
     public void Handle(string[] args, ILaunchParameter parameter, string name)
     {
+        if (args == null)
+        {
+            throw new ArgumentNullException(nameof(args));
+        }
+
         if (parameter == null)
         {
             throw new ArgumentNullException(nameof(parameter));
@@ -30,14 +35,11 @@ public class StringParameterHandler : IParameterHandler
             return;
         }
 
-        var value = args
-            .Where(arg => arg.StartsWith($"--{name}=", StringComparison.OrdinalIgnoreCase))
-            .Select(arg => arg[(arg.IndexOf('=') + 1)..])
-            .FirstOrDefault();
+        var value = parameter.GetValue(args);
 
         if (value != null)
         {
-            stringParam.SetValue(value);
+            stringParam.SetValue(value.ToString());
         }
     }
 }
