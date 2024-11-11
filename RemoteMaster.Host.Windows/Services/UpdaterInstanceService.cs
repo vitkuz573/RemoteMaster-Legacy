@@ -26,12 +26,12 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
 
         if (updateRequest.ForceUpdate)
         {
-            arguments["force"] = string.Empty;
+            arguments["force"] = true;
         }
 
         if (updateRequest.AllowDowngrade)
         {
-            arguments["allow-downgrade"] = string.Empty;
+            arguments["allow-downgrade"] = true;
         }
 
         if (updateRequest.UserCredentials != null)

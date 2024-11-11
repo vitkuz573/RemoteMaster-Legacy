@@ -10,8 +10,6 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpService, IEnumerable<IParameterHandler> handlers) : IArgumentParser
 {
-    private readonly IEnumerable<IParameterHandler> _handlers = handlers;
-
     public LaunchModeBase? ParseArguments(string[] args)
     {
         var modeName = ExtractLaunchModeName(args);
@@ -44,12 +42,9 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
 
     private void ParseAndSetParameters(string[] args, LaunchModeBase mode)
     {
-        foreach (var parameterEntry in mode.Parameters)
+        foreach (var (name, parameter) in mode.Parameters)
         {
-            var name = parameterEntry.Key;
-            var parameter = parameterEntry.Value;
-
-            var handler = _handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}' of type {parameter.GetType().GetFriendlyName()}.");
+            var handler = handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}' of type {parameter.GetType().GetFriendlyName()}.");
 
             handler.Handle(args, parameter, name);
         }
@@ -60,7 +55,7 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
     private static void ValidateRequiredParameters(LaunchModeBase mode)
     {
         var missingParameters = mode.Parameters
-            .Where(p => p.Value.IsRequired && p.Value.Value == null)
+            .Where(p => p.Value is { IsRequired: true, Value: null })
             .ToList();
 
         if (missingParameters.Count != 0)
