@@ -3,20 +3,21 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.IO.Abstractions;
 using System.Reflection;
 using System.Security.Cryptography;
+using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
-using MessagePack;
-using MessagePack.Resolvers;
-using Microsoft.Extensions.DependencyInjection;
-using RemoteMaster.Shared.Formatters;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -30,6 +31,7 @@ public class HostUpdater : IHostUpdater
     private bool _emergencyRecoveryApplied;
     private HubConnection? _updaterHubClient;
 
+    private readonly IFileSystem _fileSystem;
     private readonly INetworkDriveService _networkDriveService;
     private readonly IUserInstanceService _userInstanceService;
     private readonly IChatInstanceService _chatInstanceService;
@@ -38,8 +40,9 @@ public class HostUpdater : IHostUpdater
     private readonly IHubContext<UpdaterHub, IUpdaterClient> _hubContext;
     private readonly ILogger<HostUpdater> _logger;
 
-    public HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
+    public HostUpdater(IFileSystem fileSystem, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
     {
+        _fileSystem = fileSystem;
         _networkDriveService = networkDriveService;
         _userInstanceService = userInstanceService;
         _chatInstanceService = chatInstanceService;
@@ -95,7 +98,7 @@ public class HostUpdater : IHostUpdater
             await NotifyFlags(force, allowDowngrade);
             await NotifyProcessId();
 
-            var sourceFolderPath = Path.Combine(folderPath, "Host");
+            var sourceFolderPath = _fileSystem.Path.Combine(folderPath, "Host");
             var isNetworkPath = folderPath.StartsWith(@"\\");
 
             if (isNetworkPath)
@@ -108,9 +111,9 @@ public class HostUpdater : IHostUpdater
                 }
             }
 
-            if (!Directory.Exists(_updateFolderPath))
+            if (!_fileSystem.Directory.Exists(_updateFolderPath))
             {
-                Directory.CreateDirectory(_updateFolderPath);
+                _fileSystem.Directory.CreateDirectory(_updateFolderPath);
             }
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
@@ -242,7 +245,7 @@ public class HostUpdater : IHostUpdater
     private async Task CleanupUpdateFolder()
     {
         await Notify("Starting cleanup...", MessageSeverity.Information);
-        await DeleteDirectoriesAsync(Path.Combine(BaseFolderPath, "Update"));
+        await DeleteDirectoriesAsync(_fileSystem.Path.Combine(BaseFolderPath, "Update"));
         await Notify("Cleanup completed.", MessageSeverity.Information);
     }
 
@@ -265,9 +268,9 @@ public class HostUpdater : IHostUpdater
 
             var dirs = dir.GetDirectories();
 
-            if (!Directory.Exists(destDir))
+            if (!_fileSystem.Directory.Exists(destDir))
             {
-                Directory.CreateDirectory(destDir);
+                _fileSystem.Directory.CreateDirectory(destDir);
             }
 
             foreach (var file in dir.GetFiles())
@@ -277,7 +280,7 @@ public class HostUpdater : IHostUpdater
                     continue;
                 }
 
-                var tempPath = Path.Combine(destDir, file.Name);
+                var tempPath = _fileSystem.Path.Combine(destDir, file.Name);
                 var copiedSuccessfully = await TryCopyFileAsync(file.FullName, tempPath, overwrite);
 
                 if (copiedSuccessfully)
@@ -292,7 +295,7 @@ public class HostUpdater : IHostUpdater
 
             foreach (var subdir in dirs)
             {
-                var tempPath = Path.Combine(destDir, subdir.Name);
+                var tempPath = _fileSystem.Path.Combine(destDir, subdir.Name);
 
                 if (!await CopyDirectoryAsync(subdir.FullName, tempPath, overwrite))
                 {
@@ -310,10 +313,10 @@ public class HostUpdater : IHostUpdater
         }
     }
 
-    private static string GenerateChecksum(string filePath)
+    private string GenerateChecksum(string filePath)
     {
         using var sha256 = SHA256.Create();
-        using var stream = File.OpenRead(filePath);
+        using var stream = _fileSystem.File.OpenRead(filePath);
         var hash = sha256.ComputeHash(stream);
 
         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
@@ -350,7 +353,7 @@ public class HostUpdater : IHostUpdater
         {
             try
             {
-                File.Copy(sourceFile, destFile, overwrite);
+                _fileSystem.File.Copy(sourceFile, destFile, overwrite);
 
                 if (await VerifyChecksum(sourceFile, destFile))
                 {
@@ -458,10 +461,10 @@ public class HostUpdater : IHostUpdater
 
             await WaitForFileRelease(BaseFolderPath);
 
-            var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
-            var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+            var sourceExePath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
+            var destinationExePath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
 
-            if (!File.Exists(sourceExePath))
+            if (!_fileSystem.File.Exists(sourceExePath))
             {
                 await Notify("Source executable for recovery not found. Unable to proceed with recovery.", MessageSeverity.Error);
                 
@@ -480,13 +483,13 @@ public class HostUpdater : IHostUpdater
         }
     }
 
-    private static void CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 3)
+    private void CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 3)
     {
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
-                File.Copy(sourceFile, destinationFile, overwrite);
+                _fileSystem.File.Copy(sourceFile, destinationFile, overwrite);
 
                 return;
             }
@@ -548,13 +551,13 @@ public class HostUpdater : IHostUpdater
 
     private async Task<bool> NeedUpdate()
     {
-        var updateFiles = Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories).Select(Path.GetFullPath);
+        var updateFiles = _fileSystem.Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories).Select(_fileSystem.Path.GetFullPath);
 
         foreach (var file in updateFiles)
         {
             var targetFile = file.Replace(_updateFolderPath, BaseFolderPath);
 
-            if (!File.Exists(targetFile))
+            if (!_fileSystem.File.Exists(targetFile))
             {
                 return true;
             }
@@ -571,13 +574,13 @@ public class HostUpdater : IHostUpdater
     private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
     {
         var currentVersion = new Version(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "0.0.0.0");
-        var updateVersion = GetVersionFromExecutable(Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
+        var updateVersion = GetVersionFromExecutable(_fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
 
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
         await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
 
-        var currentExecutablePath = Path.Combine(BaseFolderPath, "RemoteMaster.Host.exe");
-        var updateExecutablePath = Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
+        var currentExecutablePath = _fileSystem.Path.Combine(BaseFolderPath, "RemoteMaster.Host.exe");
+        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
 
         if (updateVersion > currentVersion)
         {
@@ -626,9 +629,9 @@ public class HostUpdater : IHostUpdater
         return false;
     }
 
-    private static Version GetVersionFromExecutable(string filePath)
+    private Version GetVersionFromExecutable(string filePath)
     {
-        if (!File.Exists(filePath))
+        if (!_fileSystem.File.Exists(filePath))
         {
             throw new FileNotFoundException("Executable file not found.", filePath);
         }
@@ -680,12 +683,13 @@ public class HostUpdater : IHostUpdater
         {
             try
             {
-                if (!Directory.Exists(directory))
+                if (!_fileSystem.Directory.Exists(directory))
                 {
                     continue;
                 }
 
-                Directory.Delete(directory, true);
+                _fileSystem.Directory.Delete(directory, true);
+
                 await Notify($"Successfully deleted directory: {directory}", MessageSeverity.Information);
             }
             catch (Exception ex)
