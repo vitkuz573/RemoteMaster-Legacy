@@ -59,7 +59,7 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
             return;
         }
 
-        const double SimilarityThreshold = 0.6;
+        const double similarityThreshold = 0.6;
 
         var suggestions = availableModes
             .Select(mode => new
@@ -67,7 +67,7 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
                 Mode = mode,
                 Similarity = ComputeSimilarity(inputMode.ToLower(), mode.Name.ToLower())
             })
-            .Where(result => result.Similarity >= SimilarityThreshold)
+            .Where(result => result.Similarity >= similarityThreshold)
             .OrderByDescending(result => result.Similarity)
             .Take(3)
             .Select(result => result.Mode)
@@ -87,20 +87,6 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
         {
             PrintModeSummary(suggestion);
         }
-    }
-
-    private static void PrintParameterDetails(IEnumerable<dynamic> parameters)
-    {
-        foreach (var param in parameters)
-        {
-            var aliases = param.Aliases is IEnumerable<string> aliasCollection && aliasCollection.Any()
-                ? $" (Aliases: {string.Join(", ", aliasCollection.Select(alias => $"--{alias}"))})"
-                : string.Empty;
-
-            Console.WriteLine($"  --{param.MainKey}: {param.Parameter.Description} {(param.Parameter.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
-        }
-
-        Console.WriteLine();
     }
 
     private void PrintGeneralHelp()
@@ -123,11 +109,8 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
 
         Console.WriteLine($"  {mode.Description}\n");
 
-        foreach (var paramPair in mode.Parameters)
+        foreach (var (key, param) in mode.Parameters)
         {
-            var key = paramPair.Key;
-            var param = paramPair.Value;
-
             var aliases = param.Aliases.Any()
                 ? $" (Aliases: {string.Join(", ", param.Aliases.Select(alias => $"--{alias}"))})"
                 : string.Empty;
