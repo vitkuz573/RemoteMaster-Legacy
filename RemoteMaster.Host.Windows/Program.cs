@@ -214,19 +214,19 @@ internal class Program
                             OnAuthenticationFailed = context =>
                             {
                                 var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                                logger.LogError("Authentication failed: {Error}", context.Exception.Message);
+                                logger.LogDebug("Authentication failed: {Error}", context.Exception.Message);
                                 return Task.CompletedTask;
                             },
                             OnTokenValidated = context =>
                             {
                                 var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                                logger.LogInformation("Authentication succeeded for user {User}", context.Principal.Identity?.Name);
+                                logger.LogDebug("Authentication succeeded for user {User}", context.Principal.Identity?.Name);
                                 return Task.CompletedTask;
                             },
                             OnChallenge = context =>
                             {
                                 var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                                logger.LogWarning("Token challenge failed. Authorization header: {AuthorizationHeader}",
+                                logger.LogDebug("Token challenge failed. Authorization header: {AuthorizationHeader}",
                                     context.Request.Headers["Authorization"]);
                                 return Task.CompletedTask;
                             }
