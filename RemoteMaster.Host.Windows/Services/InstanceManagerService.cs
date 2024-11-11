@@ -11,11 +11,11 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
-    private string _executablePath = Environment.ProcessPath!;
-
     public int StartNewInstance(string? destinationPath, NativeProcessStartInfo startInfo)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
+
+        var executablePath = Environment.ProcessPath!;
 
         try
         {
@@ -29,16 +29,16 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
                     fileSystem.Directory.CreateDirectory(destinationDirectory);
                 }
 
-                logger.LogInformation("Copying executable from {ExecutablePath} to {DestinationPath}", _executablePath, destinationPath);
-                fileSystem.File.Copy(_executablePath, destinationPath, true);
+                logger.LogInformation("Copying executable from {ExecutablePath} to {DestinationPath}", executablePath, destinationPath);
+                fileSystem.File.Copy(executablePath, destinationPath, true);
                 logger.LogInformation("Successfully copied the executable.");
 
-                _executablePath = destinationPath;
+                executablePath = destinationPath;
             }
 
             var process = nativeProcessFactory.Create();
 
-            startInfo.FileName = _executablePath;
+            startInfo.FileName = executablePath;
             process.StartInfo = startInfo;
 
             process.Start();
@@ -48,13 +48,13 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
         catch (IOException ioEx)
         {
-            logger.LogError(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", _executablePath, destinationPath);
+            logger.LogError(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", executablePath, destinationPath);
 
             throw;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
+            logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", executablePath);
 
             throw;
         }
