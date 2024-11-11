@@ -10,6 +10,8 @@ public class BooleanParameterHandler : BaseParameterHandler<bool>
 {
     protected override void SetValue(ILaunchParameter<bool> parameter, object? value)
     {
+        ArgumentNullException.ThrowIfNull(parameter);
+
         parameter.SetValue(value != null && (bool)value);
     }
 }

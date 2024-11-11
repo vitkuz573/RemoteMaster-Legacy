@@ -10,6 +10,8 @@ public class StringParameterHandler : BaseParameterHandler<string>
 {
     protected override void SetValue(ILaunchParameter<string> parameter, object? value)
     {
+        ArgumentNullException.ThrowIfNull(parameter);
+
         if (value != null)
         {
             parameter.SetValue(value.ToString());
