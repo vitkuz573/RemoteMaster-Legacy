@@ -24,9 +24,9 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class HostUpdater : IHostUpdater
 {
-    private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
+    private readonly string _baseFolderPath;
+    private readonly string _updateFolderPath;
 
-    private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
     private readonly TaskCompletionSource<bool> _clientConnectedTcs = new();
     private bool _emergencyRecoveryApplied;
     private HubConnection? _updaterHubClient;
@@ -50,6 +50,9 @@ public class HostUpdater : IHostUpdater
         _hostConfigurationService = hostConfigurationService;
         _hubContext = hubContext;
         _logger = logger;
+
+        _baseFolderPath = _fileSystem.Path.Combine(_fileSystem.Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)) ?? string.Empty, "RemoteMaster", "Host");
+        _updateFolderPath = _fileSystem.Path.Combine(_baseFolderPath, "Update");
 
         Task.Run(async () => await InitializeHubClient());
     }
@@ -175,8 +178,8 @@ public class HostUpdater : IHostUpdater
         _chatInstanceService.Stop();
         _userInstanceService.Stop();
 
-        await WaitForFileRelease(BaseFolderPath);
-        await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
+        await WaitForFileRelease(_baseFolderPath);
+        await CopyDirectoryAsync(_updateFolderPath, _baseFolderPath, true);
 
         hostService.Start();
         await EnsureServicesRunning([hostService, _userInstanceService], 5, 5);
@@ -245,7 +248,7 @@ public class HostUpdater : IHostUpdater
     private async Task CleanupUpdateFolder()
     {
         await Notify("Starting cleanup...", MessageSeverity.Information);
-        await DeleteDirectoriesAsync(_fileSystem.Path.Combine(BaseFolderPath, "Update"));
+        await DeleteDirectoriesAsync(_fileSystem.Path.Combine(_baseFolderPath, "Update"));
         await Notify("Cleanup completed.", MessageSeverity.Information);
     }
 
@@ -459,7 +462,7 @@ public class HostUpdater : IHostUpdater
                 _userInstanceService.Stop();
             }
 
-            await WaitForFileRelease(BaseFolderPath);
+            await WaitForFileRelease(_baseFolderPath);
 
             var sourceExePath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
             var destinationExePath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
@@ -555,7 +558,7 @@ public class HostUpdater : IHostUpdater
 
         foreach (var file in updateFiles)
         {
-            var targetFile = file.Replace(_updateFolderPath, BaseFolderPath);
+            var targetFile = file.Replace(_updateFolderPath, _baseFolderPath);
 
             if (!_fileSystem.File.Exists(targetFile))
             {
@@ -579,7 +582,7 @@ public class HostUpdater : IHostUpdater
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
         await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
 
-        var currentExecutablePath = _fileSystem.Path.Combine(BaseFolderPath, "RemoteMaster.Host.exe");
+        var currentExecutablePath = _fileSystem.Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
         var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
 
         if (updateVersion > currentVersion)
