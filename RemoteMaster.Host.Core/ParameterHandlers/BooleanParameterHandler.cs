@@ -6,44 +6,10 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.ParameterHandlers;
 
-public class BooleanParameterHandler : IParameterHandler
+public class BooleanParameterHandler : BaseParameterHandler<bool>
 {
-    public bool CanHandle(ILaunchParameter parameter)
+    protected override void SetValue(ILaunchParameter<bool> parameter, object? value)
     {
-        return parameter == null ? throw new ArgumentNullException(nameof(parameter)) : parameter is ILaunchParameter<bool>;
-    }
-
-    public void Handle(string[] args, ILaunchParameter parameter, string name)
-    {
-        if (args == null)
-        {
-            throw new ArgumentNullException(nameof(args));
-        }
-
-        if (parameter == null)
-        {
-            throw new ArgumentNullException(nameof(parameter));
-        }
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Parameter name cannot be null, empty, or whitespace.", nameof(name));
-        }
-
-        if (parameter is not ILaunchParameter<bool> boolParam)
-        {
-            return;
-        }
-
-        var value = parameter.GetValue(args);
-
-        if (value != null)
-        {
-            boolParam.SetValue((bool)value);
-        }
-        else
-        {
-            boolParam.SetValue(false);
-        }
+        parameter.SetValue(value != null && (bool)value);
     }
 }
