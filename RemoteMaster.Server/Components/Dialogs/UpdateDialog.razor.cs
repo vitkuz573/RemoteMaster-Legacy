@@ -68,6 +68,17 @@ public partial class UpdateDialog
                 })
                 .Build();
 
+                if (!_subscribedConnections.Contains(updaterConnection))
+                {
+                    updaterConnection.On<Message>("ReceiveMessage", async message =>
+                    {
+                        UpdateResultsForHost(host, message);
+                        await InvokeAsync(StateHasChanged);
+                    });
+
+                    _subscribedConnections.Add(updaterConnection);
+                }
+
                 var updateRequest = new UpdateRequest(_folderPath)
                 {
                     UserCredentials = new Credentials(_username, _password),
@@ -81,24 +92,18 @@ public partial class UpdateDialog
                 {
                     connection!.On<Message>("ReceiveMessage", async message =>
                     {
-                        UpdateResultsForHost(host, message);
-                        await InvokeAsync(StateHasChanged);
+                        if (message.Text.Contains("Updater instance on port"))
+                        {
+                            await updaterConnection.StartAsync();
+                        }
+                        else
+                        {
+                            UpdateResultsForHost(host, message);
+                            await InvokeAsync(StateHasChanged);
+                        }
                     });
 
                     _subscribedConnections.Add(connection!);
-                }
-
-                await updaterConnection.StartAsync();
-
-                if (!_subscribedConnections.Contains(updaterConnection))
-                {
-                    updaterConnection.On<Message>("ReceiveMessage", async message =>
-                    {
-                        UpdateResultsForHost(host, message);
-                        await InvokeAsync(StateHasChanged);
-                    });
-
-                    _subscribedConnections.Add(updaterConnection);
                 }
             });
 

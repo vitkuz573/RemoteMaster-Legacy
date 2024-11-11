@@ -9,4 +9,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IUpdaterClient
 {
     Task ReceiveMessage(Message message);
+
+    Task NotifyPortReady(int port);
 }

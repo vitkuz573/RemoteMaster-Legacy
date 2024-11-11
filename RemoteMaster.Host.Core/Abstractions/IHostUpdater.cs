@@ -7,4 +7,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IHostUpdater
 {
     Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false);
+
+    void NotifyClientConnected();
 }

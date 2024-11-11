@@ -4,16 +4,48 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Models;
+using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
-public class UpdaterHub(IUpdaterInstanceService updaterInstanceService) : Hub<IUpdaterClient>
+[Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
+public class UpdaterHub(IUpdaterInstanceService updaterInstanceService, IHostUpdater hostUpdater, ILogger<UpdaterHub> logger) : Hub<IUpdaterClient>
 {
+    public async override Task OnConnectedAsync()
+    {
+        var httpContext = Context.GetHttpContext();
+
+        logger.LogInformation("New connection detected. Connection ID: {ConnectionId}, Local Port: {Port}", Context.ConnectionId, httpContext?.Connection.LocalPort);
+
+        var localPort = httpContext?.Connection.LocalPort;
+
+        if (localPort == 6001)
+        {
+            logger.LogInformation("Notifying HostUpdater about client connection on port 6001.");
+
+            hostUpdater.NotifyClientConnected();
+        }
+        else
+        {
+            logger.LogWarning("Unexpected connection on port {Port}.", localPort);
+        }
+
+        await base.OnConnectedAsync();
+    }
+
     public void SendStartUpdater(UpdateRequest updateRequest)
     {
         updaterInstanceService.Start(updateRequest);
+    }
+
+    public void NotifyPortReady(int port)
+    {
+        logger.LogInformation("Port {Port} is ready.", port);
+
+        Clients.All.ReceiveMessage(new Message($"Updater instance on port {port} is ready.", MessageSeverity.Information));
     }
 }

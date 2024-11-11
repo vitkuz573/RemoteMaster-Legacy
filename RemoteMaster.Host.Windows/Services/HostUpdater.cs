@@ -6,27 +6,89 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
+using MessagePack;
+using MessagePack.Resolvers;
+using Microsoft.Extensions.DependencyInjection;
+using RemoteMaster.Shared.Formatters;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger) : IHostUpdater
+public class HostUpdater : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
-
+    private readonly TaskCompletionSource<bool> _clientConnectedTcs = new();
     private bool _emergencyRecoveryApplied;
+    private HubConnection? _updaterHubClient;
+
+    private readonly INetworkDriveService _networkDriveService;
+    private readonly IUserInstanceService _userInstanceService;
+    private readonly IChatInstanceService _chatInstanceService;
+    private readonly IServiceFactory _serviceFactory;
+    private readonly IHostConfigurationService _hostConfigurationService;
+    private readonly IHubContext<UpdaterHub, IUpdaterClient> _hubContext;
+    private readonly ILogger<HostUpdater> _logger;
+
+    public HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
+    {
+        _networkDriveService = networkDriveService;
+        _userInstanceService = userInstanceService;
+        _chatInstanceService = chatInstanceService;
+        _serviceFactory = serviceFactory;
+        _hostConfigurationService = hostConfigurationService;
+        _hubContext = hubContext;
+        _logger = logger;
+
+        Task.Run(async () => await InitializeHubClient());
+    }
+
+    private async Task InitializeHubClient()
+    {
+        var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
+
+        _updaterHubClient = new HubConnectionBuilder()
+            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/updater", options =>
+            {
+                options.Headers.Add("X-Service-Flag", "true");
+            })
+            .AddMessagePackProtocol(options =>
+            {
+                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+            })
+            .Build();
+
+        await _updaterHubClient.StartAsync();
+
+        await _updaterHubClient.InvokeAsync("NotifyPortReady", 6001);
+    }
 
     public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
+
+        try
+        {
+            _logger.LogInformation("Waiting for client to connect to UpdaterHub...");
+            await _clientConnectedTcs.Task;
+            _logger.LogInformation("Client connected. Proceeding with update.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error waiting for client connection.");
+
+            return;
+        }
 
         try
         {
@@ -88,19 +150,33 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
+    public void NotifyClientConnected()
+    {
+        if (!_clientConnectedTcs.Task.IsCompleted)
+        {
+            _clientConnectedTcs.SetResult(true); 
+
+            _logger.LogInformation("Client successfully connected to UpdaterHub.");
+        }
+        else
+        {
+            _logger.LogWarning("NotifyClientConnected called but TCS is already completed.");
+        }
+    }
+
     private async Task PerformUpdate()
     {
-        var hostService = serviceFactory.GetService("RCHost");
+        var hostService = _serviceFactory.GetService("RCHost");
 
         hostService.Stop();
-        chatInstanceService.Stop();
-        userInstanceService.Stop();
+        _chatInstanceService.Stop();
+        _userInstanceService.Stop();
 
         await WaitForFileRelease(BaseFolderPath);
         await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
 
         hostService.Start();
-        await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
+        await EnsureServicesRunning([hostService, _userInstanceService], 5, 5);
 
         if (!_emergencyRecoveryApplied)
         {
@@ -122,7 +198,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
     private async Task NotifyProcessId()
     {
-        await hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageSeverity.Service)
+        await _hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageSeverity.Service)
         {
             Meta = "pid"
         });
@@ -132,7 +208,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     {
         await Notify($"Attempting to map network drive with remote path: {folderPath}", MessageSeverity.Information);
 
-        var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
+        var isMapped = _networkDriveService.MapNetworkDrive(folderPath, username, password);
 
         if (!isMapped)
         {
@@ -151,7 +227,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     {
         await Notify($"Attempting to unmap network drive with remote path: {folderPath}", MessageSeverity.Information);
 
-        var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
+        var isCancelled = _networkDriveService.CancelNetworkDrive(folderPath);
 
         if (!isCancelled)
         {
@@ -371,13 +447,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         try
         {
-            var hostService = serviceFactory.GetService("RCHost");
+            var hostService = _serviceFactory.GetService("RCHost");
 
             StopServiceWithRetry(hostService, "Host");
 
-            if (userInstanceService.IsRunning)
+            if (_userInstanceService.IsRunning)
             {
-                userInstanceService.Stop();
+                _userInstanceService.Stop();
             }
 
             await WaitForFileRelease(BaseFolderPath);
@@ -580,13 +656,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         switch (messageType)
         {
             case MessageSeverity.Information:
-                logger.LogInformation("{Message}", message);
+                _logger.LogInformation("{Message}", message);
                 break;
             case MessageSeverity.Warning:
-                logger.LogWarning("{Message}", message);
+                _logger.LogWarning("{Message}", message);
                 break;
             case MessageSeverity.Error:
-                logger.LogError("{Message}", message);
+                _logger.LogError("{Message}", message);
                 break;
         }
 
@@ -594,7 +670,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
+            await _hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
         }
     }
 

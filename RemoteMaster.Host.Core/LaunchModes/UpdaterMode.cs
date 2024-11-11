@@ -34,8 +34,6 @@ public class UpdaterMode : LaunchModeBase
 
         var hostUpdater = serviceProvider.GetRequiredService<IHostUpdater>();
 
-        await Task.Delay(2000);
-
         await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade);
 
         Environment.Exit(0);
