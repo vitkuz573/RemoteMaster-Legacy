@@ -12,6 +12,13 @@ public class BooleanParameterHandler : BaseParameterHandler<bool>
     {
         ArgumentNullException.ThrowIfNull(parameter);
 
-        parameter.SetValue(value != null && (bool)value);
+        if (value is bool boolValue)
+        {
+            parameter.SetValue(boolValue);
+        }
+        else
+        {
+            parameter.SetValue(false);
+        }
     }
 }
