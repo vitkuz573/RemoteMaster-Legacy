@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core;
 using RemoteMaster.Host.Core.Abstractions;
@@ -112,13 +113,13 @@ internal class Program
         }
         catch (ArgumentException ex)
         {
-            Console.Error.WriteLine($"Error: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
 
             Environment.Exit(1);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"An unexpected error occurred: {ex.Message}");
+            await Console.Error.WriteLineAsync($"An unexpected error occurred: {ex.Message}");
 
             Environment.Exit(1);
         }
@@ -190,6 +191,8 @@ internal class Program
 #pragma warning restore CA2000
                 rsa.ImportRSAPublicKey(publicKey, out _);
 
+                var validateLifetime = !IsWinPE();
+
                 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(jwtBearerOptions =>
                     {
@@ -198,12 +201,35 @@ internal class Program
                             ValidateIssuer = true,
                             ValidateAudience = true,
                             ValidateIssuerSigningKey = true,
-                            ValidateLifetime = true,
+                            ValidateLifetime = validateLifetime,
                             ValidIssuer = "RemoteMaster Server",
                             ValidAudience = "RMServiceAPI",
                             IssuerSigningKey = new RsaSecurityKey(rsa),
                             RoleClaimType = ClaimTypes.Role,
                             AuthenticationType = "JWT Security"
+                        };
+
+                        jwtBearerOptions.Events = new JwtBearerEvents
+                        {
+                            OnAuthenticationFailed = context =>
+                            {
+                                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                                logger.LogError("Authentication failed: {Error}", context.Exception.Message);
+                                return Task.CompletedTask;
+                            },
+                            OnTokenValidated = context =>
+                            {
+                                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                                logger.LogInformation("Authentication succeeded for user {User}", context.Principal.Identity?.Name);
+                                return Task.CompletedTask;
+                            },
+                            OnChallenge = context =>
+                            {
+                                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                                logger.LogWarning("Token challenge failed. Authorization header: {AuthorizationHeader}",
+                                    context.Request.Headers["Authorization"]);
+                                return Task.CompletedTask;
+                            }
                         };
                     });
 
@@ -273,5 +299,14 @@ internal class Program
                 services.AddHostedService<ChatWindowService>();
                 break;
         }
+    }
+
+    private static bool IsWinPE()
+    {
+        var systemDirectory = Environment.SystemDirectory;
+
+        var systemDrive = Path.GetPathRoot(systemDirectory);
+
+        return !string.Equals(systemDrive, @"C:\", StringComparison.OrdinalIgnoreCase);
     }
 }
