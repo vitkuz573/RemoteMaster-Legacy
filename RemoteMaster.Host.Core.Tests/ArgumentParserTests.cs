@@ -15,7 +15,6 @@ public class ArgumentParserTests
 {
     private readonly Mock<ILaunchModeProvider> _mockModeProvider;
     private readonly Mock<IHelpService> _mockHelpService;
-    private readonly List<IParameterHandler> _handlers;
     private readonly ArgumentParser _parser;
 
     public ArgumentParserTests()
@@ -23,13 +22,12 @@ public class ArgumentParserTests
         _mockModeProvider = new Mock<ILaunchModeProvider>();
         _mockHelpService = new Mock<IHelpService>();
 
-        _handlers =
-        [
+        List<IParameterHandler> handlers = [
             new BooleanParameterHandler(),
             new StringParameterHandler()
         ];
 
-        _parser = new ArgumentParser(_mockModeProvider.Object, _mockHelpService.Object, _handlers);
+        _parser = new ArgumentParser(_mockModeProvider.Object, _mockHelpService.Object, handlers);
     }
 
     [Fact]
@@ -168,17 +166,16 @@ public class ArgumentParserTests
         {
             foreach (var parameter in parameters.Values)
             {
-                if (parameter is ILaunchParameter<string> stringParam)
+                switch (parameter)
                 {
-                    AddParameter(stringParam);
-                }
-                else if (parameter is ILaunchParameter<bool> boolParam)
-                {
-                    AddParameter(boolParam);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Unsupported parameter type: {parameter.GetType()}");
+                    case ILaunchParameter<string> stringParam:
+                        AddParameter(stringParam);
+                        break;
+                    case ILaunchParameter<bool> boolParam:
+                        AddParameter(boolParam);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unsupported parameter type: {parameter.GetType()}");
                 }
             }
         }

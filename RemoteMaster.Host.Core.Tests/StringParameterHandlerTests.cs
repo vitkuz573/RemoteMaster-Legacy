@@ -25,6 +25,7 @@ public class StringParameterHandlerTests
                         return arg[(arg.IndexOf('=') + 1)..].Trim();
                     }
                 }
+
                 return returnValue;
             });
     }
