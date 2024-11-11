@@ -12,9 +12,13 @@ public class StringParameterHandler : BaseParameterHandler<string>
     {
         ArgumentNullException.ThrowIfNull(parameter);
 
-        if (value != null)
+        if (value is string str && !string.IsNullOrWhiteSpace(str))
         {
-            parameter.SetValue(value.ToString());
+            parameter.SetValue(str);
+        }
+        else if (value != null)
+        {
+            parameter.SetValue(value.ToString()!);
         }
     }
 }

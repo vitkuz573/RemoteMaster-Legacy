@@ -55,7 +55,7 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
     private static void ValidateRequiredParameters(LaunchModeBase mode)
     {
         var missingParameters = mode.Parameters
-            .Where(p => p.Value is { IsRequired: true, Value: null })
+            .Where(p => p.Value is { IsRequired: true } && (p.Value.Value == null || (p.Value.Value is string str && string.IsNullOrWhiteSpace(str))))
             .ToList();
 
         if (missingParameters.Count != 0)
