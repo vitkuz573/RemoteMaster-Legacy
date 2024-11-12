@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -167,7 +166,6 @@ internal class Program
         services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
         services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
         services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
-        services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         services.AddSingleton<ICommandExecutor, CommandExecutor>();

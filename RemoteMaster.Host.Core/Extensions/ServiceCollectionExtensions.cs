@@ -55,6 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
+        services.AddSingleton<IFileService, FileService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

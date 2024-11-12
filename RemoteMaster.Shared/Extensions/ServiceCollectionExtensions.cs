@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
@@ -15,5 +16,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<IHostInformationService, HostInformationService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
+        services.AddSingleton<IFileSystem, FileSystem>();
     }
 }

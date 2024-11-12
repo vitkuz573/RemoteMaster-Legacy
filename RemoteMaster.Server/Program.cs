@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.IO.Abstractions;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text.Json;
@@ -162,7 +161,6 @@ public static class Program
         services.AddScoped<ICrlUnitOfWork, CrlUnitOfWork>();
         services.AddScoped<ICertificateTaskUnitOfWork, CertificateTaskUnitOfWork>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
-        services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();

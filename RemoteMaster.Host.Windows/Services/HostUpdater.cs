@@ -5,7 +5,6 @@
 using System.Diagnostics;
 using System.IO.Abstractions;
 using System.Reflection;
-using System.Security.Cryptography;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR;
@@ -17,7 +16,6 @@ using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
-using Windows.Win32.Foundation;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -31,6 +29,7 @@ public class HostUpdater : IHostUpdater
     private bool _emergencyRecoveryApplied;
     private HubConnection? _updaterHubClient;
 
+    private readonly IFileService _fileService;
     private readonly IFileSystem _fileSystem;
     private readonly INetworkDriveService _networkDriveService;
     private readonly IUserInstanceService _userInstanceService;
@@ -40,8 +39,9 @@ public class HostUpdater : IHostUpdater
     private readonly IHubContext<UpdaterHub, IUpdaterClient> _hubContext;
     private readonly ILogger<HostUpdater> _logger;
 
-    public HostUpdater(IFileSystem fileSystem, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
+    public HostUpdater(IFileService fileService, IFileSystem fileSystem, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
     {
+        _fileService = fileService;
         _fileSystem = fileSystem;
         _networkDriveService = networkDriveService;
         _userInstanceService = userInstanceService;
@@ -248,7 +248,20 @@ public class HostUpdater : IHostUpdater
     private async Task CleanupUpdateFolder()
     {
         await Notify("Starting cleanup...", MessageSeverity.Information);
-        await DeleteDirectoriesAsync(_fileSystem.Path.Combine(_baseFolderPath, "Update"));
+
+        var updateDirectory = _fileSystem.Path.Combine(_baseFolderPath, "Update");
+
+        try
+        {
+            _fileService.DeleteDirectory(updateDirectory);
+
+            await Notify($"Successfully deleted directory: {updateDirectory}", MessageSeverity.Information);
+        }
+        catch (Exception ex)
+        {
+            await Notify($"Failed to delete directory {updateDirectory}: {ex.Message}", MessageSeverity.Error);
+        }
+
         await Notify("Cleanup completed.", MessageSeverity.Information);
     }
 
@@ -258,77 +271,62 @@ public class HostUpdater : IHostUpdater
         await Notify("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
     }
 
-    private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
+    private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false, int maxAttempts = 5)
     {
-        try
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            var dir = _fileSystem.DirectoryInfo.New(sourceDir);
-
-            if (!dir.Exists)
+            try
             {
-                throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDir}.");
-            }
+                _fileService.CopyDirectory(sourceDir, destDir, overwrite);
 
-            var dirs = dir.GetDirectories();
-
-            if (!_fileSystem.Directory.Exists(destDir))
-            {
-                _fileSystem.Directory.CreateDirectory(destDir);
-            }
-
-            foreach (var file in dir.GetFiles())
-            {
-                if (file.Name.Equals("RemoteMaster.Host.json", StringComparison.OrdinalIgnoreCase))
+                foreach (var sourceFile in _fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
                 {
-                    continue;
+                    var relativePath = sourceFile[(sourceDir.Length + 1)..];
+                    var destFile = _fileSystem.Path.Combine(destDir, relativePath);
+
+                    if (!_fileSystem.File.Exists(destFile))
+                    {
+                        await Notify($"File {sourceFile} was not copied to {destFile}.", MessageSeverity.Error);
+
+                        throw new IOException($"File {sourceFile} was not copied successfully.");
+                    }
+
+                    if (await VerifyChecksum(sourceFile, destFile))
+                    {
+                        continue;
+                    }
+
+                    await Notify($"File {sourceFile} copied with errors. Checksum does not match.", MessageSeverity.Error);
+
+                    throw new IOException($"Checksum mismatch for file {sourceFile}.");
                 }
 
-                var tempPath = _fileSystem.Path.Combine(destDir, file.Name);
-                var copiedSuccessfully = await TryCopyFileAsync(file.FullName, tempPath, overwrite);
-
-                if (copiedSuccessfully)
-                {
-                    continue;
-                }
-
-                await Notify($"File {file.Name} copied with errors. Checksum does not match.", MessageSeverity.Error);
-
-                return false;
+                await Notify($"Successfully copied directory {sourceDir} to {destDir} on attempt {attempt}.", MessageSeverity.Information);
+                
+                return true;
             }
-
-            foreach (var subdir in dirs)
+            catch (Exception ex)
             {
-                var tempPath = _fileSystem.Path.Combine(destDir, subdir.Name);
+                await Notify($"Attempt {attempt} to copy directory {sourceDir} to {destDir} failed: {ex.Message}", MessageSeverity.Warning);
 
-                if (!await CopyDirectoryAsync(subdir.FullName, tempPath, overwrite))
+                if (attempt == maxAttempts)
                 {
+                    await Notify($"All {maxAttempts} attempts to copy directory {sourceDir} to {destDir} failed.", MessageSeverity.Error);
+                    
                     return false;
                 }
+
+                await Task.Delay(1000);
             }
-
-            return true;
         }
-        catch (Exception ex)
-        {
-            await Notify($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}", MessageSeverity.Error);
 
-            return false;
-        }
-    }
-
-    private string GenerateChecksum(string filePath)
-    {
-        using var sha256 = SHA256.Create();
-        using var stream = _fileSystem.File.OpenRead(filePath);
-        var hash = sha256.ComputeHash(stream);
-
-        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        return false;
     }
 
     private async Task<bool> VerifyChecksum(string sourceFilePath, string destFilePath, bool expectDifference = false)
     {
-        var sourceChecksum = GenerateChecksum(sourceFilePath);
-        var destChecksum = GenerateChecksum(destFilePath);
+        var sourceChecksum = _fileService.CalculateChecksum(sourceFilePath);
+        var destChecksum = _fileService.CalculateChecksum(destFilePath);
 
         var checksumMatch = sourceChecksum == destChecksum;
 
@@ -346,40 +344,6 @@ public class HostUpdater : IHostUpdater
                 await Notify("Checksum verification successful. No differences found.", MessageSeverity.Information);
                 return true;
         }
-    }
-
-    private async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
-    {
-        var attempts = 0;
-
-        while (true)
-        {
-            try
-            {
-                _fileSystem.File.Copy(sourceFile, destFile, overwrite);
-
-                if (await VerifyChecksum(sourceFile, destFile))
-                {
-                    break;
-                }
-
-                await Notify($"Checksum verification failed for file {sourceFile}.", MessageSeverity.Error);
-
-                return false;
-            }
-            catch (IOException ex) when (ex.HResult == (int)WIN32_ERROR.ERROR_SHARING_VIOLATION)
-            {
-                if (++attempts == 5)
-                {
-                    throw;
-                }
-
-                await Notify($"File {sourceFile} is currently in use. Retrying in 1 second...", MessageSeverity.Warning);
-                await Task.Delay(1000);
-            }
-        }
-
-        return true;
     }
 
     private async Task WaitForFileRelease(string directory)
@@ -486,26 +450,36 @@ public class HostUpdater : IHostUpdater
         }
     }
 
-    private void CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 3)
+    private async Task CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 5)
     {
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
-                _fileSystem.File.Copy(sourceFile, destinationFile, overwrite);
+                _fileService.CopyFile(sourceFile, destinationFile, overwrite);
 
-                return;
-            }
-            catch (IOException)
-            {
-                if (attempt == maxAttempts)
+                if (await VerifyChecksum(sourceFile, destinationFile))
                 {
-                    throw;
+                    await Notify($"Successfully copied file {sourceFile} to {destinationFile} on attempt {attempt}.", MessageSeverity.Information);
+                    
+                    return;
                 }
 
-                Thread.Sleep(1000);
+                await Notify($"Checksum verification failed for file {sourceFile}. Retrying...", MessageSeverity.Warning);
+            }
+            catch (IOException ex) when (attempt < maxAttempts)
+            {
+                await Notify($"Attempt {attempt} to copy file {sourceFile} failed: {ex.Message}. Retrying in 1 second...", MessageSeverity.Warning);
+                await Task.Delay(1000);
+            }
+            catch (Exception ex)
+            {
+                await Notify($"Failed to copy file {sourceFile} to {destinationFile}: {ex.Message}.", MessageSeverity.Error);
+                throw;
             }
         }
+
+        throw new IOException($"Failed to copy file {sourceFile} to {destinationFile} after {maxAttempts} attempts.");
     }
 
     private static void StopServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
@@ -677,28 +651,6 @@ public class HostUpdater : IHostUpdater
         while (await streamReader.ReadLineAsync() is { } line)
         {
             await _hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
-        }
-    }
-
-    private async Task DeleteDirectoriesAsync(params string[] directories)
-    {
-        foreach (var directory in directories)
-        {
-            try
-            {
-                if (!_fileSystem.Directory.Exists(directory))
-                {
-                    continue;
-                }
-
-                _fileSystem.Directory.Delete(directory, true);
-
-                await Notify($"Successfully deleted directory: {directory}", MessageSeverity.Information);
-            }
-            catch (Exception ex)
-            {
-                await Notify($"Failed to delete directory {directory}: {ex.Message}", MessageSeverity.Error);
-            }
         }
     }
 }
