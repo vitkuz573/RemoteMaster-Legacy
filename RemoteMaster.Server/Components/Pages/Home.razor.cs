@@ -217,7 +217,7 @@ public partial class Home
 
     private async Task LogonHost(HostDto hostDto)
     {
-        using var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         var cancellationToken = cts.Token;
 
         try
