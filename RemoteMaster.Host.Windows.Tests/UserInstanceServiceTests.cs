@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -14,6 +15,7 @@ public class UserInstanceServiceTests
 {
     private readonly Mock<IInstanceManagerService> _instanceStarterServiceMock;
     private readonly Mock<IProcessService> _processServiceMock;
+    private readonly MockFileSystem _mockFileSystem;
     private readonly UserInstanceService _userInstanceService;
 
     public UserInstanceServiceTests()
@@ -21,8 +23,10 @@ public class UserInstanceServiceTests
         Mock<ISessionChangeEventService> sessionChangeEventServiceMock = new();
         _instanceStarterServiceMock = new Mock<IInstanceManagerService>();
         _processServiceMock = new Mock<IProcessService>();
+        _mockFileSystem = new MockFileSystem();
         Mock<ILogger<UserInstanceService>> loggerMock = new();
-        _userInstanceService = new UserInstanceService(sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object, loggerMock.Object);
+
+        _userInstanceService = new UserInstanceService(sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object, _mockFileSystem, loggerMock.Object);
     }
 
     [Fact]

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions.TestingHelpers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Enums;
 
@@ -9,23 +10,30 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class FileManagerServiceTests
 {
-    private readonly FileManagerService _fileManagerService = new();
+    private readonly MockFileSystem _mockFileSystem;
+    private readonly FileManagerService _fileManagerService;
+
+    public FileManagerServiceTests()
+    {
+        _mockFileSystem = new MockFileSystem();
+        _fileManagerService = new FileManagerService(_mockFileSystem);
+    }
 
     [Fact]
     public async Task UploadFileAsync_CreatesFileAtPath()
     {
         // Arrange
-        var path = Path.GetTempPath();
+        var path = _mockFileSystem.Path.GetTempPath();
         var fileName = Guid.NewGuid().ToString();
         var fileData = new byte[] { 1, 2, 3, 4, 5 };
 
         // Act
         await _fileManagerService.UploadFileAsync(path, fileName, fileData);
-        var filePath = Path.Combine(path, fileName);
+        var filePath = _mockFileSystem.Path.Combine(path, fileName);
 
         // Assert
-        Assert.True(File.Exists(filePath));
-        var uploadedData = await File.ReadAllBytesAsync(filePath);
+        Assert.True(_mockFileSystem.File.Exists(filePath));
+        var uploadedData = await _mockFileSystem.File.ReadAllBytesAsync(filePath);
         Assert.Equal(fileData, uploadedData);
 
         // Cleanup
@@ -36,9 +44,9 @@ public class FileManagerServiceTests
     public void DownloadFile_ReturnsMemoryStream()
     {
         // Arrange
-        var path = Path.GetTempFileName();
+        var path = _mockFileSystem.Path.GetTempFileName();
         var fileData = new byte[] { 1, 2, 3, 4, 5 };
-        File.WriteAllBytes(path, fileData);
+        _mockFileSystem.File.WriteAllBytes(path, fileData);
 
         // Act
         var result = _fileManagerService.DownloadFile(path);
@@ -47,6 +55,7 @@ public class FileManagerServiceTests
         using (var memoryStream = new MemoryStream(fileData))
         {
             Assert.True(result.Length == memoryStream.Length);
+
             for (var i = 0; i < memoryStream.Length; i++)
             {
                 Assert.Equal(memoryStream.ReadByte(), result.ReadByte());
@@ -55,34 +64,34 @@ public class FileManagerServiceTests
 
         // Cleanup
         result.Dispose();
-        File.Delete(path);
+        _mockFileSystem.File.Delete(path);
     }
 
     [Fact]
     public void GetFilesAndDirectories_ReturnsCorrectItems()
     {
         // Arrange
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(tempDir);
+        var tempDir = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetTempPath(), Guid.NewGuid().ToString());
+        _mockFileSystem.Directory.CreateDirectory(tempDir);
 
-        var tempFile = Path.Combine(tempDir, $"{Guid.NewGuid()}.txt");
-        File.WriteAllText(tempFile, "Test file content");
+        var tempFile = _mockFileSystem.Path.Combine(tempDir, $"{Guid.NewGuid()}.txt");
+        _mockFileSystem.File.WriteAllText(tempFile, "Test file content");
 
-        var subDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
-        Directory.CreateDirectory(subDir);
+        var subDir = _mockFileSystem.Path.Combine(tempDir, Guid.NewGuid().ToString());
+        _mockFileSystem.Directory.CreateDirectory(subDir);
 
         // Act
         var result = _fileManagerService.GetFilesAndDirectories(tempDir);
 
         // Assert
         Assert.Contains(result, item => item is { Name: "..", Type: FileSystemItemType.Directory });
-        Assert.Contains(result, item => item.Name == Path.GetFileName(tempFile) && item.Type == FileSystemItemType.File);
-        Assert.Contains(result, item => item.Name == Path.GetFileName(subDir) && item.Type == FileSystemItemType.Directory);
+        Assert.Contains(result, item => item.Name == _mockFileSystem.Path.GetFileName(tempFile) && item.Type == FileSystemItemType.File);
+        Assert.Contains(result, item => item.Name == _mockFileSystem.Path.GetFileName(subDir) && item.Type == FileSystemItemType.Directory);
 
         // Cleanup
-        File.Delete(tempFile);
-        Directory.Delete(subDir);
-        Directory.Delete(tempDir);
+        _mockFileSystem.File.Delete(tempFile);
+        _mockFileSystem.Directory.Delete(subDir);
+        _mockFileSystem.Directory.Delete(tempDir);
     }
 
     [Fact]
@@ -92,7 +101,7 @@ public class FileManagerServiceTests
         var result = await _fileManagerService.GetAvailableDrivesAsync();
 
         // Assert
-        var drives = DriveInfo.GetDrives()
+        var drives = _mockFileSystem.DriveInfo.GetDrives()
             .Where(d => d.IsReady)
             .Select(d => d.Name)
             .ToList();
