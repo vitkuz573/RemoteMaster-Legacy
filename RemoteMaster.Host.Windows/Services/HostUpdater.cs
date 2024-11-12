@@ -51,7 +51,7 @@ public class HostUpdater : IHostUpdater
         _hubContext = hubContext;
         _logger = logger;
 
-        _baseFolderPath = _fileSystem.Path.Combine(_fileSystem.Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)) ?? string.Empty, "RemoteMaster", "Host");
+        _baseFolderPath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
         _updateFolderPath = _fileSystem.Path.Combine(_baseFolderPath, "Update");
 
         Task.Run(async () => await InitializeHubClient());

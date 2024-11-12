@@ -33,10 +33,10 @@ public partial class ManageJwt
 
             foreach (var file in files)
             {
-                var filePath = Path.Combine(_keysDirectory, file);
+                var filePath = FileSystem.Path.Combine(_keysDirectory, file);
                 var entry = archive.CreateEntry(file, CompressionLevel.Fastest);
 
-                await using var fileStream = new FileStream(filePath, FileMode.Open);
+                await using var fileStream = FileSystem.FileStream.New(filePath, FileMode.Open);
                 await using var entryStream = entry.Open();
 
                 await fileStream.CopyToAsync(entryStream);
@@ -59,12 +59,12 @@ public partial class ManageJwt
             return;
         }
 
-        var privateKeyPath = Path.Combine(_keysDirectory, "private_key.der");
+        var privateKeyPath = FileSystem.Path.Combine(_keysDirectory, "private_key.der");
 
         try
         {
             // Load the existing private key
-            var privateKeyBytes = await File.ReadAllBytesAsync(privateKeyPath);
+            var privateKeyBytes = await FileSystem.File.ReadAllBytesAsync(privateKeyPath);
             using var rsa = RSA.Create();
             rsa.ImportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes(Jwt.Value.KeyPassword), privateKeyBytes, out _);
 
@@ -72,7 +72,7 @@ public partial class ManageJwt
             var newKeyPasswordBytes = Encoding.UTF8.GetBytes(_newKeyPassword);
             var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
 
-            await File.WriteAllBytesAsync(privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(newKeyPasswordBytes, encryptionAlgorithm));
+            await FileSystem.File.WriteAllBytesAsync(privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(newKeyPasswordBytes, encryptionAlgorithm));
 
             await JsRuntime.InvokeVoidAsync("alert", "Key password changed successfully.");
         }

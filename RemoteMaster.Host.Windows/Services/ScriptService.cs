@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
+public class ScriptService(IFileSystem fileSystem, IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
 {
     public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
@@ -34,7 +35,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
         };
 
         var fileName = $"{Guid.NewGuid()}{extension}";
-        var tempFilePath = Path.Combine(publicDirectory, fileName);
+        var tempFilePath = fileSystem.Path.Combine(publicDirectory, fileName);
 
         logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
 
@@ -48,11 +49,11 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
 
         var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? $"@echo off\r\n{scriptExecutionRequest.Content}" : scriptExecutionRequest.Content;
 
-        await File.WriteAllTextAsync(tempFilePath, scriptContent, encoding);
+        await fileSystem.File.WriteAllTextAsync(tempFilePath, scriptContent, encoding);
 
         try
         {
-            if (!File.Exists(tempFilePath))
+            if (!fileSystem.File.Exists(tempFilePath))
             {
                 logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
 
@@ -101,9 +102,9 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext, I
         {
             await Task.Delay(5000);
 
-            if (File.Exists(tempFilePath))
+            if (fileSystem.File.Exists(tempFilePath))
             {
-                File.Delete(tempFilePath);
+                fileSystem.File.Delete(tempFilePath);
             }
         }
     }

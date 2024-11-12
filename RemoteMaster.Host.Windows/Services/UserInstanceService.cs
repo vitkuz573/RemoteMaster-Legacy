@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
@@ -18,18 +19,20 @@ public sealed class UserInstanceService : IUserInstanceService
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
     private readonly IInstanceManagerService _instanceManagerService;
     private readonly IProcessService _processService;
+    private readonly IFileSystem _fileSystem;
     private readonly ILogger<UserInstanceService> _logger;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
-    public bool IsRunning => _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, Argument));
+    public bool IsRunning => _processService.FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, Argument));
 
-    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, ILogger<UserInstanceService> logger)
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
 
         _instanceManagerService = instanceManagerService;
         _processService = processService;
+        _fileSystem = fileSystem;
         _logger = logger;
 
         sessionChangeEventService.SessionChanged += OnSessionChanged;
@@ -53,7 +56,7 @@ public sealed class UserInstanceService : IUserInstanceService
 
     public void Stop()
     {
-        var processes = _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = _processService.FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {

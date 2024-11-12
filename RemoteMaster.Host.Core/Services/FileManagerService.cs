@@ -2,31 +2,32 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class FileManagerService : IFileManagerService
+public class FileManagerService(IFileSystem fileSystem) : IFileManagerService
 {
     public async Task UploadFileAsync(string path, string fileName, byte[] fileData)
     {
-        var filePath = Path.Combine(path, fileName);
+        var filePath = fileSystem.Path.Combine(path, fileName);
 
-        if (!Directory.Exists(path))
+        if (!fileSystem.Directory.Exists(path))
         {
-            Directory.CreateDirectory(path);
+            fileSystem.Directory.CreateDirectory(path);
         }
 
-        await File.WriteAllBytesAsync(filePath, fileData);
+        await fileSystem.File.WriteAllBytesAsync(filePath, fileData);
     }
 
     public Stream DownloadFile(string path)
     {
         var memoryStream = new MemoryStream();
 
-        using (var stream = new FileStream(path, FileMode.Open))
+        using (var stream = fileSystem.FileStream.New(path, FileMode.Open))
         {
             stream.CopyTo(memoryStream);
         }
@@ -39,7 +40,7 @@ public class FileManagerService : IFileManagerService
     public List<FileSystemItem> GetFilesAndDirectories(string path)
     {
         var items = new List<FileSystemItem>();
-        var directoryInfo = new DirectoryInfo(path);
+        var directoryInfo = fileSystem.DirectoryInfo.New(path);
 
         if (directoryInfo.Parent != null)
         {
@@ -60,7 +61,7 @@ public class FileManagerService : IFileManagerService
 
     public Task<List<string>> GetAvailableDrivesAsync()
     {
-        var drives = DriveInfo.GetDrives()
+        var drives = fileSystem.DriveInfo.GetDrives()
             .Where(d => d.IsReady)
             .Select(d => d.Name)
             .ToList();

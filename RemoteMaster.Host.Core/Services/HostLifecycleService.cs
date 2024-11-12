@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -14,7 +15,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService, ILogger<HostLifecycleService> logger) : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService, IFileSystem fileSystem, ILogger<HostLifecycleService> logger) : IHostLifecycleService
 {
     public async Task RegisterAsync()
     {
@@ -22,11 +23,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            var jwtDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Security", "JWT");
+            var jwtDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Security", "JWT");
 
-            if (!Directory.Exists(jwtDirectory))
+            if (!fileSystem.Directory.Exists(jwtDirectory))
             {
-                Directory.CreateDirectory(jwtDirectory);
+                fileSystem.Directory.CreateDirectory(jwtDirectory);
             }
 
             logger.LogInformation("Attempting to register host...");
@@ -42,11 +43,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
 
-                var publicKeyPath = Path.Combine(jwtDirectory, "public_key.der");
+                var publicKeyPath = fileSystem.Path.Combine(jwtDirectory, "public_key.der");
 
                 try
                 {
-                    await File.WriteAllBytesAsync(publicKeyPath, jwtPublicKey);
+                    await fileSystem.File.WriteAllBytesAsync(publicKeyPath, jwtPublicKey);
 
                     logger.LogInformation("Public key saved successfully at {Path}.", publicKeyPath);
                 }
@@ -191,7 +192,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable or SocketError.ConnectionRefused })
         {
-            // logger.LogWarning("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.");
+            logger.LogDebug("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.");
 
             return true;
         }

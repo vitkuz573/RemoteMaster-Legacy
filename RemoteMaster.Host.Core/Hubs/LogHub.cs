@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -10,34 +11,34 @@ using RemoteMaster.Host.Core.Abstractions;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Roles = "Administrator")]
-public class LogHub : Hub<ILogClient>
+public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
 {
-    private readonly string _logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Host");
+    private readonly string _logDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Host");
 
     public async Task GetLogFiles()
     {
-        if (!Directory.Exists(_logDirectory))
+        if (!fileSystem.Directory.Exists(_logDirectory))
         {
             await Clients.Caller.ReceiveError("Log directory not found.");
 
             return;
         }
 
-        var logFiles = Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
-        var fileNames = logFiles.Select(Path.GetFileName).ToList();
+        var logFiles = fileSystem.Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
+        var fileNames = logFiles.Select(fileSystem.Path.GetFileName).ToList();
 
         await Clients.Caller.ReceiveLogFiles(fileNames);
     }
 
     public async Task GetLog(string fileName)
     {
-        var filePath = Path.Combine(_logDirectory, fileName);
+        var filePath = fileSystem.Path.Combine(_logDirectory, fileName);
 
-        if (File.Exists(filePath))
+        if (fileSystem.File.Exists(filePath))
         {
             try
             {
-                await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                await using var fileStream = fileSystem.FileStream.New(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var streamReader = new StreamReader(fileStream);
 
                 var logContent = await streamReader.ReadToEndAsync();
@@ -57,9 +58,9 @@ public class LogHub : Hub<ILogClient>
 
     public async Task GetFilteredLog(string fileName, string? level, DateTime? startDate, DateTime? endDate)
     {
-        var filePath = Path.Combine(_logDirectory, fileName);
+        var filePath = fileSystem.Path.Combine(_logDirectory, fileName);
 
-        if (!File.Exists(filePath))
+        if (!fileSystem.File.Exists(filePath))
         {
             await Clients.Caller.ReceiveError("Log file not found.");
 
@@ -68,7 +69,7 @@ public class LogHub : Hub<ILogClient>
 
         try
         {
-            await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            await using var fileStream = fileSystem.FileStream.New(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var streamReader = new StreamReader(fileStream);
 
             var logContent = await streamReader.ReadToEndAsync();
@@ -102,7 +103,7 @@ public class LogHub : Hub<ILogClient>
 
     public async Task DeleteAllLogs()
     {
-        if (!Directory.Exists(_logDirectory))
+        if (!fileSystem.Directory.Exists(_logDirectory))
         {
             await Clients.Caller.ReceiveError("Log directory not found.");
 
@@ -111,7 +112,7 @@ public class LogHub : Hub<ILogClient>
 
         try
         {
-            var logFiles = Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
+            var logFiles = fileSystem.Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
 
             if (logFiles.Length == 0)
             {
@@ -122,7 +123,7 @@ public class LogHub : Hub<ILogClient>
 
             foreach (var logFile in logFiles)
             {
-                File.Delete(logFile);
+                fileSystem.File.Delete(logFile);
             }
 
             await Clients.Caller.ReceiveMessage("All log files have been deleted.");

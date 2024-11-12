@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -14,20 +15,23 @@ public class HostRegistrationMonitorService : IHostedService
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInformationUpdaterService _hostInformationMonitorService;
     private readonly IUserInstanceService _userInstanceService;
+    private readonly IFileSystem _fileSystem;
     private readonly ILogger<HostRegistrationMonitorService> _logger;
 
     private readonly Timer _timer;
-    private readonly string _syncIndicatorFilePath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+    private readonly string _syncIndicatorFilePath;
 
-    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, ILogger<HostRegistrationMonitorService> logger)
+    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, IFileSystem fileSystem, ILogger<HostRegistrationMonitorService> logger)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
         _hostInformationMonitorService = hostInformationUpdaterService;
         _userInstanceService = userInstanceService;
+        _fileSystem = fileSystem;
         _logger = logger;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
+        _syncIndicatorFilePath = _fileSystem.Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -122,14 +126,14 @@ public class HostRegistrationMonitorService : IHostedService
 
     private bool IsSyncRequired()
     {
-        return File.Exists(_syncIndicatorFilePath);
+        return _fileSystem.File.Exists(_syncIndicatorFilePath);
     }
 
     private void SetSyncRequired()
     {
         try
         {
-            File.WriteAllText(_syncIndicatorFilePath, "Sync required");
+            _fileSystem.File.WriteAllText(_syncIndicatorFilePath, "Sync required");
         }
         catch (Exception ex)
         {
@@ -141,9 +145,9 @@ public class HostRegistrationMonitorService : IHostedService
     {
         try
         {
-            if (File.Exists(_syncIndicatorFilePath))
+            if (_fileSystem.File.Exists(_syncIndicatorFilePath))
             {
-                File.Delete(_syncIndicatorFilePath);
+                _fileSystem.File.Delete(_syncIndicatorFilePath);
             }
         }
         catch (Exception ex)

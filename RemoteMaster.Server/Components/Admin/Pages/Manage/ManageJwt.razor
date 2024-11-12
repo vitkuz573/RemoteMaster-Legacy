@@ -2,10 +2,12 @@
 
 @rendermode InteractiveServer
 
+@using System.IO.Abstractions
 @using Microsoft.Extensions.Options
 @using RemoteMaster.Server.Options
 
 @inject IJSRuntime JsRuntime
+@inject IFileSystem FileSystem
 @inject IOptions<JwtOptions> Jwt
 
 <PageTitle>Manage JWT</PageTitle>

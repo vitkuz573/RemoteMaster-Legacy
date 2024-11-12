@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -9,13 +10,13 @@ using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ChatInstanceService(IInstanceManagerService instanceManagerService, IProcessService processService, ILogger<ChatInstanceService> logger) : IChatInstanceService
+public class ChatInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, IProcessService processService, ILogger<ChatInstanceService> logger) : IChatInstanceService
 {
     private const string Argument = "--launch-mode=chat";
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
-    public bool IsRunning => processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => processService.HasProcessArgument(p, Argument));
+    public bool IsRunning => processService.FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => processService.HasProcessArgument(p, Argument));
 
     public void Start()
     {
@@ -33,7 +34,7 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     public void Stop()
     {
-        var processes = processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = processService.FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {

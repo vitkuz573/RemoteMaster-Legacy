@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
@@ -10,7 +11,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public class RemoteExecutionService(ILogger<RemoteExecutionService> logger) : IRemoteExecutionService
+public class RemoteExecutionService(IFileSystem fileSystem, ILogger<RemoteExecutionService> logger) : IRemoteExecutionService
 {
     public Result ExecuteApplication(string remoteMachineName, string localExecutablePath, string? args = null)
     {
@@ -30,13 +31,13 @@ public class RemoteExecutionService(ILogger<RemoteExecutionService> logger) : IR
         }
 
         var adminShare = $@"\\{remoteMachineName}\ADMIN$\Temp";
-        var remoteExecutablePath = Path.Combine(adminShare, Path.GetFileName(localExecutablePath));
+        var remoteExecutablePath = fileSystem.Path.Combine(adminShare, Path.GetFileName(localExecutablePath));
 
         try
         {
             logger.LogInformation("Copying executable to remote machine: {RemotePath}", remoteExecutablePath);
 
-            File.Copy(localExecutablePath, remoteExecutablePath, true);
+            fileSystem.File.Copy(localExecutablePath, remoteExecutablePath, true);
 
             logger.LogInformation("Starting remote service for execution.");
 
@@ -54,7 +55,7 @@ public class RemoteExecutionService(ILogger<RemoteExecutionService> logger) : IR
             {
                 logger.LogInformation("Deleting executable from remote machine: {RemotePath}", remoteExecutablePath);
 
-                File.Delete(remoteExecutablePath);
+                fileSystem.File.Delete(remoteExecutablePath);
             }
             catch (Exception deleteEx)
             {
@@ -66,6 +67,7 @@ public class RemoteExecutionService(ILogger<RemoteExecutionService> logger) : IR
     private unsafe Result CreateAndStartService(string remoteMachineName, string remoteExecutablePath, string? args)
     {
         using var scmHandle = OpenSCManager(remoteMachineName, null, SC_MANAGER_CREATE_SERVICE);
+
         if (scmHandle.IsInvalid || scmHandle.IsClosed)
         {
             var error = new Error("Failed to connect to the Service Control Manager.")
@@ -77,7 +79,7 @@ public class RemoteExecutionService(ILogger<RemoteExecutionService> logger) : IR
 
         const string serviceName = "RemoteExecutionService";
 
-        var serviceExePath = $@"C:\Windows\Temp\{Path.GetFileName(remoteExecutablePath)}";
+        var serviceExePath = $@"C:\Windows\Temp\{fileSystem.Path.GetFileName(remoteExecutablePath)}";
 
         using (var existingServiceHandle = OpenService(scmHandle, serviceName, SERVICE_ALL_ACCESS))
         {

@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
-    private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
+    private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
     public async Task UninstallAsync()
     {
@@ -39,7 +39,7 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
 
             await hostLifecycleService.UnregisterAsync();
 
-            var currentDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
+            var currentDirectory = fileSystem.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
 
             if (!string.Equals(currentDirectory, _applicationDirectory, StringComparison.OrdinalIgnoreCase))
             {
