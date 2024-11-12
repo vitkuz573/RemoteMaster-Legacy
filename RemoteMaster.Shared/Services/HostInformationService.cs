@@ -41,13 +41,7 @@ public class HostInformationService : IHostInformationService
 
     private static bool IsSupportedNetworkInterfaceType(NetworkInterfaceType type)
     {
-        return type == NetworkInterfaceType.Wireless80211 ||
-               type == NetworkInterfaceType.Tunnel ||
-               type == NetworkInterfaceType.Ethernet ||
-               type == NetworkInterfaceType.FastEthernetT ||
-               type == NetworkInterfaceType.FastEthernetFx ||
-               type == NetworkInterfaceType.GigabitEthernet ||
-               type == NetworkInterfaceType.Ethernet3Megabit;
+        return type is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Tunnel or NetworkInterfaceType.Ethernet or NetworkInterfaceType.FastEthernetT or NetworkInterfaceType.FastEthernetFx or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType.Ethernet3Megabit;
     }
 
     private static int GetInterfacePriority(NetworkInterfaceType type)
