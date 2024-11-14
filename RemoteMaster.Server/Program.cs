@@ -2,15 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Text.Json;
 using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
@@ -28,19 +25,17 @@ using RemoteMaster.Server.Data;
 using RemoteMaster.Server.DomainEvents;
 using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Middlewares;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Repositories;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.UnitOfWork;
 using RemoteMaster.Server.Validators;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.Extensions;
-using RemoteMaster.Shared.JsonContexts;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Services;
 using Serilog;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace RemoteMaster.Server;
 
@@ -100,7 +95,8 @@ public static class Program
             });
         });
 
-        services.AddRazorComponents().AddInteractiveServerComponents();
+        services.AddRazorComponents()
+            .AddInteractiveServerComponents();
 
         services.AddCascadingAuthenticationState();
         services.AddScoped<IdentityUserAccessor>();
@@ -120,7 +116,7 @@ public static class Program
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
-        services.AddIdentityCore<ApplicationUser>()
+        services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
@@ -132,7 +128,6 @@ public static class Program
 
         services.AddCertificateAuthorityService();
 
-        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IDomainEventHandler<OrganizationAddressChangedEvent>, OrganizationAddressChangedEventHandler>();
@@ -180,6 +175,11 @@ public static class Program
         services.AddSingleton<ITokenValidationService, RsaTokenValidationService>();
         services.AddSingleton<ISslWarningService, SslWarningService>();
 
+        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IHostInformationService, HostInformationService>();
+        services.AddSingleton<ISubjectService, SubjectService>();
+        services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
+
         services.AddHostedService<MigrationService>();
         services.AddHostedService<RoleInitializationService>();
         services.AddHostedService<SecurityInitializationService>();
@@ -218,7 +218,6 @@ public static class Program
         });
 
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
 
         services.AddHealthChecks()
             .AddSqlServer(
@@ -279,82 +278,25 @@ public static class Program
 
     private static void ConfigurePipeline(WebApplication app)
     {
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
-
-        app.MapHealthChecks("/health", new HealthCheckOptions
-        {
-            ResponseWriter = async (context, report) =>
-            {
-                context.Response.ContentType = "application/json";
-
-                var healthCheckResults = report.Entries.Select(entry => new HealthCheck(
-                    name: entry.Key,
-                    status: entry.Value.Status.ToString(),
-                    statusCode: entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
-                    duration: entry.Value.Duration.ToString(),
-                    description: entry.Value.Description,
-                    exception: entry.Value.Exception?.Message,
-                    data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
-                )).ToList();
-
-                var overallStatus = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;
-                var responseModel = new ApiResponse<List<HealthCheck>>(healthCheckResults, "Health checks completed", overallStatus);
-
-                var jsonResponse = JsonSerializer.Serialize(responseModel, ApiJsonSerializerContext.Default.ApiResponseListHealthCheck);
-
-                await context.Response.WriteAsync(jsonResponse);
-            }
-        });
-
-        app.UseRateLimiter();
-
         if (app.Environment.IsDevelopment())
         {
             app.UseMigrationsEndPoint();
-            app.UseSwagger();
-            app.UseSwaggerUI(options =>
-            {
-                var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-
-                foreach (var description in provider.ApiVersionDescriptions)
-                {
-                    var url = $"/swagger/{description.GroupName}/swagger.json";
-                    var name = description.GroupName.ToUpperInvariant();
-
-                    options.SwaggerEndpoint($"http://localhost:5254{url}", name);
-                }
-            });
         }
         else
         {
-            app.UseExceptionHandler("/Error", createScopeForErrors: true);
-            app.UseHsts();
+            app.UseExceptionHandler("/Error");
         }
-
-        app.UseRequestLocalization();
-
-        app.Use(async (context, next) =>
-        {
-            if (context.Connection.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/api"))
-            {
-                context.Response.StatusCode = 404;
-
-                return;
-            }
-
-            await next();
-        });
 
         app.UseMiddleware<RegistrationRestrictionMiddleware>();
 
-        app.UseStaticFiles();
         app.UseAntiforgery();
 
-        app.MapControllers().RequireHost($"*:{5254}");
-        app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+        app.MapControllers()
+            .RequireHost($"*:{5254}");
+
+        app.MapStaticAssets();
+        app.MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode();
 
         app.MapAdditionalIdentityEndpoints();
     }

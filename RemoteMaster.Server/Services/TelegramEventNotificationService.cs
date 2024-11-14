@@ -32,7 +32,7 @@ public class TelegramEventNotificationService(IOptions<TelegramBotOptions> teleg
 
             foreach (var chatId in botOptions.ChatIds)
             {
-                await botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
+                await botClient.SendMessage(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
             }
 
             return Result.Ok();

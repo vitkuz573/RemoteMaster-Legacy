@@ -368,7 +368,7 @@ public class ChatWindowService : IHostedService
 
     private static DeleteObjectSafeHandle CreateDefaultFont()
     {
-        return CreateFont(18, 0, 0, 0, (int)FONT_WEIGHT.FW_NORMAL, 0, 0, 0, (uint)FONT_CHARSET.ANSI_CHARSET, (uint)FONT_OUTPUT_PRECISION.OUT_DEFAULT_PRECIS, (uint)FONT_CLIP_PRECISION.CLIP_DEFAULT_PRECIS, (uint)FONT_QUALITY.CLEARTYPE_QUALITY, (uint)FONT_PITCH.DEFAULT_PITCH | (uint)FONT_FAMILY.FF_SWISS, "Segoe UI");
+        return CreateFont(18, 0, 0, 0, (int)FONT_WEIGHT.FW_NORMAL, 0, 0, 0, FONT_CHARSET.ANSI_CHARSET, FONT_OUTPUT_PRECISION.OUT_DEFAULT_PRECIS, FONT_CLIP_PRECISION.CLIP_DEFAULT_PRECIS, FONT_QUALITY.CLEARTYPE_QUALITY, (uint)FONT_PITCH.DEFAULT_PITCH | (uint)FONT_FAMILY.FF_SWISS, "Segoe UI");
     }
 
     private void ShowTypingIndicator(string user)

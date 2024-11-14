@@ -5,20 +5,20 @@ $solutionDir = Resolve-Path "$currentScriptDir\.."
 # Hashtable to store unique packages
 $packages = @{}
 
-# Function to extract packages from a csproj file
-function Extract-Packages {
+# Function to extract packages from XML files
+function Extract-PackagesFromXml {
     param (
-        [string]$csprojPath
+        [string]$xmlFilePath
     )
 
-    [xml]$csproj = Get-Content -Path $csprojPath
-    $packageReferences = $csproj.Project.ItemGroup.PackageReference
+    [xml]$xmlContent = Get-Content -Path $xmlFilePath
+    $packageReferences = $xmlContent.Project.ItemGroup.PackageReference
 
-    Write-Host "Analyzing $($csprojPath):" -ForegroundColor Magenta
+    Write-Host "Analyzing $($xmlFilePath):" -ForegroundColor Magenta
 
-    # Check if there are no package references in the .csproj
+    # Check if there are no package references in the file
     if ($packageReferences.Count -eq 0) {
-        Write-Host "  No packages found in this project." -ForegroundColor Yellow
+        Write-Host "  No packages found in this file." -ForegroundColor Yellow
         return
     }
 
@@ -26,15 +26,24 @@ function Extract-Packages {
         if ($packageRef.NodeType -eq "Element" -and $null -ne $packageRef.Include) {
             $packages[$packageRef.Include] = $true
             Write-Host "  Found package: $($packageRef.Include)" -ForegroundColor DarkCyan
-		}
+        }
     }
 }
 
-# Search for all csproj files in the directory
-$csprojFiles = Get-ChildItem -Path $solutionDir -Recurse -Filter "*.csproj"
+# Search for all csproj files and Directory.Build.props
+$xmlFiles = @(
+    Get-ChildItem -Path $solutionDir -Recurse -Filter "*.csproj" |
+    Select-Object -ExpandProperty FullName
+)
+$directoryBuildProps = Get-ChildItem -Path $solutionDir -Recurse -Filter "Directory.Build.props" |
+    Select-Object -ExpandProperty FullName
 
-foreach ($csprojFile in $csprojFiles) {
-    Extract-Packages -csprojPath $csprojFile.FullName
+if ($null -ne $directoryBuildProps) {
+    $xmlFiles += $directoryBuildProps
+}
+
+foreach ($xmlFile in $xmlFiles) {
+    Extract-PackagesFromXml -xmlFilePath $xmlFile
 }
 
 # Load the Directory.Packages.props file as XML

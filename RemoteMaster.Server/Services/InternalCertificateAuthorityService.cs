@@ -175,11 +175,16 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
             foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
             {
-#pragma warning disable CA2000
-                return contentType == X509ContentType.Cert
-                    ? Result.Ok(new X509Certificate2(cert.Export(X509ContentType.Cert)))
-                    : Result.Ok(cert);
-#pragma warning restore CA2000
+                var exportedCertData = cert.Export(contentType);
+
+                var loadedCertificate = contentType switch
+                {
+                    X509ContentType.Cert => X509CertificateLoader.LoadCertificate(exportedCertData),
+                    X509ContentType.Pfx => X509CertificateLoader.LoadPkcs12(exportedCertData, null, X509KeyStorageFlags.MachineKeySet, Pkcs12LoaderLimits.Defaults),
+                    _ => throw new NotSupportedException($"Content type {contentType} is not supported.")
+                };
+
+                return Result.Ok(loadedCertificate);
             }
 
             return Result.Fail<X509Certificate2>("No valid CA certificate with a private key found.");
@@ -187,7 +192,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to retrieve CA certificate.");
-            
+
             return Result.Fail<X509Certificate2>("Failed to retrieve CA certificate.").WithError(ex.Message);
         }
     }

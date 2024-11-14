@@ -1,1 +1,1 @@
-{"ConfigurationFile":"tailwind.config.js","BuildFiles":[{"Input":"wwwroot\\main.css"}],"UseCli":false}
+{"BuildFiles":[{"Input":"..\\RemoteMaster.Server\\wwwroot\\main.css","Output":"..\\RemoteMaster.Server\\wwwroot\\main.output.css"}],"UseCli":false}

@@ -213,13 +213,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             if (certificateBytes.Length == 0)
             {
                 logger.LogError("Certificate bytes are empty.");
-
+                
                 return;
             }
 
             logger.LogInformation("Received certificate bytes, starting processing...");
 
-            tempCertificate = new X509Certificate2(certificateBytes, (string?)null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
+            tempCertificate = X509CertificateLoader.LoadPkcs12(certificateBytes, null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
             logger.LogInformation("Temporary certificate created successfully.");
 
             LogCertificateDetails(tempCertificate);
@@ -257,7 +257,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             else
             {
                 logger.LogError("Failed to create a certificate with private key.");
-
+                
                 return;
             }
 
@@ -302,14 +302,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             try
             {
-                using var caCertificate = new X509Certificate2(caCertificateData);
+                using var caCertificate = X509CertificateLoader.LoadCertificate(caCertificateData);
 
                 LogCertificateDetails(caCertificate);
 
-                var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
                 store.Open(OpenFlags.ReadWrite);
                 store.Add(caCertificate);
-                store.Close();
 
                 logger.LogInformation("CA certificate imported successfully into the certificate store.");
             }

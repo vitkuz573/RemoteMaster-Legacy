@@ -135,7 +135,9 @@ public class CertificateService(IHostInformationService hostInformationService, 
         var certResponse = await client.GetAsync($"{baseUrl}certnew.cer?ReqID={match.Groups[1].Value}&Enc=b64");
         var certBytes = await certResponse.Content.ReadAsByteArrayAsync();
 
-        return new X509Certificate2(certBytes);
+        var certificate = X509CertificateLoader.LoadCertificate(certBytes);
+
+        return Result.Ok(certificate);
     }
 
     private Result<X509Certificate2> IssueCertificateUsingCertEnroll(byte[] csrBytes)
@@ -169,9 +171,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
             try
             {
                 var certBytes = Convert.FromBase64String(responseBstr.ToString());
-#pragma warning disable CA2000
-                var certificate = new X509Certificate2(certBytes);
-#pragma warning restore CA2000
+                var certificate = X509CertificateLoader.LoadCertificate(certBytes);
 
                 return Result.Ok(certificate);
             }

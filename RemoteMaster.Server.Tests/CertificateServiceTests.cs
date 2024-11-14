@@ -179,8 +179,7 @@ public class CertificateServiceTests
     {
         using var rsa = RSA.Create(2048);
         var request = new CertificateRequest("CN=CA", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        var caCertificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1));
 
-        return new X509Certificate2(caCertificate.Export(X509ContentType.Pfx));
+        return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1));
     }
 }

@@ -68,7 +68,7 @@ public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectory
             }
 
             var rawData = (byte[])entry.Attributes["cACertificate"][0];
-            var certificate = new X509Certificate2(rawData);
+            var certificate = X509CertificateLoader.LoadCertificate(rawData);
 
             logger.LogInformation("Successfully retrieved CA certificate.");
 
