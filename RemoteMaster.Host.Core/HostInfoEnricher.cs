@@ -12,7 +12,7 @@ public class HostInfoEnricher : ILogEventEnricher
 {
     private readonly Lazy<LogEventProperty> _hostIpAddress;
     private readonly Lazy<LogEventProperty> _hostName;
-    private readonly Lazy<LogEventProperty> _macAddress;
+    private readonly Lazy<LogEventProperty> _hostMacAddress;
 
     public HostInfoEnricher(IHostInformationService hostInformationService)
     {
@@ -22,7 +22,7 @@ public class HostInfoEnricher : ILogEventEnricher
 
         _hostIpAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostIpAddress", new ScalarValue(hostInfo.IpAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
         _hostName = new Lazy<LogEventProperty>(() => new LogEventProperty("HostName", new ScalarValue(hostInfo.Name)), LazyThreadSafetyMode.ExecutionAndPublication);
-        _macAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostMacAddress", new ScalarValue(hostInfo.MacAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
+        _hostMacAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostMacAddress", new ScalarValue(hostInfo.MacAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
@@ -32,6 +32,6 @@ public class HostInfoEnricher : ILogEventEnricher
 
         logEvent.AddPropertyIfAbsent(_hostIpAddress.Value);
         logEvent.AddPropertyIfAbsent(_hostName.Value);
-        logEvent.AddPropertyIfAbsent(_macAddress.Value);
+        logEvent.AddPropertyIfAbsent(_hostMacAddress.Value);
     }
 }
