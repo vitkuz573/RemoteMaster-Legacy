@@ -15,15 +15,8 @@ public abstract class BaseParameterHandler<T> : IParameterHandler
 
     public void Handle(string[] args, ILaunchParameter parameter, string name)
     {
-        if (args == null)
-        {
-            throw new ArgumentNullException(nameof(args));
-        }
-
-        if (parameter == null)
-        {
-            throw new ArgumentNullException(nameof(parameter));
-        }
+        ArgumentNullException.ThrowIfNull(args);
+        ArgumentNullException.ThrowIfNull(parameter);
 
         if (string.IsNullOrWhiteSpace(name))
         {
