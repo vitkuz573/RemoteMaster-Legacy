@@ -18,7 +18,6 @@ using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.Exceptions;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.LaunchModes;
-using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Hubs;
@@ -231,49 +230,7 @@ internal class Program
                         };
                     });
 
-                services.AddAuthorizationBuilder()
-                    .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
-                        policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
-                    .AddPolicy("ChangeSelectedScreenPolicy", policy =>
-                        policy.RequireClaim("Screen", "ChangeSelectedScreen"))
-                    .AddPolicy("SetFrameRatePolicy", policy =>
-                        policy.RequireClaim("Screen", "SetFrameRate"))
-                    .AddPolicy("SetImageQualityPolicy", policy =>
-                        policy.RequireClaim("Screen", "SetImageQuality"))
-                    .AddPolicy("ToggleDrawCursorPolicy", policy =>
-                        policy.RequireClaim("Screen", "ToggleDrawCursor"))
-                    .AddPolicy("SetCodecPolicy", policy =>
-                        policy.RequireClaim("Screen", "SetCodec"))
-                    .AddPolicy("MouseInputPolicy", policy =>
-                        policy.RequireClaim("Input", "MouseInput"))
-                    .AddPolicy("KeyboardInputPolicy", policy =>
-                        policy.RequireClaim("Input", "KeyboardInput"))
-                    .AddPolicy("ToggleInputPolicy", policy =>
-                        policy.RequireClaim("Input", "ToggleInput"))
-                    .AddPolicy("ToggleClickIndicator", policy =>
-                        policy.RequireClaim("Input", "ToggleClickIndicator"))
-                    .AddPolicy("BlockUserInputPolicy", policy =>
-                        policy.RequireClaim("Input", "BlockUserInput"))
-                    .AddPolicy("RebootHostPolicy", policy =>
-                        policy.RequireClaim("Power", "RebootHost"))
-                    .AddPolicy("ShutdownHostPolicy", policy =>
-                        policy.RequireClaim("Power", "ShutdownHost"))
-                    .AddPolicy("SetMonitorStatePolicy", policy =>
-                        policy.RequireClaim("Hardware", "SetMonitorState"))
-                    .AddPolicy("ExecuteScriptPolicy", policy =>
-                        policy.RequireClaim("Execution", "Scripts"))
-                    .AddPolicy("LockWorkStationPolicy", policy =>
-                        policy.RequireClaim("Security", "LockWorkStation"))
-                    .AddPolicy("LogOffUserPolicy", policy =>
-                        policy.RequireClaim("Security", "LogOffUser"))
-                    .AddPolicy("TerminateHostPolicy", policy =>
-                        policy.RequireClaim("HostManagement", "TerminateHost"))
-                    .AddPolicy("MoveHostPolicy", policy =>
-                        policy.RequireClaim("HostManagement", "Move"))
-                    .AddPolicy("RenewCertificatePolicy", policy =>
-                        policy.RequireClaim("HostManagement", "RenewCertificate"))
-                    .AddPolicy("DisconnectClientPolicy", policy =>
-                        policy.RequireClaim("Service", "DisconnectClient"));
+                services.AddAuthorizationBuilder().AddCustomPolicies();
             }
         }
 
