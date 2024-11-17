@@ -57,12 +57,7 @@ internal class Program
             await builder.ConfigureSerilog(launchModeInstance, hostConfigurationService, hostInfoEnricher);
             builder.ConfigureCoreUrls(launchModeInstance, certificateLoaderService);
 
-            builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts =>
-                opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));
-
             var app = builder.Build();
-
-            app.UseCors();
 
             if (!app.Environment.IsDevelopment())
             {
