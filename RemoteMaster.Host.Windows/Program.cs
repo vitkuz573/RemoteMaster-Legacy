@@ -149,7 +149,6 @@ internal class Program
         services.AddSingleton<IRegistryService, RegistryService>();
         services.AddSingleton<IProcessService, ProcessService>();
         services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
-        services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
         services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<ICommandExecutor, CommandExecutor>();

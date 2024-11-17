@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -11,7 +12,7 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderService, IInstanceManagerService instanceManagerService, IFileSystem fileSystem, ILogger<UpdaterInstanceService> logger) : IUpdaterInstanceService
+public class UpdaterInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, ILogger<UpdaterInstanceService> logger) : IUpdaterInstanceService
 {
     private readonly string _executablePath = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
@@ -19,33 +20,28 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
     {
         ArgumentNullException.ThrowIfNull(updateRequest);
 
-        var arguments = new Dictionary<string, object>
+        var argumentsBuilder = new StringBuilder();
+
+        argumentsBuilder.Append($"--launch-mode=updater --folder-path={updateRequest.FolderPath}");
+
+        if (updateRequest.UserCredentials != null)
         {
-            { "launch-mode", "updater" },
-            { "folder-path", updateRequest.FolderPath }
-        };
+            argumentsBuilder.Append($" --username={updateRequest.UserCredentials.UserName} --password={updateRequest.UserCredentials.Password}");
+        }
 
         if (updateRequest.ForceUpdate)
         {
-            arguments["force"] = true;
+            argumentsBuilder.Append(" --force");
         }
 
         if (updateRequest.AllowDowngrade)
         {
-            arguments["allow-downgrade"] = true;
+            argumentsBuilder.Append(" --allow-downgrade");
         }
-
-        if (updateRequest.UserCredentials != null)
-        {
-            arguments["username"] = updateRequest.UserCredentials.UserName;
-            arguments["password"] = updateRequest.UserCredentials.Password;
-        }
-
-        var additionalArguments = argumentBuilderService.BuildArguments(arguments);
 
         var startInfo = new NativeProcessStartInfo
         {
-            Arguments = additionalArguments,
+            Arguments = argumentsBuilder.ToString(),
             CreateNoWindow = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true
