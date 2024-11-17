@@ -4,7 +4,7 @@
 
 using System.Net.Http.Headers;
 
-namespace RemoteMaster.Host.Core;
+namespace RemoteMaster.Host.Core.HttpClientHandlers;
 
 public class CustomHttpClientHandler : DelegatingHandler
 {

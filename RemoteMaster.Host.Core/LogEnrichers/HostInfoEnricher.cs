@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Abstractions;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace RemoteMaster.Host.Core;
+namespace RemoteMaster.Host.Core.LogEnrichers;
 
 public class HostInfoEnricher : ILogEventEnricher
 {
