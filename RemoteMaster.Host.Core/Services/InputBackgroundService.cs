@@ -5,7 +5,7 @@
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 internal class InputBackgroundService(IInputService inputService) : IHostedService
 {

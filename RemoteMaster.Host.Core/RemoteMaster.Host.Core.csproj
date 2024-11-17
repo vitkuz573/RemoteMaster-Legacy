@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="FFMpegCore.Extensions.System.Drawing.Common" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.Console" />
