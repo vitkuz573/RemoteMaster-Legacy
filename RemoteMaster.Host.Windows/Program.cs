@@ -37,12 +37,11 @@ internal class Program
                 Environment.Exit(1);
             }
 
-            var options = new WebApplicationOptions
+            var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
             {
                 ContentRootPath = AppContext.BaseDirectory
-            };
+            });
 
-            var builder = WebApplication.CreateSlimBuilder(options);
             builder.Configuration.AddCommandLine(args);
 
             builder.Host.UseWindowsService();
