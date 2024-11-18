@@ -323,7 +323,7 @@ public class ChatWindowService : IHostedService
 
     private void InitializeControls()
     {
-        using var font = CreateDefaultFont();
+        // using var font = CreateDefaultFont();
 
         using var safeChatDisplayHandle = new SafeFileHandle(IDC_CHAT_DISPLAY, false);
 
@@ -331,7 +331,7 @@ public class ChatWindowService : IHostedService
         {
             var chatDisplay = CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | WINDOW_STYLE.WS_BORDER | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)ES_MULTILINE | (WINDOW_STYLE)ES_AUTOVSCROLL | (WINDOW_STYLE)ES_READONLY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
 
-            SendMessage(chatDisplay, WM_SETFONT, new WPARAM((nuint)font.DangerousGetHandle()), new LPARAM(1));
+            // SendMessage(chatDisplay, WM_SETFONT, new WPARAM((nuint)font.DangerousGetHandle()), new LPARAM(1));
         }
 
         using var safeChatInputHandle = new SafeFileHandle(IDC_CHAT_INPUT, false);
