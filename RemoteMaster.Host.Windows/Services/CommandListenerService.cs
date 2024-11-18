@@ -23,6 +23,7 @@ public class CommandListenerService : IHostedService
 
     private HubConnection? _connection;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
+    private readonly System.Timers.Timer _connectionCheckTimer;
 
     public CommandListenerService(IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, ILogger<CommandListenerService> logger)
     {
@@ -30,12 +31,18 @@ public class CommandListenerService : IHostedService
         _userInstanceService = userInstanceService;
         _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
         _logger = logger;
+
+        _connectionCheckTimer = new System.Timers.Timer(60000);
+        _connectionCheckTimer.Elapsed += async (sender, e) => await CheckConnectionAsync();
+        _connectionCheckTimer.AutoReset = true;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("CommandListenerService started.");
-        
+
+        _connectionCheckTimer.Start();
+
         return Task.CompletedTask;
     }
 
@@ -43,21 +50,31 @@ public class CommandListenerService : IHostedService
     {
         _logger.LogInformation("Stopping CommandListenerService.");
 
+        _connectionCheckTimer.Stop();
         await _connectionLock.WaitAsync(cancellationToken);
-        
+
         try
         {
             if (_connection != null)
             {
                 await _connection.StopAsync(cancellationToken);
                 await _connection.DisposeAsync();
-                
+
                 _connection = null;
             }
         }
         finally
         {
             _connectionLock.Release();
+        }
+    }
+
+    private async Task CheckConnectionAsync()
+    {
+        if (_connection?.State != HubConnectionState.Connected)
+        {
+            _logger.LogWarning("Connection is not active. Attempting to reconnect...");
+            await StartConnectionAsync();
         }
     }
 
@@ -116,7 +133,7 @@ public class CommandListenerService : IHostedService
             _connection.Closed += async error =>
             {
                 _logger.LogWarning("Connection closed: {Error}.", error?.Message);
-                
+
                 await Task.Delay(5000);
                 await StartConnectionAsync();
             };
@@ -124,14 +141,14 @@ public class CommandListenerService : IHostedService
             _connection.Reconnecting += error =>
             {
                 _logger.LogWarning("Connection reconnecting: {Error}.", error?.Message);
-                
+
                 return Task.CompletedTask;
             };
 
             _connection.Reconnected += connectionId =>
             {
                 _logger.LogInformation("Connection reconnected: {ConnectionId}.", connectionId);
-                
+
                 return Task.CompletedTask;
             };
 
