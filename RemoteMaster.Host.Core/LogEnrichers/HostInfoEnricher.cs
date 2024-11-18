@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Shared.Abstractions;
 using Serilog.Core;
 using Serilog.Events;
@@ -10,19 +11,39 @@ namespace RemoteMaster.Host.Core.LogEnrichers;
 
 public class HostInfoEnricher : ILogEventEnricher
 {
-    private readonly Lazy<LogEventProperty> _hostIpAddress;
-    private readonly Lazy<LogEventProperty> _hostName;
-    private readonly Lazy<LogEventProperty> _hostMacAddress;
+    private readonly Lazy<LogEventProperty?> _hostIpAddress;
+    private readonly Lazy<LogEventProperty?> _hostName;
+    private readonly Lazy<LogEventProperty?> _hostMacAddress;
 
-    public HostInfoEnricher(IHostInformationService hostInformationService)
+    public HostInfoEnricher(IHostInformationService hostInformationService, ILogger<HostInfoEnricher> logger)
     {
         ArgumentNullException.ThrowIfNull(hostInformationService);
+        ArgumentNullException.ThrowIfNull(logger);
 
-        var hostInfo = hostInformationService.GetHostInformation();
+        try
+        {
+            var hostInfo = hostInformationService.GetHostInformation();
 
-        _hostIpAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostIpAddress", new ScalarValue(hostInfo.IpAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
-        _hostName = new Lazy<LogEventProperty>(() => new LogEventProperty("HostName", new ScalarValue(hostInfo.Name)), LazyThreadSafetyMode.ExecutionAndPublication);
-        _hostMacAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostMacAddress", new ScalarValue(hostInfo.MacAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
+            _hostIpAddress = new Lazy<LogEventProperty?>(() =>
+                new LogEventProperty("HostIpAddress", new ScalarValue(hostInfo.IpAddress)),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+            _hostName = new Lazy<LogEventProperty?>(() =>
+                new LogEventProperty("HostName", new ScalarValue(hostInfo.Name)),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+            _hostMacAddress = new Lazy<LogEventProperty?>(() =>
+                new LogEventProperty("HostMacAddress", new ScalarValue(hostInfo.MacAddress)),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Could not retrieve host information.");
+
+            _hostIpAddress = new Lazy<LogEventProperty?>(() => null);
+            _hostName = new Lazy<LogEventProperty?>(() => null);
+            _hostMacAddress = new Lazy<LogEventProperty?>(() => null);
+        }
     }
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
@@ -30,8 +51,19 @@ public class HostInfoEnricher : ILogEventEnricher
         ArgumentNullException.ThrowIfNull(logEvent);
         ArgumentNullException.ThrowIfNull(propertyFactory);
 
-        logEvent.AddPropertyIfAbsent(_hostIpAddress.Value);
-        logEvent.AddPropertyIfAbsent(_hostName.Value);
-        logEvent.AddPropertyIfAbsent(_hostMacAddress.Value);
+        if (_hostIpAddress.Value != null)
+        {
+            logEvent.AddPropertyIfAbsent(_hostIpAddress.Value);
+        }
+
+        if (_hostName.Value != null)
+        {
+            logEvent.AddPropertyIfAbsent(_hostName.Value);
+        }
+
+        if (_hostMacAddress.Value != null)
+        {
+            logEvent.AddPropertyIfAbsent(_hostMacAddress.Value);
+        }
     }
 }

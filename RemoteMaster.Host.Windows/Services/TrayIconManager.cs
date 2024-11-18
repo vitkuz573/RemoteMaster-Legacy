@@ -119,10 +119,22 @@ public class TrayIconManager : ITrayIconManager
             return;
         }
 
-        _notifyIconData.szTip = $"Name: {_hostInformationService.GetHostInformation().Name}\n" +
-                                $"IP Address: {_hostInformationService.GetHostInformation().IpAddress}\n" +
-                                $"MAC Address: {_hostInformationService.GetHostInformation().MacAddress}\n" +
-                                $"{newTooltipText}";
+        string baseTooltipText;
+
+        try
+        {
+            var hostInfo = _hostInformationService.GetHostInformation();
+
+            baseTooltipText = $"Name: {hostInfo.Name}\nIP Address: {hostInfo.IpAddress}\nMAC Address: {hostInfo.MacAddress}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Failed to retrieve host information. Tooltip will be partially updated.");
+
+            baseTooltipText = "Host information unavailable";
+        }
+
+        _notifyIconData.szTip = $"{baseTooltipText}\n{newTooltipText}";
 
         Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData);
     }
@@ -228,11 +240,20 @@ public class TrayIconManager : ITrayIconManager
 
     private string GetBaseTooltipText()
     {
-        var hostInfo = _hostInformationService.GetHostInformation();
-        
-        return $"Name: {hostInfo.Name}\nIP Address: {hostInfo.IpAddress}\nMAC Address: {hostInfo.MacAddress}";
+        try
+        {
+            var hostInfo = _hostInformationService.GetHostInformation();
+
+            return $"Name: {hostInfo.Name}\nIP Address: {hostInfo.IpAddress}\nMAC Address: {hostInfo.MacAddress}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Failed to retrieve host information. Returning placeholder text for tooltip.");
+
+            return "Host information unavailable";
+        }
     }
-    
+
     private string GetTooltipText(int activeConnections)
     {
         return $"{GetBaseTooltipText()}\nActive Connections: {activeConnections}";

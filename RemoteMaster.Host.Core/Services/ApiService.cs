@@ -41,18 +41,29 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
     private async Task NotifyDeprecatedVersionAsync()
     {
-        var hostInformation = hostInformationService.GetHostInformation();
+        try
+        {
+            var hostInformation = hostInformationService.GetHostInformation();
 
-        var message = new NotificationMessage(
-            Id: Guid.NewGuid().ToString(),
-            Title: "Deprecated API Version",
-            Text: $"The current API version {CurrentApiVersion} is deprecated and will soon be unsupported. Please update to the latest version.",
-            Category: "Warning",
-            PublishDate: DateTime.UtcNow,
-            Author: hostInformation.IpAddress.ToString()
-        );
+            var message = new NotificationMessage(
+                Id: Guid.NewGuid().ToString(),
+                Title: "Deprecated API Version",
+                Text: $"The current API version {CurrentApiVersion} is deprecated and will soon be unsupported. Please update to the latest version.",
+                Category: "Warning",
+                PublishDate: DateTime.UtcNow,
+                Author: hostInformation.IpAddress.ToString()
+            );
 
-        await AddNotificationAsync(message);
+            await AddNotificationAsync(message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning(ex, "Failed to retrieve host information. Skipping deprecated version notification.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An unexpected error occurred while attempting to send deprecated version notification.");
+        }
     }
 
     private async Task CheckDeprecatedVersionAsync(HttpResponseMessage response)

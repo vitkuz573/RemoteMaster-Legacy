@@ -16,7 +16,19 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
         var hasChanges = false;
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-        var hostInformation = hostInformationService.GetHostInformation();
+
+        HostDto hostInformation;
+        
+        try
+        {
+            hostInformation = hostInformationService.GetHostInformation();
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning(ex, "Failed to retrieve host information. Skipping update.");
+            
+            return false;
+        }
 
         if (!hostConfiguration.Host.Equals(hostInformation))
         {
@@ -28,7 +40,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
             hostConfiguration.Host = hostInformation;
 
             logger.LogInformation("Host details were either missing or have been updated.");
-
+            
             hasChanges = true;
         }
 
@@ -41,7 +53,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error saving updated configuration.");
-
+                
                 return false;
             }
         }
@@ -58,7 +70,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
                 if (isOrganizationChanged || isOrganizationalUnitChanged)
                 {
                     hostConfiguration.Subject = new SubjectDto(hostMoveRequest.Organization, hostMoveRequest.OrganizationalUnit);
-
+                    
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
                     logger.LogInformation("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
