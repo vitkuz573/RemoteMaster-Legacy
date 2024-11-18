@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using System.IO.Abstractions;
-using System.Reflection;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR;
@@ -287,17 +286,17 @@ public class HostUpdater : IHostUpdater
                     if (!_fileSystem.File.Exists(destFile))
                     {
                         await Notify($"File {sourceFile} was not copied to {destFile}.", MessageSeverity.Error);
-
+                        
                         throw new IOException($"File {sourceFile} was not copied successfully.");
                     }
 
-                    if (await VerifyChecksum(sourceFile, destFile))
+                    if (await VerifyChecksum(sourceFile, destFile, expectDifference: false))
                     {
                         continue;
                     }
 
                     await Notify($"File {sourceFile} copied with errors. Checksum does not match.", MessageSeverity.Error);
-
+                    
                     throw new IOException($"Checksum mismatch for file {sourceFile}.");
                 }
 
@@ -323,27 +322,39 @@ public class HostUpdater : IHostUpdater
         return false;
     }
 
-    private async Task<bool> VerifyChecksum(string sourceFilePath, string destFilePath, bool expectDifference = false)
+    private async Task<bool> VerifyChecksum(string sourceFilePath, string destFilePath, bool expectDifference)
     {
         var sourceChecksum = _fileService.CalculateChecksum(sourceFilePath);
         var destChecksum = _fileService.CalculateChecksum(destFilePath);
 
-        var checksumMatch = sourceChecksum == destChecksum;
+        var checksumsMatch = sourceChecksum == destChecksum;
 
-        await Notify($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].", MessageSeverity.Information);
+        await Notify($"Verifying checksum: {sourceFilePath} [Checksum: {sourceChecksum}] vs {destFilePath} [Checksum: {destChecksum}].", MessageSeverity.Information);
 
-        switch (expectDifference)
+        if (expectDifference)
         {
-            case true when !checksumMatch:
-                await Notify("Checksums do not match as expected for an update. An update is needed.", MessageSeverity.Information);
-                return false;
-            case false when !checksumMatch:
-                await Notify("Unexpected checksum mismatch. The files may have been tampered with or corrupted.", MessageSeverity.Error);
-                return false;
-            default:
-                await Notify("Checksum verification successful. No differences found.", MessageSeverity.Information);
+            if (!checksumsMatch)
+            {
+                await Notify("Checksums differ as expected. Proceeding.", MessageSeverity.Information);
+
                 return true;
+            }
+
+            await Notify("Checksums match unexpectedly. No update needed.", MessageSeverity.Warning);
+
+            return false;
         }
+
+        if (checksumsMatch)
+        {
+            await Notify("Checksums match as expected.", MessageSeverity.Information);
+
+            return true;
+        }
+
+        await Notify("Checksums differ unexpectedly. Possible file corruption.", MessageSeverity.Error);
+
+        return false;
     }
 
     private async Task WaitForFileRelease(string directory)
@@ -458,7 +469,7 @@ public class HostUpdater : IHostUpdater
             {
                 _fileService.CopyFile(sourceFile, destinationFile, overwrite);
 
-                if (await VerifyChecksum(sourceFile, destinationFile))
+                if (await VerifyChecksum(sourceFile, destinationFile, expectDifference: false))
                 {
                     await Notify($"Successfully copied file {sourceFile} to {destinationFile} on attempt {attempt}.", MessageSeverity.Information);
                     
@@ -528,7 +539,8 @@ public class HostUpdater : IHostUpdater
 
     private async Task<bool> NeedUpdate()
     {
-        var updateFiles = _fileSystem.Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories).Select(_fileSystem.Path.GetFullPath);
+        var updateFiles = _fileSystem.Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories)
+            .Select(_fileSystem.Path.GetFullPath);
 
         foreach (var file in updateFiles)
         {
@@ -539,7 +551,7 @@ public class HostUpdater : IHostUpdater
                 return true;
             }
 
-            if (!await VerifyChecksum(file, targetFile, true))
+            if (await VerifyChecksum(file, targetFile, expectDifference: true))
             {
                 return true;
             }
@@ -548,62 +560,71 @@ public class HostUpdater : IHostUpdater
         return false;
     }
 
+    private Version GetCurrentVersion()
+    {
+        var currentExecutablePath = _fileSystem.Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
+
+        return GetVersionFromExecutable(currentExecutablePath);
+    }
+
+    private Version GetUpdateVersion()
+    {
+        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
+
+        return GetVersionFromExecutable(updateExecutablePath);
+    }
+
     private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
     {
-        var currentVersion = new Version(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "0.0.0.0");
-        var updateVersion = GetVersionFromExecutable(_fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
+        var currentVersion = GetCurrentVersion();
+        var updateVersion = GetUpdateVersion();
 
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
         await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
 
-        var currentExecutablePath = _fileSystem.Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
-        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
+        var currentExecutablePath = Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
+        var updateExecutablePath = Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
 
         if (updateVersion > currentVersion)
         {
+            await Notify("Update version is newer than current version; proceeding with update.", MessageSeverity.Information);
             return true;
         }
+        else if (updateVersion == currentVersion)
+        {
+            var checksumsDiffer = await VerifyChecksum(updateExecutablePath, currentExecutablePath, expectDifference: true);
 
-        if (updateVersion < currentVersion)
+            if (checksumsDiffer)
+            {
+                await Notify("Checksums differ; proceeding with update.", MessageSeverity.Information);
+                return true;
+            }
+            else if (force)
+            {
+                await Notify("Force flag is set; proceeding with update even though files are identical.", MessageSeverity.Warning);
+                return true;
+            }
+            else
+            {
+                await Notify("No update needed; files are identical.", MessageSeverity.Information);
+                return false;
+            }
+        }
+        else
         {
             if (allowDowngrade)
             {
-                await Notify("Allowing downgrade as per the allow-downgrade flag.", MessageSeverity.Information);
-
+                await Notify("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);
+               
                 return true;
             }
-
-            await Notify($"Current version {currentVersion} is newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade option.", MessageSeverity.Information);
-
-            return false;
-        }
-
-        var checksumsMatch = await VerifyChecksum(updateExecutablePath, currentExecutablePath, true);
-
-        if (checksumsMatch)
-        {
-            if (allowDowngrade && force)
+            else
             {
-                await Notify("Checksum match detected with same version. Update needed due to both allow-downgrade and force flags.", MessageSeverity.Information);
-
-                return true;
+                await Notify($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
+                
+                return false;
             }
-
-            await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force option.", MessageSeverity.Information);
-
-            return false;
         }
-
-        if (force)
-        {
-            await Notify("Checksum mismatch detected with same version. Update needed due to force flag.", MessageSeverity.Information);
-
-            return true;
-        }
-
-        await Notify("Checksum mismatch detected but force flag is not set.", MessageSeverity.Error);
-
-        return false;
     }
 
     private Version GetVersionFromExecutable(string filePath)
