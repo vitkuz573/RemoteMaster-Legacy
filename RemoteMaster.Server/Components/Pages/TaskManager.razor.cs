@@ -3,13 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Polly;
 using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
@@ -35,24 +36,41 @@ public partial class TaskManager : IAsyncDisposable
     private List<ProcessInfo> _allProcesses = [];
     private string _processPath = string.Empty;
     private bool _firstRenderCompleted;
+    private bool _disposed;
 
-    protected override void OnAfterRender(bool firstRender)
+    private bool _isAccessDenied;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !_disposed && !_isAccessDenied)
         {
             _firstRenderCompleted = true;
+
+            if (_isAccessDenied)
+            {
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+                await FetchProcesses();
+            }
         }
     }
 
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
 
-        if (_user?.Identity?.IsAuthenticated == true)
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
+
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
         {
-            await InitializeHostConnectionAsync();
-            await FetchProcesses();
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
         }
     }
 
@@ -195,6 +213,11 @@ public partial class TaskManager : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         if (_connection != null)
         {
             try
@@ -203,9 +226,11 @@ public partial class TaskManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
+
+        _disposed = true;
 
         GC.SuppressFinalize(this);
     }

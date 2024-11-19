@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Microsoft.Win32;
+using MudBlazor;
 using Polly;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
@@ -32,6 +33,7 @@ public partial class Registry : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
+    private bool _isAccessDenied;
 
     private string? _selectedValue;
 
@@ -40,24 +42,39 @@ public partial class Registry : IAsyncDisposable
     private readonly List<RegistryValueDto> _registryValues = [];
 
     private bool _firstRenderCompleted;
+    private bool _disposed;
 
-    protected override void OnAfterRender(bool firstRender)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !_disposed && !_isAccessDenied)
         {
             _firstRenderCompleted = true;
+
+            if (_isAccessDenied)
+            {
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+                await FetchRootKeys();
+            }
         }
     }
 
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
 
-        if (_user?.Identity?.IsAuthenticated == true)
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
+
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
         {
-            await InitializeHostConnectionAsync();
-            await FetchRootKeys();
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
         }
     }
 
@@ -584,6 +601,11 @@ public partial class Registry : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         if (_connection != null)
         {
             try
@@ -592,9 +614,11 @@ public partial class Registry : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
+
+        _disposed = true;
 
         GC.SuppressFinalize(this);
     }

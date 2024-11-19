@@ -5,6 +5,9 @@
 @using RemoteMaster.Server.Abstractions
 
 @inject IAccessTokenProvider AccessTokenProvider
+@inject ISnackbar SnackBar
+@inject IHostAccessService HostAccessService
+@inject IJSRuntime JsRuntime
 @inject ILogger<LogsViewer> Logger
 
 <PageTitle>Logs Viewer</PageTitle>

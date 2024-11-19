@@ -3,14 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Polly;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -41,31 +42,48 @@ public partial class FileManager : IAsyncDisposable
     private string _selectedDrive = string.Empty;
     private IBrowserFile? _selectedFile;
     private bool _firstRenderCompleted;
+    private bool _disposed;
 
-    protected override void OnAfterRender(bool firstRender)
+    private bool _isAccessDenied;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !_disposed && !_isAccessDenied)
         {
             _firstRenderCompleted = true;
+
+            if (_isAccessDenied)
+            {
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+                await FetchAvailableDrives();
+
+                if (_availableDrives.Count > 0)
+                {
+                    _selectedDrive = _availableDrives.First();
+                    _currentPath = _selectedDrive;
+                    await FetchFilesAndDirectories();
+                }
+            }
         }
     }
 
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
 
-        if (_user?.Identity?.IsAuthenticated == true)
-        {
-            await InitializeHostConnectionAsync();
-            await FetchAvailableDrives();
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
 
-            if (_availableDrives.Count > 0)
-            {
-                _selectedDrive = _availableDrives.First();
-                _currentPath = _selectedDrive;
-                await FetchFilesAndDirectories();
-            }
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
+        {
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
         }
     }
 
@@ -286,6 +304,11 @@ public partial class FileManager : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         if (_connection != null)
         {
             try
@@ -294,9 +317,11 @@ public partial class FileManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
+
+        _disposed = true;
 
         GC.SuppressFinalize(this);
     }

@@ -3,12 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
+using MudBlazor;
+using Polly;
 using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -22,6 +25,9 @@ public partial class LogsViewer : IAsyncDisposable
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
+    [Inject(Key = "Resilience-Pipeline")]
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; } = default!;
+
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
     private List<string> _logFiles = [];
@@ -31,13 +37,43 @@ public partial class LogsViewer : IAsyncDisposable
     private DateTime? _startDate;
     private DateTime? _endDate;
 
+    private bool _firstRenderCompleted;
+    private bool _disposed;
+
+    private bool _isAccessDenied;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_disposed && !_isAccessDenied)
+        {
+            _firstRenderCompleted = true;
+
+            if (_isAccessDenied)
+            {
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+                await FetchLogFiles();
+            }
+        }
+    }
+
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
 
-        await InitializeHostConnectionAsync();
-        await FetchLogFiles();
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
+
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
+        {
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
+        }
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -95,10 +131,12 @@ public partial class LogsViewer : IAsyncDisposable
 
     private async Task FetchLogFiles()
     {
-        if (_connection != null)
+        if (_connection == null)
         {
-            await _connection.InvokeAsync("GetLogFiles");
+            return;
         }
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("GetLogFiles"));
     }
 
     private async Task OnLogSelected(ChangeEventArgs e)
@@ -111,32 +149,74 @@ public partial class LogsViewer : IAsyncDisposable
 
     private async Task FetchLogs()
     {
-        if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
+        if (_connection == null)
         {
-            await _connection.InvokeAsync("GetLog", _selectedLogFile);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_selectedLogFile))
+        {
+            await SafeInvokeAsync(() => _connection.InvokeAsync("GetLog", _selectedLogFile));
         }
     }
 
     private async Task FetchFilteredLogs()
     {
-        if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
+        if (_connection == null)
         {
-            await _connection.InvokeAsync("GetFilteredLog", _selectedLogFile, _selectedLogLevel, _startDate, _endDate);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_selectedLogFile))
+        {
+            await SafeInvokeAsync(() => _connection.InvokeAsync("GetFilteredLog", _selectedLogFile, _selectedLogLevel, _startDate, _endDate));
         }
     }
 
     private async Task DeleteAllLogs()
     {
-        if (_connection != null)
+        if (_connection == null)
         {
-            await _connection.InvokeAsync("DeleteAllLogs");
+            return;
         }
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("DeleteAllLogs"));
 
         await FetchLogFiles();
     }
 
+    private async Task SafeInvokeAsync(Func<Task> action)
+    {
+        var result = await ResiliencePipeline.ExecuteAsync(async _ =>
+        {
+            if (_connection is not { State: HubConnectionState.Connected })
+            {
+                throw new InvalidOperationException("Connection is not active");
+            }
+
+            await action();
+            await Task.CompletedTask;
+
+            return "Success";
+
+        }, CancellationToken.None);
+
+        if (result == "This function is not available in the current host version. Please update your host.")
+        {
+            if (_firstRenderCompleted)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", result);
+            }
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         if (_connection != null)
         {
             try
@@ -145,9 +225,11 @@ public partial class LogsViewer : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
+
+        _disposed = true;
 
         GC.SuppressFinalize(this);
     }

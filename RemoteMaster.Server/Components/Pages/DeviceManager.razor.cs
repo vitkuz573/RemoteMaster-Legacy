@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Polly;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
@@ -33,6 +34,9 @@ public partial class DeviceManager : IAsyncDisposable
     private ClaimsPrincipal? _user;
     private List<DeviceDto> _deviceItems = [];
     private bool _firstRenderCompleted;
+    private bool _disposed;
+
+    private bool _isAccessDenied;
 
     private readonly Dictionary<string, bool> _devicePanelState = [];
 
@@ -80,23 +84,37 @@ public partial class DeviceManager : IAsyncDisposable
         { "UCMCLIENT", new DeviceClassInfo("UCMCLIENT", "UCM Client", new IconInfo("developer_board", "material-symbols-outlined"), "Specialized Devices") }
     };
 
-    protected override void OnAfterRender(bool firstRender)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !_disposed && !_isAccessDenied)
         {
             _firstRenderCompleted = true;
+
+            if (_isAccessDenied)
+            {
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+                await FetchDevices();
+            }
         }
     }
 
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
 
-        if (_user?.Identity?.IsAuthenticated == true)
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
+
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
         {
-            await InitializeHostConnectionAsync();
-            await FetchDevices();
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
         }
     }
 
@@ -193,6 +211,11 @@ public partial class DeviceManager : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         if (_connection != null)
         {
             try
@@ -201,9 +224,11 @@ public partial class DeviceManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Logger.LogError("An error occurred while asynchronously disposing the connection for host {Host}: {Message}", Host, ex.Message);
+                Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
+
+        _disposed = true;
 
         GC.SuppressFinalize(this);
     }

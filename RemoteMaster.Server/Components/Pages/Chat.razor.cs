@@ -3,14 +3,16 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using MudBlazor;
+using Polly;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 
@@ -25,6 +27,9 @@ public partial class Chat : IAsyncDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
+    [Inject(Key = "Resilience-Pipeline")]
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; } = default!;
+
     private InputFile? _fileInput;
     private HubConnection? _connection;
     private string _message = string.Empty;
@@ -33,11 +38,46 @@ public partial class Chat : IAsyncDisposable
     private readonly List<ChatMessageDto> _messages = [];
     private string _typingMessage = string.Empty;
     private ClaimsPrincipal? _user;
+    private bool _firstRenderCompleted;
     private bool _disposed;
     private Timer? _typingTimer;
     private readonly List<IBrowserFile> _selectedFiles = [];
+    private bool _isAccessDenied;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_disposed && !_isAccessDenied)
+        {
+            _firstRenderCompleted = true;
+
+            if (_isAccessDenied)
+            {
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+            }
+        }
+    }
 
     protected async override Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+
+        _user = authState.User;
+
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
+
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
+        {
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
+        }
+    }
+
+    private async Task InitializeHostConnectionAsync()
     {
         var authState = await AuthenticationStateTask;
 
@@ -102,8 +142,6 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Logger.LogError("Connection is not established.");
-            
             return;
         }
 
@@ -133,7 +171,7 @@ public partial class Chat : IAsyncDisposable
 
         chatMessageDto.Attachments.AddRange(attachments);
 
-        await _connection.SendAsync("SendMessage", chatMessageDto);
+        await SafeInvokeAsync(() => _connection.SendAsync("SendMessage", chatMessageDto));
 
         _message = string.Empty;
         _replyToMessageId = null;
@@ -145,14 +183,12 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Logger.LogError("Connection is not established.");
-            
             return;
         }
 
         var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
 
-        await _connection.SendAsync("DeleteMessage", id, userName);
+        await SafeInvokeAsync(() => _connection.SendAsync("DeleteMessage", id, userName));
     }
 
     private void SetReplyToMessage(string messageId)
@@ -178,15 +214,13 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Logger.LogError("Connection is not established.");
-
             return;
         }
 
         var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
         _message = e.Value?.ToString() ?? string.Empty;
         
-        await _connection.SendAsync("Typing", userName);
+        await SafeInvokeAsync(() => _connection.SendAsync("Typing", userName));
 
         ResetTypingTimer();
     }
@@ -212,8 +246,6 @@ public partial class Chat : IAsyncDisposable
     {
         if (_connection == null)
         {
-            Logger.LogError("Connection is not established.");
-
             return;
         }
 
@@ -228,9 +260,34 @@ public partial class Chat : IAsyncDisposable
             {
                 var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
 
-                await _connection.SendAsync("StopTyping", userName);
+                await SafeInvokeAsync(() => _connection.SendAsync("StopTyping", userName));
             }
         }, null, 1000, Timeout.Infinite);
+    }
+
+    private async Task SafeInvokeAsync(Func<Task> action)
+    {
+        var result = await ResiliencePipeline.ExecuteAsync(async _ =>
+        {
+            if (_connection is not { State: HubConnectionState.Connected })
+            {
+                throw new InvalidOperationException("Connection is not active");
+            }
+
+            await action();
+            await Task.CompletedTask;
+
+            return "Success";
+
+        }, CancellationToken.None);
+
+        if (result == "This function is not available in the current host version. Please update your host.")
+        {
+            if (_firstRenderCompleted)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", result);
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()

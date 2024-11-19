@@ -18,7 +18,6 @@ using Polly;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
@@ -78,20 +77,14 @@ public partial class Access : IAsyncDisposable
         var authState = await AuthenticationStateTask;
         
         _user = authState.User;
-        _isAccessDenied = _user == null || !await HasAccessAsync();
 
-        if (!_isAccessDenied)
+        var result = await HostAccessService.InitializeAccessAsync(Host, _user);
+
+        _isAccessDenied = result.IsAccessDenied;
+
+        if (_isAccessDenied && result.ErrorMessage != null)
         {
-            var userId = _user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
-
-            var tokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
-
-            if (!tokenResult.IsSuccess)
-            {
-                Logger.LogWarning("Access token retrieval failed before rendering.");
-                _isAccessDenied = true;
-                SnackBar.Add("Authorization failed. Please log in again.", Severity.Error);
-            }
+            SnackBar.Add(result.ErrorMessage, Severity.Error);
         }
     }
 
@@ -691,21 +684,6 @@ public partial class Access : IAsyncDisposable
         }
 
         var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, policyName);
-
-        return authorizationResult.Succeeded;
-    }
-
-    private async Task<bool> HasAccessAsync()
-    {
-        if (_user == null)
-        {
-            return false;
-        }
-
-        var requirement = new HostAccessRequirement(Host);
-        var requirements = new List<IAuthorizationRequirement> { requirement };
-
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, requirements);
 
         return authorizationResult.Succeeded;
     }
