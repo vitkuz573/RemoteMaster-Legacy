@@ -76,9 +76,23 @@ public partial class Access : IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
-
+        
         _user = authState.User;
         _isAccessDenied = _user == null || !await HasAccessAsync();
+
+        if (!_isAccessDenied)
+        {
+            var userId = _user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
+
+            var tokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+            if (!tokenResult.IsSuccess)
+            {
+                Logger.LogWarning("Access token retrieval failed before rendering.");
+                _isAccessDenied = true;
+                SnackBar.Add("Authorization failed. Please log in again.", Severity.Error);
+            }
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
