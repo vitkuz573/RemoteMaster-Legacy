@@ -38,13 +38,7 @@ public class HostAccessService(IAuthorizationService authorizationService, IHttp
             return result;
         }
 
-        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        
-        if (userId == null)
-        {
-            throw new InvalidOperationException("User ID is not found.");
-        }
-
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
         var tokenResult = await accessTokenProvider.GetAccessTokenAsync(userId);
 
         if (tokenResult.IsSuccess)
