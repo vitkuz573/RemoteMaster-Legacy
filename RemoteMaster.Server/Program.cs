@@ -19,6 +19,7 @@ using Polly.Fallback;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
+using RemoteMaster.Server.AuthorizationHandlers;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
@@ -27,7 +28,6 @@ using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Repositories;
-using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.UnitOfWork;
 using RemoteMaster.Server.Validators;
@@ -175,7 +175,6 @@ public static class Program
         services.AddSingleton<ITokenSigningService, RsaTokenSigningService>();
         services.AddSingleton<ITokenValidationService, RsaTokenValidationService>();
         services.AddSingleton<ISslWarningService, SslWarningService>();
-
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IHostInformationService, HostInformationService>();
         services.AddSingleton<ISubjectService, SubjectService>();

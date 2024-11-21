@@ -6,6 +6,4 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace RemoteMaster.Host.Core.Requirements;
 
-public class LocalhostOrAuthenticatedRequirement : IAuthorizationRequirement
-{
-}
+public class LocalhostOrAuthenticatedRequirement : IAuthorizationRequirement;

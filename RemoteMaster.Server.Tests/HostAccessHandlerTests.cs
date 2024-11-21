@@ -12,6 +12,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
+using RemoteMaster.Server.AuthorizationHandlers;
 using RemoteMaster.Server.Requirements;
 
 namespace RemoteMaster.Server.Tests;

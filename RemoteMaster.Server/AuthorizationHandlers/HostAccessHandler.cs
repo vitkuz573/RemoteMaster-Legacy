@@ -6,8 +6,9 @@ using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Requirements;
 
-namespace RemoteMaster.Server.Requirements;
+namespace RemoteMaster.Server.AuthorizationHandlers;
 
 public class HostAccessHandler(IApplicationUnitOfWork applicationUnitOfWork) : AuthorizationHandler<HostAccessRequirement>
 {
