@@ -18,7 +18,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         ArgumentNullException.ThrowIfNull(viewer);
 
         viewer.FrameRate = frameRate;
-        viewer.ScreenCapturing.ScreenChanged += async (_, bounds) => await SendScreenSize(viewer, bounds.Width, bounds.Height);
+        viewer.ScreenCapturing.ScreenChanged += async (_, args) => await SendScreenSize(viewer, args.Bounds.Width, args.Bounds.Height);
 
         logger.LogInformation("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
 

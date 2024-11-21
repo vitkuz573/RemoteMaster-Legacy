@@ -21,7 +21,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcess : INativeProcess
 {
-    private static readonly object _createProcessLock = new();
+    private static readonly Lock _createProcessLock = new();
 
     private NativeProcessStartInfo? _startInfo;
     private SafeProcessHandle? _processHandle;

@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.EventArguments;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.ScreenOverlays;
@@ -20,7 +21,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     private readonly IDesktopService _desktopService;
     private readonly ClickIndicatorOverlay _clickIndicatorOverlay;
     private readonly ILogger<ScreenCapturingService> _logger;
-    private readonly object _screenBoundsLock = new();
+    private readonly Lock _screenBoundsLock = new();
     private readonly List<IScreenOverlay> _overlays = [];
     private bool _showClickIndicator;
 
@@ -63,7 +64,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         }
     }
 
-    public event EventHandler<Rectangle>? ScreenChanged;
+    public event EventHandler<ScreenChangedEventArgs>? ScreenChanged;
 
     protected ScreenCapturingService(IDesktopService desktopService, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<ScreenCapturingService> logger)
     {
@@ -152,7 +153,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     protected void RaiseScreenChangedEvent(Rectangle currentScreenBounds)
     {
-        ScreenChanged?.Invoke(this, currentScreenBounds);
+        ScreenChanged?.Invoke(this, new ScreenChangedEventArgs(currentScreenBounds));
     }
 
     public virtual void Dispose()

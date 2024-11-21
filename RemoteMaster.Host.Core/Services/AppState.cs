@@ -17,7 +17,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
     private readonly HashSet<string> _ignoredUsers = ["RCHost"];
 
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
-    private static readonly object Lock = new();
+    private static readonly Lock Lock = new();
 
     public event EventHandler<IViewer>? ViewerAdded;
     public event EventHandler<IViewer?>? ViewerRemoved;
