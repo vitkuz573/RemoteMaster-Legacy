@@ -113,7 +113,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public byte[]? GetNextFrame()
     {
-        lock (_screenBoundsLock)
+        using (_screenBoundsLock.EnterScope())
         {
             try
             {

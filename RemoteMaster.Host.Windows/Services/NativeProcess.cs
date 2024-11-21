@@ -149,7 +149,7 @@ public class NativeProcess : INativeProcess
         SafeFileHandle? parentErrorPipeHandle = null;
         SafeFileHandle? childErrorPipeHandle = null;
 
-        lock (_createProcessLock)
+        using (_createProcessLock.EnterScope())
         {
             try
             {
