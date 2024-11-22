@@ -278,19 +278,8 @@ public partial class Home
 
     private async Task LogoffHost(HostDto hostDto)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-
-        var cancellationToken = cts.Token;
-
         try
         {
-            var connection = await SetupConnection(hostDto, "hubs/control", false, cancellationToken);
-
-            connection.On("ReceiveCloseConnection", async () =>
-            {
-                await connection.StopAsync(cancellationToken);
-            });
-
             hostDto.Thumbnail = null;
 
             await MoveToPending(hostDto);
