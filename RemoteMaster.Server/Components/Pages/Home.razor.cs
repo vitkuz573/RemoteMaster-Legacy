@@ -8,8 +8,6 @@ using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -22,7 +20,7 @@ using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -426,11 +424,7 @@ public partial class Home
 
                 options.AccessTokenProvider = () => Task.FromResult(token);
             })
-            .AddMessagePackProtocol(options =>
-            {
-                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-            })
+            .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
         if (!startConnection)

@@ -7,8 +7,6 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -17,7 +15,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -212,12 +210,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
                     return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                 };
             })
-            .AddMessagePackProtocol(options =>
-            {
-                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-                
-                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-            })
+            .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
         if (startConnection)

@@ -6,8 +6,6 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -19,7 +17,7 @@ using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -421,12 +419,7 @@ public partial class Access : IAsyncDisposable
                         return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                     };
                 })
-                .AddMessagePackProtocol(options =>
-                {
-                    var resolver = CompositeResolver.Create([new IPAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-                    options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-                })
+                .AddMessagePackProtocol(options => options.Configure())
                 .Build();
 
             _connection.On<IEnumerable<Display>>("ReceiveDisplays", displays =>

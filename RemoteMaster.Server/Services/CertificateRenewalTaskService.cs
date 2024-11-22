@@ -2,13 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CertificateRenewalTaskAggregate;
 using RemoteMaster.Server.Enums;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 
 namespace RemoteMaster.Server.Services;
 
@@ -83,12 +81,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
                     return accessToken;
                 };
             })
-            .AddMessagePackProtocol(options =>
-            {
-                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-            })
+            .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
         await hubConnection.StartAsync();

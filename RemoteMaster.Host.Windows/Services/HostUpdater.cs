@@ -4,8 +4,6 @@
 
 using System.Diagnostics;
 using System.IO.Abstractions;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using static RemoteMaster.Shared.Models.Message;
 
@@ -65,12 +63,7 @@ public class HostUpdater : IHostUpdater
             {
                 options.Headers.Add("X-Service-Flag", "true");
             })
-            .AddMessagePackProtocol(options =>
-            {
-                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-            })
+            .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
         await _updaterHubClient.StartAsync();

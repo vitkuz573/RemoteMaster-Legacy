@@ -3,8 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -12,7 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -90,12 +88,7 @@ public partial class LogsViewer : IAsyncDisposable
                     return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                 };
             })
-            .AddMessagePackProtocol(options =>
-            {
-                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-            })
+            .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
         _connection.On<List<string>>("ReceiveLogFiles", logs =>

@@ -4,8 +4,6 @@
 
 using System.Security.Claims;
 using System.Security.Cryptography;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +17,6 @@ using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
-using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -107,12 +104,7 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        services.AddSignalR().AddMessagePackProtocol(options =>
-        {
-            var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-            options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-        });
+        services.AddSignalR().AddMessagePackProtocol(options => options.Configure());
 
         switch (launchModeInstance)
         {

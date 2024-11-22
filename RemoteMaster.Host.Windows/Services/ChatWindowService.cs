@@ -3,8 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Runtime.InteropServices;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -101,12 +99,7 @@ public class ChatWindowService : IHostedService
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat")
-            .AddMessagePackProtocol(options =>
-            {
-                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-            })
+            .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
         _connection.On<ChatMessageDto>("ReceiveMessage", AddMessageToChatDisplay);

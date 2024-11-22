@@ -2,15 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
-using RemoteMaster.Shared.Formatters;
+using RemoteMaster.Shared.Extensions;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -107,12 +105,7 @@ public class CommandListenerService : IHostedService
                 {
                     options.Headers.Add("X-Service-Flag", "true");
                 })
-                .AddMessagePackProtocol(options =>
-                {
-                    var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
-                    options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
-                })
+                .AddMessagePackProtocol(options => options.Configure())
                 .Build();
 
             _logger.LogDebug("HubConnection created, setting up ReceiveCommand handler.");
