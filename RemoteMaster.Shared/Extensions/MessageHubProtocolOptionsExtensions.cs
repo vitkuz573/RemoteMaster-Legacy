@@ -10,7 +10,7 @@ using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Shared.Extensions;
 
-public static class MessageHubProtocolOptionsExtensions
+public static class MessagePackHubProtocolOptionsExtensions
 {
     public static void Configure(this MessagePackHubProtocolOptions options)
     {
