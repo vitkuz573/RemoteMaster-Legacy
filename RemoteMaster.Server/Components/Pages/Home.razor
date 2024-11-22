@@ -110,7 +110,7 @@
 
                                 @if (context.User.HasClaim("Power", "WakeUpHost"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">Wake Up</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedHosts.Count == 0 || _selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Wake Up</MudButton>
                                 }
                                 
                                 @if (context.User.HasClaim("Connect", "View") || context.User.HasClaim("Connect", "Control"))
@@ -243,7 +243,7 @@
                             </MudTabPanel>
 
                             <MudTabPanel Text="Extra" Icon="@Icons.Material.Filled.Settings">
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoteExecutor" Class="mr-2">Remote Executor</MudButton>
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoteExecutor" Disabled="@(_selectedHosts.Count > 0)" Class="mr-2">Remote Executor</MudButton>
                             </MudTabPanel>
                         </Authorized>
                     </AuthorizeView>
