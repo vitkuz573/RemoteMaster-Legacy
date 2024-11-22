@@ -276,19 +276,7 @@ public partial class Home
         ResetSelections();
     }
 
-    private async Task LogoffHost(HostDto hostDto)
-    {
-        try
-        {
-            hostDto.Thumbnail = null;
-
-            await MoveToPending(hostDto);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Exception in LogoffHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
-        }
-    }
+    private async Task LogoffHost(HostDto hostDto) => await MoveToPending(hostDto);
 
     private async Task MoveToAvailable(HostDto hostDto)
     {
