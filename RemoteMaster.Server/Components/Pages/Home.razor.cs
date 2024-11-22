@@ -372,6 +372,16 @@ public partial class Home
     {
         var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
+        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+        if (!accessTokenResult.IsSuccess)
+        {
+            Logger.LogError("Failed to retrieve access token for user {UserId}", userId);
+            throw new InvalidOperationException("Failed to retrieve access token.");
+        }
+
+        var token = accessTokenResult.Value;
+
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostDto.IpAddress}:5001/{hubPath}", options =>
             {
@@ -434,16 +444,10 @@ public partial class Home
 
                         };
                     }
-
                     return handler;
                 };
 
-                options.AccessTokenProvider = async () =>
-                {
-                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
-
-                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
-                };
+                options.AccessTokenProvider = () => Task.FromResult(token);
             })
             .AddMessagePackProtocol(options =>
             {
