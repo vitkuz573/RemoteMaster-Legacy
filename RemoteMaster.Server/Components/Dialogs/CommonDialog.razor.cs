@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Security;
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -72,6 +73,7 @@ public class CommonDialogBase : ComponentBase
     protected async void Cancel()
     {
         await FreeResources();
+
         MudDialog.Cancel();
     }
 
@@ -84,7 +86,7 @@ public class CommonDialogBase : ComponentBase
                 await connection!.StopAsync();
                 await connection.DisposeAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // ignored
             }
@@ -93,6 +95,13 @@ public class CommonDialogBase : ComponentBase
 
     protected async override Task OnInitializedAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+
+        var user = httpContext.User;
+
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
+        await AccessTokenProvider.GetAccessTokenAsync(userId);
+
         if (RequireConnections)
         {
             await ConnectHosts();

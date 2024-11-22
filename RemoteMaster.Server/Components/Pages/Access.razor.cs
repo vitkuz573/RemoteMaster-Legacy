@@ -93,12 +93,15 @@ public partial class Access : IAsyncDisposable
         if (firstRender && !_disposed && !_isAccessDenied)
         {
             _firstRenderCompleted = true;
+
+            var objectReference = DotNetObjectReference.Create(this);
+
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
 
             await module.InvokeVoidAsync("addPreventCtrlSListener");
-            await module.InvokeVoidAsync("addBeforeUnloadListener", DotNetObjectReference.Create(this));
-            await module.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
-            await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("addBeforeUnloadListener", objectReference);
+            await module.InvokeVoidAsync("addKeyDownEventListener", objectReference);
+            await module.InvokeVoidAsync("addKeyUpEventListener", objectReference);
             await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
 
             if (_isAccessDenied)
