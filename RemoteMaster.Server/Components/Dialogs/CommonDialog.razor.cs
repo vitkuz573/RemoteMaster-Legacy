@@ -21,7 +21,7 @@ using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-public class CommonDialogBase : ComponentBase
+public class CommonDialogBase : ComponentBase, IAsyncDisposable
 {
     [CascadingParameter]
     protected MudDialogInstance MudDialog { get; set; } = default!;
@@ -72,25 +72,9 @@ public class CommonDialogBase : ComponentBase
 
     protected async void Cancel()
     {
-        await FreeResources();
+        await DisposeAsync();
 
         MudDialog.Cancel();
-    }
-
-    private async Task FreeResources()
-    {
-        foreach (var connection in Hosts.Values.Where(connection => connection != null))
-        {
-            try
-            {
-                await connection!.StopAsync();
-                await connection.DisposeAsync();
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
     }
 
     protected async override Task OnInitializedAsync()
@@ -355,5 +339,21 @@ public class CommonDialogBase : ComponentBase
         }
 
         return "Error";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (var connection in Hosts.Values.Where(connection => connection != null))
+        {
+            try
+            {
+                await connection!.StopAsync();
+                await connection.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
     }
 }
