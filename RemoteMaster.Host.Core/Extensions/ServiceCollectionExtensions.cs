@@ -25,13 +25,13 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddCoreParameterHandlers(this IServiceCollection services)
+    private static void AddCoreParameterHandlers(this IServiceCollection services)
     {
         services.AddTransient<IParameterHandler, StringParameterHandler>();
         services.AddTransient<IParameterHandler, BooleanParameterHandler>();
     }
 
-    public static void AddCommonCoreServices(this IServiceCollection services)
+    private static void AddCommonCoreServices(this IServiceCollection services)
     {
         services.AddLogging(loggingBuilder =>
         {
