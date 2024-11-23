@@ -93,7 +93,7 @@ public partial class FileManager : IAsyncDisposable
         StateHasChanged();
     }
 
-    private async Task EnterDirectory(FileSystemItem item)
+    private async Task HandleDoubleClick(FileSystemItem item)
     {
         if (item.Name == "..")
         {
