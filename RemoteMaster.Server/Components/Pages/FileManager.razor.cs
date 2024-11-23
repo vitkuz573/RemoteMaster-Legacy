@@ -34,13 +34,14 @@ public partial class FileManager : IAsyncDisposable
     private ClaimsPrincipal? _user;
     private string _searchQuery = string.Empty;
     private string _currentPath = string.Empty;
-    private List<FileSystemItem> _fileSystemItems = [];
-    private List<FileSystemItem> _allFileSystemItems = [];
     private List<string> _availableDrives = [];
     private string _selectedDrive = string.Empty;
     private IBrowserFile? _selectedFile;
     private bool _firstRenderCompleted;
     private bool _disposed;
+
+    private List<FileSystemItem> _items = [];
+    private string _selectedItem;
 
     private bool _isAccessDenied;
 
@@ -85,6 +86,32 @@ public partial class FileManager : IAsyncDisposable
         }
     }
 
+    private static void CreateNewItem()
+    {
+
+    }
+
+    private static void DeleteSelectedItem()
+    {
+
+    }
+
+    private async Task SelectItem(FileSystemItem item)
+    {
+        if (item.Name == "..")
+        {
+            await NavigateUp();
+        }
+        else if (item.Type == FileSystemItemType.Directory)
+        {
+            await ChangeDirectory(item.Name);
+        }
+        else
+        {
+            await DownloadFile(item.Name);
+        }
+    }
+
     private void OnInputFileChange(InputFileChangeEventArgs e)
     {
         _selectedFile = e.File;
@@ -119,11 +146,6 @@ public partial class FileManager : IAsyncDisposable
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetAvailableDrives"));
     }
 
-    private async Task NavigateToPath()
-    {
-        await FetchFilesAndDirectories();
-    }
-
     private async Task FetchFilesAndDirectories()
     {
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetFilesAndDirectories", _currentPath));
@@ -148,8 +170,7 @@ public partial class FileManager : IAsyncDisposable
 
         _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
         {
-            _fileSystemItems = fileSystemItems;
-            _allFileSystemItems = [.. _fileSystemItems];
+            _items = fileSystemItems;
 
             await InvokeAsync(StateHasChanged);
         });
@@ -227,22 +248,6 @@ public partial class FileManager : IAsyncDisposable
         }
     }
 
-    private async Task HandleClick(FileSystemItem item)
-    {
-        if (item.Name == "..")
-        {
-            await NavigateUp();
-        }
-        else if (item.Type == FileSystemItemType.Directory)
-        {
-            await ChangeDirectory(item.Name);
-        }
-        else
-        {
-            await DownloadFile(item.Name);
-        }
-    }
-
     private static string FormatSize(long size)
     {
         string[] sizes = ["B", "KB", "MB", "GB", "TB"];
@@ -262,23 +267,7 @@ public partial class FileManager : IAsyncDisposable
     {
         _searchQuery = e.Value?.ToString() ?? string.Empty;
 
-        FilterItems();
-
         await InvokeAsync(StateHasChanged);
-    }
-
-    private void FilterItems()
-    {
-        if (string.IsNullOrWhiteSpace(_searchQuery))
-        {
-            _allFileSystemItems = [.._fileSystemItems];
-        }
-        else
-        {
-            _fileSystemItems = _allFileSystemItems
-                .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
     }
 
     private async Task OnDriveSelected(ChangeEventArgs e)

@@ -3,78 +3,75 @@
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Abstractions
-@using RemoteMaster.Shared.Enums
 
-@inject IJSRuntime JsRuntime
 @inject IAccessTokenProvider AccessTokenProvider
+@inject IJSRuntime JsRuntime
 @inject ISnackbar SnackBar
 @inject IHostAccessService HostAccessService
 @inject ILogger<FileManager> Logger
 
 <PageTitle>File Manager</PageTitle>
 
-<div class="min-h-screen bg-gray-100 p-4 sm:p-6">
-    <div class="mx-auto max-w-7xl">
-        <div class="mb-4 flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
-            <div class="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-                <InputFile OnChange="@OnInputFileChange" />
-                <button @onclick="UploadFile" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
-                    Upload
-                </button>
-                <select @onchange="OnDriveSelected" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    @foreach (var drive in _availableDrives)
-                    {
-                        <option value="@drive">@drive</option>
-                    }
-                </select>
-                <InputText @bind-Value="_currentPath" placeholder="Path" class="h-10 w-64 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" />
-                <button @onclick="NavigateToPath" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
-                    Navigate
-                </button>
-            </div>
-            <div class="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 sm:ml-auto">
-                <InputText @bind-Value="_searchQuery" placeholder="Search" class="h-10 w-80 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" @oninput="UpdateSearchQuery" />
+<div class="flex h-screen">
+    <!-- Right-side container -->
+    <div class="flex-1 flex h-full flex-col p-4">
+        <!-- Current selected path -->
+        <div>
+            <h3 class="text-sm font-semibold text-gray-500">Current Path:</h3>
+            <div class="text-lg text-gray-900">
+                @if (_currentPath != null)
+                {
+                    <span class="select-text">@_currentPath</span>
+                }
+                else
+                {
+                    <span class="text-gray-400">Select a directory to view its contents</span>
+                }
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full overflow-hidden rounded-md bg-white shadow">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Name
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Type
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Size
-                        </th>
+        <!-- File manager actions -->
+        <div class="mb-4 mt-4 flex items-center justify-between">
+            <h3 class="border-b-2 border-gray-200 pb-2 text-lg font-semibold text-gray-600">Contents</h3>
+            @if (_currentPath != null)
+            {
+                <div class="flex space-x-2">
+                    <button class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                            @onclick="CreateNewItem">
+                        New Item
+                    </button>
+                    <button class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                            @onclick="DeleteSelectedItem" disabled="@string.IsNullOrEmpty(_selectedItem)">
+                        Delete
+                    </button>
+                    <!-- <InputFile OnChange="@OnInputFileChange" /> -->
+                    <button class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                            @onclick="UploadFile">
+                        Upload File
+                    </button>
+                </div>
+            }
+        </div>
+
+        <!-- File manager table -->
+        <div class="flex-1 overflow-auto rounded border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="sticky top-0 bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-medium text-gray-500">Type</th>
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-medium text-gray-500">Size</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                @foreach (var item in _fileSystemItems)
-                {
-                    <tr>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                            <div class="flex items-center space-x-2">
-                                <button @onclick="() => HandleClick(item)" class="flex items-center space-x-2 p-0 focus:outline-none">
-                                    @if (item.Type == FileSystemItemType.Directory)
-                                    {
-                                        <span class="material-icons">folder</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="material-icons">insert_drive_file</span>
-                                    }
-                                    <span class="hover:underline">@item.Name</span>
-                                </button>
-                            </div>
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@item.Type</td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@FormatSize(item.Size)</td>
-                    </tr>
-                }
+                    @foreach (var item in _items)
+                    {
+                        <tr class="cursor-pointer hover:bg-gray-100" @onclick="() => SelectItem(item)">
+                            <td class="px-4 py-2 text-sm text-gray-700">@item.Name</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">@item.Type</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">@FormatSize(@item.Size)</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
