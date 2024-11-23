@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Shared.Enums
 
 @inject IAccessTokenProvider AccessTokenProvider
 @inject IJSRuntime JsRuntime
@@ -66,10 +67,19 @@
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @foreach (var item in _items)
                     {
-                        <tr class="cursor-pointer hover:bg-gray-100" @onclick="() => SelectItem(item)">
+                        var isSelected = _selectedItem == item.Name;
+                        var selectedClass = isSelected ? "bg-blue-100 text-blue-800" : "hover:bg-gray-100";
+
+                        <tr class="cursor-pointer @selectedClass"
+                            @onclick="() => SelectItem(item)"
+                            @ondblclick="() => EnterDirectory(item)">
                             <td class="px-4 py-2 text-sm text-gray-700">@item.Name</td>
-                            <td class="px-4 py-2 text-sm text-gray-700">@item.Type</td>
-                            <td class="px-4 py-2 text-sm text-gray-700">@FormatSize(@item.Size)</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">
+                                @(item.Name == ".." ? "Parent Directory" : item.Type.ToString())
+                            </td>
+                            <td class="px-4 py-2 text-sm text-gray-700">
+                                @(item.Type == FileSystemItemType.Drive || item.Name == ".." ? "-" : FormatSize(item.Size))
+                            </td>
                         </tr>
                     }
                 </tbody>

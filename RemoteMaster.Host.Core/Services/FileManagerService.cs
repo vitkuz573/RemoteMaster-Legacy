@@ -42,7 +42,7 @@ public class FileManagerService(IFileSystem fileSystem) : IFileManagerService
         var items = new List<FileSystemItem>();
         var directoryInfo = fileSystem.DirectoryInfo.New(path);
 
-        if (directoryInfo.Parent != null)
+        if (fileSystem.Path.GetPathRoot(path) == path || directoryInfo.Parent != null)
         {
             items.Add(new FileSystemItem("..", FileSystemItemType.Directory, 0));
         }
@@ -59,11 +59,11 @@ public class FileManagerService(IFileSystem fileSystem) : IFileManagerService
         return items;
     }
 
-    public Task<List<string>> GetAvailableDrivesAsync()
+    public Task<List<FileSystemItem>> GetAvailableDrivesAsync()
     {
         var drives = fileSystem.DriveInfo.GetDrives()
             .Where(d => d.IsReady)
-            .Select(d => d.Name)
+            .Select(d => new FileSystemItem(d.Name, FileSystemItemType.Drive, 0))
             .ToList();
 
         return Task.FromResult(drives);

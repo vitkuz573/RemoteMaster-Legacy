@@ -12,5 +12,5 @@ public interface IFileManagerClient
 
     Task ReceiveFilesAndDirectories(List<FileSystemItem> fileSystemItems);
 
-    Task ReceiveAvailableDrives(List<string> availableDrives);
+    Task ReceiveAvailableDrives(List<FileSystemItem> availableDrives);
 }

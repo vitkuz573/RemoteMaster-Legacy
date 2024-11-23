@@ -14,5 +14,5 @@ public interface IFileManagerService
 
     List<FileSystemItem> GetFilesAndDirectories(string path);
 
-    Task<List<string>> GetAvailableDrivesAsync();
+    Task<List<FileSystemItem>> GetAvailableDrivesAsync();
 }

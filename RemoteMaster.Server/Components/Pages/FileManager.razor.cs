@@ -33,9 +33,9 @@ public partial class FileManager : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
     private string _searchQuery = string.Empty;
-    private string _currentPath = string.Empty;
-    private List<string> _availableDrives = [];
-    private string _selectedDrive = string.Empty;
+    private string? _currentPath = null;
+    private List<FileSystemItem> _availableDrives = [];
+    private FileSystemItem? _selectedDrive;
     private IBrowserFile? _selectedFile;
     private bool _firstRenderCompleted;
     private bool _disposed;
@@ -59,13 +59,6 @@ public partial class FileManager : IAsyncDisposable
             {
                 await InitializeHostConnectionAsync();
                 await FetchAvailableDrives();
-
-                if (_availableDrives.Count > 0)
-                {
-                    _selectedDrive = _availableDrives.First();
-                    _currentPath = _selectedDrive;
-                    await FetchFilesAndDirectories();
-                }
             }
         }
     }
@@ -96,19 +89,22 @@ public partial class FileManager : IAsyncDisposable
 
     }
 
-    private async Task SelectItem(FileSystemItem item)
+    private void SelectItem(FileSystemItem item)
+    {
+        _selectedItem = item.Name;
+
+        StateHasChanged();
+    }
+
+    private async Task EnterDirectory(FileSystemItem item)
     {
         if (item.Name == "..")
         {
             await NavigateUp();
         }
-        else if (item.Type == FileSystemItemType.Directory)
+        else if (item.Type == FileSystemItemType.Drive || item.Type == FileSystemItemType.Directory)
         {
             await ChangeDirectory(item.Name);
-        }
-        else
-        {
-            await DownloadFile(item.Name);
         }
     }
 
@@ -168,6 +164,17 @@ public partial class FileManager : IAsyncDisposable
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
+        _connection.On<List<FileSystemItem>>("ReceiveAvailableDrives", async drives =>
+        {
+            Logger.LogInformation(drives.Count.ToString());
+            Logger.LogInformation(drives.Count.ToString());
+            Logger.LogInformation(drives.Count.ToString());
+
+            _items = drives;
+
+            await InvokeAsync(StateHasChanged);
+        });
+
         _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
         {
             _items = fileSystemItems;
@@ -185,11 +192,6 @@ public partial class FileManager : IAsyncDisposable
             const string contentType = "application/octet-stream;base64";
 
             await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
-        });
-
-        _connection.On<List<string>>("ReceiveAvailableDrives", drives =>
-        {
-            _availableDrives = drives;
         });
 
         _connection.Closed += async _ =>
@@ -233,7 +235,15 @@ public partial class FileManager : IAsyncDisposable
 
     private async Task ChangeDirectory(string directory)
     {
-        _currentPath = Path.Combine(_currentPath, directory);
+        if (string.IsNullOrEmpty(_currentPath))
+        {
+            _currentPath = directory;
+        }
+        else
+        {
+            _currentPath = Path.Combine(_currentPath, directory);
+        }
+
         await FetchFilesAndDirectories();
     }
 
@@ -244,7 +254,14 @@ public partial class FileManager : IAsyncDisposable
         if (parentDir != null)
         {
             _currentPath = parentDir.FullName;
+
             await FetchFilesAndDirectories();
+        }
+        else
+        {
+            _currentPath = null;
+
+            await FetchAvailableDrives();
         }
     }
 
@@ -268,14 +285,6 @@ public partial class FileManager : IAsyncDisposable
         _searchQuery = e.Value?.ToString() ?? string.Empty;
 
         await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task OnDriveSelected(ChangeEventArgs e)
-    {
-        _selectedDrive = e.Value?.ToString() ?? string.Empty;
-        _currentPath = _selectedDrive;
-
-        await FetchFilesAndDirectories();
     }
 
     [JSInvokable]

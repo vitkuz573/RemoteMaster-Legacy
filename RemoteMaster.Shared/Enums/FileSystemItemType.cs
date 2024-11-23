@@ -6,6 +6,7 @@ namespace RemoteMaster.Shared.Enums;
 
 public enum FileSystemItemType
 {
+    Drive,
     File,
     Directory
 }
