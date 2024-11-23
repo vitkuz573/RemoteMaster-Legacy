@@ -48,10 +48,9 @@ internal class Program
 
             await ConfigureServices(builder.Services, launchModeInstance);
 
-            var serviceProvider = builder.Services.BuildServiceProvider();
-            var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
-            var hostInfoEnricher = serviceProvider.GetRequiredService<HostInfoEnricher>();
-            var certificateLoaderService = serviceProvider.GetRequiredService<ICertificateLoaderService>();
+            var hostInfoEnricher = minimalServiceProvider.GetRequiredService<HostInfoEnricher>();
+            var hostConfigurationService = minimalServiceProvider.GetRequiredService<IHostConfigurationService>();
+            var certificateLoaderService = minimalServiceProvider.GetRequiredService<ICertificateLoaderService>();
 
             await builder.ConfigureSerilog(launchModeInstance, hostConfigurationService, hostInfoEnricher);
             builder.ConfigureCoreUrls(launchModeInstance, certificateLoaderService);

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -28,11 +29,20 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IParameterHandler, BooleanParameterHandler>();
     }
 
+    public static void AddCommonCoreServices(this IServiceCollection services)
+    {
+        services.AddTransient<HostInfoEnricher>();
+        services.AddSingleton<IHelpService, HelpService>();
+        services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
+        services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
+    }
+
     public static void AddMinimalCoreServices(this IServiceCollection services)
     {
+        services.AddCommonCoreServices();
         services.AddCoreParameterHandlers();
 
-        services.AddSingleton<IHelpService, HelpService>();
+        services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IArgumentParser, ArgumentParser>();
         services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
     }
@@ -44,22 +54,19 @@ public static class ServiceCollectionExtensions
             loggingBuilder.ClearProviders();
         });
 
+        services.AddCommonCoreServices();
         services.AddSharedServices();
 
-        services.AddTransient<HostInfoEnricher>();
         services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
-        services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
-        services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
-        services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
         services.AddSingleton<IFileService, FileService>();
