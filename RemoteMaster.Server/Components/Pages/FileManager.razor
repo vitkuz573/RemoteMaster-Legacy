@@ -78,7 +78,7 @@
                                 @(item.Name == ".." ? "Parent Directory" : item.Type.ToString())
                             </td>
                             <td class="px-4 py-2 text-sm text-gray-700">
-                                @(item.Type == FileSystemItemType.Drive || item.Name == ".." ? "-" : FormatSize(item.Size))
+                                @(item.Type == FileSystemItemType.Drive || item.Type == FileSystemItemType.Directory || item.Name == ".." ? "-" : FormatSize(item.Size))
                             </td>
                         </tr>
                     }
