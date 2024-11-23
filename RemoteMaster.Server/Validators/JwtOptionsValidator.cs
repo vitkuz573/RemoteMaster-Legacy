@@ -2,12 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Validators;
 
-public class JwtOptionsValidator : IValidateOptions<JwtOptions>
+public class JwtOptionsValidator(IFileSystem fileSystem) : IValidateOptions<JwtOptions>
 {
     private readonly int[] _validKeySizes = [2048, 4096];
 
@@ -38,13 +39,13 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
         return !IsValidPassword(options.KeyPassword) ? ValidateOptionsResult.Fail("KeyPassword does not meet the complexity requirements.") : ValidateOptionsResult.Success;
     }
 
-    private static bool IsValidPath(string path)
+    private bool IsValidPath(string path)
     {
         try
         {
-            var fullPath = Path.GetFullPath(path);
+            var fullPath = fileSystem.Path.GetFullPath(path);
 
-            return Path.IsPathRooted(fullPath);
+            return fileSystem.Path.IsPathRooted(fullPath);
         }
         catch
         {
