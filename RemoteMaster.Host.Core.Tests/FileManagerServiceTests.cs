@@ -5,6 +5,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Enums;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Tests;
 
@@ -36,8 +37,7 @@ public class FileManagerServiceTests
         var uploadedData = await _mockFileSystem.File.ReadAllBytesAsync(filePath);
         Assert.Equal(fileData, uploadedData);
 
-        // Cleanup
-        File.Delete(filePath);
+        _mockFileSystem.File.Delete(filePath);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class FileManagerServiceTests
         // Assert
         var drives = _mockFileSystem.DriveInfo.GetDrives()
             .Where(d => d.IsReady)
-            .Select(d => d.Name)
+            .Select(d => new FileSystemItem(d.Name, FileSystemItemType.Drive, 0))
             .ToList();
 
         Assert.Equal(drives, result);

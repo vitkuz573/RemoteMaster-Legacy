@@ -6,11 +6,4 @@ using RemoteMaster.Shared.Enums;
 
 namespace RemoteMaster.Shared.Models;
 
-public class FileSystemItem(string name, FileSystemItemType type, long size)
-{
-    public string Name { get; } = name;
-
-    public FileSystemItemType Type { get; } = type;
-
-    public long Size { get; } = size;
-}
+public record FileSystemItem(string Name, FileSystemItemType Type, long Size);
