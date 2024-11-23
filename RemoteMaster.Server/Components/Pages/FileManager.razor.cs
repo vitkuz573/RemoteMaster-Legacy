@@ -32,10 +32,7 @@ public partial class FileManager : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private string _searchQuery = string.Empty;
     private string? _currentPath = null;
-    private List<FileSystemItem> _availableDrives = [];
-    private FileSystemItem? _selectedDrive;
     private IBrowserFile? _selectedFile;
     private bool _firstRenderCompleted;
     private bool _disposed;
@@ -166,10 +163,6 @@ public partial class FileManager : IAsyncDisposable
 
         _connection.On<List<FileSystemItem>>("ReceiveAvailableDrives", async drives =>
         {
-            Logger.LogInformation(drives.Count.ToString());
-            Logger.LogInformation(drives.Count.ToString());
-            Logger.LogInformation(drives.Count.ToString());
-
             _items = drives;
 
             await InvokeAsync(StateHasChanged);
@@ -278,13 +271,6 @@ public partial class FileManager : IAsyncDisposable
         }
 
         return $"{len:0.##} {sizes[order]}";
-    }
-
-    private async Task UpdateSearchQuery(ChangeEventArgs e)
-    {
-        _searchQuery = e.Value?.ToString() ?? string.Empty;
-
-        await InvokeAsync(StateHasChanged);
     }
 
     [JSInvokable]
