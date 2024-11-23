@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using FluentResults;
@@ -11,21 +12,33 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostMoveRequestService(IEventNotificationService eventNotificationService) : IHostMoveRequestService
+public class HostMoveRequestService : IHostMoveRequestService
 {
-    private static readonly string ProgramDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-    private static readonly string HostMoveRequestsFilePath = Path.Combine(ProgramDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
+    private readonly IEventNotificationService _eventNotificationService;
+    private readonly IFileSystem _fileSystem;
+
+    private readonly string _hostMoveRequestsFilePath;
+
+    public HostMoveRequestService(IEventNotificationService eventNotificationService, IFileSystem fileSystem)
+    {
+        _eventNotificationService = eventNotificationService;
+        _fileSystem = fileSystem;
+        
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        
+        _hostMoveRequestsFilePath = _fileSystem.Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
+    }
 
     public async Task<Result<List<HostMoveRequest>>> GetHostMoveRequestsAsync()
     {
         try
         {
-            if (!File.Exists(HostMoveRequestsFilePath))
+            if (!_fileSystem.File.Exists(_hostMoveRequestsFilePath))
             {
                 return Result.Ok(new List<HostMoveRequest>());
             }
 
-            var json = await File.ReadAllTextAsync(HostMoveRequestsFilePath);
+            var json = await _fileSystem.File.ReadAllTextAsync(_hostMoveRequestsFilePath);
             var hostMoveRequests = JsonSerializer.Deserialize(json, HostJsonSerializerContext.Default.ListHostMoveRequest) ?? [];
 
             return Result.Ok(hostMoveRequests);
@@ -42,7 +55,7 @@ public class HostMoveRequestService(IEventNotificationService eventNotificationS
         try
         {
             var updatedJson = JsonSerializer.Serialize(hostMoveRequests, HostJsonSerializerContext.Default.ListHostMoveRequest);
-            await File.WriteAllTextAsync(HostMoveRequestsFilePath, updatedJson);
+            await _fileSystem.File.WriteAllTextAsync(_hostMoveRequestsFilePath, updatedJson);
 
             return Result.Ok();
         }
@@ -105,7 +118,7 @@ public class HostMoveRequestService(IEventNotificationService eventNotificationS
                              .WithErrors(saveResult.Errors);
             }
 
-            await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
+            await _eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
 
             return Result.Ok();
         }

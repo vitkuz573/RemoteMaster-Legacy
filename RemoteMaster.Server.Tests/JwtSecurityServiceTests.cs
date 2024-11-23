@@ -48,8 +48,8 @@ public class JwtSecurityServiceTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.True(_mockFileSystem.FileExists(Path.Combine(_options.KeysDirectory, "private_key.der")));
-        Assert.True(_mockFileSystem.FileExists(Path.Combine(_options.KeysDirectory, "public_key.der")));
+        Assert.True(_mockFileSystem.FileExists(_mockFileSystem.Path.Combine(_options.KeysDirectory, "private_key.der")));
+        Assert.True(_mockFileSystem.FileExists(_mockFileSystem.Path.Combine(_options.KeysDirectory, "public_key.der")));
     }
 
     [Fact]
@@ -57,23 +57,23 @@ public class JwtSecurityServiceTests
     {
         // Arrange
         _mockFileSystem.AddDirectory(_options.KeysDirectory);
-        _mockFileSystem.AddFile(Path.Combine(_options.KeysDirectory, "private_key.der"), new MockFileData("dummy"));
-        _mockFileSystem.AddFile(Path.Combine(_options.KeysDirectory, "public_key.der"), new MockFileData("dummy"));
+        _mockFileSystem.AddFile(_mockFileSystem.Path.Combine(_options.KeysDirectory, "private_key.der"), new MockFileData("dummy"));
+        _mockFileSystem.AddFile(_mockFileSystem.Path.Combine(_options.KeysDirectory, "public_key.der"), new MockFileData("dummy"));
 
         // Act
         var result = await _jwtSecurityService.EnsureKeysExistAsync();
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(Path.Combine(_options.KeysDirectory, "private_key.der")));
-        Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(Path.Combine(_options.KeysDirectory, "public_key.der")));
+        Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(_mockFileSystem.Path.Combine(_options.KeysDirectory, "private_key.der")));
+        Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(_mockFileSystem.Path.Combine(_options.KeysDirectory, "public_key.der")));
     }
 
     [Fact]
     public async Task GetPublicKeyAsync_ReturnsPublicKeyWhenExists()
     {
         // Arrange
-        var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_options.KeysDirectory, "public_key.der");
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData("publickey"));
 
         // Act

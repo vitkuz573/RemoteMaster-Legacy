@@ -31,7 +31,7 @@ public class HostRegistrationMonitorService : IHostedService
         _logger = logger;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
-        _syncIndicatorFilePath = _fileSystem.Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+        _syncIndicatorFilePath = _fileSystem.Path.Combine(_fileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
     }
 
     public Task StartAsync(CancellationToken cancellationToken)

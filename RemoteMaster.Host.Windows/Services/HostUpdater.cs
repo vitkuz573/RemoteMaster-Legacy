@@ -575,12 +575,13 @@ public class HostUpdater : IHostUpdater
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
         await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
 
-        var currentExecutablePath = Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
-        var updateExecutablePath = Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
+        var currentExecutablePath = _fileSystem.Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
+        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
 
         if (updateVersion > currentVersion)
         {
             await Notify("Update version is newer than current version; proceeding with update.", MessageSeverity.Information);
+            
             return true;
         }
         else if (updateVersion == currentVersion)

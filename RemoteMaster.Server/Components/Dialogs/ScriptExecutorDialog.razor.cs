@@ -73,7 +73,7 @@ public partial class ScriptExecutorDialog
             using var reader = new StreamReader(file.OpenReadStream());
             _content = await reader.ReadToEndAsync();
 
-            _shell = Path.GetExtension(file.Name) switch
+            _shell = FileSystem.Path.GetExtension(file.Name) switch
             {
                 ".bat" => Shell.Cmd,
                 ".cmd" => Shell.Cmd,

@@ -1,8 +1,10 @@
 ﻿@inherits CommonDialogBase
 
 @using RemoteMaster.Shared.Enums
+@using System.IO.Abstractions
 
 @inject IJSRuntime JsRuntime
+@inject IFileSystem FileSystem
 
 <CommonDialog>
     <Content>

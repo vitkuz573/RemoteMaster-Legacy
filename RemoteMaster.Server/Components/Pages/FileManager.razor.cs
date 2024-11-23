@@ -180,7 +180,7 @@ public partial class FileManager : IAsyncDisposable
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
             var base64File = Convert.ToBase64String(file);
-            var fileName = Path.GetFileName(path);
+            var fileName = FileSystem.Path.GetFileName(path);
 
             const string contentType = "application/octet-stream;base64";
 
@@ -234,7 +234,7 @@ public partial class FileManager : IAsyncDisposable
         }
         else
         {
-            _currentPath = Path.Combine(_currentPath, directory);
+            _currentPath = FileSystem.Path.Combine(_currentPath, directory);
         }
 
         await FetchFilesAndDirectories();
@@ -242,7 +242,7 @@ public partial class FileManager : IAsyncDisposable
 
     private async Task NavigateUp()
     {
-        var parentDir = Directory.GetParent(_currentPath);
+        var parentDir = FileSystem.Directory.GetParent(_currentPath);
 
         if (parentDir != null)
         {

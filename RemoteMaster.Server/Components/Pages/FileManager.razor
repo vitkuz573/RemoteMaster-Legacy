@@ -4,11 +4,13 @@
 
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Enums
+@using System.IO.Abstractions
 
 @inject IAccessTokenProvider AccessTokenProvider
 @inject IJSRuntime JsRuntime
 @inject ISnackbar SnackBar
 @inject IHostAccessService HostAccessService
+@inject IFileSystem FileSystem
 @inject ILogger<FileManager> Logger
 
 <PageTitle>File Manager</PageTitle>

@@ -3,9 +3,11 @@
 @using Microsoft.Extensions.Options
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Options
+@using System.IO.Abstractions
 
 @inject IHostCommandService HostCommandService
 @inject IOrganizationService OrganizationService
+@inject IFileSystem FileSystem
 @inject IOptions<WimBootOptions> Options
 
 <CommonDialog>

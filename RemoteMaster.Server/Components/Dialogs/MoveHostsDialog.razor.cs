@@ -167,23 +167,23 @@ public partial class MoveHostsDialog
         }
     }
 
-    private static async Task AppendHostMoveRequests(List<HostDto> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
+    private async Task AppendHostMoveRequests(List<HostDto> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var applicationData = Path.Combine(programDataPath, "RemoteMaster", "Server");
+        var applicationData = FileSystem.Path.Combine(programDataPath, "RemoteMaster", "Server");
 
-        if (!Directory.Exists(applicationData))
+        if (!FileSystem.Directory.Exists(applicationData))
         {
-            Directory.CreateDirectory(applicationData);
+            FileSystem.Directory.CreateDirectory(applicationData);
         }
 
-        var hostMoveRequestsFilePath = Path.Combine(applicationData, "HostMoveRequests.json");
+        var hostMoveRequestsFilePath = FileSystem.Path.Combine(applicationData, "HostMoveRequests.json");
 
         List<HostMoveRequest> hostMoveRequests;
 
-        if (File.Exists(hostMoveRequestsFilePath))
+        if (FileSystem.File.Exists(hostMoveRequestsFilePath))
         {
-            var existingJson = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
+            var existingJson = await FileSystem.File.ReadAllTextAsync(hostMoveRequestsFilePath);
             hostMoveRequests = JsonSerializer.Deserialize(existingJson, HostJsonSerializerContext.Default.ListHostMoveRequest) ?? [];
         }
         else
@@ -208,6 +208,6 @@ public partial class MoveHostsDialog
 
         var json = JsonSerializer.Serialize(hostMoveRequests, HostJsonSerializerContext.Default.ListHostMoveRequest);
 
-        await File.WriteAllTextAsync(hostMoveRequestsFilePath, json);
+        await FileSystem.File.WriteAllTextAsync(hostMoveRequestsFilePath, json);
     }
 }

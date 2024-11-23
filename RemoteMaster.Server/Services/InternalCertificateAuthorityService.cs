@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
@@ -12,7 +13,7 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService, ILogger<InternalCertificateAuthorityService> logger) : ICertificateAuthorityService
+public class InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService, IFileSystem fileSystem, ILogger<InternalCertificateAuthorityService> logger) : ICertificateAuthorityService
 {
     private readonly InternalCertificateOptions _options = options.Value;
 
@@ -98,7 +99,7 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
             request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
 
             var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+            var crlFilePath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "list.crl");
 
             var hostInformation = hostInformationService.GetHostInformation();
 

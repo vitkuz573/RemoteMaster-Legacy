@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel;
+using System.IO.Abstractions;
 using System.Security.Principal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -16,7 +17,7 @@ namespace RemoteMaster.Host.Windows.Services;
 /// <summary>
 /// Provides services for managing domain membership of the machine.
 /// </summary>
-public class DomainService(IPowerService powerService, ILogger<DomainService> logger) : IDomainService
+public class DomainService(IPowerService powerService, IFileSystem fileSystem, ILogger<DomainService> logger) : IDomainService
 {
     /// <summary>
     /// Joins the machine to a domain.
@@ -82,14 +83,14 @@ public class DomainService(IPowerService powerService, ILogger<DomainService> lo
 
                         var profileImagePathValue = sidKey.GetValue("ProfileImagePath");
 
-                        if (profileImagePathValue is not string profileImagePath || string.IsNullOrEmpty(profileImagePath) || !Directory.Exists(profileImagePath))
+                        if (profileImagePathValue is not string profileImagePath || string.IsNullOrEmpty(profileImagePath) || !fileSystem.Directory.Exists(profileImagePath))
                         {
                             continue;
                         }
 
                         try
                         {
-                            Directory.Delete(profileImagePath, true);
+                            fileSystem.Directory.Delete(profileImagePath, true);
                             logger.LogInformation("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
 
                             profileListKey.DeleteSubKeyTree(sidString);

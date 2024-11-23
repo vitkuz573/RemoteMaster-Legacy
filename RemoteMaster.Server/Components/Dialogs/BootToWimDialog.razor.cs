@@ -48,7 +48,7 @@ public partial class BootToWimDialog
 
             var loaderCommand = _loaderCommand
                 .Replace("{folderPath}", _folderPath)
-                .Replace("{wimFile}", Path.GetFileName(_wimFile));
+                .Replace("{wimFile}", FileSystem.Path.GetFileName(_wimFile));
 
             scriptBuilder.AppendLine(loaderCommand);
 

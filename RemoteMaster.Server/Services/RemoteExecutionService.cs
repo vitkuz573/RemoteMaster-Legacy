@@ -25,13 +25,13 @@ public class RemoteExecutionService(IFileSystem fileSystem, ILogger<RemoteExecut
             return Result.Fail("Local executable path cannot be null or empty.");
         }
 
-        if (!File.Exists(localExecutablePath))
+        if (!fileSystem.File.Exists(localExecutablePath))
         {
             return Result.Fail($"Local executable not found: {localExecutablePath}");
         }
 
         var adminShare = $@"\\{remoteMachineName}\ADMIN$\Temp";
-        var remoteExecutablePath = fileSystem.Path.Combine(adminShare, Path.GetFileName(localExecutablePath));
+        var remoteExecutablePath = fileSystem.Path.Combine(adminShare, fileSystem.Path.GetFileName(localExecutablePath));
 
         try
         {
