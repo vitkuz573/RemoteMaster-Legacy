@@ -31,6 +31,11 @@ public static class ServiceCollectionExtensions
 
     public static void AddCommonCoreServices(this IServiceCollection services)
     {
+        services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.ClearProviders();
+        });
+
         services.AddTransient<HostInfoEnricher>();
         services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
@@ -49,11 +54,6 @@ public static class ServiceCollectionExtensions
 
     public static async Task AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)
     {
-        services.AddLogging(loggingBuilder =>
-        {
-            loggingBuilder.ClearProviders();
-        });
-
         services.AddCommonCoreServices();
         services.AddSharedServices();
 
