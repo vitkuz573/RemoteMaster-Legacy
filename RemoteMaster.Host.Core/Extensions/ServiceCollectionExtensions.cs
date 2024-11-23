@@ -17,7 +17,9 @@ using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Extensions;
+using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -50,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IArgumentParser, ArgumentParser>();
         services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
+        services.AddSingleton<IHostInformationService, HostInformationService>();
     }
 
     public static async Task AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)

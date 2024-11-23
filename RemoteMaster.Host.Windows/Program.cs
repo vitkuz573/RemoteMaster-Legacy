@@ -110,7 +110,7 @@ internal class Program
 
     private static void ConfigureMinimalServices(IServiceCollection services)
     {
-        services.AddMinimalCoreServices();
+        services.AddMinimalCoreServices();        
     }
 
     private static async Task ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
