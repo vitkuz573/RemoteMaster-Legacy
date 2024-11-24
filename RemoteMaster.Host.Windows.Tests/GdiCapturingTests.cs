@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -19,15 +18,12 @@ public class GdiCapturingTests : IDisposable
 
     public GdiCapturingTests()
     {
-        Mock<ICursorRenderService> mockCursorRenderService = new();
-        var clickIndicatorOverlay = new ClickIndicatorOverlay();
+        using var cursorOverlay = new CursorOverlay();
+        using var clickIndicatorOverlay = new ClickIndicatorOverlay();
         _mockDesktopService = new Mock<IDesktopService>();
         Mock<ILogger<ScreenCapturingService>> mockLogger = new();
 
-        mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
-        mockCursorRenderService.Setup(crs => crs.ClearCache());
-
-        _gdiCapturing = new GdiCapturing(mockCursorRenderService.Object, clickIndicatorOverlay, _mockDesktopService.Object, mockLogger.Object);
+        _gdiCapturing = new GdiCapturing(cursorOverlay, clickIndicatorOverlay, _mockDesktopService.Object, mockLogger.Object);
     }
 
     [Fact]
