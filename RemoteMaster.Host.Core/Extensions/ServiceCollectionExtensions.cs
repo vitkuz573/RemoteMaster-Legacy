@@ -2,18 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Claims;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.HttpClientHandlers;
 using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
+using RemoteMaster.Host.Core.NamedOptionsConfigurations;
 using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
@@ -53,6 +52,7 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
+        services.AddSingleton<IRsaKeyProvider, RsaKeyProvider>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
@@ -70,39 +70,12 @@ public static class ServiceCollectionExtensions
 
         if (launchModeInstance is not InstallMode)
         {
-            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer();
 
-            if (File.Exists(publicKeyPath))
-            {
-                var publicKey = await File.ReadAllBytesAsync(publicKeyPath);
+            services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
 
-#pragma warning disable CA2000
-                var rsa = RSA.Create();
-#pragma warning restore CA2000
-                rsa.ImportRSAPublicKey(publicKey, out _);
-
-                var validateLifetime = !IsWinPE();
-
-                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer(jwtBearerOptions =>
-                    {
-                        jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            ValidateIssuer = true,
-                            ValidateAudience = true,
-                            ValidateIssuerSigningKey = true,
-                            ValidateLifetime = validateLifetime,
-                            ValidIssuer = "RemoteMaster Server",
-                            ValidAudience = "RMServiceAPI",
-                            IssuerSigningKey = new RsaSecurityKey(rsa),
-                            RoleClaimType = ClaimTypes.Role,
-                            AuthenticationType = "JWT Security"
-                        };
-                    });
-
-                services.AddAuthorizationBuilder().AddCustomPolicies();
-            }
+            services.AddAuthorizationBuilder().AddCustomPolicies();
         }
 
         services.AddSignalR().AddMessagePackProtocol(options => options.Configure());
@@ -118,14 +91,5 @@ public static class ServiceCollectionExtensions
                 services.AddHostedService<HostRegistrationMonitorService>();
                 break;
         }
-    }
-
-    private static bool IsWinPE()
-    {
-        var systemDirectory = Environment.SystemDirectory;
-
-        var systemDrive = Path.GetPathRoot(systemDirectory);
-
-        return !string.Equals(systemDrive, @"C:\", StringComparison.OrdinalIgnoreCase);
     }
 }
