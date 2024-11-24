@@ -40,7 +40,6 @@ public partial class Access : IAsyncDisposable
     private bool _drawerOpen;
     private HubConnection? _connection;
     private bool _isInputEnabled;
-    private bool _isClickIndicatorEnabled;
     private bool _isUserInputEnabled = true;
     private bool _drawCursor;
     private int _frameRate;
@@ -553,19 +552,6 @@ public partial class Access : IAsyncDisposable
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value), true);
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
-    }
-
-    private async Task EnableClickIndicator(bool value)
-    {
-        if (_connection == null)
-        {
-            return;
-        }
-
-        _isClickIndicatorEnabled = value;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleClickIndicator", value), true);
-        QueryParameterService.UpdateParameter("clickIndicatorEnabled", value.ToString());
     }
 
     private async Task ToggleUserInput(bool value)

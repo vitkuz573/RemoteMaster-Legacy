@@ -23,7 +23,6 @@ public static class AuthorizationBuilderExtensions
         builder.AddPolicy("MouseInputPolicy", policy => policy.RequireClaim("Input", "MouseInput"));
         builder.AddPolicy("KeyboardInputPolicy", policy => policy.RequireClaim("Input", "KeyboardInput"));
         builder.AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "ToggleInput"));
-        builder.AddPolicy("ToggleClickIndicator", policy => policy.RequireClaim("Input", "ToggleClickIndicator"));
         builder.AddPolicy("BlockUserInputPolicy", policy => policy.RequireClaim("Input", "BlockUserInput"));
         builder.AddPolicy("RebootHostPolicy", policy => policy.RequireClaim("Power", "RebootHost"));
         builder.AddPolicy("ShutdownHostPolicy", policy => policy.RequireClaim("Power", "ShutdownHost"));

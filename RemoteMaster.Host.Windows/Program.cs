@@ -155,17 +155,7 @@ internal class Program
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<IOverlayManagerService, OverlayManagerService>();
 
-        services.AddSingleton<ClickIndicatorOverlay>();
-        services.AddSingleton<CursorOverlay>();
-
         services.AddSingleton<IScreenOverlay, CursorOverlay>();
-        services.AddSingleton<IScreenOverlay, CursorOverlay>();
-
-        services.AddSingleton<IScreenOverlay[]>(provider =>
-        [
-            provider.GetRequiredService<ClickIndicatorOverlay>(),
-            provider.GetRequiredService<CursorOverlay>()
-        ]);
 
         switch (launchModeInstance)
         {

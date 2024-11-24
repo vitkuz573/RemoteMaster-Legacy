@@ -15,7 +15,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService(IDesktopService desktopService, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<InputService> logger) : IInputService
+public sealed class InputService(IDesktopService desktopService, ILogger<InputService> logger) : IInputService
 {
     private readonly ConcurrentQueue<Action> _operationQueue = new();
     private readonly ManualResetEvent _queueEvent = new(false);
@@ -178,7 +178,6 @@ public sealed class InputService(IDesktopService desktopService, ClickIndicatorO
                 switch (dto)
                 {
                     case { Button: not null, IsPressed: true }:
-                        clickIndicatorOverlay.RegisterClick(clickPosition);
                         mouseEventFlags |= dto.Button.Value switch
                         {
                             0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,

@@ -58,27 +58,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
-    public bool ShowClickIndicator
-    {
-        get => _overlayManagerService.ActiveOverlays.Any(o => o.Name == nameof(ClickIndicatorOverlay));
-        set
-        {
-            if (value == ShowClickIndicator)
-            {
-                return;
-            }
-
-            if (value)
-            {
-                _overlayManagerService.ActivateOverlay(nameof(ClickIndicatorOverlay));
-            }
-            else
-            {
-                _overlayManagerService.DeactivateOverlay(nameof(ClickIndicatorOverlay));
-            }
-        }
-    }
-
     public event EventHandler<ScreenChangedEventArgs>? ScreenChanged;
 
     protected ScreenCapturingService(IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger)
