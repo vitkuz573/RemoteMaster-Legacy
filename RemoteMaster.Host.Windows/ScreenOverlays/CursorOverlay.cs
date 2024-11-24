@@ -18,9 +18,9 @@ public class CursorOverlay : IScreenOverlay
 
     public string Name => nameof(CursorOverlay);
 
-    public void Draw(Graphics g, Rectangle screenBounds)
+    public void Draw(Graphics graphics, Rectangle screenBounds)
     {
-        ArgumentNullException.ThrowIfNull(g);
+        ArgumentNullException.ThrowIfNull(graphics);
 
         var cursorInfo = GetCursorInformation();
 
@@ -52,7 +52,7 @@ public class CursorOverlay : IScreenOverlay
             icon = _lastCursorIcon;
         }
 
-        g.DrawIcon(icon, relativeX, relativeY);
+        graphics.DrawIcon(icon, relativeX, relativeY);
     }
 
     private CURSORINFO GetCursorInformation()
