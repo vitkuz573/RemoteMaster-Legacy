@@ -10,7 +10,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.ScreenOverlays;
 
-public class CursorOverlay : IScreenOverlay, IDisposable
+public class CursorOverlay : IScreenOverlay
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
