@@ -12,11 +12,11 @@ public class OverlayManagerService(IEnumerable<IScreenOverlay> screenOverlays) :
 
     public IEnumerable<IScreenOverlay> ActiveOverlays => _activeOverlays;
 
-    public bool IsOverlayActive(string name) => _activeOverlays.Any(o => o.Name == name);
+    public bool IsOverlayActive(string name) => _activeOverlays.Any(o => o.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
     public void ActivateOverlay(string name)
     {
-        var overlay = screenOverlays.FirstOrDefault(o => o.Name == name);
+        var overlay = screenOverlays.FirstOrDefault(o => o.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
         if (overlay != null && !_activeOverlays.Contains(overlay))
         {
@@ -26,7 +26,7 @@ public class OverlayManagerService(IEnumerable<IScreenOverlay> screenOverlays) :
 
     public void DeactivateOverlay(string name)
     {
-        var overlay = _activeOverlays.FirstOrDefault(o => o.Name == name);
+        var overlay = _activeOverlays.FirstOrDefault(o => o.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
         if (overlay != null)
         {
