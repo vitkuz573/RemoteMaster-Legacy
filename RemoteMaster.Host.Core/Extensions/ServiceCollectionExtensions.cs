@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -17,9 +16,7 @@ using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Extensions;
-using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -33,11 +30,6 @@ public static class ServiceCollectionExtensions
 
     private static void AddCommonCoreServices(this IServiceCollection services)
     {
-        services.AddLogging(loggingBuilder =>
-        {
-            loggingBuilder.ClearProviders();
-        });
-
         services.AddTransient<HostInfoEnricher>();
         services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
@@ -48,11 +40,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddCommonCoreServices();
         services.AddCoreParameterHandlers();
+        services.AddMinimalSharedServices();
 
-        services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IArgumentParser, ArgumentParser>();
         services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
-        services.AddSingleton<IHostInformationService, HostInformationService>();
     }
 
     public static async Task AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)
