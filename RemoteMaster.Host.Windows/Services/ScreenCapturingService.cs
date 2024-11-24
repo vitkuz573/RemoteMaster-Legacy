@@ -19,15 +19,13 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
     private readonly IDesktopService _desktopService;
+    private readonly IOverlayManagerService _overlayManagerService;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
 
-    private readonly IEnumerable<IScreenOverlay> _availableOverlays;
-    private readonly List<IScreenOverlay> _activeOverlays = [];
-
     public bool DrawCursor
     {
-        get => _activeOverlays.Any(o => o.Name == nameof(CursorOverlay));
+        get => _overlayManagerService.ActiveOverlays.Any(o => o.Name == nameof(CursorOverlay));
         set
         {
             if (value == DrawCursor)
@@ -37,11 +35,11 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
             if (value)
             {
-                ActivateOverlay(nameof(CursorOverlay));
+                _overlayManagerService.ActivateOverlay(nameof(CursorOverlay));
             }
             else
             {
-                DeactivateOverlay(nameof(CursorOverlay));
+                _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay));
             }
         }
     }
@@ -62,7 +60,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public bool ShowClickIndicator
     {
-        get => _activeOverlays.Any(o => o.Name == nameof(ClickIndicatorOverlay));
+        get => _overlayManagerService.ActiveOverlays.Any(o => o.Name == nameof(ClickIndicatorOverlay));
         set
         {
             if (value == ShowClickIndicator)
@@ -72,21 +70,21 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
             if (value)
             {
-                ActivateOverlay(nameof(ClickIndicatorOverlay));
+                _overlayManagerService.ActivateOverlay(nameof(ClickIndicatorOverlay));
             }
             else
             {
-                DeactivateOverlay(nameof(ClickIndicatorOverlay));
+                _overlayManagerService.DeactivateOverlay(nameof(ClickIndicatorOverlay));
             }
         }
     }
 
     public event EventHandler<ScreenChangedEventArgs>? ScreenChanged;
 
-    protected ScreenCapturingService(IDesktopService desktopService, IEnumerable<IScreenOverlay> availableOverlays, ILogger<ScreenCapturingService> logger)
+    protected ScreenCapturingService(IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger)
     {
         _desktopService = desktopService;
-        _availableOverlays = availableOverlays;
+        _overlayManagerService = overlayManagerService;
         _logger = logger;
 
         Init();
@@ -95,28 +93,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected abstract void Init();
 
     protected abstract byte[]? GetFrame();
-
-    private void ActivateOverlay(string name)
-    {
-        var overlay = _availableOverlays.FirstOrDefault(o => o.Name == name);
-
-        if (overlay != null && !_activeOverlays.Contains(overlay))
-        {
-            _activeOverlays.Add(overlay);
-        }
-    }
-
-    private void DeactivateOverlay(string name)
-    {
-        var overlay = _activeOverlays.FirstOrDefault(o => o.Name == name);
-
-        if (overlay != null)
-        {
-            _activeOverlays.Remove(overlay);
-        }
-    }
-
-    public IEnumerable<IScreenOverlay> GetActiveOverlays() => _activeOverlays;
 
     public IEnumerable<Display> GetDisplays()
     {

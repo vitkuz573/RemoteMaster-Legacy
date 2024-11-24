@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
-using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows.Tests;
@@ -14,20 +13,16 @@ namespace RemoteMaster.Host.Windows.Tests;
 public class GdiCapturingTests : IDisposable
 {
     private readonly Mock<IDesktopService> _mockDesktopService;
+    private readonly Mock<IOverlayManagerService> _mockOverlayManagerService;
     private readonly GdiCapturing _gdiCapturing;
 
     public GdiCapturingTests()
     {
-        var screenOverlays = new IScreenOverlay[]
-        {
-            new CursorOverlay(),
-            new ClickIndicatorOverlay()
-        };
-
         _mockDesktopService = new Mock<IDesktopService>();
+        _mockOverlayManagerService = new Mock<IOverlayManagerService>();
         Mock<ILogger<ScreenCapturingService>> mockLogger = new();
 
-        _gdiCapturing = new GdiCapturing(screenOverlays, _mockDesktopService.Object, mockLogger.Object);
+        _gdiCapturing = new GdiCapturing(_mockDesktopService.Object, _mockOverlayManagerService.Object, mockLogger.Object);
     }
 
     [Fact]

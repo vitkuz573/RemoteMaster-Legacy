@@ -17,11 +17,14 @@ public class GdiCapturing : ScreenCapturingService
 {
     private Bitmap _bitmap;
     private Graphics _memoryGraphics;
+    private readonly IOverlayManagerService _overlayManagerService;
     private readonly ILogger<ScreenCapturingService> _logger;
 
-    public GdiCapturing(IEnumerable<IScreenOverlay> screenOverlays, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, screenOverlays, logger)
+    public GdiCapturing(IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger) : base(desktopService, overlayManagerService, logger)
     {
+        _overlayManagerService = overlayManagerService;
         _logger = logger;
+        
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
         _memoryGraphics = Graphics.FromImage(_bitmap);
     }
@@ -68,7 +71,7 @@ public class GdiCapturing : ScreenCapturingService
         _memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);
 
-        foreach (var overlay in GetActiveOverlays())
+        foreach (var overlay in _overlayManagerService.ActiveOverlays)
         {
             overlay.Draw(_memoryGraphics, CurrentScreenBounds);
         }
