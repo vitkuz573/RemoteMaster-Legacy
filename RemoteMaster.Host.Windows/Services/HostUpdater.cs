@@ -442,7 +442,7 @@ public class HostUpdater : IHostUpdater
                 return;
             }
 
-            CopyFileWithRetry(sourceExePath, destinationExePath, true);
+            await CopyFileWithRetry(sourceExePath, destinationExePath, true);
             
             await Notify("Emergency recovery completed successfully. Attempting to restart services...", MessageSeverity.Information);
 
