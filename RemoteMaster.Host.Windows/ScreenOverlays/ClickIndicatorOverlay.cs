@@ -49,4 +49,8 @@ public class ClickIndicatorOverlay(int initialSize = 20, Color? indicatorColor =
 
         graphics.FillEllipse(brush, drawPosition.X, drawPosition.Y, size, size);
     }
+
+    public void Dispose()
+    {
+    }
 }

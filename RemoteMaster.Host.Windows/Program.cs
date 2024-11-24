@@ -130,7 +130,6 @@ internal class Program
         services.AddSingleton<IHostInstaller, HostInstaller>();
         services.AddSingleton<IHostUninstaller, HostUninstaller>();
         services.AddSingleton<IScreenCapturingService, GdiCapturing>();
-        services.AddSingleton<ICursorRenderService, CursorRenderService>();
         services.AddSingleton<IInputService, InputService>();
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IHardwareService, HardwareService>();
@@ -156,6 +155,8 @@ internal class Program
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<ClickIndicatorOverlay>();
         services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<ClickIndicatorOverlay>());
+        services.AddSingleton<CursorOverlay>();
+        services.AddSingleton<IScreenOverlay>(provider => provider.GetRequiredService<CursorOverlay>());
 
         switch (launchModeInstance)
         {

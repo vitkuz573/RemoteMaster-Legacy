@@ -8,20 +8,17 @@ using RemoteMaster.Host.Windows.Abstractions;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Windows.ScreenOverlays;
 
-public class CursorRenderService : ICursorRenderService
+public class CursorOverlay : IScreenOverlay, IDisposable
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
-    private Rectangle _cachedScreenBounds;
     private readonly uint _cursorInfoSize = (uint)Marshal.SizeOf<CURSORINFO>();
 
-    public void DrawCursor(Graphics g, Rectangle currentScreenBounds)
+    public void Draw(Graphics g, Rectangle screenBounds)
     {
         ArgumentNullException.ThrowIfNull(g);
-
-        _cachedScreenBounds = currentScreenBounds;
 
         var cursorInfo = GetCursorInformation();
 
@@ -30,10 +27,10 @@ public class CursorRenderService : ICursorRenderService
             return;
         }
 
-        var relativeX = cursorInfo.ptScreenPos.X - _cachedScreenBounds.Left;
-        var relativeY = cursorInfo.ptScreenPos.Y - _cachedScreenBounds.Top;
+        var relativeX = cursorInfo.ptScreenPos.X - screenBounds.Left;
+        var relativeY = cursorInfo.ptScreenPos.Y - screenBounds.Top;
 
-        if (relativeX < 0 || relativeX >= _cachedScreenBounds.Width || relativeY < 0 || relativeY >= _cachedScreenBounds.Height)
+        if (relativeX < 0 || relativeX >= screenBounds.Width || relativeY < 0 || relativeY >= screenBounds.Height)
         {
             return;
         }
@@ -66,13 +63,6 @@ public class CursorRenderService : ICursorRenderService
         GetCursorInfo(ref cursorInfo);
 
         return cursorInfo;
-    }
-
-    public void ClearCache()
-    {
-        _lastCursorIcon?.Dispose();
-        _lastCursorPoint = null;
-        _cachedScreenBounds = Rectangle.Empty;
     }
 
     public void Dispose()

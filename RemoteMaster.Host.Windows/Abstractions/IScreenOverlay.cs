@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IScreenOverlay
+public interface IScreenOverlay : IDisposable
 {
     void Draw(Graphics graphics, Rectangle screenBounds);
 }

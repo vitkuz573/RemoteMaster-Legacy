@@ -19,13 +19,32 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
     private readonly IDesktopService _desktopService;
+    private readonly CursorOverlay _cursorOverlay;
     private readonly ClickIndicatorOverlay _clickIndicatorOverlay;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
     private readonly List<IScreenOverlay> _overlays = [];
-    private bool _showClickIndicator;
 
-    public bool DrawCursor { get; set; } = false;
+    public bool DrawCursor
+    {
+        get => _overlays.Contains(_cursorOverlay);
+        set
+        {
+            if (value == DrawCursor)
+            {
+                return;
+            }
+
+            if (value)
+            {
+                AddOverlay(_cursorOverlay);
+            }
+            else
+            {
+                RemoveOverlay(_cursorOverlay);
+            }
+        }
+    }
 
     public int ImageQuality { get; set; } = 25;
 
@@ -43,17 +62,15 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public bool ShowClickIndicator
     {
-        get => _showClickIndicator;
+        get => _overlays.Contains(_clickIndicatorOverlay);
         set
         {
-            if (_showClickIndicator == value)
+            if (value == ShowClickIndicator)
             {
                 return;
             }
 
-            _showClickIndicator = value;
-
-            if (_showClickIndicator)
+            if (value)
             {
                 AddOverlay(_clickIndicatorOverlay);
             }
@@ -66,9 +83,10 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public event EventHandler<ScreenChangedEventArgs>? ScreenChanged;
 
-    protected ScreenCapturingService(IDesktopService desktopService, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<ScreenCapturingService> logger)
+    protected ScreenCapturingService(IDesktopService desktopService, CursorOverlay cursorOverlay, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<ScreenCapturingService> logger)
     {
         _desktopService = desktopService;
+        _cursorOverlay = cursorOverlay;
         _clickIndicatorOverlay = clickIndicatorOverlay;
         _logger = logger;
 

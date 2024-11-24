@@ -18,12 +18,10 @@ public class GdiCapturing : ScreenCapturingService
 {
     private Bitmap _bitmap;
     private Graphics _memoryGraphics;
-    private readonly ICursorRenderService _cursorRenderService;
     private readonly ILogger<ScreenCapturingService> _logger;
 
-    public GdiCapturing(ICursorRenderService cursorRenderService, ClickIndicatorOverlay clickIndicatorOverlay, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, clickIndicatorOverlay, logger)
+    public GdiCapturing(CursorOverlay cursorOverlay, ClickIndicatorOverlay clickIndicatorOverlay, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, cursorOverlay, clickIndicatorOverlay, logger)
     {
-        _cursorRenderService = cursorRenderService;
         _logger = logger;
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
         _memoryGraphics = Graphics.FromImage(_bitmap);
@@ -71,11 +69,6 @@ public class GdiCapturing : ScreenCapturingService
         _memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);
 
-        if (DrawCursor)
-        {
-            _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
-        }
-
         foreach (var overlay in GetOverlays())
         {
             overlay.Draw(_memoryGraphics, CurrentScreenBounds);
@@ -117,7 +110,6 @@ public class GdiCapturing : ScreenCapturingService
     {
         CurrentScreenBounds = SelectedScreen == VirtualScreen ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
         RaiseScreenChangedEvent(CurrentScreenBounds);
-        _cursorRenderService.ClearCache();
     }
 
     public override void Dispose()
