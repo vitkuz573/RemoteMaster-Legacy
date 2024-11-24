@@ -8,5 +8,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IScreenOverlay : IDisposable
 {
+    string Name { get; }
+
     void Draw(Graphics graphics, Rectangle screenBounds);
 }

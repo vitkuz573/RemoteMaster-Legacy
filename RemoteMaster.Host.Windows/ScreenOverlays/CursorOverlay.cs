@@ -16,6 +16,8 @@ public class CursorOverlay : IScreenOverlay
     private Icon? _lastCursorIcon;
     private readonly uint _cursorInfoSize = (uint)Marshal.SizeOf<CURSORINFO>();
 
+    public string Name => nameof(CursorOverlay);
+
     public void Draw(Graphics g, Rectangle screenBounds)
     {
         ArgumentNullException.ThrowIfNull(g);

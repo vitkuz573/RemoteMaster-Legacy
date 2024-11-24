@@ -7,7 +7,6 @@ using System.Drawing.Imaging;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
-using RemoteMaster.Host.Windows.ScreenOverlays;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -20,7 +19,7 @@ public class GdiCapturing : ScreenCapturingService
     private Graphics _memoryGraphics;
     private readonly ILogger<ScreenCapturingService> _logger;
 
-    public GdiCapturing(CursorOverlay cursorOverlay, ClickIndicatorOverlay clickIndicatorOverlay, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, cursorOverlay, clickIndicatorOverlay, logger)
+    public GdiCapturing(IEnumerable<IScreenOverlay> screenOverlays, IDesktopService desktopService, ILogger<ScreenCapturingService> logger) : base(desktopService, screenOverlays, logger)
     {
         _logger = logger;
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
@@ -69,7 +68,7 @@ public class GdiCapturing : ScreenCapturingService
         _memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);
 
-        foreach (var overlay in GetOverlays())
+        foreach (var overlay in GetActiveOverlays())
         {
             overlay.Draw(_memoryGraphics, CurrentScreenBounds);
         }

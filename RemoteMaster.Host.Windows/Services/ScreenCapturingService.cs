@@ -19,15 +19,15 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
     private readonly IDesktopService _desktopService;
-    private readonly CursorOverlay _cursorOverlay;
-    private readonly ClickIndicatorOverlay _clickIndicatorOverlay;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
-    private readonly List<IScreenOverlay> _overlays = [];
+
+    private readonly IEnumerable<IScreenOverlay> _availableOverlays;
+    private readonly List<IScreenOverlay> _activeOverlays = [];
 
     public bool DrawCursor
     {
-        get => _overlays.Contains(_cursorOverlay);
+        get => _activeOverlays.Any(o => o.Name == nameof(CursorOverlay));
         set
         {
             if (value == DrawCursor)
@@ -37,11 +37,11 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
             if (value)
             {
-                AddOverlay(_cursorOverlay);
+                ActivateOverlay(nameof(CursorOverlay));
             }
             else
             {
-                RemoveOverlay(_cursorOverlay);
+                DeactivateOverlay(nameof(CursorOverlay));
             }
         }
     }
@@ -62,7 +62,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public bool ShowClickIndicator
     {
-        get => _overlays.Contains(_clickIndicatorOverlay);
+        get => _activeOverlays.Any(o => o.Name == nameof(ClickIndicatorOverlay));
         set
         {
             if (value == ShowClickIndicator)
@@ -72,22 +72,21 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
             if (value)
             {
-                AddOverlay(_clickIndicatorOverlay);
+                ActivateOverlay(nameof(ClickIndicatorOverlay));
             }
             else
             {
-                RemoveOverlay(_clickIndicatorOverlay);
+                DeactivateOverlay(nameof(ClickIndicatorOverlay));
             }
         }
     }
 
     public event EventHandler<ScreenChangedEventArgs>? ScreenChanged;
 
-    protected ScreenCapturingService(IDesktopService desktopService, CursorOverlay cursorOverlay, ClickIndicatorOverlay clickIndicatorOverlay, ILogger<ScreenCapturingService> logger)
+    protected ScreenCapturingService(IDesktopService desktopService, IEnumerable<IScreenOverlay> availableOverlays, ILogger<ScreenCapturingService> logger)
     {
         _desktopService = desktopService;
-        _cursorOverlay = cursorOverlay;
-        _clickIndicatorOverlay = clickIndicatorOverlay;
+        _availableOverlays = availableOverlays;
         _logger = logger;
 
         Init();
@@ -97,11 +96,27 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     protected abstract byte[]? GetFrame();
 
-    public void AddOverlay(IScreenOverlay overlay) => _overlays.Add(overlay);
+    private void ActivateOverlay(string name)
+    {
+        var overlay = _availableOverlays.FirstOrDefault(o => o.Name == name);
 
-    public void RemoveOverlay(IScreenOverlay overlay) => _overlays.Remove(overlay);
+        if (overlay != null && !_activeOverlays.Contains(overlay))
+        {
+            _activeOverlays.Add(overlay);
+        }
+    }
 
-    protected IEnumerable<IScreenOverlay> GetOverlays() => _overlays;
+    private void DeactivateOverlay(string name)
+    {
+        var overlay = _activeOverlays.FirstOrDefault(o => o.Name == name);
+
+        if (overlay != null)
+        {
+            _activeOverlays.Remove(overlay);
+        }
+    }
+
+    public IEnumerable<IScreenOverlay> GetActiveOverlays() => _activeOverlays;
 
     public IEnumerable<Display> GetDisplays()
     {

@@ -15,6 +15,8 @@ public class ClickIndicatorOverlay(int initialSize = 20, Color? indicatorColor =
     private readonly Color _indicatorColor = indicatorColor ?? Color.Yellow;
     private readonly int _sizeIncrease = 20;
 
+    public string Name => nameof(ClickIndicatorOverlay);
+
     public void RegisterClick(Point position)
     {
         _lastClickPosition = position;

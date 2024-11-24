@@ -18,12 +18,16 @@ public class GdiCapturingTests : IDisposable
 
     public GdiCapturingTests()
     {
-        using var cursorOverlay = new CursorOverlay();
-        using var clickIndicatorOverlay = new ClickIndicatorOverlay();
+        var screenOverlays = new IScreenOverlay[]
+        {
+            new CursorOverlay(),
+            new ClickIndicatorOverlay()
+        };
+
         _mockDesktopService = new Mock<IDesktopService>();
         Mock<ILogger<ScreenCapturingService>> mockLogger = new();
 
-        _gdiCapturing = new GdiCapturing(cursorOverlay, clickIndicatorOverlay, _mockDesktopService.Object, mockLogger.Object);
+        _gdiCapturing = new GdiCapturing(screenOverlays, _mockDesktopService.Object, mockLogger.Object);
     }
 
     [Fact]
