@@ -31,7 +31,7 @@ public partial class Home
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private List<TreeItemData<object>> _treeItems = [];
+    private List<UnifiedTreeItemData> _treeItems = [];
 
     private readonly List<HostDto> _selectedHosts = [];
     private readonly ConcurrentDictionary<IPAddress, HostDto> _availableHosts = new();
@@ -78,7 +78,8 @@ public partial class Home
         }
 
         var nodes = await LoadNodes();
-        _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<object>>().ToList();
+
+        _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).ToList();
 
         var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
         
