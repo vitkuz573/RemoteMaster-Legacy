@@ -4,13 +4,11 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IRunnable
+public interface ISyncIndicatorService
 {
-    void Start();
-
-    void Stop();
-
-    void Restart();
-
-    bool IsRunning { get; }
+    bool IsSyncRequired();
+    
+    void SetSyncRequired();
+    
+    void ClearSyncIndicator();
 }

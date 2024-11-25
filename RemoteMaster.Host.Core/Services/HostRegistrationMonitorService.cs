@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.IO.Abstractions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -12,28 +11,26 @@ namespace RemoteMaster.Host.Core.Services;
 public class HostRegistrationMonitorService : IHostedService
 {
     private readonly ICertificateService _certificateService;
+    private readonly ISyncIndicatorService _syncIndicatorService;
     private readonly IHostLifecycleService _hostLifecycleService;
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInformationUpdaterService _hostInformationMonitorService;
     private readonly IUserInstanceService _userInstanceService;
-    private readonly IFileSystem _fileSystem;
     private readonly ILogger<HostRegistrationMonitorService> _logger;
 
     private readonly Timer _timer;
-    private readonly string _syncIndicatorFilePath;
 
-    public HostRegistrationMonitorService(ICertificateService certificateService, IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, IFileSystem fileSystem, ILogger<HostRegistrationMonitorService> logger)
+    public HostRegistrationMonitorService(ICertificateService certificateService, ISyncIndicatorService syncIndicatorService, IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, ILogger<HostRegistrationMonitorService> logger)
     {
         _certificateService = certificateService;
+        _syncIndicatorService = syncIndicatorService;
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
         _hostInformationMonitorService = hostInformationUpdaterService;
         _userInstanceService = userInstanceService;
-        _fileSystem = fileSystem;
         _logger = logger;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
-        _syncIndicatorFilePath = _fileSystem.Path.Combine(_fileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -51,7 +48,7 @@ public class HostRegistrationMonitorService : IHostedService
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
             var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
-            var isSyncRequired = IsSyncRequired();
+            var isSyncRequired = _syncIndicatorService.IsSyncRequired();
 
             if (configurationChanged || isSyncRequired)
             {
@@ -74,16 +71,16 @@ public class HostRegistrationMonitorService : IHostedService
 
                     await _certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
-                    ClearSyncIndicator();
+                    _syncIndicatorService.ClearSyncIndicator();
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to update host information. Sync will be retried.");
 
-                    SetSyncRequired();
+                    _syncIndicatorService.SetSyncRequired();
                 }
 
-                await RestartUserInstance();
+                _userInstanceService.Restart();
             }
             else if (!isHostRegistered)
             {
@@ -94,7 +91,8 @@ public class HostRegistrationMonitorService : IHostedService
                 var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
                 await _certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
-                await RestartUserInstance();
+                
+                _userInstanceService.Restart();
             }
         }
         catch (Exception ex)
@@ -103,58 +101,10 @@ public class HostRegistrationMonitorService : IHostedService
         }
     }
 
-    private async Task RestartUserInstance()
-    {
-        _logger.LogInformation("Stopping user instance...");
-        _userInstanceService.Stop();
-
-        while (_userInstanceService.IsRunning)
-        {
-            _logger.LogInformation("Waiting for user instance to stop...");
-            await Task.Delay(50);
-        }
-
-        _logger.LogInformation("User instance stopped. Starting a new instance...");
-        _userInstanceService.Start();
-        _logger.LogInformation("New user instance started.");
-    }
-
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer.Dispose();
 
         return Task.CompletedTask;
-    }
-
-    private bool IsSyncRequired()
-    {
-        return _fileSystem.File.Exists(_syncIndicatorFilePath);
-    }
-
-    private void SetSyncRequired()
-    {
-        try
-        {
-            _fileSystem.File.WriteAllText(_syncIndicatorFilePath, "Sync required");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create sync indicator file.");
-        }
-    }
-
-    private void ClearSyncIndicator()
-    {
-        try
-        {
-            if (_fileSystem.File.Exists(_syncIndicatorFilePath))
-            {
-                _fileSystem.File.Delete(_syncIndicatorFilePath);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete sync indicator file.");
-        }
     }
 }

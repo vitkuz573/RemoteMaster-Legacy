@@ -56,6 +56,18 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
         }
     }
 
+    public void Restart()
+    {
+        Stop();
+
+        while (IsRunning)
+        {
+            Task.Delay(50).Wait();
+        }
+
+        Start();
+    }
+
     private int StartNewInstance()
     {
         var startInfo = new NativeProcessStartInfo

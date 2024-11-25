@@ -121,6 +121,11 @@ public abstract class AbstractService : IRunnable
         serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
     }
 
+    public virtual void Restart()
+    {
+        throw new NotImplementedException();
+    }
+
     public virtual void Delete() => ExecuteServiceCommand($"delete {Name}");
 
     protected virtual void ExecuteServiceCommand(string arguments)

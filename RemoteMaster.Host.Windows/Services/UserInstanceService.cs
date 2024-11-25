@@ -78,6 +78,18 @@ public sealed class UserInstanceService : IUserInstanceService
         }
     }
 
+    public void Restart()
+    {
+        Stop();
+
+        while (IsRunning)
+        {
+            Task.Delay(50).Wait();
+        }
+
+        Start();
+    }
+
     private int StartNewInstance()
     {
         var startInfo = new NativeProcessStartInfo
@@ -99,14 +111,7 @@ public sealed class UserInstanceService : IUserInstanceService
             return;
         }
 
-        Stop();
-
-        while (IsRunning)
-        {
-            Task.Delay(50).Wait();
-        }
-
-        Start();
+        Restart();
     }
 
     private void OnUserInstanceCreated(UserInstanceCreatedEventArgs e)
