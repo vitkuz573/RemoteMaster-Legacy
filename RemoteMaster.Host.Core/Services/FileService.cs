@@ -21,7 +21,7 @@ public class FileService(IFileSystem fileSystem) : IFileService
         using var stream = fileSystem.File.OpenRead(filePath);
         var hash = sha256.ComputeHash(stream);
 
-        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        return Convert.ToHexStringLower(hash);
     }
 
     public void DeleteFile(string filePath)
