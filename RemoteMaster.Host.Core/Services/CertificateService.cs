@@ -127,7 +127,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         }
     }
 
-    public void RemoveExistingCertificate()
+    public void RemoveCertificates()
     {
         logger.LogInformation("Starting the process of removing existing certificates...");
 
@@ -163,27 +163,6 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         logger.LogInformation("Finished removing existing certificates.");
     }
 
-    public void RemoveCertificate()
-    {
-        using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-        store.Open(OpenFlags.ReadWrite);
-
-        var certificate = store.Certificates
-            .Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false)
-            .FirstOrDefault(cert => cert.HasPrivateKey);
-
-        if (certificate != null)
-        {
-            store.Remove(certificate);
-
-            logger.LogInformation("Certificate with private key removed successfully from certificate store.");
-        }
-        else
-        {
-            logger.LogWarning("No certificate with a private key found in the certificate store.");
-        }
-    }
-
     public async Task IssueCertificateAsync(HostConfiguration hostConfiguration, AddressDto organizationAddress)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
@@ -202,7 +181,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
 
             logger.LogInformation("Removing existing certificates...");
 
-            RemoveExistingCertificate();
+            RemoveCertificates();
 
             var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
 

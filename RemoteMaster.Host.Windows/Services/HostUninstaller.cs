@@ -50,7 +50,7 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
                 logger.LogInformation("Current process is running from the application directory. Skipping deletion of files and directory.");
             }
 
-            certificateService.RemoveCertificate();
+            certificateService.RemoveCertificates();
 
             logger.LogInformation("Uninstallation process completed successfully.");
         }

@@ -14,9 +14,7 @@ public interface ICertificateService
 
     Task GetCaCertificateAsync();
 
-    void RemoveExistingCertificate();
-
-    void RemoveCertificate();
+    void RemoveCertificates();
 
     Task IssueCertificateAsync(HostConfiguration hostConfiguration, AddressDto organizationAddress);
 }
