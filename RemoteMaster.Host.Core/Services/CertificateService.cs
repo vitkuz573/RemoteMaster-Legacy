@@ -139,7 +139,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         ArgumentNullException.ThrowIfNull(certificateBytes);
         ArgumentNullException.ThrowIfNull(rsaKeyPair);
 
-        X509Certificate2? tempCertificate = null;
+        X509Certificate2? certificateWithPrivateKey = null;
 
         try
         {
@@ -152,47 +152,21 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
 
             logger.LogInformation("Received certificate bytes, starting processing...");
 
-            tempCertificate = X509CertificateLoader.LoadPkcs12(certificateBytes, null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
-            logger.LogInformation("Temporary certificate created successfully.");
+            certificateWithPrivateKey = X509CertificateLoader.LoadPkcs12(certificateBytes, null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable).CopyWithPrivateKey(rsaKeyPair);
 
-            LogCertificateDetails(tempCertificate);
+            logger.LogInformation("Certificate with private key prepared.");
 
-            X509Certificate2? certificateWithPrivateKey = null;
+            LogCertificateDetails(certificateWithPrivateKey);
 
-            if (OperatingSystem.IsWindows())
-            {
-                var cspParams = new CspParameters
-                {
-                    KeyContainerName = Guid.NewGuid().ToString(),
-                    Flags = CspProviderFlags.UseMachineKeyStore,
-                    KeyNumber = (int)KeyNumber.Exchange
-                };
+            var pfxBytes = certificateWithPrivateKey.Export(X509ContentType.Pfx, (string?)null);
 
-                using var rsaProvider = new RSACryptoServiceProvider(cspParams);
+            using var importedCertificate = X509CertificateLoader.LoadPkcs12(pfxBytes, null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet);
 
-                var rsaParameters = rsaKeyPair.ExportParameters(true);
-                rsaProvider.ImportParameters(rsaParameters);
+            using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadWrite);
+            store.Add(importedCertificate);
 
-                certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
-                certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
-
-                logger.LogInformation("Certificate with private key prepared.");
-            }
-
-            if (certificateWithPrivateKey != null)
-            {
-                using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-                store.Open(OpenFlags.ReadWrite);
-                store.Add(certificateWithPrivateKey);
-
-                logger.LogInformation("Certificate with private key imported successfully into the certificate store.");
-            }
-            else
-            {
-                logger.LogError("Failed to create a certificate with private key.");
-
-                return;
-            }
+            logger.LogInformation("Certificate with private key imported successfully into the certificate store.");
 
             certificateLoaderService.LoadCertificate();
         }
@@ -202,7 +176,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         }
         finally
         {
-            tempCertificate?.Dispose();
+            certificateWithPrivateKey?.Dispose();
         }
     }
 
