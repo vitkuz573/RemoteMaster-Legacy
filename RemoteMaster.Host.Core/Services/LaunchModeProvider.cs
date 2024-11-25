@@ -20,6 +20,7 @@ public class LaunchModeProvider : ILaunchModeProvider
             { "Install", new InstallMode() },
             { "Updater", new UpdaterMode() },
             { "Uninstall", new UninstallMode() },
+            { "Reinstall", new ReinstallMode() },
             { "Chat", new ChatMode() }
         };
     }
