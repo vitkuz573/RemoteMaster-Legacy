@@ -131,8 +131,6 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
             logger.LogInformation("No certificates found to remove.");
         }
 
-        store.Close();
-
         logger.LogInformation("Finished removing existing certificates.");
     }
 
