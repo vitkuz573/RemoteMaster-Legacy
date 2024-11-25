@@ -113,17 +113,14 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         {
             logger.LogInformation("Found {Count} certificates to remove.", existingCertificates.Count);
 
-            foreach (var cert in existingCertificates)
+            try
             {
-                try
-                {
-                    store.Remove(cert);
-                    logger.LogInformation("Successfully removed certificate with serial number: {SerialNumber}.", cert.SerialNumber);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError("Failed to remove certificate with serial number: {SerialNumber}. Error: {Message}", cert.SerialNumber, ex.Message);
-                }
+                store.RemoveRange(existingCertificates);
+                logger.LogInformation("Successfully removed all certificates.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Failed to remove certificates. Error: {Message}", ex.Message);
             }
         }
         else
