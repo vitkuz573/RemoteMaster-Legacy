@@ -121,6 +121,7 @@ internal class Program
         
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
+        services.AddTransient<IShellScriptHandlerFactory, ShellScriptHandlerFactory>();
         services.AddSingleton<IService, HostService>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
         services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();

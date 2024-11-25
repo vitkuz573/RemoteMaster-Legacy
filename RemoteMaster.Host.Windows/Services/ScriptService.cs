@@ -3,20 +3,18 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScriptService(IFileSystem fileSystem, IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
+public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory shellScriptHandlerFactory, IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
 {
     public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
@@ -24,32 +22,17 @@ public class ScriptService(IFileSystem fileSystem, IHubContext<ControlHub, ICont
 
         logger.LogInformation("Executing script with shell: {Shell}", scriptExecutionRequest.Shell);
 
+        var scriptHandler = shellScriptHandlerFactory.Create(scriptExecutionRequest.Shell);
+
         const string publicDirectory = @"C:\Users\Public";
-
-        var extension = scriptExecutionRequest.Shell switch
-        {
-            Shell.Cmd => ".bat",
-            Shell.PowerShell => ".ps1",
-            Shell.Pwsh => ".ps1",
-            _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
-        };
-
-        var fileName = $"{Guid.NewGuid()}{extension}";
+        var fileName = $"{Guid.NewGuid()}{scriptHandler.FileExtension}";
         var tempFilePath = fileSystem.Path.Combine(publicDirectory, fileName);
 
         logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
 
-        var encoding = scriptExecutionRequest.Shell switch
-        {
-            Shell.Cmd => new UTF8Encoding(false),
-            Shell.PowerShell => new UTF8Encoding(true),
-            Shell.Pwsh => new UTF8Encoding(true),
-            _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
-        };
+        var scriptContent = scriptHandler.FormatScript(scriptExecutionRequest.Content);
 
-        var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? $"@echo off\r\n{scriptExecutionRequest.Content}" : scriptExecutionRequest.Content;
-
-        await fileSystem.File.WriteAllTextAsync(tempFilePath, scriptContent, encoding);
+        await fileSystem.File.WriteAllTextAsync(tempFilePath, scriptContent, scriptHandler.FileEncoding);
 
         try
         {
@@ -60,24 +43,20 @@ public class ScriptService(IFileSystem fileSystem, IHubContext<ControlHub, ICont
                 return;
             }
 
-            var applicationToRun = scriptExecutionRequest.Shell switch
-            {
-                Shell.Cmd => $"cmd /c \"{tempFilePath}\"",
-                Shell.PowerShell => $"powershell -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                Shell.Pwsh => $"pwsh -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
-            };
+            var executionCommand = scriptHandler.GetExecutionCommand(tempFilePath);
 
-            using var process = new NativeProcess();
-            process.StartInfo = new NativeProcessStartInfo
+            using var process = new NativeProcess
             {
-                FileName = applicationToRun,
-                ForceConsoleSession = true,
-                DesktopName = "Default",
-                CreateNoWindow = true,
-                UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
+                StartInfo = new NativeProcessStartInfo
+                {
+                    FileName = executionCommand,
+                    ForceConsoleSession = true,
+                    DesktopName = "Default",
+                    CreateNoWindow = true,
+                    UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
             };
 
             process.Start();
