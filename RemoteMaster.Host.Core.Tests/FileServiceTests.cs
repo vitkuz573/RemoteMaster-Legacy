@@ -4,6 +4,7 @@
 
 using System.IO.Abstractions.TestingHelpers;
 using System.Security.Cryptography;
+using System.Text;
 using RemoteMaster.Host.Core.Services;
 
 namespace RemoteMaster.Host.Core.Tests;
@@ -27,11 +28,7 @@ public class FileServiceTests
         const string filePath = "/test.txt";
         const string fileData = "Hello, world!";
         _fileSystem.AddFile(filePath, new MockFileData(fileData));
-
-        using var sha256 = SHA256.Create();
-        var expectedHash = BitConverter.ToString(sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(fileData)))
-            .Replace("-", "")
-            .ToLowerInvariant();
+        var expectedHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(fileData)));
 
         var checksum = _fileService.CalculateChecksum(filePath);
 
