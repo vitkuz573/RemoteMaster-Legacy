@@ -5,17 +5,18 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using RemoteMaster.Host.Core.Abstractions;
 using Windows.Wdk.System.Threading;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
 using static Windows.Wdk.PInvoke;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Windows.Extensions;
+namespace RemoteMaster.Host.Windows.Services;
 
-public static class ProcessExtensions
+public class CommandLineProvider : ICommandLineProvider
 {
-    public static string GetCommandLine(this Process process)
+    public string GetCommandLine(Process process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
@@ -32,7 +33,6 @@ public static class ProcessExtensions
         while (true)
         {
             var buffer = new byte[bufferSize];
-
             NTSTATUS status;
 
             unsafe

@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddSharedServices();
 
         services.AddTransient<CustomHttpClientHandler>();
+        services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
         services.AddSingleton<IHostUninstaller, HostUninstaller>();
@@ -71,6 +72,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddSingleton<ISyncIndicatorService, SyncIndicatorService>();
+        services.AddSingleton<IProcessService, ProcessService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

@@ -4,22 +4,25 @@
 
 using System.Diagnostics;
 using Moq;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Services;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 
-namespace RemoteMaster.Host.Windows.Tests;
+namespace RemoteMaster.Host.Core.Tests;
 
 public class ProcessServiceTests
 {
     private readonly Mock<IProcessWrapper> _mockProcessWrapper;
     private readonly Mock<IProcessWrapperFactory> _mockProcessWrapperFactory;
+    private readonly Mock<ICommandLineProvider> _mockCommandLineProvider;
     private readonly ProcessService _processService;
 
     public ProcessServiceTests()
     {
         _mockProcessWrapper = new Mock<IProcessWrapper>();
         _mockProcessWrapperFactory = new Mock<IProcessWrapperFactory>();
-        _processService = new ProcessService(_mockProcessWrapperFactory.Object);
+        _mockCommandLineProvider = new Mock<ICommandLineProvider>();
+
+        _processService = new ProcessService(_mockProcessWrapperFactory.Object, _mockCommandLineProvider.Object);
     }
 
     [Fact]

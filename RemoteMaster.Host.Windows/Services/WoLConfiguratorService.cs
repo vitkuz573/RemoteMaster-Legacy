@@ -5,6 +5,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;

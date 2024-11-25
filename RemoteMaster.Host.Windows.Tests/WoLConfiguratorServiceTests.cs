@@ -6,6 +6,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Moq;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Services;
 

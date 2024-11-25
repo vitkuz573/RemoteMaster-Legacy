@@ -3,11 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
-public class ProcessWrapperFactory : IProcessWrapperFactory
+public class ProcessWrapperFactory(ICommandLineProvider commandLineProvider) : IProcessWrapperFactory
 {
     public IProcessWrapper Create(ProcessStartInfo startInfo)
     {
@@ -18,6 +18,6 @@ public class ProcessWrapperFactory : IProcessWrapperFactory
 
         process.Start();
 
-        return new ProcessWrapper(process);
+        return new ProcessWrapper(process, commandLineProvider);
     }
 }

@@ -3,11 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
-public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IProcessService
+public class ProcessService(IProcessWrapperFactory processWrapperFactory, ICommandLineProvider commandLineProvider) : IProcessService
 {
     public IProcessWrapper Start(ProcessStartInfo startInfo)
     {
@@ -33,7 +33,7 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
         var processes = Process.GetProcessesByName(processName);
 
         return processes.Where(p => !p.HasExited)
-            .Select(p => new ProcessWrapper(p))
+            .Select(p => new ProcessWrapper(p, commandLineProvider))
             .ToArray();
     }
 

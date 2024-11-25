@@ -120,7 +120,6 @@ internal class Program
         services.AddCoreServices(launchModeInstance);
         
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
-        services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
         services.AddSingleton<IService, HostService>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
@@ -141,7 +140,6 @@ internal class Program
         services.AddSingleton<IFirewallService, FirewallService>();
         services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
         services.AddSingleton<IRegistryService, RegistryService>();
-        services.AddSingleton<IProcessService, ProcessService>();
         services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
         services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
@@ -150,6 +148,7 @@ internal class Program
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<IOverlayManagerService, OverlayManagerService>();
+        services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
 
         services.AddSingleton<IScreenOverlay, CursorOverlay>();
 

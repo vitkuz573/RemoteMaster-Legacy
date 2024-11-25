@@ -3,18 +3,19 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Extensions;
+using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class ProcessWrapper : IProcessWrapper
 {
     private readonly Process _process;
+    private readonly ICommandLineProvider _commandLineProvider;
 
-    public ProcessWrapper(Process process)
+    public ProcessWrapper(Process process, ICommandLineProvider commandLineProvider)
     {
         _process = process ?? throw new ArgumentNullException(nameof(process));
+        _commandLineProvider = commandLineProvider;
 
         if (_process.HasExited)
         {
@@ -35,7 +36,7 @@ public class ProcessWrapper : IProcessWrapper
 
     public string GetCommandLine()
     {
-        return _process.GetCommandLine();
+        return _commandLineProvider.GetCommandLine(_process);
     }
 
     public void WaitForExit()
