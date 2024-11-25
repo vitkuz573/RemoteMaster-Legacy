@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.EventArguments;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.ScreenOverlays;
@@ -57,8 +56,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     public string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
     private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
-
-    public event EventHandler<ScreenChangedEventArgs>? ScreenChanged;
 
     protected ScreenCapturingService(IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger)
     {
@@ -137,11 +134,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         SetSelectedScreen(originalScreen);
 
         return frame ?? null;
-    }
-
-    protected void RaiseScreenChangedEvent(Rectangle currentScreenBounds)
-    {
-        ScreenChanged?.Invoke(this, new ScreenChangedEventArgs(currentScreenBounds));
     }
 
     public virtual void Dispose()

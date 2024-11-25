@@ -111,7 +111,6 @@ public class GdiCapturing : ScreenCapturingService
     protected override void RefreshCurrentScreenBounds()
     {
         CurrentScreenBounds = SelectedScreen == VirtualScreen ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
-        RaiseScreenChangedEvent(CurrentScreenBounds);
     }
 
     public override void Dispose()

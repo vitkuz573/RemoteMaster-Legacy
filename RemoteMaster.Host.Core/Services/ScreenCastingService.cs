@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,6 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         ArgumentNullException.ThrowIfNull(viewer);
 
         viewer.FrameRate = frameRate;
-        viewer.ScreenCapturing.ScreenChanged += async (_, args) => await SendScreenSize(viewer, args.Bounds.Width, args.Bounds.Height);
 
         logger.LogInformation("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
 
@@ -37,11 +35,6 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         var displays = viewer.ScreenCapturing.GetDisplays();
 
         await hubContext.Clients.Client(viewer.ConnectionId).ReceiveDisplays(displays);
-    }
-
-    private async Task SendScreenSize(IViewer viewer, int width, int height)
-    {
-        await hubContext.Clients.Client(viewer.ConnectionId).ReceiveScreenSize(new Size(width, height));
     }
 
     private static async IAsyncEnumerable<byte[]> StreamScreenDataAsync(IScreenCapturingService screenCapturing, IViewer viewer, [EnumeratorCancellation] CancellationToken cancellationToken)

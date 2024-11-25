@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using RemoteMaster.Host.Core.EventArguments;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
@@ -15,8 +14,6 @@ public interface IScreenCapturingService : IDisposable
     int ImageQuality { get; set; }
 
     string? SelectedCodec { get; set; }
-
-    event EventHandler<ScreenChangedEventArgs> ScreenChanged;
 
     Rectangle CurrentScreenBounds { get; }
 
