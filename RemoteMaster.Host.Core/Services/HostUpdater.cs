@@ -10,12 +10,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using static RemoteMaster.Shared.Models.Message;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class HostUpdater : IHostUpdater
 {

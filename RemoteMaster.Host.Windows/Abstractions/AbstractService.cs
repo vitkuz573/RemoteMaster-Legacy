@@ -8,7 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public abstract class AbstractService : IRunnable
+public abstract class AbstractService : IService
 {
     public abstract string Name { get; }
 

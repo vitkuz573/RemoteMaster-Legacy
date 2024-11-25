@@ -6,9 +6,8 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostUninstaller> logger) : IHostUninstaller
 {

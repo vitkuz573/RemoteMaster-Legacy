@@ -3,27 +3,27 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Moq;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Services;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 
-namespace RemoteMaster.Host.Windows.Tests;
+namespace RemoteMaster.Host.Core.Tests;
 
 public class ServiceFactoryTests
 {
-    private static Mock<AbstractService> CreateMockService(string name)
+    private static Mock<IService> CreateMockService(string name)
     {
-        var mockService = new Mock<AbstractService>();
+        var mockService = new Mock<IService>();
         mockService.Setup(s => s.Name).Returns(name);
 
         return mockService;
     }
 
     [Fact]
-    public void LoadAllServices_ShouldLoadAllAbstractServices()
+    public void LoadAllServices_ShouldLoadAllServices()
     {
         // Arrange
         var mockService = CreateMockService("MockService");
-        var services = new List<AbstractService> { mockService.Object };
+        var services = new List<IService> { mockService.Object };
         var factory = new ServiceFactory(services);
 
         // Act
@@ -39,7 +39,7 @@ public class ServiceFactoryTests
     {
         // Arrange
         var mockService = CreateMockService("MockService");
-        var services = new List<AbstractService> { mockService.Object };
+        var services = new List<IService> { mockService.Object };
         var factory = new ServiceFactory(services);
 
         // Act
@@ -55,7 +55,7 @@ public class ServiceFactoryTests
     {
         // Arrange
         var mockService = CreateMockService("MockService");
-        var services = new List<AbstractService> { mockService.Object };
+        var services = new List<IService> { mockService.Object };
         var factory = new ServiceFactory(services);
 
         // Act & Assert

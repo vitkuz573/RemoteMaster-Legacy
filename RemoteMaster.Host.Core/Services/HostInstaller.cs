@@ -7,12 +7,11 @@ using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
 {

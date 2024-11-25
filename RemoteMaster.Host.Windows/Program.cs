@@ -119,21 +119,17 @@ internal class Program
 
         services.AddCoreServices(launchModeInstance);
         
-        services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
-        services.AddSingleton<AbstractService, HostService>();
+        services.AddSingleton<IService, HostService>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
         services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         services.AddSingleton<IChatInstanceService, ChatInstanceService>();
-        services.AddSingleton<IHostInstaller, HostInstaller>();
-        services.AddSingleton<IHostUninstaller, HostUninstaller>();
         services.AddSingleton<IScreenCapturingService, GdiCapturing>();
         services.AddSingleton<IInputService, InputService>();
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IHardwareService, HardwareService>();
-        services.AddSingleton<IHostUpdater, HostUpdater>();
         services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
         services.AddSingleton<IDesktopService, DesktopService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();

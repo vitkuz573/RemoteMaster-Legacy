@@ -2,15 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class ServiceFactory : IServiceFactory
 {
-    private readonly Dictionary<string, AbstractService> _serviceInstances;
+    private readonly Dictionary<string, IService> _serviceInstances;
 
-    public ServiceFactory(IEnumerable<AbstractService> services)
+    public ServiceFactory(IEnumerable<IService> services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -22,7 +22,7 @@ public class ServiceFactory : IServiceFactory
         }
     }
 
-    public AbstractService GetService(string serviceName)
+    public IService GetService(string serviceName)
     {
         if (_serviceInstances.TryGetValue(serviceName, out var serviceInstance))
         {

@@ -52,6 +52,10 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
+        services.AddSingleton<IHostInstaller, HostInstaller>();
+        services.AddSingleton<IHostUninstaller, HostUninstaller>();
+        services.AddSingleton<IHostUpdater, HostUpdater>();
+        services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddSingleton<IRsaKeyProvider, RsaKeyProvider>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
