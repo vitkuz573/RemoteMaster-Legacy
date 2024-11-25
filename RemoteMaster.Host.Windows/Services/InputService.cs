@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Shared.DTOs;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
