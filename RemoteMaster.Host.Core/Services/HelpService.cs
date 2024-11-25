@@ -109,13 +109,32 @@ public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
 
         Console.WriteLine($"  {mode.Description}\n");
 
+        var processedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var (key, param) in mode.Parameters)
         {
-            var aliases = param.Aliases.Any()
-                ? $" (Aliases: {string.Join(", ", param.Aliases.Select(alias => $"--{alias}"))})"
+            if (processedKeys.Contains(key))
+            {
+                continue;
+            }
+
+            var aliases = param.Aliases
+                .Where(alias => !string.Equals(alias, key, StringComparison.OrdinalIgnoreCase))
+                .Distinct()
+                .ToList();
+
+            processedKeys.Add(key);
+
+            foreach (var alias in aliases)
+            {
+                processedKeys.Add(alias);
+            }
+
+            var aliasText = aliases.Count > 0
+                ? $" (Aliases: {string.Join(", ", aliases.Select(alias => $"--{alias}"))})"
                 : string.Empty;
 
-            Console.WriteLine($"  --{key}: {param.Description} {(param.IsRequired ? "(Required)" : "(Optional)")}{aliases}");
+            Console.WriteLine($"  --{key}: {param.Description} {(param.IsRequired ? "(Required)" : "(Optional)")}{aliasText}");
         }
     }
 

@@ -12,6 +12,22 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
 {
     public LaunchModeBase? ParseArguments(string[] args)
     {
+        if (args.Contains("--help", StringComparer.OrdinalIgnoreCase))
+        {
+            var extractedModeName = ExtractLaunchModeName(args);
+
+            if (!string.IsNullOrEmpty(extractedModeName) && modeProvider.GetAvailableModes().TryGetValue(extractedModeName, out var specificMode))
+            {
+                helpService.PrintHelp(specificMode);
+            }
+            else
+            {
+                helpService.PrintHelp(null);
+            }
+
+            return null;
+        }
+
         var modeName = ExtractLaunchModeName(args);
 
         if (string.IsNullOrEmpty(modeName))

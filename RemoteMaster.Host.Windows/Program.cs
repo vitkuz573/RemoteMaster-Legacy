@@ -34,7 +34,7 @@ internal class Program
 
             if (launchModeInstance == null)
             {
-                Environment.Exit(1);
+                Environment.Exit(0);
             }
 
             var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
