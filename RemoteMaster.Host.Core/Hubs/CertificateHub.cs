@@ -11,15 +11,15 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class CertificateHub(IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<ICertificateClient>
+public class CertificateHub(ICertificateService certificateService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<ICertificateClient>
 {
     [Authorize(Policy = "RenewCertificatePolicy")]
     public async Task RenewCertificate()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-
         var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
-        await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
+        
+        await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 
     public async Task GetCertificateSerialNumber()

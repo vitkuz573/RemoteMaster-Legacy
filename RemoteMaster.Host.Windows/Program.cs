@@ -46,7 +46,7 @@ internal class Program
 
             builder.Host.UseWindowsService();
 
-            await ConfigureServices(builder.Services, launchModeInstance);
+            ConfigureServices(builder.Services, launchModeInstance);
 
             var hostInfoEnricher = minimalServiceProvider.GetRequiredService<HostInfoEnricher>();
             var hostConfigurationService = minimalServiceProvider.GetRequiredService<IHostConfigurationService>();
@@ -113,11 +113,11 @@ internal class Program
         services.AddMinimalCoreServices();        
     }
 
-    private static async Task ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
+    private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
     {
         services.AddHttpContextAccessor();
 
-        await services.AddCoreServices(launchModeInstance);
+        services.AddCoreServices(launchModeInstance);
         
         services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();

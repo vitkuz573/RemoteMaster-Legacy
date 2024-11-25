@@ -45,7 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
     }
 
-    public static async Task AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)
+    public static void AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)
     {
         services.AddCommonCoreServices();
         services.AddSharedServices();
@@ -56,6 +56,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
+        services.AddSingleton<ICertificateService, CertificateService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();

@@ -11,6 +11,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostRegistrationMonitorService : IHostedService
 {
+    private readonly ICertificateService _certificateService;
     private readonly IHostLifecycleService _hostLifecycleService;
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInformationUpdaterService _hostInformationMonitorService;
@@ -21,8 +22,9 @@ public class HostRegistrationMonitorService : IHostedService
     private readonly Timer _timer;
     private readonly string _syncIndicatorFilePath;
 
-    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, IFileSystem fileSystem, ILogger<HostRegistrationMonitorService> logger)
+    public HostRegistrationMonitorService(ICertificateService certificateService, IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, IFileSystem fileSystem, ILogger<HostRegistrationMonitorService> logger)
     {
+        _certificateService = certificateService;
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
         _hostInformationMonitorService = hostInformationUpdaterService;
@@ -70,7 +72,7 @@ public class HostRegistrationMonitorService : IHostedService
 
                     var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
-                    await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
+                    await _certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
                     ClearSyncIndicator();
                 }
@@ -91,7 +93,7 @@ public class HostRegistrationMonitorService : IHostedService
 
                 var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
-                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
+                await _certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
                 await RestartUserInstance();
             }
         }

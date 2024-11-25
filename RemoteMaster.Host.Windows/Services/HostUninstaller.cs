@@ -10,7 +10,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostUninstaller> logger) : IHostUninstaller
+public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -50,7 +50,7 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
                 logger.LogInformation("Current process is running from the application directory. Skipping deletion of files and directory.");
             }
 
-            hostLifecycleService.RemoveCertificate();
+            certificateService.RemoveCertificate();
 
             logger.LogInformation("Uninstallation process completed successfully.");
         }

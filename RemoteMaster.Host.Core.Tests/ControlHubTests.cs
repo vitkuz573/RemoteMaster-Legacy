@@ -23,6 +23,7 @@ public class ControlHubTests
     private readonly Mock<IHardwareService> _mockHardwareService;
     private readonly Mock<IShutdownService> _mockShutdownService;
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
+    private readonly Mock<ICertificateService> _mockCertificateService;
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<HubCallerContext> _mockHubCallerContext;
@@ -43,6 +44,7 @@ public class ControlHubTests
         Mock<IWorkStationSecurityService> mockWorkStationSecurityService = new();
         Mock<IScreenCastingService> mockScreenCastingService = new();
         Mock<IOperatingSystemInformationService> mockOperatingSystemInformationService = new();
+        _mockCertificateService = new();
         Mock<ILogger<ControlHub>> mockLogger = new();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         Mock<IGroupManager> mockGroups = new();
@@ -65,6 +67,7 @@ public class ControlHubTests
             mockWorkStationSecurityService.Object,
             mockScreenCastingService.Object,
             mockOperatingSystemInformationService.Object,
+            _mockCertificateService.Object,
             mockLogger.Object)
         {
             Clients = _mockClients.Object,
@@ -329,6 +332,6 @@ public class ControlHubTests
             hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.OrganizationalUnit)
         )), Times.Once);
 
-        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
+        _mockCertificateService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
     }
 }

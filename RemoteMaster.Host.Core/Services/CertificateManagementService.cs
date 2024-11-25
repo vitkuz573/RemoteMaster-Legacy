@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class CertificateManagementService(IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : IHostedService
+public class CertificateManagementService(ICertificateService certificateService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -19,7 +19,7 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
         {
             var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
-            await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
+            await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
         }
     }
 

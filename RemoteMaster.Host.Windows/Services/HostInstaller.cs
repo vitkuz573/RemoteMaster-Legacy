@@ -14,7 +14,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
+public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -63,11 +63,11 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             logger.LogInformation("{ServiceName} installed and started successfully.", hostService.Name);
 
             await hostLifecycleService.RegisterAsync();
-            await hostLifecycleService.GetCaCertificateAsync();
+            await certificateService.GetCaCertificateAsync();
 
             var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(installRequest.Organization);
 
-            await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
+            await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
             hostService.Start();
         }
