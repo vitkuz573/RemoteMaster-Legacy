@@ -24,18 +24,11 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
 
         try
         {
-            var ipAddresses = new List<IPAddress>
-            {
-                hostConfiguration.Host.IpAddress
-            };
-
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
-
-            logger.LogInformation("Removing existing certificates...");
 
             RemoveCertificates();
 
-            var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
+            var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, [hostConfiguration.Host.IpAddress], out rsaKeyPair);
 
             logger.LogInformation("Attempting to issue certificate...");
 
