@@ -40,8 +40,6 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
             }
 
             ProcessCertificate(certificate, rsaKeyPair);
-
-            logger.LogInformation("Certificate issued and processed successfully.");
         }
         catch (Exception ex)
         {
