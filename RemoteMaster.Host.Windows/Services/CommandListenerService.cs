@@ -21,7 +21,7 @@ public class CommandListenerService : IHostedService
 
     private HubConnection? _connection;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
-    private readonly System.Timers.Timer _connectionCheckTimer;
+    private readonly Timer _connectionCheckTimer;
 
     public CommandListenerService(IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, ILogger<CommandListenerService> logger)
     {
@@ -30,16 +30,14 @@ public class CommandListenerService : IHostedService
         _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
         _logger = logger;
 
-        _connectionCheckTimer = new System.Timers.Timer(60000);
-        _connectionCheckTimer.Elapsed += async (sender, e) => await CheckConnectionAsync();
-        _connectionCheckTimer.AutoReset = true;
+        _connectionCheckTimer = new Timer(CheckConnectionAsync, null, Timeout.Infinite, 0);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("CommandListenerService started.");
 
-        _connectionCheckTimer.Start();
+        _connectionCheckTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         return Task.CompletedTask;
     }
@@ -48,7 +46,7 @@ public class CommandListenerService : IHostedService
     {
         _logger.LogInformation("Stopping CommandListenerService.");
 
-        _connectionCheckTimer.Stop();
+        _connectionCheckTimer.Dispose();
         await _connectionLock.WaitAsync(cancellationToken);
 
         try
@@ -67,7 +65,7 @@ public class CommandListenerService : IHostedService
         }
     }
 
-    private async Task CheckConnectionAsync()
+    private async void CheckConnectionAsync(object? state)
     {
         if (_connection?.State != HubConnectionState.Connected)
         {
