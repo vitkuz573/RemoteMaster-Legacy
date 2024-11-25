@@ -12,10 +12,13 @@ public class ReinstallMode : LaunchModeBase
 {
     public override string Name => "Reinstall";
 
-    public override string Description => "Reinstalls the program using the current configuration.";
+    public override string Description => "Reinstalls the program using the current configuration or specified parameters.";
 
     protected override void InitializeParameters()
     {
+        AddParameter(new LaunchParameter<string>("server", "Specifies the server where the host will be registered. Overrides the current configuration.", false, "srv"));
+        AddParameter(new LaunchParameter<string>("organization", "Specifies the name of the organization where the host is registered. Overrides the current configuration.", false, "org"));
+        AddParameter(new LaunchParameter<string>("organizational-unit", "Specifies the organizational unit where the host is registered. Overrides the current configuration.", false, "ou"));
     }
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
@@ -26,9 +29,9 @@ public class ReinstallMode : LaunchModeBase
 
         var currentConfig = await hostConfigurationService.LoadConfigurationAsync();
 
-        var server = currentConfig.Server;
-        var organization = currentConfig.Subject.Organization;
-        var organizationalUnit = currentConfig.Subject.OrganizationalUnit.FirstOrDefault();
+        var server = GetParameter<string>("server").Value ?? currentConfig.Server;
+        var organization = GetParameter<string>("organization").Value ?? currentConfig.Subject.Organization;
+        var organizationalUnit = GetParameter<string>("organizational-unit").Value ?? currentConfig.Subject.OrganizationalUnit.FirstOrDefault();
 
         if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(organization) || string.IsNullOrWhiteSpace(organizationalUnit))
         {
