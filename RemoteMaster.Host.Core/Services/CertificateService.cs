@@ -15,75 +15,48 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateService(IApiService apiService, ISubjectService subjectService, ICertificateRequestService certificateRequestService, ICertificateLoaderService certificateLoaderService, ILogger<CertificateService> logger) : ICertificateService
 {
-    public void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair)
+    public async Task IssueCertificateAsync(HostConfiguration hostConfiguration, AddressDto organizationAddress)
     {
-        ArgumentNullException.ThrowIfNull(certificateBytes);
-        ArgumentNullException.ThrowIfNull(rsaKeyPair);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+        ArgumentNullException.ThrowIfNull(organizationAddress);
 
-        X509Certificate2? tempCertificate = null;
+        RSA? rsaKeyPair = null;
 
         try
         {
-            if (certificateBytes.Length == 0)
+            var ipAddresses = new List<IPAddress>
             {
-                logger.LogError("Certificate bytes are empty.");
+                hostConfiguration.Host.IpAddress
+            };
 
-                return;
+            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
+
+            logger.LogInformation("Removing existing certificates...");
+
+            RemoveCertificates();
+
+            var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
+
+            logger.LogInformation("Attempting to issue certificate...");
+
+            var certificate = await apiService.IssueCertificateAsync(signingRequest);
+
+            if (certificate == null || certificate.Length == 0)
+            {
+                throw new InvalidOperationException("Certificate processing failed.");
             }
 
-            logger.LogInformation("Received certificate bytes, starting processing...");
+            ProcessCertificate(certificate, rsaKeyPair);
 
-            tempCertificate = X509CertificateLoader.LoadPkcs12(certificateBytes, null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
-            logger.LogInformation("Temporary certificate created successfully.");
-
-            LogCertificateDetails(tempCertificate);
-
-            X509Certificate2? certificateWithPrivateKey = null;
-
-            if (OperatingSystem.IsWindows())
-            {
-                var cspParams = new CspParameters
-                {
-                    KeyContainerName = Guid.NewGuid().ToString(),
-                    Flags = CspProviderFlags.UseMachineKeyStore,
-                    KeyNumber = (int)KeyNumber.Exchange
-                };
-
-                using var rsaProvider = new RSACryptoServiceProvider(cspParams);
-
-                var rsaParameters = rsaKeyPair.ExportParameters(true);
-                rsaProvider.ImportParameters(rsaParameters);
-
-                certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
-                certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
-
-                logger.LogInformation("Certificate with private key prepared.");
-            }
-
-            if (certificateWithPrivateKey != null)
-            {
-                using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-                store.Open(OpenFlags.ReadWrite);
-                store.Add(certificateWithPrivateKey);
-
-                logger.LogInformation("Certificate with private key imported successfully into the certificate store.");
-            }
-            else
-            {
-                logger.LogError("Failed to create a certificate with private key.");
-
-                return;
-            }
-
-            certificateLoaderService.LoadCertificate();
+            logger.LogInformation("Certificate issued and processed successfully.");
         }
         catch (Exception ex)
         {
-            logger.LogError("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
+            logger.LogError("Issuing certificate failed: {Message}.", ex.Message);
         }
         finally
         {
-            tempCertificate?.Dispose();
+            rsaKeyPair?.Dispose();
         }
     }
 
@@ -163,48 +136,75 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         logger.LogInformation("Finished removing existing certificates.");
     }
 
-    public async Task IssueCertificateAsync(HostConfiguration hostConfiguration, AddressDto organizationAddress)
+    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-        ArgumentNullException.ThrowIfNull(organizationAddress);
+        ArgumentNullException.ThrowIfNull(certificateBytes);
+        ArgumentNullException.ThrowIfNull(rsaKeyPair);
 
-        RSA? rsaKeyPair = null;
+        X509Certificate2? tempCertificate = null;
 
         try
         {
-            var ipAddresses = new List<IPAddress>
+            if (certificateBytes.Length == 0)
             {
-                hostConfiguration.Host.IpAddress
-            };
+                logger.LogError("Certificate bytes are empty.");
 
-            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
-
-            logger.LogInformation("Removing existing certificates...");
-
-            RemoveCertificates();
-
-            var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
-
-            logger.LogInformation("Attempting to issue certificate...");
-
-            var certificate = await apiService.IssueCertificateAsync(signingRequest);
-
-            if (certificate == null || certificate.Length == 0)
-            {
-                throw new InvalidOperationException("Certificate processing failed.");
+                return;
             }
 
-            ProcessCertificate(certificate, rsaKeyPair);
+            logger.LogInformation("Received certificate bytes, starting processing...");
 
-            logger.LogInformation("Certificate issued and processed successfully.");
+            tempCertificate = X509CertificateLoader.LoadPkcs12(certificateBytes, null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
+            logger.LogInformation("Temporary certificate created successfully.");
+
+            LogCertificateDetails(tempCertificate);
+
+            X509Certificate2? certificateWithPrivateKey = null;
+
+            if (OperatingSystem.IsWindows())
+            {
+                var cspParams = new CspParameters
+                {
+                    KeyContainerName = Guid.NewGuid().ToString(),
+                    Flags = CspProviderFlags.UseMachineKeyStore,
+                    KeyNumber = (int)KeyNumber.Exchange
+                };
+
+                using var rsaProvider = new RSACryptoServiceProvider(cspParams);
+
+                var rsaParameters = rsaKeyPair.ExportParameters(true);
+                rsaProvider.ImportParameters(rsaParameters);
+
+                certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
+                certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
+
+                logger.LogInformation("Certificate with private key prepared.");
+            }
+
+            if (certificateWithPrivateKey != null)
+            {
+                using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                store.Add(certificateWithPrivateKey);
+
+                logger.LogInformation("Certificate with private key imported successfully into the certificate store.");
+            }
+            else
+            {
+                logger.LogError("Failed to create a certificate with private key.");
+
+                return;
+            }
+
+            certificateLoaderService.LoadCertificate();
         }
         catch (Exception ex)
         {
-            logger.LogError("Issuing certificate failed: {Message}.", ex.Message);
+            logger.LogError("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
         }
         finally
         {
-            rsaKeyPair?.Dispose();
+            tempCertificate?.Dispose();
         }
     }
 
