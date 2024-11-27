@@ -45,18 +45,17 @@ public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory sh
 
             var executionCommand = scriptHandler.GetExecutionCommand(tempFilePath);
 
-            using var process = new NativeProcess
+            using var process = new NativeProcess();
+
+            process.StartInfo = new NativeProcessStartInfo
             {
-                StartInfo = new NativeProcessStartInfo
-                {
-                    FileName = executionCommand,
-                    ForceConsoleSession = true,
-                    DesktopName = "Default",
-                    CreateNoWindow = true,
-                    UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
+                FileName = executionCommand,
+                ForceConsoleSession = true,
+                DesktopName = "Default",
+                CreateNoWindow = true,
+                UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
 
             process.Start();

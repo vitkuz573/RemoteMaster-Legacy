@@ -17,7 +17,7 @@ public class ConfigureJwtBearerOptions(IRsaKeyProvider rsaKeyProvider) : IConfig
         ArgumentNullException.ThrowIfNull(options);
 
         var rsa = rsaKeyProvider.GetRsaPublicKey() ?? throw new InvalidOperationException("RSA public key is not available.");
-        var validateLifetime = !IsWinPE();
+        var validateLifetime = !IsWinPe();
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -38,7 +38,7 @@ public class ConfigureJwtBearerOptions(IRsaKeyProvider rsaKeyProvider) : IConfig
         Configure(Options.DefaultName, options);
     }
 
-    private static bool IsWinPE()
+    private static bool IsWinPe()
     {
         var systemDirectory = Environment.SystemDirectory;
         var systemDrive = Path.GetPathRoot(systemDirectory);
