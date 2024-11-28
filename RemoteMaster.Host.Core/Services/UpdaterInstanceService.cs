@@ -2,14 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.IO.Abstractions;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.DTOs;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class UpdaterInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, ILogger<UpdaterInstanceService> logger) : IUpdaterInstanceService
 {
@@ -38,15 +38,12 @@ public class UpdaterInstanceService(IInstanceManagerService instanceManagerServi
             argumentsBuilder.Append(" --allow-downgrade");
         }
 
-        var startInfo = new NativeProcessStartInfo
+        var startInfo = new ProcessStartInfo
         {
-            ProcessStartInfo =
-            {
-                Arguments = argumentsBuilder.ToString(),
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            }
+            Arguments = argumentsBuilder.ToString(),
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
 
         try

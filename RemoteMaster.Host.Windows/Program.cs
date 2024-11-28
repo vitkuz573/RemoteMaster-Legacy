@@ -124,7 +124,6 @@ internal class Program
         services.AddTransient<IShellScriptHandlerFactory, ShellScriptHandlerFactory>();
         services.AddSingleton<IService, HostService>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
-        services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         services.AddSingleton<IChatInstanceService, ChatInstanceService>();
         services.AddSingleton<IScreenCapturingService, GdiCapturing>();
         services.AddSingleton<IInputService, InputService>();

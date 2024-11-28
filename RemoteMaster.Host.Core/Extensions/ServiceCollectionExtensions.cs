@@ -74,6 +74,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProcessService, ProcessService>();
         services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
         services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
+        services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
