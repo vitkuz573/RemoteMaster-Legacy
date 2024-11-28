@@ -7,50 +7,69 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ProcessWrapper : IProcessWrapper
+public class ProcessWrapper(Process process, ICommandLineProvider commandLineProvider) : IProcessWrapper
 {
-    private readonly Process _process;
-    private readonly ICommandLineProvider _commandLineProvider;
+    private bool _disposed = false;
 
-    public ProcessWrapper(Process process, ICommandLineProvider commandLineProvider)
+    public int Id => process.Id;
+
+    public StreamReader StandardOutput => process.StandardOutput;
+
+    public StreamReader StandardError => process.StandardError;
+
+    public bool HasExited
     {
-        _process = process ?? throw new ArgumentNullException(nameof(process));
-        _commandLineProvider = commandLineProvider;
-
-        if (_process.HasExited)
+        get
         {
-            throw new InvalidOperationException("Process has already exited.");
+            try
+            {
+                return process.HasExited;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
         }
     }
 
-    public int Id => _process.Id;
-
-    public StreamReader StandardOutput => _process.StandardOutput;
-
-    public StreamReader StandardError => _process.StandardError;
-
     public void Start()
     {
-        _process.Start();
+        process.Start();
     }
 
     public void Kill()
     {
-        _process.Kill();
+        process.Kill();
     }
 
     public string GetCommandLine()
     {
-        return _commandLineProvider.GetCommandLine(_process);
+        return commandLineProvider.GetCommandLine(process);
     }
 
     public void WaitForExit()
     {
-        _process.WaitForExit();
+        process.WaitForExit();
     }
 
     public void Dispose()
     {
-        _process.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            process.Dispose();
+        }
+
+        _disposed = true;
     }
 }

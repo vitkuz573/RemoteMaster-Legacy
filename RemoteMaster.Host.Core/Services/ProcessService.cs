@@ -11,7 +11,11 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory, IComma
 {
     public IProcessWrapper Start(ProcessStartInfo startInfo)
     {
-        return processWrapperFactory.Create(startInfo);
+        var process = processWrapperFactory.Create(startInfo);
+
+        process.Start();
+
+        return process;
     }
 
     public void WaitForExit(IProcessWrapper process)

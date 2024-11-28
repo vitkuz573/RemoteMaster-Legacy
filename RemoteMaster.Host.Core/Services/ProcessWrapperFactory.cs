@@ -11,10 +11,12 @@ public class ProcessWrapperFactory(ICommandLineProvider commandLineProvider) : I
 {
     public IProcessWrapper Create(ProcessStartInfo startInfo)
     {
+#pragma warning disable CA2000
         var process = new Process
         {
             StartInfo = startInfo
         };
+#pragma warning restore CA2000
 
         return new ProcessWrapper(process, commandLineProvider);
     }

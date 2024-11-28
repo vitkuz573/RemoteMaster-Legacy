@@ -12,6 +12,8 @@ public interface IProcessWrapper : IDisposable
 
     StreamReader StandardError { get; }
 
+    bool HasExited { get; }
+
     void Start();
 
     void Kill();
