@@ -52,8 +52,20 @@ public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpS
     private static string? ExtractLaunchModeName(string[] args)
     {
         var modeArg = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode=", StringComparison.OrdinalIgnoreCase));
-        
-        return modeArg?[(modeArg.IndexOf('=') + 1)..].Trim();
+
+        if (modeArg == null)
+        {
+            return null;
+        }
+
+        var equalsIndex = modeArg.IndexOf('=');
+
+        if (equalsIndex == -1 || equalsIndex == modeArg.Length - 1)
+        {
+            return null;
+        }
+
+        return modeArg[(equalsIndex + 1)..].Trim();
     }
 
     private void ParseAndSetParameters(string[] args, LaunchModeBase mode)
