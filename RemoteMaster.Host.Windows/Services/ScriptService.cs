@@ -49,13 +49,17 @@ public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory sh
 
             process.StartInfo = new NativeProcessStartInfo
             {
-                FileName = executionCommand,
+                ProcessStartInfo =
+                {
+                    FileName = executionCommand,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                },
                 ForceConsoleSession = true,
                 DesktopName = "Default",
-                CreateNoWindow = true,
                 UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
+
             };
 
             process.Start();

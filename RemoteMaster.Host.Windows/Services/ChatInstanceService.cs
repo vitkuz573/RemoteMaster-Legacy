@@ -72,10 +72,13 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
     {
         var startInfo = new NativeProcessStartInfo
         {
-            Arguments = Argument,
+            ProcessStartInfo =
+            {
+                Arguments = Argument,
+                CreateNoWindow = true
+            },
             ForceConsoleSession = true,
             DesktopName = "Default",
-            CreateNoWindow = true,
             UseCurrentUserToken = false
         };
 

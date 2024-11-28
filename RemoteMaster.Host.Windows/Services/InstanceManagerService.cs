@@ -38,7 +38,7 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
 
             var process = nativeProcessFactory.Create();
 
-            startInfo.FileName = executablePath;
+            startInfo.ProcessStartInfo.FileName = executablePath;
             process.StartInfo = startInfo;
 
             process.Start();

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -21,7 +22,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcess : INativeProcess
 {
-    private static readonly Lock _createProcessLock = new();
+    private static readonly Lock CreateProcessLock = new();
 
     private NativeProcessStartInfo? _startInfo;
     private SafeProcessHandle? _processHandle;
@@ -149,15 +150,15 @@ public class NativeProcess : INativeProcess
         SafeFileHandle? parentErrorPipeHandle = null;
         SafeFileHandle? childErrorPipeHandle = null;
 
-        using (_createProcessLock.EnterScope())
+        using (CreateProcessLock.EnterScope())
         {
             try
             {
                 startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
 
-                if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
+                if (startInfo.ProcessStartInfo.RedirectStandardInput || startInfo.ProcessStartInfo.RedirectStandardOutput || startInfo.ProcessStartInfo.RedirectStandardError)
                 {
-                    if (startInfo.RedirectStandardInput)
+                    if (startInfo.ProcessStartInfo.RedirectStandardInput)
                     {
 #pragma warning disable CA2000
                         CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
@@ -168,7 +169,7 @@ public class NativeProcess : INativeProcess
                         childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
                     }
 
-                    if (startInfo.RedirectStandardOutput)
+                    if (startInfo.ProcessStartInfo.RedirectStandardOutput)
                     {
 #pragma warning disable CA2000
                         CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
@@ -179,7 +180,7 @@ public class NativeProcess : INativeProcess
                         childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
                     }
 
-                    if (startInfo.RedirectStandardError)
+                    if (startInfo.ProcessStartInfo.RedirectStandardError)
                     {
 #pragma warning disable CA2000
                         CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
@@ -207,19 +208,14 @@ public class NativeProcess : INativeProcess
 
                 PROCESS_CREATION_FLAGS dwCreationFlags = 0;
 
-                dwCreationFlags |= startInfo.CreateNoWindow
+                dwCreationFlags |= startInfo.ProcessStartInfo.CreateNoWindow
                     ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
                     : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
 
-                string? environmentBlock = null;
+                dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
+                var environmentBlock = GetEnvironmentVariablesBlock(startInfo.ProcessStartInfo.EnvironmentVariables!);
 
-                if (startInfo._environmentVariables != null)
-                {
-                    dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-                    environmentBlock = GetEnvironmentVariablesBlock(startInfo._environmentVariables!);
-                }
-
-                var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
+                var fullCommand = $"{startInfo.ProcessStartInfo.FileName} {startInfo.ProcessStartInfo.Arguments}";
                 fullCommand += char.MinValue;
 
                 var commandSpan = new Span<char>(fullCommand.ToCharArray());
@@ -268,9 +264,9 @@ public class NativeProcess : INativeProcess
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        if (startInfo.RedirectStandardInput)
+        if (startInfo.ProcessStartInfo.RedirectStandardInput)
         {
-            var enc = startInfo.StandardInputEncoding ?? Encoding.GetEncoding((int)GetConsoleCP());
+            var enc = startInfo.ProcessStartInfo.StandardInputEncoding ?? Encoding.GetEncoding((int)GetConsoleCP());
 
             _standardInput = new StreamWriter(new FileStream(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
             {
@@ -278,16 +274,16 @@ public class NativeProcess : INativeProcess
             };
         }
 
-        if (startInfo.RedirectStandardOutput)
+        if (startInfo.ProcessStartInfo.RedirectStandardOutput)
         {
-            var enc = startInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
+            var enc = startInfo.ProcessStartInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
             _standardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
-        if (startInfo.RedirectStandardError)
+        if (startInfo.ProcessStartInfo.RedirectStandardError)
         {
-            var enc = startInfo.StandardErrorEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
+            var enc = startInfo.ProcessStartInfo.StandardErrorEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
             _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
@@ -352,7 +348,7 @@ public class NativeProcess : INativeProcess
         }
     }
 
-    private static string GetEnvironmentVariablesBlock(IDictionary<string, string> sd)
+    private static string GetEnvironmentVariablesBlock(StringDictionary sd)
     {
         var keys = new string[sd.Count];
         sd.Keys.CopyTo(keys, 0);

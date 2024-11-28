@@ -41,10 +41,13 @@ public class UpdaterInstanceService(IInstanceManagerService instanceManagerServi
 
         var startInfo = new NativeProcessStartInfo
         {
-            Arguments = argumentsBuilder.ToString(),
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
+            ProcessStartInfo =
+            {
+                Arguments = argumentsBuilder.ToString(),
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }
         };
 
         try
