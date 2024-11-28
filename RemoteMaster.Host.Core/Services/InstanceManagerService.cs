@@ -48,6 +48,7 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         {
             process.Start();
             logger.LogInformation("Started a new instance of the host with Process. Process ID: {ProcessId}", process.Id);
+
             return process.Id;
         }
         catch (Exception ex)

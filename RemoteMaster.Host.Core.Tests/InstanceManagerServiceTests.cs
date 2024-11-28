@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,13 +10,10 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Services;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
-using RemoteMaster.Host.Windows.Services;
 using Serilog;
 using Serilog.Sinks.TestCorrelator;
 
-namespace RemoteMaster.Host.Windows.Tests;
+namespace RemoteMaster.Host.Core.Tests;
 
 public class InstanceManagerServiceTests
 {
@@ -50,7 +48,7 @@ public class InstanceManagerServiceTests
     public void StartNewInstance_ShouldThrowArgumentNullException_WhenStartInfoIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("destinationPath", null!));
+        Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("destinationPath", (ProcessStartInfo)null!));
     }
 
     [Fact]
@@ -60,7 +58,7 @@ public class InstanceManagerServiceTests
         var executablePath = Environment.ProcessPath!;
         const string destinationPath = @"C:\destinationPath\executable.exe";
         var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
-        var startInfo = new NativeProcessStartInfo { FileName = executablePath };
+        var startInfo = new TestProcessStartInfo(executablePath);
 
         _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
 
@@ -79,7 +77,7 @@ public class InstanceManagerServiceTests
         // Arrange
         const string executablePath = @"C:\sourcePath\executable.exe";
         const string destinationPath = @"C:\destinationPath\executable.exe";
-        var startInfo = new NativeProcessStartInfo { FileName = executablePath };
+        var startInfo = new TestProcessStartInfo(executablePath);
     
         var fileMock = new Mock<IFile>();
         fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<IOException>();
@@ -108,35 +106,23 @@ public class InstanceManagerServiceTests
     }
 
     [Fact]
-    public void StartNewInstance_ShouldLogAndRethrowException_WhenExceptionOccurs()
+    public void StartNewInstance_ShouldLogAndRethrowException_WhenProcessStartFails()
     {
         // Arrange
         const string executablePath = @"C:\sourcePath\executable.exe";
-        const string destinationPath = @"C:\destinationPath\executable.exe";
-        var startInfo = new NativeProcessStartInfo { FileName = executablePath };
-    
-        var fileMock = new Mock<IFile>();
-        fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<Exception>();
-    
-        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { executablePath, new MockFileData("content") }
-        });
-    
-        var fileSystemMock = new Mock<IFileSystem>();
-        fileSystemMock.SetupGet(fs => fs.File).Returns(fileMock.Object);
-        fileSystemMock.SetupGet(fs => fs.Directory).Returns(mockFileSystem.Directory);
-        fileSystemMock.SetupGet(fs => fs.Path).Returns(mockFileSystem.Path);
-    
-        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, fileSystemMock.Object, _logger);
-    
+        var startInfo = new TestProcessStartInfo(executablePath);
+
+        _nativeProcessMock.Setup(x => x.Start()).Throws(new Exception("Process start failed"));
+
+        var instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _mockFileSystem, _logger);
+
         // Act & Assert
         using (TestCorrelator.CreateContext())
         {
-            Assert.Throws<Exception>(() => instanceStarterService.StartNewInstance(destinationPath, startInfo));
-    
+            Assert.Throws<Exception>(() => instanceManagerService.StartNewInstance(null, startInfo));
+
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
-    
+
             Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("Error starting new instance of the host"));
         }
     }
@@ -146,7 +132,7 @@ public class InstanceManagerServiceTests
     {
         // Arrange
         const string executablePath = @"C:\sourcePath\executable.exe";
-        var startInfo = new NativeProcessStartInfo { FileName = executablePath };
+        var startInfo = new TestProcessStartInfo(executablePath);
 
         _nativeProcessMock.Setup(x => x.Start()).Verifiable();
         _nativeProcessMock.Setup(x => x.Id).Returns(1234);
