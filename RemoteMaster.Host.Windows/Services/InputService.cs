@@ -170,10 +170,6 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
                 dx = (int)(xyPercent.X * 65535F);
                 dy = (int)(xyPercent.Y * 65535F);
 
-                var pixelX = (int)(xyPercent.X * screenCapturing.CurrentScreenBounds.Width) + screenCapturing.CurrentScreenBounds.Left;
-                var pixelY = (int)(xyPercent.Y * screenCapturing.CurrentScreenBounds.Height) + screenCapturing.CurrentScreenBounds.Top;
-                var clickPosition = new Point(pixelX, pixelY);
-
                 switch (dto)
                 {
                     case { Button: not null, IsPressed: true }:

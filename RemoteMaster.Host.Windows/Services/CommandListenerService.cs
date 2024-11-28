@@ -8,7 +8,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Shared.Extensions;
 using static Windows.Win32.PInvoke;
 
@@ -47,7 +46,7 @@ public class CommandListenerService : IHostedService
     {
         _logger.LogInformation("Stopping CommandListenerService.");
 
-        _connectionCheckTimer.Dispose();
+        await _connectionCheckTimer.DisposeAsync();
         await _connectionLock.WaitAsync(cancellationToken);
 
         try
@@ -68,11 +67,14 @@ public class CommandListenerService : IHostedService
 
     private async void CheckConnectionAsync(object? state)
     {
-        if (_connection?.State != HubConnectionState.Connected)
+        if (_connection?.State == HubConnectionState.Connected)
         {
-            _logger.LogWarning("Connection is not active. Attempting to reconnect...");
-            await StartConnectionAsync();
+            return;
         }
+
+        _logger.LogWarning("Connection is not active. Attempting to reconnect...");
+
+        await StartConnectionAsync();
     }
 
     private async void OnUserInstanceCreated(object? sender, UserInstanceCreatedEventArgs e)
