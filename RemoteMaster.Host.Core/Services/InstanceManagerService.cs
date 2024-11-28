@@ -22,17 +22,17 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         {
             var process = nativeProcessFactory.Create(options);
 
-            return StartNativeProcess(process, startInfo, executablePath);
+            return StartNativeProcess(process, startInfo);
         }
         else
         {
             var process = processWrapperFactory.Create(startInfo);
 
-            return StartRegularProcess(process, executablePath);
+            return StartRegularProcess(process);
         }
     }
 
-    private int StartNativeProcess(INativeProcess process, ProcessStartInfo startInfo, string executablePath)
+    private int StartNativeProcess(INativeProcess process, ProcessStartInfo startInfo)
     {
         try
         {
@@ -43,12 +43,12 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host with NativeProcess. Executable path: {Path}", executablePath);
+            logger.LogError(ex, "Error starting new instance of the host with NativeProcess.");
             throw;
         }
     }
 
-    private int StartRegularProcess(IProcessWrapper process, string executablePath)
+    private int StartRegularProcess(IProcessWrapper process)
     {
         try
         {
@@ -59,7 +59,7 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host with Process. Executable path: {Path}", executablePath);
+            logger.LogError(ex, "Error starting new instance of the host with Process.");
             throw;
         }
     }
