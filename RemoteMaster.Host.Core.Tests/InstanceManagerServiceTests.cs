@@ -17,17 +17,30 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class InstanceManagerServiceTests
 {
-    private readonly Mock<INativeProcess> _nativeProcessMock;
     private readonly Mock<INativeProcessFactory> _nativeProcessFactoryMock;
+    private readonly Mock<INativeProcess> _nativeProcessMock;
+    private readonly Mock<IProcessWrapperFactory> _processWrapperFactoryMock;
+    private readonly Mock<IProcessWrapper> _processWrapperMock;
     private readonly MockFileSystem _mockFileSystem;
     private readonly ILogger<InstanceManagerService> _logger;
     private readonly InstanceManagerService _instanceManagerService;
 
     public InstanceManagerServiceTests()
     {
-        _nativeProcessMock = new Mock<INativeProcess>();
         _nativeProcessFactoryMock = new Mock<INativeProcessFactory>();
-        _nativeProcessFactoryMock.Setup(factory => factory.Create()).Returns(_nativeProcessMock.Object);
+        _nativeProcessMock = new Mock<INativeProcess>();
+
+        _processWrapperFactoryMock = new Mock<IProcessWrapperFactory>();
+        _processWrapperMock = new Mock<IProcessWrapper>();
+
+        _nativeProcessFactoryMock
+            .Setup(factory => factory.Create(It.IsAny<INativeProcessOptions>()))
+            .Returns(_nativeProcessMock.Object);
+
+        _processWrapperFactoryMock
+            .Setup(factory => factory.Create(It.IsAny<ProcessStartInfo>()))
+            .Returns(_processWrapperMock.Object);
+
         _mockFileSystem = new MockFileSystem();
 
         Log.Logger = new LoggerConfiguration()
@@ -41,14 +54,14 @@ public class InstanceManagerServiceTests
 
         _logger = services.GetRequiredService<ILogger<InstanceManagerService>>();
 
-        _instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _mockFileSystem, _logger);
+        _instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _processWrapperFactoryMock.Object, _mockFileSystem, _logger);
     }
 
     [Fact]
     public void StartNewInstance_ShouldThrowArgumentNullException_WhenStartInfoIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("destinationPath", (ProcessStartInfo)null!));
+        Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("destinationPath", null!));
     }
 
     [Fact]
@@ -58,17 +71,24 @@ public class InstanceManagerServiceTests
         var executablePath = Environment.ProcessPath!;
         const string destinationPath = @"C:\destinationPath\executable.exe";
         var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
-        var startInfo = new TestProcessStartInfo(executablePath);
+        var startInfo = new ProcessStartInfo(executablePath);
 
         _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
 
+        _processWrapperMock.Setup(p => p.Start()).Verifiable();
+        _processWrapperMock.SetupGet(p => p.Id).Returns(1234);
+
         // Act
-        _instanceManagerService.StartNewInstance(destinationPath, startInfo);
+        var processId = _instanceManagerService.StartNewInstance(destinationPath, startInfo);
 
         // Assert
         Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
         Assert.True(_mockFileSystem.File.Exists(destinationPath));
         Assert.Equal("test content", _mockFileSystem.File.ReadAllText(destinationPath));
+
+        _processWrapperMock.Verify(p => p.Start(), Times.Once);
+
+        Assert.Equal(1234, processId);
     }
 
     [Fact]
@@ -77,7 +97,7 @@ public class InstanceManagerServiceTests
         // Arrange
         const string executablePath = @"C:\sourcePath\executable.exe";
         const string destinationPath = @"C:\destinationPath\executable.exe";
-        var startInfo = new TestProcessStartInfo(executablePath);
+        var startInfo = new ProcessStartInfo(executablePath);
     
         var fileMock = new Mock<IFile>();
         fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<IOException>();
@@ -92,7 +112,7 @@ public class InstanceManagerServiceTests
         fileSystemMock.SetupGet(fs => fs.Directory).Returns(mockFileSystem.Directory);
         fileSystemMock.SetupGet(fs => fs.Path).Returns(mockFileSystem.Path);
     
-        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, fileSystemMock.Object, _logger);
+        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _processWrapperFactoryMock.Object, fileSystemMock.Object, _logger);
     
         // Act & Assert
         using (TestCorrelator.CreateContext())
@@ -110,16 +130,17 @@ public class InstanceManagerServiceTests
     {
         // Arrange
         const string executablePath = @"C:\sourcePath\executable.exe";
-        var startInfo = new TestProcessStartInfo(executablePath);
+        var startInfo = new ProcessStartInfo(executablePath);
+        var options = new Mock<INativeProcessOptions>().Object;
 
-        _nativeProcessMock.Setup(x => x.Start()).Throws(new Exception("Process start failed"));
+        _nativeProcessMock.Setup(x => x.Start(startInfo)).Throws(new Exception("Process start failed"));
 
-        var instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _mockFileSystem, _logger);
+        var instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _processWrapperFactoryMock.Object, _mockFileSystem, _logger);
 
         // Act & Assert
         using (TestCorrelator.CreateContext())
         {
-            Assert.Throws<Exception>(() => instanceManagerService.StartNewInstance(null, startInfo));
+            Assert.Throws<Exception>(() => instanceManagerService.StartNewInstance(null, startInfo, options));
 
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
 
@@ -132,16 +153,17 @@ public class InstanceManagerServiceTests
     {
         // Arrange
         const string executablePath = @"C:\sourcePath\executable.exe";
-        var startInfo = new TestProcessStartInfo(executablePath);
+        var startInfo = new ProcessStartInfo(executablePath);
+        var options = new Mock<INativeProcessOptions>().Object;
 
-        _nativeProcessMock.Setup(x => x.Start()).Verifiable();
+        _nativeProcessMock.Setup(x => x.Start(startInfo)).Verifiable();
         _nativeProcessMock.Setup(x => x.Id).Returns(1234);
 
         // Act
-        var processId = _instanceManagerService.StartNewInstance(null, startInfo);
+        var processId = _instanceManagerService.StartNewInstance(null, startInfo, options);
 
         // Assert
         Assert.Equal(1234, processId);
-        _nativeProcessMock.Verify(x => x.Start(), Times.Once);
+        _nativeProcessMock.Verify(x => x.Start(startInfo), Times.Once);
     }
 }

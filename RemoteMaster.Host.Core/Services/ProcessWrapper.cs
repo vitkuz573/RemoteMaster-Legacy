@@ -29,6 +29,11 @@ public class ProcessWrapper : IProcessWrapper
 
     public StreamReader StandardError => _process.StandardError;
 
+    public void Start()
+    {
+        _process.Start();
+    }
+
     public void Kill()
     {
         _process.Kill();

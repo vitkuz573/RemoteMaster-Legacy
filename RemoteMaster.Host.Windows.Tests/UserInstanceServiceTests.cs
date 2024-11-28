@@ -2,12 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows.Tests;
@@ -36,14 +35,14 @@ public class UserInstanceServiceTests
         // Arrange
         const int processId = 1234;
         _instanceStarterServiceMock
-            .Setup(x => x.StartNewInstance(It.IsAny<string>(), It.IsAny<NativeProcessStartInfo>()))
+            .Setup(x => x.StartNewInstance(It.IsAny<string>(), It.IsAny<ProcessStartInfo>(), It.IsAny<INativeProcessOptions>()))
             .Returns(processId);
 
         // Act
         _userInstanceService.Start();
 
         // Assert
-        _instanceStarterServiceMock.Verify(x => x.StartNewInstance(null, It.IsAny<NativeProcessStartInfo>()), Times.Once);
+        _instanceStarterServiceMock.Verify(x => x.StartNewInstance(null, It.IsAny<ProcessStartInfo>(), It.IsAny<INativeProcessOptions>()), Times.Once);
     }
 
     [Fact]

@@ -16,8 +16,6 @@ public class ProcessWrapperFactory(ICommandLineProvider commandLineProvider) : I
             StartInfo = startInfo
         };
 
-        process.Start();
-
         return new ProcessWrapper(process, commandLineProvider);
     }
 }

@@ -7,8 +7,6 @@ using System.Diagnostics;
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IInstanceManagerService
-{
-    int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions options);
-
-    int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo);
+{ 
+    int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions? options = null);
 }

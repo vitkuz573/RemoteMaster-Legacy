@@ -9,17 +9,31 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
+public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
-    public int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions options)
+    public int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 
         var executablePath = PrepareExecutable(destinationPath);
-
-        var process = nativeProcessFactory.Create(options);
         startInfo.FileName = executablePath;
 
+        if (options != null)
+        {
+            var process = nativeProcessFactory.Create(options);
+
+            return StartNativeProcess(process, startInfo, executablePath);
+        }
+        else
+        {
+            var process = processWrapperFactory.Create(startInfo);
+
+            return StartRegularProcess(process, executablePath);
+        }
+    }
+
+    private int StartNativeProcess(INativeProcess process, ProcessStartInfo startInfo, string executablePath)
+    {
         try
         {
             process.Start(startInfo);
@@ -29,24 +43,13 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", executablePath);
+            logger.LogError(ex, "Error starting new instance of the host with NativeProcess. Executable path: {Path}", executablePath);
             throw;
         }
     }
 
-    public int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo)
+    private int StartRegularProcess(IProcessWrapper process, string executablePath)
     {
-        ArgumentNullException.ThrowIfNull(startInfo);
-
-        var executablePath = PrepareExecutable(destinationPath);
-
-        var process = new Process
-        {
-            StartInfo = startInfo
-        };
-
-        process.StartInfo.FileName = executablePath;
-
         try
         {
             process.Start();
@@ -56,7 +59,7 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", executablePath);
+            logger.LogError(ex, "Error starting new instance of the host with Process. Executable path: {Path}", executablePath);
             throw;
         }
     }

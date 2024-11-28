@@ -12,6 +12,8 @@ public interface IProcessWrapper : IDisposable
 
     StreamReader StandardError { get; }
 
+    void Start();
+
     void Kill();
 
     string GetCommandLine();
