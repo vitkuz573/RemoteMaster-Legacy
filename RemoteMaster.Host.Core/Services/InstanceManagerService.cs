@@ -11,19 +11,18 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
-    public int StartNewInstance(string? destinationPath, INativeProcessStartInfo startInfo)
+    public int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions options)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 
         var executablePath = PrepareExecutable(destinationPath);
 
-        var process = nativeProcessFactory.Create();
-        startInfo.ProcessStartInfo.FileName = executablePath;
-        process.StartInfo = startInfo;
+        var process = nativeProcessFactory.Create(options);
+        startInfo.FileName = executablePath;
 
         try
         {
-            process.Start();
+            process.Start(startInfo);
             logger.LogInformation("Started a new instance of the host with NativeProcess. Process ID: {ProcessId}", process.Id);
 
             return process.Id;
@@ -41,7 +40,11 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
 
         var executablePath = PrepareExecutable(destinationPath);
 
-        var process = new Process { StartInfo = startInfo };
+        var process = new Process
+        {
+            StartInfo = startInfo
+        };
+
         process.StartInfo.FileName = executablePath;
 
         try

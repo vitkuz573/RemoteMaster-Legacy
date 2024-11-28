@@ -24,48 +24,35 @@ public class NativeProcess : INativeProcess
 {
     private static readonly Lock CreateProcessLock = new();
 
-    private INativeProcessStartInfo? _startInfo;
+    private readonly NativeProcessOptions _options;
     private SafeProcessHandle? _processHandle;
-    private StreamWriter? _standardInput;
-    private StreamReader? _standardOutput;
-    private StreamReader? _standardError;
 
     private bool _haveProcessId;
-    private int _processId;
 
-    public INativeProcessStartInfo StartInfo
+    public int Id { get; private set; }
+
+    public StreamWriter? StandardInput { get; private set; }
+
+    public StreamReader? StandardOutput { get; private set; }
+
+    public StreamReader? StandardError { get; private set; }
+
+    public NativeProcess(INativeProcessOptions options)
     {
-        get
+        if (options is not NativeProcessOptions nativeOptions)
         {
-            _startInfo ??= new NativeProcessStartInfo();
-
-            return _startInfo;
+            throw new ArgumentException("Invalid options type. Expected NativeProcessOptions.", nameof(options));
         }
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
 
-            _startInfo = value;
-        }
+        _options = nativeOptions;
     }
 
-    public int Id => _processId;
-
-    public StreamWriter? StandardInput => _standardInput;
-
-    public StreamReader? StandardOutput => _standardOutput;
-
-    public StreamReader? StandardError => _standardError;
-
-    public void Start()
+    public void Start(ProcessStartInfo startInfo)
     {
-        if (StartInfo is not NativeProcessStartInfo nativeProcessStartInfo)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(startInfo);
 
-        var sessionId = nativeProcessStartInfo is { TargetSessionId: not null, ForceConsoleSession: false }
-            ? FindTargetSessionId(nativeProcessStartInfo.TargetSessionId.Value)
+        var sessionId = _options is { TargetSessionId: not null, ForceConsoleSession: false }
+            ? FindTargetSessionId(_options.TargetSessionId.Value)
             : WTSGetActiveConsoleSessionId();
 
 
@@ -73,7 +60,7 @@ public class NativeProcess : INativeProcess
 
         try
         {
-            if (!nativeProcessStartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
+            if (!_options.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION | PROCESS_ACCESS_RIGHTS.PROCESS_DUP_HANDLE, false, winlogonPid);
@@ -92,7 +79,7 @@ public class NativeProcess : INativeProcess
 
             if (hUserTokenDup != null)
             {
-                StartWithCreateProcess(nativeProcessStartInfo, hUserTokenDup);
+                StartWithCreateProcess(startInfo, hUserTokenDup);
             }
             else
             {
@@ -140,7 +127,7 @@ public class NativeProcess : INativeProcess
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    private bool StartWithCreateProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
+    private bool StartWithCreateProcess(ProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         STARTUPINFOW startupInfo = default;
         PROCESS_INFORMATION processInfo = default;
@@ -162,9 +149,9 @@ public class NativeProcess : INativeProcess
             {
                 startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
 
-                if (startInfo.ProcessStartInfo.RedirectStandardInput || startInfo.ProcessStartInfo.RedirectStandardOutput || startInfo.ProcessStartInfo.RedirectStandardError)
+                if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
                 {
-                    if (startInfo.ProcessStartInfo.RedirectStandardInput)
+                    if (startInfo.RedirectStandardInput)
                     {
 #pragma warning disable CA2000
                         CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
@@ -175,7 +162,7 @@ public class NativeProcess : INativeProcess
                         childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
                     }
 
-                    if (startInfo.ProcessStartInfo.RedirectStandardOutput)
+                    if (startInfo.RedirectStandardOutput)
                     {
 #pragma warning disable CA2000
                         CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
@@ -186,7 +173,7 @@ public class NativeProcess : INativeProcess
                         childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
                     }
 
-                    if (startInfo.ProcessStartInfo.RedirectStandardError)
+                    if (startInfo.RedirectStandardError)
                     {
 #pragma warning disable CA2000
                         CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
@@ -206,7 +193,7 @@ public class NativeProcess : INativeProcess
 
                 unsafe
                 {
-                    fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
+                    fixed (char* pDesktopName = $@"winsta0\{_options.DesktopName}")
                     {
                         startupInfo.lpDesktop = pDesktopName;
                     }
@@ -214,14 +201,14 @@ public class NativeProcess : INativeProcess
 
                 PROCESS_CREATION_FLAGS dwCreationFlags = 0;
 
-                dwCreationFlags |= startInfo.ProcessStartInfo.CreateNoWindow
+                dwCreationFlags |= startInfo.CreateNoWindow
                     ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
                     : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
 
                 dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-                var environmentBlock = GetEnvironmentVariablesBlock(startInfo.ProcessStartInfo.EnvironmentVariables!);
+                var environmentBlock = GetEnvironmentVariablesBlock(startInfo.EnvironmentVariables!);
 
-                var fullCommand = $"{startInfo.ProcessStartInfo.FileName} {startInfo.ProcessStartInfo.Arguments}";
+                var fullCommand = $"{startInfo.FileName} {startInfo.Arguments}";
                 fullCommand += char.MinValue;
 
                 var commandSpan = new Span<char>(fullCommand.ToCharArray());
@@ -270,28 +257,28 @@ public class NativeProcess : INativeProcess
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        if (startInfo.ProcessStartInfo.RedirectStandardInput)
+        if (startInfo.RedirectStandardInput)
         {
-            var enc = startInfo.ProcessStartInfo.StandardInputEncoding ?? Encoding.GetEncoding((int)GetConsoleCP());
+            var enc = startInfo.StandardInputEncoding ?? Encoding.GetEncoding((int)GetConsoleCP());
 
-            _standardInput = new StreamWriter(new FileStream(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
+            StandardInput = new StreamWriter(new FileStream(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
             {
                 AutoFlush = true
             };
         }
 
-        if (startInfo.ProcessStartInfo.RedirectStandardOutput)
+        if (startInfo.RedirectStandardOutput)
         {
-            var enc = startInfo.ProcessStartInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
+            var enc = startInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
-            _standardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
+            StandardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
-        if (startInfo.ProcessStartInfo.RedirectStandardError)
+        if (startInfo.RedirectStandardError)
         {
-            var enc = startInfo.ProcessStartInfo.StandardErrorEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
+            var enc = startInfo.StandardErrorEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
-            _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
+            StandardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
         if (procSH.IsInvalid)
@@ -309,7 +296,7 @@ public class NativeProcess : INativeProcess
 
     private void SetProcessId(int processId)
     {
-        _processId = processId;
+        Id = processId;
         _haveProcessId = true;
     }
 
@@ -422,8 +409,8 @@ public class NativeProcess : INativeProcess
 
     public void Dispose()
     {
-        _standardOutput?.Dispose();
-        _standardError?.Dispose();
+        StandardOutput?.Dispose();
+        StandardError?.Dispose();
         _processHandle?.Close();
     }
 }

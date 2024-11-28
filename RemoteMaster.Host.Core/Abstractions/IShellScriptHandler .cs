@@ -11,8 +11,10 @@ public interface IShellScriptHandler
     string FileExtension { get; }
     
     Encoding FileEncoding { get; }
-    
-    string GetExecutionCommand(string scriptFilePath);
-    
-    string FormatScript(string scriptContent);
+
+    string FormatScript(string content);
+
+    string ExecutableName { get; }
+
+    string GetArguments(string scriptPath);
 }

@@ -2,12 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
+
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface INativeProcess : IDisposable
 {
-    INativeProcessStartInfo StartInfo { get; set; }
-
     int Id { get; }
 
     StreamWriter? StandardInput { get; }
@@ -16,7 +16,5 @@ public interface INativeProcess : IDisposable
 
     StreamReader? StandardError { get; }
 
-    void Start();
-
-    bool WaitForExit(uint millisecondsTimeout = uint.MaxValue);
+    void Start(ProcessStartInfo startInfo);
 }

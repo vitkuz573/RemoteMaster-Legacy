@@ -3,13 +3,19 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcessFactory : INativeProcessFactory
 {
-    public INativeProcess Create()
+    public INativeProcess Create(INativeProcessOptions options)
     {
-        return new NativeProcess();
+        if (options is not NativeProcessOptions nativeOptions)
+        {
+            throw new ArgumentException("Invalid process options for Windows platform.", nameof(options));
+        }
+
+        return new NativeProcess(nativeOptions);
     }
 }

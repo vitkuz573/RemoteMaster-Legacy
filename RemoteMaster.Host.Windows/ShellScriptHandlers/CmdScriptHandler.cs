@@ -12,8 +12,10 @@ public class CmdScriptHandler : IShellScriptHandler
     public string FileExtension => ".bat";
     
     public Encoding FileEncoding => new UTF8Encoding(false);
-    
-    public string GetExecutionCommand(string scriptFilePath) => $"cmd /c \"{scriptFilePath}\"";
-    
-    public string FormatScript(string scriptContent) => $"@echo off\r\n{scriptContent}";
+
+    public string FormatScript(string content) => $"@echo off\r\n{content}";
+
+    public string ExecutableName => "cmd";
+
+    public string GetArguments(string scriptPath) => $"/c \"{scriptPath}\"";
 }

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -69,18 +70,19 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     private int StartNewInstance()
     {
-        var startInfo = new NativeProcessStartInfo
+        var startInfo = new ProcessStartInfo
         {
-            ProcessStartInfo =
-            {
-                Arguments = Argument,
-                CreateNoWindow = true
-            },
+            Arguments = Argument,
+            CreateNoWindow = true
+        };
+
+        var options = new NativeProcessOptions
+        {
             ForceConsoleSession = true,
             DesktopName = "Default",
             UseCurrentUserToken = false
         };
 
-        return instanceManagerService.StartNewInstance(null, startInfo);
+        return instanceManagerService.StartNewInstance(null, startInfo, options);
     }
 }
