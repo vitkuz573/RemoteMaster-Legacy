@@ -2,12 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Host.Core.EventArguments;
-using RemoteMaster.Host.Core.Models;
+using System.Diagnostics;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IUserInstanceService : IRunnable
+public interface INativeProcessStartInfo
 {
-    event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
+    ProcessStartInfo ProcessStartInfo { get; }
 }

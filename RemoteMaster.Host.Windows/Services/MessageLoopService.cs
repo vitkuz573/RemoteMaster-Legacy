@@ -5,7 +5,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;

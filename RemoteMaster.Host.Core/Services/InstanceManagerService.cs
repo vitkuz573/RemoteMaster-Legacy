@@ -4,14 +4,13 @@
 
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
-    public int StartNewInstance(string? destinationPath, NativeProcessStartInfo startInfo)
+    public int StartNewInstance(string? destinationPath, INativeProcessStartInfo startInfo)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 

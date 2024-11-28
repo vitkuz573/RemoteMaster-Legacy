@@ -6,7 +6,6 @@ using System.IO.Abstractions;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.DTOs;
 

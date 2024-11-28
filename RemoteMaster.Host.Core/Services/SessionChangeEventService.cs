@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.EventArguments;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class SessionChangeEventService : ISessionChangeEventService
 {

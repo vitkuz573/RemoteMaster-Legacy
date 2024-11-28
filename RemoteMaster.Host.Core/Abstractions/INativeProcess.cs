@@ -2,13 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Host.Windows.Models;
-
-namespace RemoteMaster.Host.Windows.Abstractions;
+namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface INativeProcess : IDisposable
 {
-    NativeProcessStartInfo StartInfo { get; set; }
+    INativeProcessStartInfo StartInfo { get; set; }
 
     int Id { get; }
 

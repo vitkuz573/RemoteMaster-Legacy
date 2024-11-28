@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Host.Windows.Abstractions;
+namespace RemoteMaster.Host.Core.EventArguments;
 
-public interface INativeProcessFactory
+public class UserInstanceCreatedEventArgs(int processId) : EventArgs
 {
-    INativeProcess Create();
+    public int ProcessId { get; } = processId;
 }

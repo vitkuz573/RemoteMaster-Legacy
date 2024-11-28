@@ -7,6 +7,8 @@ using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;

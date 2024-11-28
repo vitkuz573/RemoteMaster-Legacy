@@ -141,8 +141,6 @@ internal class Program
         services.AddSingleton<IFirewallService, FirewallService>();
         services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
         services.AddSingleton<IRegistryService, RegistryService>();
-        services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
-        services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<ICommandExecutor, CommandExecutor>();
         services.AddSingleton<IDeviceManagerService, DeviceManagerService>();

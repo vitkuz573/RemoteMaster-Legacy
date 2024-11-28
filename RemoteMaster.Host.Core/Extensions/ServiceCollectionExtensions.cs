@@ -72,6 +72,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddSingleton<ISyncIndicatorService, SyncIndicatorService>();
         services.AddSingleton<IProcessService, ProcessService>();
+        services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
+        services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

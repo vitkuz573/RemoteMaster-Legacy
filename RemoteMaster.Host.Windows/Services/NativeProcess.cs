@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -24,7 +24,7 @@ public class NativeProcess : INativeProcess
 {
     private static readonly Lock CreateProcessLock = new();
 
-    private NativeProcessStartInfo? _startInfo;
+    private INativeProcessStartInfo? _startInfo;
     private SafeProcessHandle? _processHandle;
     private StreamWriter? _standardInput;
     private StreamReader? _standardOutput;
@@ -33,7 +33,7 @@ public class NativeProcess : INativeProcess
     private bool _haveProcessId;
     private int _processId;
 
-    public NativeProcessStartInfo StartInfo
+    public INativeProcessStartInfo StartInfo
     {
         get
         {
@@ -59,15 +59,21 @@ public class NativeProcess : INativeProcess
 
     public void Start()
     {
-        var sessionId = StartInfo is { TargetSessionId: not null, ForceConsoleSession: false }
-            ? FindTargetSessionId(StartInfo.TargetSessionId.Value)
+        if (StartInfo is not NativeProcessStartInfo nativeProcessStartInfo)
+        {
+            return;
+        }
+
+        var sessionId = nativeProcessStartInfo is { TargetSessionId: not null, ForceConsoleSession: false }
+            ? FindTargetSessionId(nativeProcessStartInfo.TargetSessionId.Value)
             : WTSGetActiveConsoleSessionId();
+
 
         SafeFileHandle? hUserTokenDup = null;
 
         try
         {
-            if (!StartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
+            if (!nativeProcessStartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION | PROCESS_ACCESS_RIGHTS.PROCESS_DUP_HANDLE, false, winlogonPid);
@@ -86,7 +92,7 @@ public class NativeProcess : INativeProcess
 
             if (hUserTokenDup != null)
             {
-                StartWithCreateProcess(StartInfo, hUserTokenDup);
+                StartWithCreateProcess(nativeProcessStartInfo, hUserTokenDup);
             }
             else
             {

@@ -3,10 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class NativeProcessStartInfo
+public class NativeProcessStartInfo : INativeProcessStartInfo
 {
     public ProcessStartInfo ProcessStartInfo { get; }
 
