@@ -14,14 +14,13 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IProcessService processService, ILogger<HostInstaller> logger) : IHostInstaller
 {
-    private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-
     public async Task InstallAsync(HostInstallRequest installRequest)
     {
         ArgumentNullException.ThrowIfNull(installRequest);
 
         try
-        {
+        { 
+            var applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
             var hostInformation = hostInformationService.GetHostInformation();
 
             logger.LogInformation("Starting installation...");
@@ -34,11 +33,11 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
             if (hostService.IsInstalled)
             {
                 hostService.Stop();
-                CopyToTargetPath();
+                CopyToTargetPath(applicationDirectory);
             }
             else
             {
-                CopyToTargetPath();
+                CopyToTargetPath(applicationDirectory);
                 hostService.Create();
             }
 
@@ -65,18 +64,18 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
         }
     }
 
-    private void CopyToTargetPath()
+    private void CopyToTargetPath(string targetDirectoryPath)
     {
         try
         {
             var sourceExecutablePath = processService.GetProcessPath();
-            var targetExecutablePath = Path.Combine(_applicationDirectory, Path.GetFileName(sourceExecutablePath));
+            var targetExecutablePath = Path.Combine(targetDirectoryPath, Path.GetFileName(sourceExecutablePath));
 
             fileService.CopyFile(sourceExecutablePath, targetExecutablePath, true);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("Failed to copy files to {TargetPath}. Details: {Error}", _applicationDirectory, ex.Message);
+            logger.LogWarning("Failed to copy files to {TargetPath}. Details: {Error}", targetDirectoryPath, ex.Message);
         }
     }
 }
