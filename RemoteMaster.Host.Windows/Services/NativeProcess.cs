@@ -9,12 +9,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.Console;
-using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
@@ -25,6 +25,8 @@ public class NativeProcess : IProcess
     private static readonly Lock CreateProcessLock = new();
 
     private readonly NativeProcessOptions _options;
+    private readonly ISessionService _sessionService;
+
     private SafeProcessHandle? _processHandle;
     private string? _commandLine;
     private bool _haveProcessId;
@@ -55,7 +57,7 @@ public class NativeProcess : IProcess
         }
     }
 
-    public NativeProcess(INativeProcessOptions options)
+    public NativeProcess(INativeProcessOptions options, ISessionService sessionService)
     {
         if (options is not NativeProcessOptions nativeOptions)
         {
@@ -63,6 +65,7 @@ public class NativeProcess : IProcess
         }
 
         _options = nativeOptions;
+        _sessionService = sessionService;
     }
 
     public void Start(ProcessStartInfo startInfo)
@@ -72,7 +75,7 @@ public class NativeProcess : IProcess
         _commandLine = $"{startInfo.FileName} {startInfo.Arguments}";
 
         var sessionId = _options is { TargetSessionId: not null, ForceConsoleSession: false }
-            ? FindTargetSessionId(_options.TargetSessionId.Value)
+            ? _sessionService.FindTargetSessionId(_options.TargetSessionId.Value)
             : WTSGetActiveConsoleSessionId();
 
 
@@ -82,7 +85,7 @@ public class NativeProcess : IProcess
         {
             if (!_options.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                var winlogonPid = GetWinlogonPidForSession(sessionId);
+                var winlogonPid = _sessionService.GetWinlogonPid(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION | PROCESS_ACCESS_RIGHTS.PROCESS_DUP_HANDLE, false, winlogonPid);
 
                 if (!hProcess.IsInvalid && !hProcess.IsClosed)
@@ -123,41 +126,6 @@ public class NativeProcess : IProcess
         {
             throw new Win32Exception(Marshal.GetLastWin32Error());
         }
-    }
-
-    private static uint GetWinlogonPidForSession(uint sessionId)
-    {
-        foreach (var process in Process.GetProcessesByName("winlogon"))
-        {
-            if ((uint)process.SessionId == sessionId)
-            {
-                return (uint)process.Id;
-            }
-        }
-
-        throw new Exception("No winlogon process found for the given session id.");
-    }
-
-    private static uint FindTargetSessionId(int targetSessionId)
-    {
-        var activeSessions = GetActiveSessions();
-        uint lastSessionId = 0;
-        var targetSessionFound = false;
-
-        foreach (var session in activeSessions)
-        {
-            lastSessionId = session.SessionId;
-
-            if (session.SessionId != targetSessionId)
-            {
-                continue;
-            }
-
-            targetSessionFound = true;
-            break;
-        }
-
-        return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
     private bool StartWithCreateProcess(ProcessStartInfo startInfo, SafeHandle hUserTokenDup)
@@ -397,35 +365,6 @@ public class NativeProcess : IProcess
         hUserToken = new SafeFileHandle(userTokenHandle, true);
 
         return success;
-    }
-
-    private static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
-    {
-        var sessions = new List<WTS_SESSION_INFOW>();
-
-        if (!WTSEnumerateSessions(HANDLE.Null, 0, 1, out var ppSessionInfo, out var count))
-        {
-            return sessions;
-        }
-
-        try
-        {
-            for (var i = 0; i < count; i++)
-            {
-                var session = ppSessionInfo[i];
-
-                if (session.State == WTS_CONNECTSTATE_CLASS.WTSActive)
-                {
-                    sessions.Add(session);
-                }
-            }
-        }
-        finally
-        {
-            WTSFreeMemory(ppSessionInfo);
-        }
-
-        return sessions;
     }
 
     public string GetCommandLine()
