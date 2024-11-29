@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 
@@ -23,9 +24,19 @@ public class InstallMode : LaunchModeBase
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
+        var logger = serviceProvider.GetRequiredService<ILogger<InstallMode>>();
+
         var server = GetParameter<string>("server").Value;
         var organization = GetParameter<string>("organization").Value;
         var organizationalUnit = GetParameter<string>("organizational-unit").Value;
+
+        var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
+
+        if (!await serverAvailabilityService.IsServerAvailableAsync(server))
+        {
+            logger.LogError("The server {Server} is unavailable. Installation will not proceed.", server);
+            Environment.Exit(1);
+        }
 
         var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
         var installRequest = new HostInstallRequest(server, organization, organizationalUnit);

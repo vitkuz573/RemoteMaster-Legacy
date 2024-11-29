@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.LaunchModes;
@@ -19,7 +20,20 @@ public class UninstallMode : LaunchModeBase
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
+        var logger = serviceProvider.GetRequiredService<ILogger<UninstallMode>>();
+        var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
+        var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
         var hostUninstaller = serviceProvider.GetRequiredService<IHostUninstaller>();
+
+        var currentConfig = await hostConfigurationService.LoadConfigurationAsync();
+
+        var server = currentConfig.Server;
+
+        if (!await serverAvailabilityService.IsServerAvailableAsync(server))
+        {
+            logger.LogError("The server {Server} is unavailable. Uninstallation will not proceed.", server);
+            Environment.Exit(1);
+        }
 
         await hostUninstaller.UninstallAsync();
 

@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
@@ -17,19 +16,9 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
-    private const int MaxConnectionAttempts = 5;
-    private const int ConnectionRetryDelay = 1000;
-
     public async Task InstallAsync(HostInstallRequest installRequest)
     {
         ArgumentNullException.ThrowIfNull(installRequest);
-
-        if (!await IsServerAvailableAsync(installRequest.Server))
-        {
-            logger.LogWarning("The server {Server} is unavailable. Installation will not proceed.", installRequest.Server);
-
-            return;
-        }
 
         try
         {
@@ -74,34 +63,6 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
         {
             logger.LogError("An error occurred: {Message}", ex.Message);
         }
-    }
-
-    private async Task<bool> IsServerAvailableAsync(string server)
-    {
-        for (var attempt = 1; attempt <= MaxConnectionAttempts; attempt++)
-        {
-            try
-            {
-                logger.LogInformation("Checking server availability, attempt {Attempt} of {MaxAttempts}...", attempt, MaxConnectionAttempts);
-
-                using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(server, 5254);
-
-                logger.LogInformation("Server {Server} is available.", server);
-                
-                return true;
-            }
-            catch (SocketException)
-            {
-                logger.LogWarning("Attempt {Attempt} failed. Retrying in {RetryDelay}ms...", attempt, ConnectionRetryDelay);
-
-                await Task.Delay(ConnectionRetryDelay);
-            }
-        }
-
-        logger.LogError("Server {Server} is unavailable after {MaxAttempts} attempts.", server, MaxConnectionAttempts);
-
-        return false;
     }
 
     private void CopyToTargetPath(string targetDirectoryPath)

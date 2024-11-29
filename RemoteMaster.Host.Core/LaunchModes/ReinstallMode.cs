@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 
@@ -23,6 +24,8 @@ public class ReinstallMode : LaunchModeBase
 
     public async override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
+        var logger = serviceProvider.GetRequiredService<ILogger<ReinstallMode>>();
+        var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
         var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
         var hostUninstaller = serviceProvider.GetRequiredService<IHostUninstaller>();
         var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
@@ -35,7 +38,14 @@ public class ReinstallMode : LaunchModeBase
 
         if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(organization) || string.IsNullOrWhiteSpace(organizationalUnit))
         {
-            throw new InvalidOperationException("The configuration is incomplete or invalid.");
+            logger.LogError("The configuration is incomplete or invalid.");
+            Environment.Exit(1);
+        }
+
+        if (!await serverAvailabilityService.IsServerAvailableAsync(server))
+        {
+            logger.LogError("The server {Server} is unavailable. Reinstallation will not proceed.", server);
+            Environment.Exit(1);
         }
 
         await hostUninstaller.UninstallAsync();
