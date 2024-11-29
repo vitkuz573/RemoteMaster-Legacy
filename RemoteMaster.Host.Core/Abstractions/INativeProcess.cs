@@ -17,4 +17,6 @@ public interface INativeProcess : IDisposable
     StreamReader? StandardError { get; }
 
     void Start(ProcessStartInfo startInfo);
+
+    bool WaitForExit(uint millisecondsTimeout = uint.MaxValue);
 }

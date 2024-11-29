@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ProcessWrapper(Process process, ICommandLineProvider commandLineProvider) : IProcessWrapper
 {
-    private bool _disposed = false;
+    private bool _disposed;
 
     public int Id => process.Id;
 

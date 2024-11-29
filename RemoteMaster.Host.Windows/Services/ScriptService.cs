@@ -15,7 +15,7 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory shellScriptHandlerFactory, IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
+public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory shellScriptHandlerFactory, INativeProcessFactory nativeProcessFactory, IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
 {
     public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
@@ -51,7 +51,7 @@ public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory sh
                 UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
             };
 
-            using var process = new NativeProcess(options);
+            var process = nativeProcessFactory.Create(options);
 
             process.Start(new ProcessStartInfo
             {
