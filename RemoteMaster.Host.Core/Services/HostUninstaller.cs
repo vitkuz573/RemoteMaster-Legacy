@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, ILogger<HostUninstaller> logger) : IHostUninstaller
+public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IInstanceManagerService instanceManagerService, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -17,31 +17,38 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
     {
         try
         {
-            var hostService = serviceFactory.GetService("RCHost");
+            var currentDirectory = fileSystem.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
 
-            if (hostService.IsInstalled)
+            if (string.Equals(currentDirectory, _applicationDirectory, StringComparison.OrdinalIgnoreCase))
             {
-                hostService.Stop();
-                hostService.Delete();
+                logger.LogInformation("Current process is running from the application directory.");
 
-                logger.LogInformation("{ServiceName} Service uninstalled successfully.", hostService.Name);
+                var tempDirectory = fileSystem.Path.GetTempPath();
+                var tempExecutablePath = fileSystem.Path.Combine(tempDirectory, fileSystem.Path.GetFileName(Environment.ProcessPath)!);
+
+                if (!fileSystem.Directory.Exists(tempDirectory))
+                {
+                    fileSystem.Directory.CreateDirectory(tempDirectory);
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    Arguments = "--launch-mode=uninstall",
+                    UseShellExecute = false,
+                    CreateNoWindow = false
+                };
+
+                var tempProcessId = instanceManagerService.StartNewInstance(tempExecutablePath, startInfo);
+                logger.LogInformation("Temporary uninstaller started with Process ID: {ProcessId}. Exiting current process...", tempProcessId);
+
+                Environment.Exit(0);
             }
             else
             {
-                logger.LogInformation("{ServiceName} Service is not installed.", hostService.Name);
-            }
+                logger.LogInformation("Current process is not running from the application directory.");
 
-            if (userInstanceService.IsRunning)
-            {
-                userInstanceService.Stop();
-            }
+                await RemoveServicesAndResources();
 
-            await hostLifecycleService.UnregisterAsync();
-
-            var currentDirectory = fileSystem.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
-
-            if (!string.Equals(currentDirectory, _applicationDirectory, StringComparison.OrdinalIgnoreCase))
-            {
                 DeleteFiles(_applicationDirectory);
 
                 try
@@ -57,15 +64,9 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
                 {
                     logger.LogError("Failed to delete directory {DirectoryPath}: {Message}", _applicationDirectory, ex.Message);
                 }
-            }
-            else
-            {
-                logger.LogInformation("Current process is running from the application directory. Skipping deletion of files and directory.");
-            }
 
-            certificateService.RemoveCertificates();
-
-            logger.LogInformation("Uninstallation process completed successfully.");
+                logger.LogInformation("Uninstallation process completed successfully. Exiting...");
+            }
         }
         catch (Exception ex)
         {
@@ -73,12 +74,37 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
         }
     }
 
+    private async Task RemoveServicesAndResources()
+    {
+        var hostService = serviceFactory.GetService("RCHost");
+
+        if (hostService.IsInstalled)
+        {
+            hostService.Stop();
+            hostService.Delete();
+            logger.LogInformation("{ServiceName} Service uninstalled successfully.", hostService.Name);
+        }
+        else
+        {
+            logger.LogInformation("{ServiceName} Service is not installed.", hostService.Name);
+        }
+
+        if (userInstanceService.IsRunning)
+        {
+            userInstanceService.Stop();
+        }
+
+        await hostLifecycleService.UnregisterAsync();
+
+        certificateService.RemoveCertificates();
+        logger.LogInformation("Services and resources have been removed.");
+    }
+
     private void DeleteFiles(string directoryPath)
     {
         if (!fileSystem.Directory.Exists(directoryPath))
         {
-            logger.LogInformation("Directory {DirectoryPath} does not exist, no files to delete.", directoryPath);
-
+            logger.LogInformation("Directory {DirectoryPath} does not exist, skipping deletion.", directoryPath);
             return;
         }
 
