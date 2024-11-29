@@ -34,11 +34,11 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
             if (hostService.IsInstalled)
             {
                 hostService.Stop();
-                CopyToTargetPath(_applicationDirectory);
+                CopyToTargetPath();
             }
             else
             {
-                CopyToTargetPath(_applicationDirectory);
+                CopyToTargetPath();
                 hostService.Create();
             }
 
@@ -65,18 +65,18 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
         }
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath)
+    private void CopyToTargetPath()
     {
         try
         {
             var sourceExecutablePath = processService.GetProcessPath();
-            var targetExecutablePath = Path.Combine(targetDirectoryPath, Path.GetFileName(sourceExecutablePath));
+            var targetExecutablePath = Path.Combine(_applicationDirectory, Path.GetFileName(sourceExecutablePath));
 
             fileService.CopyFile(sourceExecutablePath, targetExecutablePath, true);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("Failed to copy files to {TargetPath}. Details: {Error}", targetDirectoryPath, ex.Message);
+            logger.LogWarning("Failed to copy files to {TargetPath}. Details: {Error}", _applicationDirectory, ex.Message);
         }
     }
 }
