@@ -6,9 +6,8 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Models;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class ChatInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, IProcessService processService, ILogger<ChatInstanceService> logger) : IChatInstanceService
 {
@@ -76,13 +75,6 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
             CreateNoWindow = true
         };
 
-        var options = new NativeProcessOptions
-        {
-            ForceConsoleSession = true,
-            DesktopName = "Default",
-            UseCurrentUserToken = false
-        };
-
-        return instanceManagerService.StartNewInstance(null, startInfo, options);
+        return instanceManagerService.StartNewInstance(null, startInfo);
     }
 }
