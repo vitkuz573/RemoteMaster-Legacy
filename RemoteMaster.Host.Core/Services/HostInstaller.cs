@@ -12,7 +12,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, ILogger<HostInstaller> logger) : IHostInstaller
+public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IProcessService processService, ILogger<HostInstaller> logger) : IHostInstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -69,7 +69,7 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
     {
         try
         {
-            var sourceExecutablePath = Environment.ProcessPath!;
+            var sourceExecutablePath = processService.GetProcessPath();
             var targetExecutablePath = Path.Combine(targetDirectoryPath, Path.GetFileName(sourceExecutablePath));
 
             fileService.CopyFile(sourceExecutablePath, targetExecutablePath, true);

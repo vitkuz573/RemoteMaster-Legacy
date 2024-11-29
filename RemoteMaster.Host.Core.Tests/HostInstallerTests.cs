@@ -26,6 +26,7 @@ public class HostInstallerTests
     private readonly Mock<IHostLifecycleService> _hostLifecycleServiceMock;
     private readonly Mock<IFileSystem> _fileSystemMock;
     private readonly Mock<IFileService> _fileServiceMock;
+    private readonly Mock<IProcessService> _processServiceMock;
     private readonly Mock<ILogger<HostInstaller>> _loggerMock;
     private readonly HostInstaller _installer;
 
@@ -38,10 +39,13 @@ public class HostInstallerTests
         _hostLifecycleServiceMock = new Mock<IHostLifecycleService>();
         _fileSystemMock = new Mock<IFileSystem>();
         _fileServiceMock = new Mock<IFileService>();
+        _processServiceMock = new Mock<IProcessService>();
         _loggerMock = new Mock<ILogger<HostInstaller>>();
 
         _fileSystemMock.Setup(fs => fs.Path.Combine(It.IsAny<string>(), It.IsAny<string>()))
                        .Returns((string path1, string path2) => $"{path1}\\{path2}");
+
+        _processServiceMock.Setup(ps => ps.GetProcessPath()).Returns("C:\\default\\test.exe");
 
         _installer = new HostInstaller(
             _certificateServiceMock.Object,
@@ -51,6 +55,7 @@ public class HostInstallerTests
             _hostLifecycleServiceMock.Object,
             _fileSystemMock.Object,
             _fileServiceMock.Object,
+            _processServiceMock.Object,
             _loggerMock.Object);
     }
 
@@ -89,6 +94,75 @@ public class HostInstallerTests
         _loggerMock.VerifyLog(LogLevel.Information, "Distinguished Name: CN=TestHost, O=TestOrg, OU=TestOU", Times.Once());
     }
 
+    [Fact]
+    public async Task InstallAsync_ShouldInstallHostService_WhenNotInstalled()
+    {
+        // Arrange
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var hostInformation = new HostDto("TestHost", IPAddress.Parse("127.0.0.1"), PhysicalAddress.Parse("001122334455"));
+        var organizationAddress = new AddressDto("Locality", "State", "Country");
+        var serviceMock = new Mock<IService>();
+
+        _hostInformationServiceMock.Setup(h => h.GetHostInformation()).Returns(hostInformation);
+        _serviceFactoryMock.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
+        serviceMock.Setup(s => s.IsInstalled).Returns(false);
+
+        _hostLifecycleServiceMock.Setup(l => l.GetOrganizationAddressAsync(installRequest.Organization))
+            .ReturnsAsync(organizationAddress);
+
+        // Act
+        await _installer.InstallAsync(installRequest);
+
+        // Assert
+        serviceMock.Verify(s => s.Create(), Times.Once);
+        serviceMock.Verify(s => s.Start(), Times.Once);
+        _certificateServiceMock.Verify(c => c.GetCaCertificateAsync(), Times.Once);
+        _certificateServiceMock.Verify(c => c.IssueCertificateAsync(It.IsAny<HostConfiguration>(), organizationAddress), Times.Once);
+    }
+
+    [Fact]
+    public async Task InstallAsync_ShouldUpdateHostService_WhenAlreadyInstalled()
+    {
+        // Arrange
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var hostInformation = new HostDto("TestHost", IPAddress.Parse("127.0.0.1"), PhysicalAddress.Parse("001122334455"));
+        var serviceMock = new Mock<IService>();
+
+        _hostInformationServiceMock.Setup(h => h.GetHostInformation()).Returns(hostInformation);
+
+        _processServiceMock.Setup(ps => ps.GetProcessPath()).Returns("C:\\test.exe");
+
+        serviceMock.Setup(s => s.IsInstalled).Returns(true);
+        _serviceFactoryMock.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
+
+        // Act
+        await _installer.InstallAsync(installRequest);
+
+        // Assert
+        serviceMock.Verify(s => s.Stop(), Times.Once);
+        serviceMock.Verify(s => s.Create(), Times.Never);
+        serviceMock.Verify(s => s.Start(), Times.Once);
+    }
+
+    #endregion
+
+    #region InstallAsync Error Tests
+
+    [Fact]
+    public async Task InstallAsync_ShouldLogError_WhenHostInformationFails()
+    {
+        // Arrange
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+
+        _hostInformationServiceMock.Setup(h => h.GetHostInformation()).Throws(new InvalidOperationException("Test error"));
+
+        // Act
+        await _installer.InstallAsync(installRequest);
+
+        // Assert
+        _loggerMock.VerifyLog(LogLevel.Error, "An error occurred: Test error", Times.Once());
+    }
+
     #endregion
 
     #region InstallAsync Error Handling Tests
@@ -120,11 +194,13 @@ public class HostInstallerTests
         const string targetDirectoryPath = "C:\\ProgramFiles\\RemoteMaster\\Host";
         var targetPath = Path.Combine(targetDirectoryPath, sourceFileName);
 
+        _processServiceMock.Setup(ps => ps.GetProcessPath()).Returns(sourcePath);
+
         _fileSystemMock.Setup(fs => fs.Path.Combine(targetDirectoryPath, sourceFileName))
             .Returns(targetPath);
 
         // Act
-        InvokePrivateMethod(_installer, "CopyToTargetPath", new object[] { targetDirectoryPath });
+        InvokePrivateMethod(_installer, "CopyToTargetPath", [targetDirectoryPath]);
 
         // Assert
         _fileServiceMock.Verify(fs => fs.CopyFile(sourcePath, targetPath, true), Times.Once);
@@ -138,10 +214,30 @@ public class HostInstallerTests
                         .Throws(new IOException("Copy failed"));
 
         // Act
-        InvokePrivateMethod(_installer, "CopyToTargetPath", new object[] { "C:\\ProgramFiles\\RemoteMaster\\Host" });
+        InvokePrivateMethod(_installer, "CopyToTargetPath", ["C:\\ProgramFiles\\RemoteMaster\\Host"]);
 
         // Assert
         _loggerMock.VerifyLog(LogLevel.Warning, "Failed to copy files to", Times.Once());
+    }
+
+    [Fact]
+    public void CopyToTargetPath_ShouldCopyFilesToTargetDirectory()
+    {
+        // Arrange
+        const string targetDirectoryPath = "C:\\ProgramFiles\\RemoteMaster\\Host";
+        const string sourceExecutablePath = "C:\\test.exe";
+        const string targetExecutablePath = "C:\\ProgramFiles\\RemoteMaster\\Host\\test.exe";
+
+        _processServiceMock.Setup(ps => ps.GetProcessPath()).Returns(sourceExecutablePath);
+
+        _fileSystemMock.Setup(fs => fs.Path.Combine(targetDirectoryPath, "test.exe"))
+            .Returns(targetExecutablePath);
+
+        // Act
+        InvokePrivateMethod(_installer, "CopyToTargetPath", [targetDirectoryPath]);
+
+        // Assert
+        _fileServiceMock.Verify(f => f.CopyFile(sourceExecutablePath, targetExecutablePath, true), Times.Once);
     }
 
     #endregion

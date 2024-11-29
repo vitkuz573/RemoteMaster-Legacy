@@ -49,4 +49,9 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory, IComma
 
         return commandLine.Contains(argument);
     }
+
+    public string GetProcessPath()
+    {
+        return Environment.ProcessPath!;
+    }
 }

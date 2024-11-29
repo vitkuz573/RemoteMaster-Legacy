@@ -17,4 +17,6 @@ public interface IProcessService
     IProcess[] FindProcessesByName(string processName);
 
     bool HasProcessArgument(IProcess process, string argument);
+
+    string GetProcessPath();
 }
