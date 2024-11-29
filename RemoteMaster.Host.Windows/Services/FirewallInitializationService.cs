@@ -14,9 +14,8 @@ public class FirewallInitializationService(IFileSystem fileSystem, IFirewallServ
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var hostRootPath = fileSystem.Path.Combine(programFilesPath, "RemoteMaster", "Host");
         var currentExecutableName = fileSystem.Path.GetFileName(Environment.ProcessPath!);
+        var hostRootPath = fileSystem.Path.GetDirectoryName(Environment.ProcessPath!)!;
 
         var hostApplicationPath = fileSystem.Path.Combine(hostRootPath, currentExecutableName);
         var hostUpdaterApplicationPath = fileSystem.Path.Combine(hostRootPath, "Updater", currentExecutableName);
