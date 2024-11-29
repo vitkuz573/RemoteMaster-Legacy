@@ -431,8 +431,8 @@ public class HostUpdater : IHostUpdater
 
             await WaitForFileRelease(_baseFolderPath);
 
-            var sourceExePath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
-            var destinationExePath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+            var sourceExePath = _fileSystem.Path.Combine(_baseFolderPath, "Updater", _fileSystem.Path.GetFileName(Environment.ProcessPath!));
+            var destinationExePath = _fileSystem.Path.Combine(_baseFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
 
             if (!_fileSystem.File.Exists(sourceExePath))
             {
@@ -554,14 +554,14 @@ public class HostUpdater : IHostUpdater
 
     private Version GetCurrentVersion()
     {
-        var currentExecutablePath = _fileSystem.Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
+        var currentExecutablePath = Environment.ProcessPath!;
 
         return GetVersionFromExecutable(currentExecutablePath);
     }
 
     private Version GetUpdateVersion()
     {
-        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
+        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
 
         return GetVersionFromExecutable(updateExecutablePath);
     }
@@ -574,8 +574,8 @@ public class HostUpdater : IHostUpdater
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
         await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
 
-        var currentExecutablePath = _fileSystem.Path.Combine(_baseFolderPath, "RemoteMaster.Host.exe");
-        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe");
+        var currentExecutablePath = Environment.ProcessPath!;
+        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
 
         if (updateVersion > currentVersion)
         {
@@ -583,41 +583,38 @@ public class HostUpdater : IHostUpdater
             
             return true;
         }
-        else if (updateVersion == currentVersion)
+
+        if (updateVersion == currentVersion)
         {
             var checksumsDiffer = await VerifyChecksum(updateExecutablePath, currentExecutablePath, expectDifference: true);
 
             if (checksumsDiffer)
             {
                 await Notify("Checksums differ; proceeding with update.", MessageSeverity.Information);
+                
                 return true;
             }
-            else if (force)
+
+            if (force)
             {
                 await Notify("Force flag is set; proceeding with update even though files are identical.", MessageSeverity.Warning);
-                return true;
-            }
-            else
-            {
-                await Notify("No update needed; files are identical.", MessageSeverity.Information);
-                return false;
-            }
-        }
-        else
-        {
-            if (allowDowngrade)
-            {
-                await Notify("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);
-               
-                return true;
-            }
-            else
-            {
-                await Notify($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
                 
-                return false;
+                return true;
             }
+            await Notify("No update needed; files are identical.", MessageSeverity.Information);
+            
+            return false;
         }
+        if (allowDowngrade)
+        {
+            await Notify("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);
+            
+            return true;
+        }
+
+        await Notify($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
+        
+        return false;
     }
 
     private Version GetVersionFromExecutable(string filePath)

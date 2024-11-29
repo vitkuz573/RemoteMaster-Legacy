@@ -111,22 +111,37 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
             fileSystem.Directory.CreateDirectory(targetDirectoryPath);
         }
 
-        var targetExecutablePath = fileSystem.Path.Combine(targetDirectoryPath, "RemoteMaster.Host.exe");
+        var sourceExecutablePath = Environment.ProcessPath!;
+        var targetExecutablePath = fileSystem.Path.Combine(targetDirectoryPath, fileSystem.Path.GetFileName(sourceExecutablePath));
 
         try
         {
-            fileSystem.File.Copy(Environment.ProcessPath!, targetExecutablePath, true);
+            fileSystem.File.Copy(sourceExecutablePath, targetExecutablePath, true);
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
-        var sourceDirectoryPath = fileSystem.Path.GetDirectoryName(Environment.ProcessPath)!;
+        var sourceDirectoryPath = fileSystem.Path.GetDirectoryName(sourceExecutablePath)!;
 
-        if (fileSystem.File.Exists(sourceDirectoryPath))
+        if (!fileSystem.Directory.Exists(sourceDirectoryPath))
         {
-            fileSystem.File.Copy(sourceDirectoryPath, targetDirectoryPath, true);
+            return;
+        }
+
+        foreach (var file in fileSystem.Directory.GetFiles(sourceDirectoryPath))
+        {
+            var targetFilePath = fileSystem.Path.Combine(targetDirectoryPath, fileSystem.Path.GetFileName(file));
+
+            try
+            {
+                fileSystem.File.Copy(file, targetFilePath, true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Failed to copy file {FileName} to {TargetPath}. Details: {Error}", file, targetFilePath, ex.Message);
+            }
         }
     }
 }

@@ -11,9 +11,25 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class UpdaterInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, ILogger<UpdaterInstanceService> logger) : IUpdaterInstanceService
+public class UpdaterInstanceService : IUpdaterInstanceService
 {
-    private readonly string _executablePath = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
+    private readonly string _updaterExecutablePath;
+
+    private readonly IInstanceManagerService _instanceManagerService;
+    private readonly ILogger<UpdaterInstanceService> _logger;
+
+    public UpdaterInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, ILogger<UpdaterInstanceService> logger)
+    {
+        ArgumentNullException.ThrowIfNull(fileSystem);
+
+        _instanceManagerService = instanceManagerService;
+        _logger = logger;
+
+        var currentExecutableName = fileSystem.Path.GetFileName(Environment.ProcessPath!);
+        var baseFolderPath = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater");
+        
+        _updaterExecutablePath = fileSystem.Path.Combine(baseFolderPath, currentExecutableName);
+    }
 
     public void Start(UpdateRequest updateRequest)
     {
@@ -48,11 +64,11 @@ public class UpdaterInstanceService(IInstanceManagerService instanceManagerServi
 
         try
         {
-            instanceManagerService.StartNewInstance(_executablePath, startInfo);
+            _instanceManagerService.StartNewInstance(_updaterExecutablePath, startInfo);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host. Executable path: {ExecutablePath}", _executablePath);
+            _logger.LogError(ex, "Error starting new instance of the host. Executable path: {ExecutablePath}", _updaterExecutablePath);
         }
     }
 }

@@ -12,7 +12,15 @@ public class HostService : AbstractService
 
     protected override string DisplayName => "RemoteMaster Control Service";
 
-    protected override string BinPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+    protected override string BinPath
+    {
+        get
+        {
+            var executableName = Path.GetFileName(Environment.ProcessPath!);
+
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", executableName);
+        }
+    }
 
     protected override IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
     {

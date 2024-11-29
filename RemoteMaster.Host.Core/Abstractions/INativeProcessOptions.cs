@@ -4,6 +4,4 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface INativeProcessOptions
-{
-}
+public interface INativeProcessOptions;
