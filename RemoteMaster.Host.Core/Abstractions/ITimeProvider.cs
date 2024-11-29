@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IServerAvailabilityService
+public interface ITimeProvider
 {
-    Task<bool> IsServerAvailableAsync(string server, CancellationToken cancellationToken = default);
+    Task Delay(int milliseconds, CancellationToken cancellationToken = default);
 }

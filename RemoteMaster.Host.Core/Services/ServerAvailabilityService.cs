@@ -8,21 +8,23 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ServerAvailabilityService(ILogger<ServerAvailabilityService> logger) : IServerAvailabilityService
+public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITimeProvider timeProvider, ILogger<ServerAvailabilityService> logger) : IServerAvailabilityService
 {
-    private const int MaxConnectionAttempts = 5;
-    private const int ConnectionRetryDelay = 1000;
+    public const int MaxConnectionAttempts = 5;
+    public const int ConnectionRetryDelay = 1000;
 
-    public async Task<bool> IsServerAvailableAsync(string server)
+    public async Task<bool> IsServerAvailableAsync(string server, CancellationToken cancellationToken = default)
     {
         for (var attempt = 1; attempt <= MaxConnectionAttempts; attempt++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 logger.LogInformation("Checking server availability, attempt {Attempt} of {MaxAttempts}...", attempt, MaxConnectionAttempts);
 
-                using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(server, 5254);
+                using var tcpClient = tcpClientFactory.Create();
+                await tcpClient.ConnectAsync(server, 5254, cancellationToken);
 
                 logger.LogInformation("Server {Server} is available.", server);
 
@@ -30,9 +32,14 @@ public class ServerAvailabilityService(ILogger<ServerAvailabilityService> logger
             }
             catch (SocketException)
             {
+                if (attempt == MaxConnectionAttempts)
+                {
+                    break;
+                }
+
                 logger.LogWarning("Attempt {Attempt} failed. Retrying in {RetryDelay}ms...", attempt, ConnectionRetryDelay);
 
-                await Task.Delay(ConnectionRetryDelay);
+                await timeProvider.Delay(ConnectionRetryDelay, cancellationToken);
             }
         }
 

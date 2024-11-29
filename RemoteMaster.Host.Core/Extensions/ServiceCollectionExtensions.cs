@@ -15,6 +15,7 @@ using RemoteMaster.Host.Core.NamedOptionsConfigurations;
 using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
+using TimeProvider = RemoteMaster.Host.Core.Services.TimeProvider;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -50,6 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddSharedServices();
 
         services.AddTransient<CustomHttpClientHandler>();
+        services.AddTransient<ITcpClientFactory, TcpClientFactory>();
         services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
@@ -78,6 +80,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IChatInstanceService, ChatInstanceService>();
         services.AddSingleton<IOverlayManagerService, OverlayManagerService>();
         services.AddSingleton<IServerAvailabilityService, ServerAvailabilityService>();
+        services.AddSingleton<ITimeProvider, TimeProvider>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

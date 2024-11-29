@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IServerAvailabilityService
+public interface ITcpClient : IDisposable
 {
-    Task<bool> IsServerAvailableAsync(string server, CancellationToken cancellationToken = default);
+    Task ConnectAsync(string host, int port, CancellationToken cancellationToken = default);
 }
