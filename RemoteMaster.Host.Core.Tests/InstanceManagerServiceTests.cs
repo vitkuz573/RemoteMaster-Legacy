@@ -54,116 +54,192 @@ public class InstanceManagerServiceTests
 
         _logger = services.GetRequiredService<ILogger<InstanceManagerService>>();
 
-        _instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _processWrapperFactoryMock.Object, _mockFileSystem, _logger);
+        _instanceManagerService = new InstanceManagerService(
+            _nativeProcessFactoryMock.Object,
+            _processWrapperFactoryMock.Object,
+            _mockFileSystem,
+            _logger);
     }
+
+    #region Validation Tests
 
     [Fact]
     public void StartNewInstance_ShouldThrowArgumentNullException_WhenStartInfoIsNull()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("destinationPath", null!));
+        Assert.Throws<ArgumentNullException>(() =>
+            _instanceManagerService.StartNewInstance("destinationPath", null!));
+    }
+
+    #endregion
+
+    #region File Management Tests
+
+    [Fact]
+    public void PrepareExecutable_ShouldCreateDestinationDirectory_WhenItDoesNotExist()
+    {
+        const string destinationPath = @"C:\new\destinationPath\executable.exe";
+        var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
+        var sourcePath = Environment.ProcessPath!;
+
+        _mockFileSystem.AddFile(sourcePath, new MockFileData("test content"));
+
+        _instanceManagerService.StartNewInstance(destinationPath, new ProcessStartInfo());
+
+        Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
     }
 
     [Fact]
-    public void StartNewInstance_ShouldCopyExecutable_WhenDestinationPathIsProvided()
+    public void PrepareExecutable_ShouldThrowIOException_WhenCopyFails()
     {
-        // Arrange
+        const string destinationPath = @"C:\destination\executable.exe";
+        var fileMock = new Mock<IFile>();
+        fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Throws<IOException>();
+
+        var mockFileSystem = new Mock<IFileSystem>();
+        mockFileSystem.SetupGet(fs => fs.File).Returns(fileMock.Object);
+        mockFileSystem.SetupGet(fs => fs.Directory).Returns(_mockFileSystem.Directory);
+        mockFileSystem.SetupGet(fs => fs.Path).Returns(_mockFileSystem.Path);
+
+        var instanceManager = new InstanceManagerService(
+            _nativeProcessFactoryMock.Object,
+            _processWrapperFactoryMock.Object,
+            mockFileSystem.Object,
+            _logger);
+
+        Assert.Throws<IOException>(() =>
+            instanceManager.StartNewInstance(destinationPath, new ProcessStartInfo()));
+    }
+
+    [Fact]
+    public void PrepareExecutable_ShouldCopyExecutable_WhenDestinationPathIsProvided()
+    {
         var executablePath = Environment.ProcessPath!;
         const string destinationPath = @"C:\destinationPath\executable.exe";
         var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
         var startInfo = new ProcessStartInfo(executablePath);
 
         _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
-
         _processWrapperMock.Setup(p => p.Start(startInfo)).Verifiable();
         _processWrapperMock.SetupGet(p => p.Id).Returns(1234);
 
-        // Act
         var processId = _instanceManagerService.StartNewInstance(destinationPath, startInfo);
 
-        // Assert
         Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
         Assert.True(_mockFileSystem.File.Exists(destinationPath));
         Assert.Equal("test content", _mockFileSystem.File.ReadAllText(destinationPath));
 
         _processWrapperMock.Verify(p => p.Start(startInfo), Times.Once);
-
         Assert.Equal(1234, processId);
     }
+
+    #endregion
+
+    #region Process Creation Tests
+
+    [Fact]
+    public void StartNewInstance_ShouldUseNativeProcess_WhenOptionsAreProvided()
+    {
+        var startInfo = new ProcessStartInfo("executable.exe");
+        var options = new Mock<INativeProcessOptions>().Object;
+
+        _nativeProcessMock.Setup(p => p.Start(startInfo)).Verifiable();
+        _nativeProcessMock.Setup(p => p.Id).Returns(1234);
+
+        var processId = _instanceManagerService.StartNewInstance(null, startInfo, options);
+
+        Assert.Equal(1234, processId);
+        _nativeProcessMock.Verify(p => p.Start(startInfo), Times.Once);
+    }
+
+    [Fact]
+    public void StartNewInstance_ShouldUseProcessWrapper_WhenOptionsAreNotProvided()
+    {
+        var startInfo = new ProcessStartInfo("executable.exe");
+
+        _processWrapperMock.Setup(p => p.Start(startInfo)).Verifiable();
+        _processWrapperMock.Setup(p => p.Id).Returns(1234);
+
+        var processId = _instanceManagerService.StartNewInstance(null, startInfo);
+
+        Assert.Equal(1234, processId);
+        _processWrapperMock.Verify(p => p.Start(startInfo), Times.Once);
+    }
+
+    #endregion
+
+    #region Logging Tests
 
     [Fact]
     public void StartNewInstance_ShouldLogAndRethrowIOException_WhenIOExceptionOccurs()
     {
-        // Arrange
-        const string executablePath = @"C:\sourcePath\executable.exe";
+        const string sourcePath = @"C:\sourcePath\executable.exe";
         const string destinationPath = @"C:\destinationPath\executable.exe";
-        var startInfo = new ProcessStartInfo(executablePath);
-    
+        var startInfo = new ProcessStartInfo(sourcePath);
+
         var fileMock = new Mock<IFile>();
-        fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<IOException>();
-    
-        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { executablePath, new MockFileData("content") }
-        });
-    
-        var fileSystemMock = new Mock<IFileSystem>();
-        fileSystemMock.SetupGet(fs => fs.File).Returns(fileMock.Object);
-        fileSystemMock.SetupGet(fs => fs.Directory).Returns(mockFileSystem.Directory);
-        fileSystemMock.SetupGet(fs => fs.Path).Returns(mockFileSystem.Path);
-    
-        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _processWrapperFactoryMock.Object, fileSystemMock.Object, _logger);
-    
-        // Act & Assert
+        fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Throws<IOException>();
+
+        var mockFileSystem = new Mock<IFileSystem>();
+        mockFileSystem.SetupGet(fs => fs.File).Returns(fileMock.Object);
+        mockFileSystem.SetupGet(fs => fs.Directory).Returns(_mockFileSystem.Directory);
+        mockFileSystem.SetupGet(fs => fs.Path).Returns(_mockFileSystem.Path);
+
+        var instanceManager = new InstanceManagerService(
+            _nativeProcessFactoryMock.Object,
+            _processWrapperFactoryMock.Object,
+            mockFileSystem.Object,
+            _logger);
+
         using (TestCorrelator.CreateContext())
         {
-            Assert.Throws<IOException>(() => instanceStarterService.StartNewInstance(destinationPath, startInfo));
-    
+            Assert.Throws<IOException>(() =>
+                instanceManager.StartNewInstance(destinationPath, startInfo));
+
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
-    
-            Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("IO error occurred while copying the executable"));
+            Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("IO error occurred"));
         }
     }
 
     [Fact]
     public void StartNewInstance_ShouldLogAndRethrowException_WhenProcessStartFails()
     {
-        // Arrange
-        const string executablePath = @"C:\sourcePath\executable.exe";
-        var startInfo = new ProcessStartInfo(executablePath);
+        var startInfo = new ProcessStartInfo("executable.exe");
         var options = new Mock<INativeProcessOptions>().Object;
 
-        _nativeProcessMock.Setup(x => x.Start(startInfo)).Throws(new Exception("Process start failed"));
+        _nativeProcessMock.Setup(p => p.Start(startInfo))
+            .Throws(new Exception("Process start failed"));
 
-        var instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _processWrapperFactoryMock.Object, _mockFileSystem, _logger);
-
-        // Act & Assert
         using (TestCorrelator.CreateContext())
         {
-            Assert.Throws<Exception>(() => instanceManagerService.StartNewInstance(null, startInfo, options));
+            Assert.Throws<Exception>(() =>
+                _instanceManagerService.StartNewInstance(null, startInfo, options));
 
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
-
-            Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("Error starting new instance of the host"));
+            Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("Error starting new instance"));
         }
     }
 
+    #endregion
+
+    #region Edge Cases
+
     [Fact]
-    public void StartNewInstance_ShouldStartProcess_WithCorrectStartInfo()
+    public void StartNewInstance_ShouldHandleEmptyDestinationPath()
     {
         // Arrange
-        const string executablePath = @"C:\sourcePath\executable.exe";
-        var startInfo = new ProcessStartInfo(executablePath);
-        var options = new Mock<INativeProcessOptions>().Object;
-
-        _nativeProcessMock.Setup(x => x.Start(startInfo)).Verifiable();
-        _nativeProcessMock.Setup(x => x.Id).Returns(1234);
+        var startInfo = new ProcessStartInfo("executable.exe");
+        _processWrapperMock.Setup(p => p.Start(startInfo)).Verifiable();
+        _processWrapperMock.Setup(p => p.Id).Returns(1234);
 
         // Act
-        var processId = _instanceManagerService.StartNewInstance(null, startInfo, options);
+        var processId = _instanceManagerService.StartNewInstance(null, startInfo);
 
         // Assert
         Assert.Equal(1234, processId);
-        _nativeProcessMock.Verify(x => x.Start(startInfo), Times.Once);
+        _processWrapperMock.Verify(p => p.Start(startInfo), Times.Once);
     }
+
+    #endregion
 }
