@@ -145,7 +145,6 @@ internal class Program
         services.AddSingleton<IDeviceManagerService, DeviceManagerService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
-        services.AddSingleton<IOverlayManagerService, OverlayManagerService>();
         services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
 
         services.AddSingleton<IScreenOverlay, CursorOverlay>();

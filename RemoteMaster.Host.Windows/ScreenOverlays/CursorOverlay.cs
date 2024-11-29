@@ -4,7 +4,7 @@
 
 using System.Drawing;
 using System.Runtime.InteropServices;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 

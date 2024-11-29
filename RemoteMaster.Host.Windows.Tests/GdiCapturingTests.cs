@@ -4,6 +4,7 @@
 
 using Microsoft.Extensions.Logging;
 using Moq;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.Services;

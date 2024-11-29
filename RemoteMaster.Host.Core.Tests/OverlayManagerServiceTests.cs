@@ -3,10 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Moq;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Services;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 
-namespace RemoteMaster.Host.Windows.Tests;
+namespace RemoteMaster.Host.Core.Tests;
 
 public class OverlayManagerServiceTests
 {

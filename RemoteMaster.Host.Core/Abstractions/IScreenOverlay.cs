@@ -4,7 +4,7 @@
 
 using System.Drawing;
 
-namespace RemoteMaster.Host.Windows.Abstractions;
+namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IScreenOverlay : IDisposable
 {
