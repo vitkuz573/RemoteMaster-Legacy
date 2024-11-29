@@ -3,13 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileSystem fileSystem, ILogger<InstanceManagerService> logger) : IInstanceManagerService
+public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileService fileService, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
     public int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
     {
@@ -30,13 +29,13 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         try
         {
             process.Start(startInfo);
-            logger.LogInformation("Started a new instance of the host with NativeProcess. Process ID: {ProcessId}", process.Id);
+            logger.LogInformation("Started a new instance of the host. Process ID: {ProcessId}, Process Type: {ProcessType}", process.Id, process.GetType().Name);
 
             return process.Id;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host with NativeProcess.");
+            logger.LogError(ex, "Error starting a new instance of the host. Process Type: {ProcessType}", process.GetType().Name);
             throw;
         }
     }
@@ -50,19 +49,9 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
             return executablePath;
         }
 
-        var destinationDirectory = fileSystem.Path.GetDirectoryName(destinationPath);
-
-        if (destinationDirectory != null && !fileSystem.Directory.Exists(destinationDirectory))
-        {
-            logger.LogInformation("Creating directory {DestinationDirectory} for the executable.", destinationDirectory);
-            fileSystem.Directory.CreateDirectory(destinationDirectory);
-        }
-
         try
         {
-            logger.LogInformation("Copying executable from {ExecutablePath} to {DestinationPath}", executablePath, destinationPath);
-            fileSystem.File.Copy(executablePath, destinationPath, true);
-            logger.LogInformation("Successfully copied the executable.");
+            fileService.CopyFile(executablePath, destinationPath, true);
             executablePath = destinationPath;
         }
         catch (IOException ioEx)

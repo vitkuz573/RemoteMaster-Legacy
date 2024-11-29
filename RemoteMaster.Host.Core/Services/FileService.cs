@@ -61,6 +61,13 @@ public class FileService(IFileSystem fileSystem) : IFileService
             throw new FileNotFoundException($"Source file not found: {sourceFile}");
         }
 
+        var destinationDirectory = fileSystem.Path.GetDirectoryName(destinationFile);
+
+        if (!string.IsNullOrEmpty(destinationDirectory) && !fileSystem.Directory.Exists(destinationDirectory))
+        {
+            fileSystem.Directory.CreateDirectory(destinationDirectory);
+        }
+
         fileSystem.File.Copy(sourceFile, destinationFile, overwrite);
     }
 
