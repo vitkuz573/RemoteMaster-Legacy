@@ -49,7 +49,7 @@ public class UserInstanceServiceTests
     public void Stop_ShouldStopRunningInstances()
     {
         // Arrange
-        var processMock = new Mock<IProcessWrapper>();
+        var processMock = new Mock<IProcess>();
         processMock.Setup(p => p.Id).Returns(1234);
         processMock.Setup(p => p.GetCommandLine()).Returns("host.exe --launch-mode=user");
         var processes = new[] { processMock.Object };
@@ -59,7 +59,7 @@ public class UserInstanceServiceTests
             .Returns(processes);
 
         _processServiceMock
-            .Setup(x => x.HasProcessArgument(It.IsAny<IProcessWrapper>(), "--launch-mode=user"))
+            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "--launch-mode=user"))
             .Returns(true);
 
         // Act
@@ -73,7 +73,7 @@ public class UserInstanceServiceTests
     public void IsRunning_ShouldReturnTrueIfUserInstanceIsRunning()
     {
         // Arrange
-        var processMock = new Mock<IProcessWrapper>();
+        var processMock = new Mock<IProcess>();
         processMock.Setup(p => p.GetCommandLine()).Returns("--launch-mode=user");
         var processes = new[] { processMock.Object };
 
@@ -82,7 +82,7 @@ public class UserInstanceServiceTests
             .Returns(processes);
 
         _processServiceMock
-            .Setup(x => x.HasProcessArgument(It.IsAny<IProcessWrapper>(), "--launch-mode=user"))
+            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "--launch-mode=user"))
             .Returns(true);
 
         // Act

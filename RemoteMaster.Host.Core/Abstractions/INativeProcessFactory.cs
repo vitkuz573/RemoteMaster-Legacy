@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface INativeProcessFactory
 {
-    INativeProcess Create(INativeProcessOptions options);
+    IProcess Create(INativeProcessOptions options);
 }

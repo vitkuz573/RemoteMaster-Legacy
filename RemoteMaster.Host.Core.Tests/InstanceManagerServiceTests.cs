@@ -18,9 +18,9 @@ namespace RemoteMaster.Host.Core.Tests;
 public class InstanceManagerServiceTests
 {
     private readonly Mock<INativeProcessFactory> _nativeProcessFactoryMock;
-    private readonly Mock<INativeProcess> _nativeProcessMock;
+    private readonly Mock<IProcess> _nativeProcessMock;
     private readonly Mock<IProcessWrapperFactory> _processWrapperFactoryMock;
-    private readonly Mock<IProcessWrapper> _processWrapperMock;
+    private readonly Mock<IProcess> _processWrapperMock;
     private readonly MockFileSystem _mockFileSystem;
     private readonly ILogger<InstanceManagerService> _logger;
     private readonly InstanceManagerService _instanceManagerService;
@@ -28,17 +28,17 @@ public class InstanceManagerServiceTests
     public InstanceManagerServiceTests()
     {
         _nativeProcessFactoryMock = new Mock<INativeProcessFactory>();
-        _nativeProcessMock = new Mock<INativeProcess>();
+        _nativeProcessMock = new Mock<IProcess>();
 
         _processWrapperFactoryMock = new Mock<IProcessWrapperFactory>();
-        _processWrapperMock = new Mock<IProcessWrapper>();
+        _processWrapperMock = new Mock<IProcess>();
 
         _nativeProcessFactoryMock
             .Setup(factory => factory.Create(It.IsAny<INativeProcessOptions>()))
             .Returns(_nativeProcessMock.Object);
 
         _processWrapperFactoryMock
-            .Setup(factory => factory.Create(It.IsAny<ProcessStartInfo>()))
+            .Setup(factory => factory.Create())
             .Returns(_processWrapperMock.Object);
 
         _mockFileSystem = new MockFileSystem();
@@ -75,7 +75,7 @@ public class InstanceManagerServiceTests
 
         _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
 
-        _processWrapperMock.Setup(p => p.Start()).Verifiable();
+        _processWrapperMock.Setup(p => p.Start(startInfo)).Verifiable();
         _processWrapperMock.SetupGet(p => p.Id).Returns(1234);
 
         // Act
@@ -86,7 +86,7 @@ public class InstanceManagerServiceTests
         Assert.True(_mockFileSystem.File.Exists(destinationPath));
         Assert.Equal("test content", _mockFileSystem.File.ReadAllText(destinationPath));
 
-        _processWrapperMock.Verify(p => p.Start(), Times.Once);
+        _processWrapperMock.Verify(p => p.Start(startInfo), Times.Once);
 
         Assert.Equal(1234, processId);
     }

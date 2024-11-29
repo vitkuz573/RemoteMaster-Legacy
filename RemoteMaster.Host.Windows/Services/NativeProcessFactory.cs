@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcessFactory : INativeProcessFactory
 {
-    public INativeProcess Create(INativeProcessOptions options)
+    public IProcess Create(INativeProcessOptions options)
     {
         if (options is not NativeProcessOptions nativeOptions)
         {

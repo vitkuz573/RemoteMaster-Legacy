@@ -7,11 +7,13 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ProcessWrapper(Process process, ICommandLineProvider commandLineProvider) : IProcessWrapper
+public class ProcessWrapper(Process process, ICommandLineProvider commandLineProvider) : IProcess
 {
     private bool _disposed;
 
     public int Id => process.Id;
+
+    public StreamWriter StandardInput => process.StandardInput;
 
     public StreamReader StandardOutput => process.StandardOutput;
 
@@ -32,8 +34,9 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
         }
     }
 
-    public void Start()
+    public void Start(ProcessStartInfo startInfo)
     {
+        process.StartInfo = startInfo;
         process.Start();
     }
 
@@ -47,9 +50,9 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
         return commandLineProvider.GetCommandLine(process);
     }
 
-    public void WaitForExit()
+    public bool WaitForExit(uint millisecondsTimeout)
     {
-        process.WaitForExit();
+        return process.WaitForExit((int)Math.Min(millisecondsTimeout, int.MaxValue));
     }
 
     public void Dispose()

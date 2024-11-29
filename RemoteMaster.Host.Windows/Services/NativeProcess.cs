@@ -20,13 +20,13 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class NativeProcess : INativeProcess
+public class NativeProcess : IProcess
 {
     private static readonly Lock CreateProcessLock = new();
 
     private readonly NativeProcessOptions _options;
     private SafeProcessHandle? _processHandle;
-
+    private string? _commandLine;
     private bool _haveProcessId;
 
     public int Id { get; private set; }
@@ -36,6 +36,24 @@ public class NativeProcess : INativeProcess
     public StreamReader? StandardOutput { get; private set; }
 
     public StreamReader? StandardError { get; private set; }
+
+    public bool HasExited
+    {
+        get
+        {
+            if (_processHandle == null || _processHandle.IsInvalid || _processHandle.IsClosed)
+            {
+                throw new InvalidOperationException("No process is associated with this NativeProcess object.");
+            }
+
+            if (GetExitCodeProcess(_processHandle, out var exitCode))
+            {
+                return exitCode != NTSTATUS.STILL_ACTIVE;
+            }
+
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+    }
 
     public NativeProcess(INativeProcessOptions options)
     {
@@ -50,6 +68,8 @@ public class NativeProcess : INativeProcess
     public void Start(ProcessStartInfo startInfo)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
+
+        _commandLine = $"{startInfo.FileName} {startInfo.Arguments}";
 
         var sessionId = _options is { TargetSessionId: not null, ForceConsoleSession: false }
             ? FindTargetSessionId(_options.TargetSessionId.Value)
@@ -89,6 +109,19 @@ public class NativeProcess : INativeProcess
         finally
         {
             hUserTokenDup?.Dispose();
+        }
+    }
+
+    public void Kill()
+    {
+        if (_processHandle == null || _processHandle.IsInvalid || _processHandle.IsClosed)
+        {
+            throw new InvalidOperationException("No process is associated with this NativeProcess object.");
+        }
+
+        if (!TerminateProcess(_processHandle, 1))
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error());
         }
     }
 
@@ -393,6 +426,16 @@ public class NativeProcess : INativeProcess
         }
 
         return sessions;
+    }
+
+    public string GetCommandLine()
+    {
+        if (_commandLine == null)
+        {
+            throw new InvalidOperationException("Process has not been started yet, or command line is unavailable.");
+        }
+
+        return _commandLine;
     }
 
     public bool WaitForExit(uint millisecondsTimeout = uint.MaxValue)

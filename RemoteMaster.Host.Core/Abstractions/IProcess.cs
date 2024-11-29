@@ -6,17 +6,23 @@ using System.Diagnostics;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface INativeProcess : IDisposable
+public interface IProcess : IDisposable
 {
     int Id { get; }
-
+    
     StreamWriter? StandardInput { get; }
-
+    
     StreamReader? StandardOutput { get; }
-
+    
     StreamReader? StandardError { get; }
+    
+    bool HasExited { get; }
 
     void Start(ProcessStartInfo startInfo);
-
+    
+    void Kill();
+    
+    string GetCommandLine();
+    
     bool WaitForExit(uint millisecondsTimeout = uint.MaxValue);
 }

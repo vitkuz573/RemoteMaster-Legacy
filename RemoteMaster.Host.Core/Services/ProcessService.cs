@@ -9,30 +9,30 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ProcessService(IProcessWrapperFactory processWrapperFactory, ICommandLineProvider commandLineProvider) : IProcessService
 {
-    public IProcessWrapper Start(ProcessStartInfo startInfo)
+    public IProcess Start(ProcessStartInfo startInfo)
     {
-        var process = processWrapperFactory.Create(startInfo);
+        var process = processWrapperFactory.Create();
 
-        process.Start();
+        process.Start(startInfo);
 
         return process;
     }
 
-    public void WaitForExit(IProcessWrapper process)
+    public void WaitForExit(IProcess process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
         process.WaitForExit();
     }
 
-    public async Task<string> ReadStandardOutputAsync(IProcessWrapper process)
+    public async Task<string> ReadStandardOutputAsync(IProcess process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
         return await process.StandardOutput.ReadToEndAsync();
     }
 
-    public IProcessWrapper[] FindProcessesByName(string processName)
+    public IProcess[] FindProcessesByName(string processName)
     {
         var processes = Process.GetProcessesByName(processName);
 
@@ -41,7 +41,7 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory, IComma
             .ToArray();
     }
 
-    public bool HasProcessArgument(IProcessWrapper process, string argument)
+    public bool HasProcessArgument(IProcess process, string argument)
     {
         ArgumentNullException.ThrowIfNull(process);
 

@@ -9,13 +9,10 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ProcessWrapperFactory(ICommandLineProvider commandLineProvider) : IProcessWrapperFactory
 {
-    public IProcessWrapper Create(ProcessStartInfo startInfo)
+    public IProcess Create()
     {
 #pragma warning disable CA2000
-        var process = new Process
-        {
-            StartInfo = startInfo
-        };
+        var process = new Process();
 #pragma warning restore CA2000
 
         return new ProcessWrapper(process, commandLineProvider);

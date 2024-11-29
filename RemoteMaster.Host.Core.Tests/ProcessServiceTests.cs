@@ -11,14 +11,14 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class ProcessServiceTests
 {
-    private readonly Mock<IProcessWrapper> _mockProcessWrapper;
+    private readonly Mock<IProcess> _mockProcessWrapper;
     private readonly Mock<IProcessWrapperFactory> _mockProcessWrapperFactory;
     private readonly Mock<ICommandLineProvider> _mockCommandLineProvider;
     private readonly ProcessService _processService;
 
     public ProcessServiceTests()
     {
-        _mockProcessWrapper = new Mock<IProcessWrapper>();
+        _mockProcessWrapper = new Mock<IProcess>();
         _mockProcessWrapperFactory = new Mock<IProcessWrapperFactory>();
         _mockCommandLineProvider = new Mock<ICommandLineProvider>();
 
@@ -34,28 +34,28 @@ public class ProcessServiceTests
             FileName = "notepad.exe"
         };
 
-        _mockProcessWrapperFactory.Setup(f => f.Create(startInfo)).Returns(_mockProcessWrapper.Object);
+        _mockProcessWrapperFactory.Setup(f => f.Create()).Returns(_mockProcessWrapper.Object);
 
         // Act
         var processWrapper = _processService.Start(startInfo);
 
         // Assert
         Assert.NotNull(processWrapper);
-        Assert.IsAssignableFrom<IProcessWrapper>(processWrapper);
-        _mockProcessWrapperFactory.Verify(f => f.Create(startInfo), Times.Once);
+        Assert.IsAssignableFrom<IProcess>(processWrapper);
+        _mockProcessWrapperFactory.Verify(f => f.Create(), Times.Once);
     }
 
     [Fact]
     public void WaitForExit_ValidProcess_WaitsForExit()
     {
         // Arrange
-        _mockProcessWrapper.Setup(p => p.WaitForExit());
+        _mockProcessWrapper.Setup(p => p.WaitForExit(It.IsAny<uint>()));
 
         // Act
         _processService.WaitForExit(_mockProcessWrapper.Object);
 
         // Assert
-        _mockProcessWrapper.Verify(p => p.WaitForExit(), Times.Once);
+        _mockProcessWrapper.Verify(p => p.WaitForExit(It.IsAny<uint>()), Times.Once);
     }
 
     [Fact]

@@ -8,13 +8,13 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IProcessService
 {
-    IProcessWrapper Start(ProcessStartInfo startInfo);
+    IProcess Start(ProcessStartInfo startInfo);
 
-    void WaitForExit(IProcessWrapper process);
+    void WaitForExit(IProcess process);
 
-    Task<string> ReadStandardOutputAsync(IProcessWrapper process);
+    Task<string> ReadStandardOutputAsync(IProcess process);
 
-    IProcessWrapper[] FindProcessesByName(string processName);
+    IProcess[] FindProcessesByName(string processName);
 
-    bool HasProcessArgument(IProcessWrapper process, string argument);
+    bool HasProcessArgument(IProcess process, string argument);
 }
