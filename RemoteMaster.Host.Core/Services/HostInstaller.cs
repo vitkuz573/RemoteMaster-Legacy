@@ -12,7 +12,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostInstaller> logger) : IHostInstaller
+public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, ILogger<HostInstaller> logger) : IHostInstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -67,42 +67,16 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
 
     private void CopyToTargetPath(string targetDirectoryPath)
     {
-        if (!fileSystem.Directory.Exists(targetDirectoryPath))
-        {
-            fileSystem.Directory.CreateDirectory(targetDirectoryPath);
-        }
-
-        var sourceExecutablePath = Environment.ProcessPath!;
-        var targetExecutablePath = fileSystem.Path.Combine(targetDirectoryPath, fileSystem.Path.GetFileName(sourceExecutablePath));
-
         try
         {
-            fileSystem.File.Copy(sourceExecutablePath, targetExecutablePath, true);
+            var sourceExecutablePath = Environment.ProcessPath!;
+            var targetExecutablePath = Path.Combine(targetDirectoryPath, Path.GetFileName(sourceExecutablePath));
+
+            fileService.CopyFile(sourceExecutablePath, targetExecutablePath, true);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
-        }
-
-        var sourceDirectoryPath = fileSystem.Path.GetDirectoryName(sourceExecutablePath)!;
-
-        if (!fileSystem.Directory.Exists(sourceDirectoryPath))
-        {
-            return;
-        }
-
-        foreach (var file in fileSystem.Directory.GetFiles(sourceDirectoryPath))
-        {
-            var targetFilePath = fileSystem.Path.Combine(targetDirectoryPath, fileSystem.Path.GetFileName(file));
-
-            try
-            {
-                fileSystem.File.Copy(file, targetFilePath, true);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Failed to copy file {FileName} to {TargetPath}. Details: {Error}", file, targetFilePath, ex.Message);
-            }
+            logger.LogWarning("Failed to copy files to {TargetPath}. Details: {Error}", targetDirectoryPath, ex.Message);
         }
     }
 }

@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, ILogger<HostUninstaller> logger) : IHostUninstaller
+public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -43,6 +43,20 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
             if (!string.Equals(currentDirectory, _applicationDirectory, StringComparison.OrdinalIgnoreCase))
             {
                 DeleteFiles(_applicationDirectory);
+
+                try
+                {
+                    fileService.DeleteDirectory(_applicationDirectory, recursive: true);
+                    logger.LogInformation("Directory {DirectoryPath} has been successfully deleted.", _applicationDirectory);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    logger.LogInformation("Directory {DirectoryPath} does not exist, no files to delete.", _applicationDirectory);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Failed to delete directory {DirectoryPath}: {Message}", _applicationDirectory, ex.Message);
+                }
             }
             else
             {
@@ -68,20 +82,9 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
             return;
         }
 
-        foreach (var file in fileSystem.Directory.EnumerateFiles(directoryPath))
+        foreach (var file in fileSystem.Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
         {
             WaitForFile(file, 100, 2000);
-        }
-
-        try
-        {
-            logger.LogInformation("Attempting to delete directory: {DirectoryPath}", directoryPath);
-            fileSystem.Directory.Delete(directoryPath, true);
-            logger.LogInformation("{DirectoryPath} has been successfully deleted.", directoryPath);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Failed to delete directory {DirectoryPath}: {Message}", directoryPath, ex.Message);
         }
     }
 
