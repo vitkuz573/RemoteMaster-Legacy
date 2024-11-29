@@ -11,15 +11,14 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IInstanceManagerService instanceManagerService, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
-    private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-
     public async Task UninstallAsync()
     {
         try
         {
+            var applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host"); 
             var currentDirectory = fileSystem.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
 
-            if (string.Equals(currentDirectory, _applicationDirectory, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(currentDirectory, applicationDirectory, StringComparison.OrdinalIgnoreCase))
             {
                 logger.LogInformation("Current process is running from the application directory.");
 
@@ -49,20 +48,20 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
 
                 await RemoveServicesAndResources();
 
-                DeleteFiles(_applicationDirectory);
+                DeleteFiles(applicationDirectory);
 
                 try
                 {
-                    fileService.DeleteDirectory(_applicationDirectory, recursive: true);
-                    logger.LogInformation("Directory {DirectoryPath} has been successfully deleted.", _applicationDirectory);
+                    fileService.DeleteDirectory(applicationDirectory, recursive: true);
+                    logger.LogInformation("Directory {DirectoryPath} has been successfully deleted.", applicationDirectory);
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    logger.LogInformation("Directory {DirectoryPath} does not exist, no files to delete.", _applicationDirectory);
+                    logger.LogInformation("Directory {DirectoryPath} does not exist, no files to delete.", applicationDirectory);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("Failed to delete directory {DirectoryPath}: {Message}", _applicationDirectory, ex.Message);
+                    logger.LogError("Failed to delete directory {DirectoryPath}: {Message}", applicationDirectory, ex.Message);
                 }
 
                 logger.LogInformation("Uninstallation process completed successfully. Exiting...");
