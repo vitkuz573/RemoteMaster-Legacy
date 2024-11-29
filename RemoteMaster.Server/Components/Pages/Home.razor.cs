@@ -43,6 +43,8 @@ public partial class Home
 
     private IDictionary<NotificationMessage, bool>? _messages;
 
+    private CancellationTokenSource? _logonCts;
+
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
@@ -143,24 +145,61 @@ public partial class Home
 
     private async Task OnNodeSelected(object? node)
     {
+        if (_logonCts != null)
+        {
+            try
+            {
+                await _logonCts.CancelAsync();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            finally
+            {
+                _logonCts.Dispose();
+            }
+        }
+
+        _logonCts = new CancellationTokenSource();
+
         _selectedHosts.Clear();
         _availableHosts.Clear();
         _unavailableHosts.Clear();
         _pendingHosts.Clear();
 
+        if (node == null)
+        {
+            Logger.LogWarning("Node is null");
+            
+            return;
+        }
+
         switch (node)
         {
             case Organization:
+                Logger.LogInformation("Organization node selected.");
                 break;
+
             case OrganizationalUnit orgUnit:
-                await LoadHosts(orgUnit);
+                if (!orgUnit.Hosts.Any())
+                {
+                    Logger.LogWarning("Selected organizational unit has no hosts.");
+                    
+                    return;
+                }
+
+                await LoadHosts(orgUnit, _logonCts.Token);
+                break;
+
+            default:
+                Logger.LogWarning("Unsupported node type selected: {NodeType}", node.GetType());
                 break;
         }
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadHosts(OrganizationalUnit orgUnit)
+    private async Task LoadHosts(OrganizationalUnit orgUnit, CancellationToken cancellationToken)
     {
         var hosts = orgUnit.Hosts.ToList();
 
@@ -183,6 +222,11 @@ public partial class Home
 
         foreach (var kvp in newPendingHosts)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             _pendingHosts.TryAdd(kvp.Key, kvp.Value);
         }
 
@@ -191,11 +235,16 @@ public partial class Home
 
     private async Task LogonHosts()
     {
+        if (_logonCts?.Token.IsCancellationRequested ?? true)
+        {
+            return;
+        }
+
         var channel = Channel.CreateUnbounded<HostDto>();
 
         var logonTasks = _selectedHosts.Select(async host =>
         {
-            await LogonHost(host);
+            await LogonHost(host, _logonCts!.Token);
             await channel.Writer.WriteAsync(host);
         });
 
@@ -203,6 +252,11 @@ public partial class Home
         {
             await foreach (var _ in channel.Reader.ReadAllAsync())
             {
+                if (_logonCts?.Token.IsCancellationRequested ?? true)
+                {
+                    break;
+                }
+
                 await InvokeAsync(StateHasChanged);
             }
         });
@@ -214,37 +268,45 @@ public partial class Home
         ResetSelections();
     }
 
-    private async Task LogonHost(HostDto hostDto)
+    private async Task LogonHost(HostDto hostDto, CancellationToken cancellationToken)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        var cancellationToken = cts.Token;
-
         try
         {
             const string url = "hubs/control?thumbnail=true";
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Logger.LogWarning("Logon canceled before connecting for host {IPAddress}", hostDto.IpAddress);
+                
+                return;
+            }
+
             var connection = await SetupConnection(hostDto, url, true, cancellationToken);
 
-            if (connection.State != HubConnectionState.Connected)
+            if (cancellationToken.IsCancellationRequested || connection.State != HubConnectionState.Connected)
             {
-                Logger.LogWarning("Failed to connect to host {IPAddress}", hostDto.IpAddress);
-
-                await MoveToUnavailable(hostDto);
-                await InvokeAsync(StateHasChanged);
-
+                Logger.LogWarning("Logon canceled or failed for host {IPAddress}", hostDto.IpAddress);
+                
+                await MoveToUnavailable(hostDto, cancellationToken);
                 return;
             }
 
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Logger.LogWarning("Thumbnail reception canceled for host {IPAddress}", hostDto.IpAddress);
+                    return;
+                }
+
                 if (thumbnailBytes.Length > 0)
                 {
                     hostDto.Thumbnail = thumbnailBytes;
-                    await MoveToAvailable(hostDto);
+                    await MoveToAvailable(hostDto, cancellationToken);
                 }
                 else
                 {
-                    await MoveToUnavailable(hostDto);
+                    await MoveToUnavailable(hostDto, cancellationToken);
                 }
 
                 await InvokeAsync(StateHasChanged);
@@ -252,15 +314,24 @@ public partial class Home
 
             connection.On("ReceiveCloseConnection", async () =>
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Logger.LogWarning("Close connection canceled for host {IPAddress}", hostDto.IpAddress);
+                    
+                    return;
+                }
+
                 await connection.StopAsync(cancellationToken);
             });
         }
         catch (Exception ex)
         {
-            Logger.LogError("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
-
-            await MoveToUnavailable(hostDto);
-            await InvokeAsync(StateHasChanged);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                Logger.LogError("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
+                
+                await MoveToUnavailable(hostDto, cancellationToken);
+            }
         }
     }
 
@@ -277,8 +348,15 @@ public partial class Home
 
     private async Task LogoffHost(HostDto hostDto) => await MoveToPending(hostDto);
 
-    private async Task MoveToAvailable(HostDto hostDto)
+    private async Task MoveToAvailable(HostDto hostDto, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            Logger.LogWarning("Skipping MoveToAvailable for {IPAddress} due to cancellation", hostDto.IpAddress);
+
+            return;
+        }
+
         if (_pendingHosts.ContainsKey(hostDto.IpAddress))
         {
             _pendingHosts.TryRemove(hostDto.IpAddress, out _);
@@ -293,8 +371,15 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task MoveToUnavailable(HostDto hostDto)
+    private async Task MoveToUnavailable(HostDto hostDto, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            Logger.LogWarning("Skipping MoveToUnavailable for {IPAddress} due to cancellation", hostDto.IpAddress);
+
+            return;
+        }
+
         hostDto.Thumbnail = null;
 
         if (_pendingHosts.ContainsKey(hostDto.IpAddress))
@@ -367,6 +452,11 @@ public partial class Home
                     {
                         clientHandler.ServerCertificateCustomValidationCallback = (_, cert, chain, sslPolicyErrors) =>
                         {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                return false;
+                            }
+
                             if (SslWarningService.IsSslAllowed(hostDto.IpAddress))
                             {
                                 return true;
@@ -608,11 +698,16 @@ public partial class Home
 
     private async Task Refresh()
     {
+        if (_logonCts?.Token.IsCancellationRequested ?? true)
+        {
+            return;
+        }
+
         var hostsToRefresh = _availableHosts.Values.Concat(_unavailableHosts.Values).ToList();
 
-        foreach (var hostDto in hostsToRefresh)
+        foreach (var hostDto in hostsToRefresh.TakeWhile(_ => !(_logonCts?.Token.IsCancellationRequested ?? true)))
         {
-            await LogonHost(hostDto);
+            await LogonHost(hostDto, _logonCts!.Token);
         }
 
         await InvokeAsync(StateHasChanged);
