@@ -56,6 +56,8 @@ public class ServerAvailabilityServiceTests
 
         tcpClientMock.SetupSequence(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()))
                      .Throws<SocketException>()
+                     .Throws<SocketException>()
+                     .Throws<SocketException>()
                      .Returns(Task.CompletedTask);
 
         // Act
@@ -63,8 +65,10 @@ public class ServerAvailabilityServiceTests
 
         // Assert
         Assert.True(result);
-        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 1 failed. Retrying in {ServerAvailabilityService.ConnectionRetryDelay}ms...", Times.Once());
-        _loggerMock.VerifyLog(LogLevel.Information, $"Server {server} is available.", Times.Once());
+        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 1 failed due to socket error. Retrying in {ServerAvailabilityService.ConnectionRetryDelay}ms...", Times.Once());
+        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 2 failed due to socket error. Retrying in {2000}ms...", Times.Once()); // Expecting 2nd delay (2000ms)
+        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 3 failed due to socket error. Retrying in {4000}ms...", Times.Once()); // Expecting 3rd delay (4000ms)
+        _loggerMock.VerifyLog(LogLevel.Information, $"Server {server} is available.", Times.Once());  // Server becomes available on the 4th attempt
     }
 
     [Fact]
@@ -104,7 +108,10 @@ public class ServerAvailabilityServiceTests
         await _service.IsServerAvailableAsync(server);
 
         // Assert
-        _timeProviderMock.Verify(tp => tp.Delay(ServerAvailabilityService.ConnectionRetryDelay, It.IsAny<CancellationToken>()), Times.Exactly(ServerAvailabilityService.MaxConnectionAttempts - 1));
+        _timeProviderMock.Verify(tp => tp.Delay(1000, It.IsAny<CancellationToken>()), Times.Once());  // First delay
+        _timeProviderMock.Verify(tp => tp.Delay(2000, It.IsAny<CancellationToken>()), Times.Once());  // Second delay
+        _timeProviderMock.Verify(tp => tp.Delay(4000, It.IsAny<CancellationToken>()), Times.Once());  // Third delay
+        _timeProviderMock.Verify(tp => tp.Delay(5000, It.IsAny<CancellationToken>()), Times.Once());  // Fourth delay (max retry)
     }
 
     [Fact]

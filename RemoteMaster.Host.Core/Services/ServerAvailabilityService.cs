@@ -12,9 +12,12 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
 {
     public const int MaxConnectionAttempts = 5;
     public const int ConnectionRetryDelay = 1000;
+    private const int MaxRetryDelay = 5000;
 
     public async Task<bool> IsServerAvailableAsync(string server, CancellationToken cancellationToken = default)
     {
+        var currentRetryDelay = ConnectionRetryDelay;
+
         for (var attempt = 1; attempt <= MaxConnectionAttempts; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -30,16 +33,23 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
 
                 return true;
             }
-            catch (SocketException)
+            catch (SocketException ex)
             {
+                logger.LogWarning(ex, "Attempt {Attempt} failed due to socket error. Retrying in {RetryDelay}ms...", attempt, currentRetryDelay);
+
                 if (attempt == MaxConnectionAttempts)
                 {
                     break;
                 }
 
-                logger.LogWarning("Attempt {Attempt} failed. Retrying in {RetryDelay}ms...", attempt, ConnectionRetryDelay);
+                await timeProvider.Delay(currentRetryDelay, cancellationToken);
 
-                await timeProvider.Delay(ConnectionRetryDelay, cancellationToken);
+                currentRetryDelay = Math.Min(currentRetryDelay * 2, MaxRetryDelay);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An unexpected error occurred while checking server availability.");
+                break;
             }
         }
 
