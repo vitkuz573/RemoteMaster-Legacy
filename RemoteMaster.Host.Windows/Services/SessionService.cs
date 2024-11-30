@@ -68,7 +68,7 @@ public class SessionService : ISessionService
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    public uint GetProcessPid(uint sessionId, string processName)
+    public uint GetProcessId(uint sessionId, string processName)
     {
         foreach (var process in Process.GetProcessesByName(processName))
         {

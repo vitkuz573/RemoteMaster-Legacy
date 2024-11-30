@@ -14,5 +14,5 @@ public interface ISessionService
 
     uint FindTargetSessionId(int targetSessionId);
 
-    uint GetProcessPid(uint sessionId, string processName);
+    uint GetProcessId(uint sessionId, string processName);
 }
