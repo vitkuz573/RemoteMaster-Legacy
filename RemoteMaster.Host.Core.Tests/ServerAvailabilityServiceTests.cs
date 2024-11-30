@@ -132,5 +132,24 @@ public class ServerAvailabilityServiceTests
         _loggerMock.VerifyLog(LogLevel.Warning, It.IsAny<string>(), Times.Never());
     }
 
+    [Fact]
+    public async Task IsServerAvailableAsync_ShouldLogError_OnUnexpectedException()
+    {
+        // Arrange
+        const string server = "127.0.0.1";
+        var tcpClientMock = new Mock<ITcpClient>();
+        _tcpClientFactoryMock.Setup(f => f.Create()).Returns(tcpClientMock.Object);
+
+        tcpClientMock.Setup(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()))
+                     .Throws<InvalidOperationException>(); // Unexpected exception
+
+        // Act
+        var result = await _service.IsServerAvailableAsync(server);
+
+        // Assert
+        Assert.False(result);
+        _loggerMock.VerifyLog(LogLevel.Error, "An unexpected error occurred while checking server availability.", Times.Once());
+    }
+
     #endregion
 }
