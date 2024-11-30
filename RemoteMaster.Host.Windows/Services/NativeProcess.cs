@@ -76,7 +76,7 @@ public class NativeProcess : IProcess
 
         var sessionId = _options is { TargetSessionId: not null, ForceConsoleSession: false }
             ? _sessionService.FindTargetSessionId(_options.TargetSessionId.Value)
-            : WTSGetActiveConsoleSessionId();
+            : _sessionService.GetActiveConsoleSessionId();
 
 
         SafeFileHandle? hUserTokenDup = null;

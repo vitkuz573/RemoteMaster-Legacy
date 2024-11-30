@@ -12,6 +12,11 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class SessionService : ISessionService
 {
+    public uint GetActiveConsoleSessionId()
+    {
+        return WTSGetActiveConsoleSessionId();
+    }
+
     public unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
     {
         var sessions = new List<WTS_SESSION_INFOW>();
