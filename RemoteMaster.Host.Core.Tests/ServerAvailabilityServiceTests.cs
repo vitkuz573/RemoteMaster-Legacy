@@ -28,13 +28,15 @@ public class ServerAvailabilityServiceTests
 
     #region IsServerAvailableAsync Tests
 
-    [Fact]
-    public async Task IsServerAvailableAsync_ShouldReturnTrue_WhenServerIsAvailable()
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("192.168.0.1")]
+    public async Task IsServerAvailableAsync_ShouldReturnTrue_WhenServerIsAvailable(string server)
     {
         // Arrange
-        const string server = "127.0.0.1";
         var tcpClientMock = new Mock<ITcpClient>();
         _tcpClientFactoryMock.Setup(f => f.Create()).Returns(tcpClientMock.Object);
+
         tcpClientMock.Setup(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()))
                      .Returns(Task.CompletedTask);
 
@@ -46,36 +48,41 @@ public class ServerAvailabilityServiceTests
         _loggerMock.VerifyLog(LogLevel.Information, $"Server {server} is available.", Times.Once());
     }
 
-    [Fact]
-    public async Task IsServerAvailableAsync_ShouldRetry_WhenServerIsUnavailable()
+    [Theory]
+    [InlineData(1, 1000)]
+    [InlineData(2, 2000)]
+    [InlineData(3, 4000)]
+    public async Task IsServerAvailableAsync_ShouldRetry_WhenServerIsUnavailable(int attempt, int delay)
     {
-        // Arrange
         const string server = "127.0.0.1";
         var tcpClientMock = new Mock<ITcpClient>();
         _tcpClientFactoryMock.Setup(f => f.Create()).Returns(tcpClientMock.Object);
 
-        tcpClientMock.SetupSequence(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()))
-                     .Throws<SocketException>()
-                     .Throws<SocketException>()
-                     .Throws<SocketException>()
-                     .Returns(Task.CompletedTask);
+        var sequence = tcpClientMock.SetupSequence(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()));
+
+        for (var i = 0; i < attempt; i++)
+        {
+            sequence.Throws<SocketException>();
+        }
+
+        sequence.Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.IsServerAvailableAsync(server);
 
         // Assert
         Assert.True(result);
-        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 1 failed due to socket error. Retrying in {ServerAvailabilityService.ConnectionRetryDelay}ms...", Times.Once());
-        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 2 failed due to socket error. Retrying in {2000}ms...", Times.Once()); // Expecting 2nd delay (2000ms)
-        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt 3 failed due to socket error. Retrying in {4000}ms...", Times.Once()); // Expecting 3rd delay (4000ms)
-        _loggerMock.VerifyLog(LogLevel.Information, $"Server {server} is available.", Times.Once());  // Server becomes available on the 4th attempt
+
+        _loggerMock.VerifyLog(LogLevel.Warning, $"Attempt {attempt} failed due to socket error. Retrying in {delay}ms...", Times.Once());
+        _loggerMock.VerifyLog(LogLevel.Information, $"Server {server} is available.", Times.Once());
     }
 
-    [Fact]
-    public async Task IsServerAvailableAsync_ShouldReturnFalse_AfterMaxAttempts()
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("192.168.0.1")]
+    public async Task IsServerAvailableAsync_ShouldReturnFalse_AfterMaxAttempts(string server)
     {
         // Arrange
-        const string server = "127.0.0.1";
         var tcpClientMock = new Mock<ITcpClient>();
         _tcpClientFactoryMock.Setup(f => f.Create()).Returns(tcpClientMock.Object);
 
@@ -90,8 +97,12 @@ public class ServerAvailabilityServiceTests
         _loggerMock.VerifyLog(LogLevel.Error, $"Server {server} is unavailable after {ServerAvailabilityService.MaxConnectionAttempts} attempts.", Times.Once());
     }
 
-    [Fact]
-    public async Task IsServerAvailableAsync_ShouldDelayBetweenRetries()
+    [Theory]
+    [InlineData(1, 1000)]
+    [InlineData(2, 2000)]
+    [InlineData(3, 4000)]
+    [InlineData(4, 5000)]
+    public async Task IsServerAvailableAsync_ShouldDelayBetweenRetries(int attempt, int expectedDelay)
     {
         // Arrange
         const string server = "127.0.0.1";
@@ -108,10 +119,7 @@ public class ServerAvailabilityServiceTests
         await _service.IsServerAvailableAsync(server);
 
         // Assert
-        _timeProviderMock.Verify(tp => tp.Delay(1000, It.IsAny<CancellationToken>()), Times.Once());  // First delay
-        _timeProviderMock.Verify(tp => tp.Delay(2000, It.IsAny<CancellationToken>()), Times.Once());  // Second delay
-        _timeProviderMock.Verify(tp => tp.Delay(4000, It.IsAny<CancellationToken>()), Times.Once());  // Third delay
-        _timeProviderMock.Verify(tp => tp.Delay(5000, It.IsAny<CancellationToken>()), Times.Once());  // Fourth delay (max retry)
+        _timeProviderMock.Verify(tp => tp.Delay(expectedDelay, It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [Fact]
