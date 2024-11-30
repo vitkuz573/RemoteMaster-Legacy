@@ -12,6 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 public class RsaKeyProvider(IFileSystem fileSystem, ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
 {
     private RSA? _rsa;
+    private readonly Lock _lock = new();
 
     public RSA? GetRsaPublicKey()
     {
@@ -20,28 +21,46 @@ public class RsaKeyProvider(IFileSystem fileSystem, ILogger<RsaKeyProvider> logg
             return _rsa;
         }
 
-        try
+        using (_lock.EnterScope())
         {
-            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var publicKeyPath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
-
-            if (fileSystem.File.Exists(publicKeyPath))
+            if (_rsa != null)
             {
-                var publicKey = fileSystem.File.ReadAllBytes(publicKeyPath);
-
-                _rsa = RSA.Create();
-                _rsa.ImportRSAPublicKey(publicKey, out _);
+                return _rsa;
             }
-            else
+
+            try
             {
-                logger.LogWarning("Public key file not found at path: {PublicKeyPath}", publicKeyPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to load RSA public key.");
-        }
+                var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                var publicKeyPath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
 
-        return _rsa;
+                if (fileSystem.File.Exists(publicKeyPath))
+                {
+                    var publicKey = fileSystem.File.ReadAllBytes(publicKeyPath);
+
+                    if (publicKey.Length == 0)
+                    {
+                        logger.LogError("Public key file is empty.");
+
+                        return null;
+                    }
+
+                    var rsa = RSA.Create();
+                    rsa.ImportRSAPublicKey(publicKey, out _);
+                    _rsa = rsa;
+                }
+                else
+                {
+                    logger.LogWarning("Public key file not found at path: {PublicKeyPath}", publicKeyPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to load RSA public key.");
+
+                _rsa = null;
+            }
+
+            return _rsa;
+        }
     }
 }
