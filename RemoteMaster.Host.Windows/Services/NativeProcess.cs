@@ -85,7 +85,7 @@ public class NativeProcess : IProcess
         {
             if (!_options.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                var winlogonPid = _sessionService.GetWinlogonPid(sessionId);
+                var winlogonPid = _sessionService.GetProcessPid(sessionId, "winlogon");
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_INFORMATION | PROCESS_ACCESS_RIGHTS.PROCESS_DUP_HANDLE, false, winlogonPid);
 
                 if (!hProcess.IsInvalid && !hProcess.IsClosed)

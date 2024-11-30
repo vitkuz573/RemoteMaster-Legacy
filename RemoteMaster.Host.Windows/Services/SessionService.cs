@@ -68,9 +68,9 @@ public class SessionService : ISessionService
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    public uint GetWinlogonPid(uint sessionId)
+    public uint GetProcessPid(uint sessionId, string processName)
     {
-        foreach (var process in Process.GetProcessesByName("winlogon"))
+        foreach (var process in Process.GetProcessesByName(processName))
         {
             if ((uint)process.SessionId == sessionId)
             {
@@ -78,6 +78,6 @@ public class SessionService : ISessionService
             }
         }
 
-        throw new Exception("No winlogon process found for the given session id.");
+        throw new Exception($"No process named '{processName}' found for session ID {sessionId}.");
     }
 }
