@@ -2,7 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Services;
@@ -11,115 +11,100 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class SyncIndicatorServiceTests
 {
-    private readonly Mock<IFileSystem> _fileSystemMock;
-    private readonly Mock<ILogger<SyncIndicatorService>> _loggerMock;
-    private readonly SyncIndicatorService _syncIndicatorService;
-
-    private const string SyncIndicatorFilePath = "C:\\app\\sync_required.ind";
+    private readonly MockFileSystem _mockFileSystem;
+    private readonly Mock<ILogger<SyncIndicatorService>> _mockLogger;
+    private readonly SyncIndicatorService _service;
 
     public SyncIndicatorServiceTests()
     {
-        _fileSystemMock = new Mock<IFileSystem>();
-        _loggerMock = new Mock<ILogger<SyncIndicatorService>>();
+        var processPath = Environment.ProcessPath ?? @"C:\FakePath\RemoteMaster.exe";
 
-        _fileSystemMock
-            .Setup(fs => fs.Path.Combine(It.IsAny<string>(), "sync_required.ind"))
-            .Returns(SyncIndicatorFilePath);
+        _mockFileSystem = new MockFileSystem();
+        _mockLogger = new Mock<ILogger<SyncIndicatorService>>();
 
-        _syncIndicatorService = new SyncIndicatorService(_fileSystemMock.Object, _loggerMock.Object);
+        var processDirectory = _mockFileSystem.Path.GetDirectoryName(processPath)!;
+        _mockFileSystem.AddDirectory(processDirectory);
+
+        _service = new SyncIndicatorService(_mockFileSystem, _mockLogger.Object);
     }
 
-    #region IsSyncRequired Tests
+    [Fact]
+    public void IsSyncRequired_ReturnsFalse_WhenFileDoesNotExist()
+    {
+        // Act
+        var result = _service.IsSyncRequired();
+
+        // Assert
+        Assert.False(result);
+    }
 
     [Fact]
-    public void IsSyncRequired_ShouldReturnTrue_WhenFileExists()
+    public void IsSyncRequired_ReturnsTrue_WhenFileExists()
     {
         // Arrange
-        _fileSystemMock.Setup(fs => fs.File.Exists(SyncIndicatorFilePath)).Returns(true);
+        var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+        _mockFileSystem.AddFile(syncFilePath, new MockFileData("Sync required"));
 
         // Act
-        var result = _syncIndicatorService.IsSyncRequired();
+        var result = _service.IsSyncRequired();
 
         // Assert
         Assert.True(result);
     }
 
     [Fact]
-    public void IsSyncRequired_ShouldReturnFalse_WhenFileDoesNotExist()
+    public void SetSyncRequired_CreatesFileWithCorrectContent()
     {
-        // Arrange
-        _fileSystemMock.Setup(fs => fs.File.Exists(SyncIndicatorFilePath)).Returns(false);
-
         // Act
-        var result = _syncIndicatorService.IsSyncRequired();
+        _service.SetSyncRequired();
 
         // Assert
-        Assert.False(result);
-    }
-
-    #endregion
-
-    #region SetSyncRequired Tests
-
-    [Fact]
-    public void SetSyncRequired_ShouldLogError_WhenExceptionIsThrown()
-    {
-        // Arrange
-        _fileSystemMock
-            .Setup(fs => fs.File.WriteAllText(SyncIndicatorFilePath, "Sync required"))
-            .Throws(new IOException("Disk full"));
-
-        // Act
-        _syncIndicatorService.SetSyncRequired();
-
-        // Assert
-        _loggerMock.VerifyLog(LogLevel.Error, "Failed to create sync indicator file.", Times.Once());
-    }
-
-    #endregion
-
-    #region ClearSyncIndicator Tests
-
-    [Fact]
-    public void ClearSyncIndicator_ShouldDeleteFile_WhenFileExists()
-    {
-        // Arrange
-        _fileSystemMock.Setup(fs => fs.File.Exists(SyncIndicatorFilePath)).Returns(true);
-
-        // Act
-        _syncIndicatorService.ClearSyncIndicator();
-
-        // Assert
-        _fileSystemMock.Verify(fs => fs.File.Delete(SyncIndicatorFilePath), Times.Once);
+        var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+        Assert.True(_mockFileSystem.File.Exists(syncFilePath));
+        Assert.Equal("Sync required", _mockFileSystem.File.ReadAllText(syncFilePath));
     }
 
     [Fact]
-    public void ClearSyncIndicator_ShouldNotDeleteFile_WhenFileDoesNotExist()
+    public void SetSyncRequired_LogsError_WhenExceptionOccurs()
     {
         // Arrange
-        _fileSystemMock.Setup(fs => fs.File.Exists(SyncIndicatorFilePath)).Returns(false);
+        var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+        _mockFileSystem.AddFile(syncFilePath, new MockFileData("Existing file is read-only"));
+        _mockFileSystem.File.SetAttributes(syncFilePath, FileAttributes.ReadOnly);
 
         // Act
-        _syncIndicatorService.ClearSyncIndicator();
+        _service.SetSyncRequired();
 
         // Assert
-        _fileSystemMock.Verify(fs => fs.File.Delete(It.IsAny<string>()), Times.Never);
+        _mockLogger.VerifyLog(LogLevel.Error, "Failed to create sync indicator file.", Times.Once());
     }
 
     [Fact]
-    public void ClearSyncIndicator_ShouldLogError_WhenExceptionIsThrown()
+    public void ClearSyncIndicator_DeletesFile_WhenFileExists()
     {
         // Arrange
-        _fileSystemMock.Setup(fs => fs.File.Exists(SyncIndicatorFilePath)).Returns(true);
-        _fileSystemMock.Setup(fs => fs.File.Delete(SyncIndicatorFilePath))
-            .Throws(new IOException("Access denied"));
+        var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+        _mockFileSystem.AddFile(syncFilePath, new MockFileData("Sync required"));
 
         // Act
-        _syncIndicatorService.ClearSyncIndicator();
+        _service.ClearSyncIndicator();
 
         // Assert
-        _loggerMock.VerifyLog(LogLevel.Error, "Failed to delete sync indicator file.", Times.Once());
+        Assert.False(_mockFileSystem.File.Exists(syncFilePath));
     }
 
-    #endregion
+    [Fact]
+    public void ClearSyncIndicator_LogsError_WhenExceptionOccurs()
+    {
+        // Arrange
+        var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
+        _mockFileSystem.AddFile(syncFilePath, new MockFileData("Sync required"));
+        _mockFileSystem.File.SetAttributes(syncFilePath, FileAttributes.ReadOnly);
+
+        // Act
+        _service.ClearSyncIndicator();
+
+        // Assert
+        _mockLogger.VerifyLog(LogLevel.Error, "Failed to delete sync indicator file.", Times.Once());
+    }
 }
