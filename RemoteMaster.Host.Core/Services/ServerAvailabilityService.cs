@@ -33,9 +33,9 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
 
                 return true;
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
-                logger.LogWarning(ex, "Attempt {Attempt} failed due to socket error. Retrying in {RetryDelay}ms...", attempt, currentRetryDelay);
+                logger.LogWarning("Attempt {Attempt} failed due to socket error. Retrying in {RetryDelay}ms...", attempt, currentRetryDelay);
 
                 if (attempt == MaxConnectionAttempts)
                 {
