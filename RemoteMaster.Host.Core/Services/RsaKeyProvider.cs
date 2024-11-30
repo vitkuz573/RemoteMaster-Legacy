@@ -2,13 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class RsaKeyProvider(ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
+public class RsaKeyProvider(IFileSystem fileSystem, ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
 {
     private RSA? _rsa;
 
@@ -22,11 +23,11 @@ public class RsaKeyProvider(ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
         try
         {
             var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+            var publicKeyPath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
 
-            if (File.Exists(publicKeyPath))
+            if (fileSystem.File.Exists(publicKeyPath))
             {
-                var publicKey = File.ReadAllBytes(publicKeyPath);
+                var publicKey = fileSystem.File.ReadAllBytes(publicKeyPath);
 
                 _rsa = RSA.Create();
                 _rsa.ImportRSAPublicKey(publicKey, out _);
