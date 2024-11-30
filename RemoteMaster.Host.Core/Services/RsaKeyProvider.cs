@@ -46,6 +46,7 @@ public class RsaKeyProvider(IFileSystem fileSystem, ILogger<RsaKeyProvider> logg
 
                     var rsa = RSA.Create();
                     rsa.ImportRSAPublicKey(publicKey, out _);
+
                     _rsa = rsa;
                 }
                 else
