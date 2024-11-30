@@ -73,14 +73,7 @@ public class SyncIndicatorServiceTests
         _syncIndicatorService.SetSyncRequired();
 
         // Assert
-        _loggerMock.Verify(
-            logger => logger.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to create sync indicator file.")),
-                It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
-            Times.Once);
+        _loggerMock.VerifyLog(LogLevel.Error, "Failed to create sync indicator file.", Times.Once());
     }
 
     #endregion
@@ -125,14 +118,7 @@ public class SyncIndicatorServiceTests
         _syncIndicatorService.ClearSyncIndicator();
 
         // Assert
-        _loggerMock.Verify(
-            logger => logger.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to delete sync indicator file.")),
-                It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
-            Times.Once);
+        _loggerMock.VerifyLog(LogLevel.Error, "Failed to delete sync indicator file.", Times.Once());
     }
 
     #endregion
