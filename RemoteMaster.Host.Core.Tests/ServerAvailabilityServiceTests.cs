@@ -109,8 +109,14 @@ public class ServerAvailabilityServiceTests
         var tcpClientMock = new Mock<ITcpClient>();
         _tcpClientFactoryMock.Setup(f => f.Create()).Returns(tcpClientMock.Object);
 
-        tcpClientMock.Setup(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()))
-                     .Throws<SocketException>();
+        var sequence = tcpClientMock.SetupSequence(c => c.ConnectAsync(server, 5254, It.IsAny<CancellationToken>()));
+        
+        for (var i = 0; i < attempt; i++)
+        {
+            sequence.Throws<SocketException>();
+        }
+
+        sequence.Returns(Task.CompletedTask);
 
         _timeProviderMock.Setup(tp => tp.Delay(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                          .Returns(Task.CompletedTask);
