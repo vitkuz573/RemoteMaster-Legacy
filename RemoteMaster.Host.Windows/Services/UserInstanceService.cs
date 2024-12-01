@@ -7,6 +7,7 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
+using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Windows.Models;
 using static Windows.Win32.PInvoke;
 
@@ -24,7 +25,9 @@ public sealed class UserInstanceService : IUserInstanceService
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
-    public bool IsRunning => _processService.FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, Argument));
+    public bool IsRunning => _processService
+        .FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
+        .Any(p => _processService.HasProcessArgument(p, Argument));
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
     {
@@ -92,9 +95,10 @@ public sealed class UserInstanceService : IUserInstanceService
 
     private int StartNewInstance()
     {
+        var userMode = new UserMode();
+
         var startInfo = new ProcessStartInfo
         {
-            Arguments = Argument,
             CreateNoWindow = true
         };
 
@@ -105,7 +109,7 @@ public sealed class UserInstanceService : IUserInstanceService
             UseCurrentUserToken = false
         };
 
-        return _instanceManagerService.StartNewInstance(null, startInfo, options);
+        return _instanceManagerService.StartNewInstance(null, userMode, startInfo, options);
     }
 
     private void OnSessionChanged(object? sender, SessionChangeEventArgs e)

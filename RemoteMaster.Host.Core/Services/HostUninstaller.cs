@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.LaunchModes;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -30,14 +31,15 @@ public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService
                     fileSystem.Directory.CreateDirectory(tempDirectory);
                 }
 
+                var uninstallMode = new UninstallMode();
+
                 var startInfo = new ProcessStartInfo
                 {
-                    Arguments = "--launch-mode=uninstall",
                     UseShellExecute = false,
                     CreateNoWindow = false
                 };
 
-                var tempProcessId = instanceManagerService.StartNewInstance(tempExecutablePath, startInfo);
+                var tempProcessId = instanceManagerService.StartNewInstance(tempExecutablePath, uninstallMode, startInfo);
                 logger.LogInformation("Temporary uninstaller started with Process ID: {ProcessId}. Exiting current process...", tempProcessId);
 
                 Environment.Exit(0);

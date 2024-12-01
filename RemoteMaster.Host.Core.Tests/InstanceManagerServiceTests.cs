@@ -20,6 +20,7 @@ public class InstanceManagerServiceTests
     private readonly Mock<IProcessWrapperFactory> _processWrapperFactoryMock;
     private readonly Mock<IProcess> _processWrapperMock;
     private readonly Mock<IFileService> _fileServiceMock;
+    private readonly Mock<LaunchModeBase> _launchModeMock;
     private readonly ILogger<InstanceManagerService> _logger;
     private readonly InstanceManagerService _instanceManagerService;
 
@@ -40,6 +41,9 @@ public class InstanceManagerServiceTests
             .Returns(_processWrapperMock.Object);
 
         _fileServiceMock = new Mock<IFileService>();
+
+        _launchModeMock = new Mock<LaunchModeBase>();
+        _launchModeMock.Setup(lm => lm.Name).Returns("testmode");
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
@@ -65,7 +69,7 @@ public class InstanceManagerServiceTests
     public void StartNewInstance_ShouldThrowArgumentNullException_WhenStartInfoIsNull()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            _instanceManagerService.StartNewInstance("destinationPath", null!));
+            _instanceManagerService.StartNewInstance("destinationPath", _launchModeMock.Object, null!));
     }
 
     #endregion
@@ -85,7 +89,7 @@ public class InstanceManagerServiceTests
         _processWrapperMock.Setup(p => p.Start(It.IsAny<ProcessStartInfo>())).Verifiable();
         _processWrapperMock.SetupGet(p => p.Id).Returns(1234);
 
-        var processId = _instanceManagerService.StartNewInstance(destinationPath, startInfo);
+        var processId = _instanceManagerService.StartNewInstance(destinationPath, _launchModeMock.Object, startInfo);
 
         _fileServiceMock.Verify(f => f.CopyFile(executablePath, destinationPath, true), Times.Once);
         _processWrapperMock.Verify(p => p.Start(It.IsAny<ProcessStartInfo>()), Times.Once);
@@ -102,7 +106,7 @@ public class InstanceManagerServiceTests
         _fileServiceMock.Setup(f => f.CopyFile(executablePath, destinationPath, true))
             .Throws<IOException>();
 
-        Assert.Throws<IOException>(() => _instanceManagerService.StartNewInstance(destinationPath, startInfo));
+        Assert.Throws<IOException>(() => _instanceManagerService.StartNewInstance(destinationPath, _launchModeMock.Object, startInfo));
         _fileServiceMock.Verify(f => f.CopyFile(executablePath, destinationPath, true), Times.Once);
     }
 
@@ -115,7 +119,7 @@ public class InstanceManagerServiceTests
         _processWrapperMock.Setup(p => p.Start(It.Is<ProcessStartInfo>(info => info.FileName == executablePath))).Verifiable();
         _processWrapperMock.SetupGet(p => p.Id).Returns(1234);
 
-        var processId = _instanceManagerService.StartNewInstance(null, startInfo);
+        var processId = _instanceManagerService.StartNewInstance(null, _launchModeMock.Object, startInfo);
 
         _processWrapperMock.Verify(p => p.Start(It.Is<ProcessStartInfo>(info => info.FileName == executablePath)), Times.Once);
         Assert.Equal(1234, processId);
@@ -134,7 +138,7 @@ public class InstanceManagerServiceTests
         _nativeProcessMock.Setup(p => p.Start(startInfo)).Verifiable();
         _nativeProcessMock.Setup(p => p.Id).Returns(1234);
 
-        var processId = _instanceManagerService.StartNewInstance(null, startInfo, options);
+        var processId = _instanceManagerService.StartNewInstance(null, _launchModeMock.Object, startInfo, options);
 
         Assert.Equal(1234, processId);
         _nativeProcessMock.Verify(p => p.Start(startInfo), Times.Once);
@@ -148,7 +152,7 @@ public class InstanceManagerServiceTests
         _processWrapperMock.Setup(p => p.Start(startInfo)).Verifiable();
         _processWrapperMock.Setup(p => p.Id).Returns(1234);
 
-        var processId = _instanceManagerService.StartNewInstance(null, startInfo);
+        var processId = _instanceManagerService.StartNewInstance(null, _launchModeMock.Object, startInfo);
 
         Assert.Equal(1234, processId);
         _processWrapperMock.Verify(p => p.Start(startInfo), Times.Once);
@@ -170,7 +174,7 @@ public class InstanceManagerServiceTests
 
         using (TestCorrelator.CreateContext())
         {
-            Assert.Throws<IOException>(() => _instanceManagerService.StartNewInstance(destinationPath, startInfo));
+            Assert.Throws<IOException>(() => _instanceManagerService.StartNewInstance(destinationPath, _launchModeMock.Object, startInfo));
 
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
             Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("IO error occurred"));
@@ -188,7 +192,7 @@ public class InstanceManagerServiceTests
 
         using (TestCorrelator.CreateContext())
         {
-            Assert.Throws<Exception>(() => _instanceManagerService.StartNewInstance(null, startInfo, options));
+            Assert.Throws<Exception>(() => _instanceManagerService.StartNewInstance(null, _launchModeMock.Object, startInfo, options));
 
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
             Assert.Contains(logEvents, e => e.MessageTemplate.Text.Contains("Error starting a new instance"));

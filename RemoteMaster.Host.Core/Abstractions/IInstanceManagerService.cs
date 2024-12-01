@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IInstanceManagerService
 { 
-    int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions? options = null);
+    int StartNewInstance(string? destinationPath, LaunchModeBase launchMode, ProcessStartInfo startInfo, INativeProcessOptions? options = null);
 }

@@ -10,12 +10,15 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileService fileService, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
-    public int StartNewInstance(string? destinationPath, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
+    public int StartNewInstance(string? destinationPath, LaunchModeBase launchMode, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(launchMode);
         ArgumentNullException.ThrowIfNull(startInfo);
 
         var executablePath = PrepareExecutable(destinationPath);
+
         startInfo.FileName = executablePath;
+        startInfo.Arguments = GenerateArguments(launchMode);
 
         var process = options != null
             ? nativeProcessFactory.Create(options)
@@ -61,5 +64,47 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
 
         return executablePath;
+    }
+
+    private static string GenerateArguments(LaunchModeBase launchMode)
+    {
+        var arguments = new List<string>
+        {
+            $"--launch-mode={launchMode.Name.ToLower()}"
+        };
+
+        arguments.AddRange(launchMode.Parameters
+            .GroupBy(p => p.Value)
+            .Select(g =>
+            {
+                var parameter = g.First();
+                var value = parameter.Value.Value;
+
+                if (value is null)
+                {
+                    if (parameter.Value.IsRequired)
+                    {
+                        return $"--{parameter.Key}=";
+                    }
+
+                    return null;
+                }
+
+                if (value is bool boolValue)
+                {
+                    return boolValue ? $"--{parameter.Key}" : null;
+                }
+
+                if (value is string stringValue && string.IsNullOrWhiteSpace(stringValue))
+                {
+                    return parameter.Value.IsRequired ? $"--{parameter.Key}=" : null;
+                }
+
+                return $"--{parameter.Key}={value}";
+            })
+            .Where(arg => arg is not null)
+            .Cast<string>());
+
+        return string.Join(" ", arguments);
     }
 }

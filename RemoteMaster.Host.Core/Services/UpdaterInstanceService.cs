@@ -4,9 +4,9 @@
 
 using System.Diagnostics;
 using System.IO.Abstractions;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -35,28 +35,21 @@ public class UpdaterInstanceService : IUpdaterInstanceService
     {
         ArgumentNullException.ThrowIfNull(updateRequest);
 
-        var argumentsBuilder = new StringBuilder();
+        var updaterMode = new UpdaterMode();
 
-        argumentsBuilder.Append($"--launch-mode=updater --folder-path={updateRequest.FolderPath}");
+        updaterMode.GetParameter<string>("folder-path")!.SetValue(updateRequest.FolderPath);
 
         if (updateRequest.UserCredentials != null)
         {
-            argumentsBuilder.Append($" --username={updateRequest.UserCredentials.UserName} --password={updateRequest.UserCredentials.Password}");
+            updaterMode.GetParameter<string>("username")!.SetValue(updateRequest.UserCredentials.UserName);
+            updaterMode.GetParameter<string>("password")!.SetValue(updateRequest.UserCredentials.Password);
         }
 
-        if (updateRequest.ForceUpdate)
-        {
-            argumentsBuilder.Append(" --force");
-        }
-
-        if (updateRequest.AllowDowngrade)
-        {
-            argumentsBuilder.Append(" --allow-downgrade");
-        }
+        updaterMode.GetParameter<bool>("force")!.SetValue(updateRequest.ForceUpdate);
+        updaterMode.GetParameter<bool>("allow-downgrade")!.SetValue(updateRequest.AllowDowngrade);
 
         var startInfo = new ProcessStartInfo
         {
-            Arguments = argumentsBuilder.ToString(),
             CreateNoWindow = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true
@@ -64,7 +57,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
         try
         {
-            _instanceManagerService.StartNewInstance(_updaterExecutablePath, startInfo);
+            _instanceManagerService.StartNewInstance(_updaterExecutablePath, updaterMode, startInfo);
         }
         catch (Exception ex)
         {

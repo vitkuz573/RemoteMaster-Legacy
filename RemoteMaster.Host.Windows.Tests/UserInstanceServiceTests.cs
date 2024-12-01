@@ -7,6 +7,7 @@ using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows.Tests;
@@ -34,15 +35,26 @@ public class UserInstanceServiceTests
     {
         // Arrange
         const int processId = 1234;
+
         _instanceStarterServiceMock
-            .Setup(x => x.StartNewInstance(It.IsAny<string>(), It.IsAny<ProcessStartInfo>(), It.IsAny<INativeProcessOptions>()))
+            .Setup(x => x.StartNewInstance(
+                It.IsAny<string>(),
+                It.Is<LaunchModeBase>(mode => mode is UserMode),
+                It.IsAny<ProcessStartInfo>(),
+                It.IsAny<INativeProcessOptions>()))
             .Returns(processId);
 
         // Act
         _userInstanceService.Start();
 
         // Assert
-        _instanceStarterServiceMock.Verify(x => x.StartNewInstance(null, It.IsAny<ProcessStartInfo>(), It.IsAny<INativeProcessOptions>()), Times.Once);
+        _instanceStarterServiceMock.Verify(
+            x => x.StartNewInstance(
+                null,
+                It.Is<LaunchModeBase>(mode => mode is UserMode),
+                It.IsAny<ProcessStartInfo>(),
+                It.IsAny<INativeProcessOptions>()),
+            Times.Once);
     }
 
     [Fact]

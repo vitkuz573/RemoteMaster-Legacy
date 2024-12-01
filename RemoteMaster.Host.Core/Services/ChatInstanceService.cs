@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.LaunchModes;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -15,7 +16,9 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
-    public bool IsRunning => processService.FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => processService.HasProcessArgument(p, Argument));
+    public bool IsRunning => processService
+        .FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
+        .Any(p => processService.HasProcessArgument(p, Argument));
 
     public void Start()
     {
@@ -69,12 +72,13 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     private int StartNewInstance()
     {
+        var chatMode = new ChatMode();
+
         var startInfo = new ProcessStartInfo
         {
-            Arguments = Argument,
             CreateNoWindow = true
         };
 
-        return instanceManagerService.StartNewInstance(null, startInfo);
+        return instanceManagerService.StartNewInstance(null, chatMode, startInfo);
     }
 }
