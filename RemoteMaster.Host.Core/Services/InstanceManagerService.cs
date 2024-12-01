@@ -5,11 +5,14 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.EventArguments;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileService fileService, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
+    public event EventHandler<InstanceStartedEventArgs>? InstanceStarted;
+
     public int StartNewInstance(string? destinationPath, LaunchModeBase launchMode, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(launchMode);
@@ -24,7 +27,11 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
             ? nativeProcessFactory.Create(options)
             : processWrapperFactory.Create();
 
-        return StartProcess(process, startInfo);
+        var processId = StartProcess(process, startInfo);
+
+        OnInstanceStarted(new InstanceStartedEventArgs(processId, launchMode.Name));
+
+        return processId;
     }
 
     private int StartProcess(IProcess process, ProcessStartInfo startInfo)
@@ -106,5 +113,10 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
             .Cast<string>());
 
         return string.Join(" ", arguments);
+    }
+
+    protected virtual void OnInstanceStarted(InstanceStartedEventArgs e)
+    {
+        InstanceStarted?.Invoke(this, e);
     }
 }

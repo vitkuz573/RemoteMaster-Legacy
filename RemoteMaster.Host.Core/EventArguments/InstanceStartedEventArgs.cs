@@ -4,7 +4,9 @@
 
 namespace RemoteMaster.Host.Core.EventArguments;
 
-public class UserInstanceCreatedEventArgs(int processId) : EventArgs
+public class InstanceStartedEventArgs(int processId, string launchMode) : EventArgs
 {
     public int ProcessId { get; } = processId;
+    
+    public string LaunchMode { get; } = launchMode;
 }

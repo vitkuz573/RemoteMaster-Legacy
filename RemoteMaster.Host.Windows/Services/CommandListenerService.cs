@@ -16,19 +16,20 @@ namespace RemoteMaster.Host.Windows.Services;
 public class CommandListenerService : IHostedService
 {
     private readonly IHostConfigurationService _hostConfigurationService;
-    private readonly IUserInstanceService _userInstanceService;
+    private readonly IInstanceManagerService _instanceManagerService;
     private readonly ILogger<CommandListenerService> _logger;
 
     private HubConnection? _connection;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
     private readonly Timer _connectionCheckTimer;
 
-    public CommandListenerService(IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, ILogger<CommandListenerService> logger)
+    public CommandListenerService(IHostConfigurationService hostConfigurationService, IInstanceManagerService instanceManagerService, ILogger<CommandListenerService> logger)
     {
         _hostConfigurationService = hostConfigurationService;
-        _userInstanceService = userInstanceService;
-        _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
+        _instanceManagerService = instanceManagerService;
         _logger = logger;
+
+        _instanceManagerService.InstanceStarted += OnInstanceStarted;
 
         _connectionCheckTimer = new Timer(CheckConnectionAsync, null, Timeout.Infinite, 0);
     }
@@ -74,13 +75,6 @@ public class CommandListenerService : IHostedService
 
         _logger.LogWarning("Connection is not active. Attempting to reconnect...");
 
-        await StartConnectionAsync();
-    }
-
-    private async void OnUserInstanceCreated(object? sender, UserInstanceCreatedEventArgs e)
-    {
-        _logger.LogInformation("UserInstanceCreated event received.");
-        
         await StartConnectionAsync();
     }
 
@@ -163,5 +157,17 @@ public class CommandListenerService : IHostedService
         {
             _connectionLock.Release();
         }
+    }
+
+    private async void OnInstanceStarted(object? sender, InstanceStartedEventArgs e)
+    {
+        if (!e.LaunchMode.Equals("user", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _logger.LogInformation("User instance started with Process ID: {ProcessId}.", e.ProcessId);
+
+        await StartConnectionAsync();
     }
 }

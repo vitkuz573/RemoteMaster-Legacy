@@ -23,8 +23,6 @@ public sealed class UserInstanceService : IUserInstanceService
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<UserInstanceService> _logger;
 
-    public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
-
     public bool IsRunning => _processService
         .FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
         .Any(p => _processService.HasProcessArgument(p, Argument));
@@ -48,8 +46,6 @@ public sealed class UserInstanceService : IUserInstanceService
             var processId = StartNewInstance();
 
             _logger.LogInformation("Successfully started a new instance of the host.");
-
-            OnUserInstanceCreated(new UserInstanceCreatedEventArgs(processId));
         }
         catch (Exception ex)
         {
@@ -120,10 +116,5 @@ public sealed class UserInstanceService : IUserInstanceService
         }
 
         Restart();
-    }
-
-    private void OnUserInstanceCreated(UserInstanceCreatedEventArgs e)
-    {
-        UserInstanceCreated?.Invoke(this, e);
     }
 }

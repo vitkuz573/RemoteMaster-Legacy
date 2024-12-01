@@ -3,10 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using RemoteMaster.Host.Core.EventArguments;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IInstanceManagerService
-{ 
+{
+    event EventHandler<InstanceStartedEventArgs>? InstanceStarted;
+
     int StartNewInstance(string? destinationPath, LaunchModeBase launchMode, ProcessStartInfo startInfo, INativeProcessOptions? options = null);
 }
