@@ -29,7 +29,7 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
 
         var processId = StartProcess(process, startInfo);
 
-        OnInstanceStarted(new InstanceStartedEventArgs(processId, launchMode.Name));
+        OnInstanceStarted(new InstanceStartedEventArgs(processId, launchMode));
 
         return processId;
     }
