@@ -3,92 +3,30 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Exceptions;
-using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Core.Helpers;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ArgumentParser(ILaunchModeProvider modeProvider, IHelpService helpService, IEnumerable<IParameterHandler> handlers) : IArgumentParser
+public class ArgumentParser(IArgumentSerializer serializer, IHelpService helpService) : IArgumentParser
 {
     public LaunchModeBase? ParseArguments(string[] args)
     {
         if (args.Contains("--help", StringComparer.OrdinalIgnoreCase))
         {
-            var extractedModeName = ExtractLaunchModeName(args);
-
-            if (!string.IsNullOrEmpty(extractedModeName) && modeProvider.GetAvailableModes().TryGetValue(extractedModeName, out var specificMode))
-            {
-                helpService.PrintHelp(specificMode);
-            }
-            else
-            {
-                helpService.PrintHelp(null);
-            }
+            var modeName = ArgumentUtils.ExtractLaunchModeName(args);
+            helpService.PrintHelp(modeName);
 
             return null;
         }
 
-        var modeName = ExtractLaunchModeName(args);
-
-        if (string.IsNullOrEmpty(modeName))
+        try
+        {
+            return serializer.Deserialize(args);
+        }
+        catch (ArgumentException)
         {
             helpService.PrintHelp(null);
-
-            return null;
-        }
-
-        if (!modeProvider.GetAvailableModes().TryGetValue(modeName, out var mode))
-        {
-            helpService.SuggestSimilarModes(modeName);
-
-            return null;
-        }
-
-        ParseAndSetParameters(args, mode);
-
-        return mode;
-    }
-
-    private static string? ExtractLaunchModeName(string[] args)
-    {
-        var modeArg = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode=", StringComparison.OrdinalIgnoreCase));
-
-        if (modeArg == null)
-        {
-            return null;
-        }
-
-        var equalsIndex = modeArg.IndexOf('=');
-
-        if (equalsIndex == -1 || equalsIndex == modeArg.Length - 1)
-        {
-            return null;
-        }
-
-        return modeArg[(equalsIndex + 1)..].Trim();
-    }
-
-    private void ParseAndSetParameters(string[] args, LaunchModeBase mode)
-    {
-        foreach (var (name, parameter) in mode.Parameters)
-        {
-            var handler = handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}' of type {parameter.GetType().GetFriendlyName()}.");
-
-            handler.Handle(args, parameter, name);
-        }
-
-        ValidateRequiredParameters(mode);
-    }
-
-    private static void ValidateRequiredParameters(LaunchModeBase mode)
-    {
-        var missingParameters = mode.Parameters
-            .Where(p => p.Value is { IsRequired: true } && (p.Value.Value == null || (p.Value.Value is string str && string.IsNullOrWhiteSpace(str))))
-            .ToList();
-
-        if (missingParameters.Count != 0)
-        {
-            throw new MissingParametersException(mode.Name, missingParameters);
+            throw;
         }
     }
 }

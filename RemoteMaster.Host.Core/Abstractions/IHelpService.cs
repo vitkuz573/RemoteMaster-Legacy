@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHelpService
 {
-    void PrintHelp(LaunchModeBase? specificMode);
+    void PrintHelp(string? modeName = null);
 
     void PrintMissingParametersError(string modeName, IEnumerable<KeyValuePair<string, ILaunchParameter>> missingParameters);
 

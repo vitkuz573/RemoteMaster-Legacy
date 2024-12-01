@@ -33,6 +33,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
+        services.AddSingleton<IArgumentSerializer, ArgumentSerializer>();
+        services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
     }
 
     public static void AddMinimalCoreServices(this IServiceCollection services)
@@ -42,7 +44,6 @@ public static class ServiceCollectionExtensions
         services.AddMinimalSharedServices();
 
         services.AddSingleton<IArgumentParser, ArgumentParser>();
-        services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
     }
 
     public static void AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)

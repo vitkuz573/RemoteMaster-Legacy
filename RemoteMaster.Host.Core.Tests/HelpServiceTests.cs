@@ -54,13 +54,16 @@ public class HelpServiceTests
             { "param2", new LaunchParameter<string>("param2", "Parameter 2", false) }
         });
 
-        var helpService = CreateHelpService();
+        var helpService = CreateHelpService(new Dictionary<string, LaunchModeBase>
+        {
+            { specificMode.Name, specificMode }
+        });
 
         using var writer = new StringWriter();
         Console.SetOut(writer);
 
         // Act
-        helpService.PrintHelp(specificMode);
+        helpService.PrintHelp("TestMode");
 
         // Assert
         var output = writer.ToString();
@@ -76,13 +79,16 @@ public class HelpServiceTests
         // Arrange
         var specificMode = new TestLaunchMode("EmptyMode", "Mode with no parameters", []);
 
-        var helpService = CreateHelpService();
+        var helpService = CreateHelpService(new Dictionary<string, LaunchModeBase>
+        {
+            { specificMode.Name, specificMode }
+        });
 
         using var writer = new StringWriter();
         Console.SetOut(writer);
 
         // Act
-        helpService.PrintHelp(specificMode);
+        helpService.PrintHelp("EmptyMode");
 
         // Assert
         var output = writer.ToString();

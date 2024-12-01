@@ -9,11 +9,18 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HelpService(ILaunchModeProvider modeProvider) : IHelpService
 {
-    public void PrintHelp(LaunchModeBase? specificMode = null)
+    public void PrintHelp(string? modeName = null)
     {
-        if (specificMode != null)
+        if (!string.IsNullOrEmpty(modeName))
         {
-            PrintModeHelp(specificMode);
+            if (modeProvider.GetAvailableModes().TryGetValue(modeName, out var specificMode))
+            {
+                PrintModeHelp(specificMode);
+            }
+            else
+            {
+                SuggestSimilarModes(modeName);
+            }
         }
         else
         {

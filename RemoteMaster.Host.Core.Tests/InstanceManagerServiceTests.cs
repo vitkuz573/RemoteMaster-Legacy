@@ -20,6 +20,7 @@ public class InstanceManagerServiceTests
     private readonly Mock<IProcessWrapperFactory> _processWrapperFactoryMock;
     private readonly Mock<IProcess> _processWrapperMock;
     private readonly Mock<IFileService> _fileServiceMock;
+    private readonly Mock<IArgumentSerializer> _argumentSerializerMock;
     private readonly Mock<LaunchModeBase> _launchModeMock;
     private readonly ILogger<InstanceManagerService> _logger;
     private readonly InstanceManagerService _instanceManagerService;
@@ -42,6 +43,8 @@ public class InstanceManagerServiceTests
 
         _fileServiceMock = new Mock<IFileService>();
 
+        _argumentSerializerMock = new Mock<IArgumentSerializer>();
+
         _launchModeMock = new Mock<LaunchModeBase>();
         _launchModeMock.Setup(lm => lm.Name).Returns("testmode");
 
@@ -60,6 +63,7 @@ public class InstanceManagerServiceTests
             _nativeProcessFactoryMock.Object,
             _processWrapperFactoryMock.Object,
             _fileServiceMock.Object,
+            _argumentSerializerMock.Object,
             _logger);
     }
 

@@ -4,34 +4,26 @@
 
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Exceptions;
-using RemoteMaster.Host.Core.Models;
-using RemoteMaster.Host.Core.ParameterHandlers;
 using RemoteMaster.Host.Core.Services;
 
 namespace RemoteMaster.Host.Core.Tests;
 
 public class ArgumentParserTests
 {
-    private readonly Mock<ILaunchModeProvider> _mockModeProvider;
+    private readonly Mock<IArgumentSerializer> _mockSerializer;
     private readonly Mock<IHelpService> _mockHelpService;
     private readonly ArgumentParser _parser;
 
     public ArgumentParserTests()
     {
-        _mockModeProvider = new Mock<ILaunchModeProvider>();
+        _mockSerializer = new Mock<IArgumentSerializer>();
         _mockHelpService = new Mock<IHelpService>();
 
-        List<IParameterHandler> handlers = [
-            new BooleanParameterHandler(),
-            new StringParameterHandler()
-        ];
-
-        _parser = new ArgumentParser(_mockModeProvider.Object, _mockHelpService.Object, handlers);
+        _parser = new ArgumentParser(_mockSerializer.Object, _mockHelpService.Object);
     }
 
     [Fact]
-    public void ParseArguments_NoArguments_PrintsHelpAndReturnsNull()
+    public void ParseArguments_NoArguments_ReturnsNull()
     {
         // Arrange
         var args = Array.Empty<string>();
@@ -40,149 +32,54 @@ public class ArgumentParserTests
         var result = _parser.ParseArguments(args);
 
         // Assert
-        _mockHelpService.Verify(h => h.PrintHelp(null), Times.Once);
+        Assert.Null(result);
+        _mockHelpService.Verify(h => h.PrintHelp(It.IsAny<string?>()), Times.Never);
+    }
+
+    [Fact]
+    public void ParseArguments_WithHelpFlag_PrintsHelpAndReturnsNull()
+    {
+        // Arrange
+        var args = new[] { "--help", "--launch-mode=testMode" };
+
+        // Act
+        var result = _parser.ParseArguments(args);
+
+        // Assert
+        _mockHelpService.Verify(h => h.PrintHelp("testMode"), Times.Once);
         Assert.Null(result);
     }
 
     [Fact]
-    public void ParseArguments_InvalidMode_PrintsHelpAndReturnsNull()
+    public void ParseArguments_InvalidArguments_PrintsGeneralHelpAndThrows()
     {
         // Arrange
         var args = new[] { "--launch-mode=invalidMode" };
-        _mockModeProvider.Setup(m => m.GetAvailableModes()).Returns(new Dictionary<string, LaunchModeBase>());
 
-        // Act
-        var result = _parser.ParseArguments(args);
-
-        // Assert
-        _mockHelpService.Verify(h => h.SuggestSimilarModes("invalidMode"), Times.Once);
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void ParseArguments_ValidMode_MissingRequiredParameter_ThrowsException()
-    {
-        // Arrange
-        var mode = new TestLaunchMode("testMode", "Test mode", new Dictionary<string, ILaunchParameter>
-        {
-            { "param1", new LaunchParameter<string>("param1", "Parameter 1", true) }
-        });
-
-        _mockModeProvider.Setup(m => m.GetAvailableModes()).Returns(new Dictionary<string, LaunchModeBase>
-        {
-            { "testMode", mode }
-        });
-
-        var args = new[] { "--launch-mode=testMode" };
+        _mockSerializer.Setup(s => s.Deserialize(args))
+            .Throws(new ArgumentException());
 
         // Act & Assert
-        var exception = Assert.Throws<MissingParametersException>(() => _parser.ParseArguments(args));
-        Assert.Equal("testMode", exception.LaunchModeName);
-        Assert.Single(exception.MissingParameters);
+        Assert.Throws<ArgumentException>(() => _parser.ParseArguments(args));
+        _mockHelpService.Verify(h => h.PrintHelp(null), Times.Once);
     }
 
     [Fact]
-    public void ParseArguments_ValidMode_SetsBooleanParameterCorrectly()
+    public void ParseArguments_ValidArguments_ReturnsLaunchMode()
     {
         // Arrange
-        var boolParam = new LaunchParameter<bool>("param1", "Boolean Parameter", false);
-        var mode = new TestLaunchMode("testMode", "Test mode", new Dictionary<string, ILaunchParameter>
-        {
-            { "param1", boolParam }
-        });
-
-        _mockModeProvider.Setup(m => m.GetAvailableModes()).Returns(new Dictionary<string, LaunchModeBase>
-        {
-            { "testMode", mode }
-        });
-
-        var args = new[] { "--launch-mode=testMode", "--param1" };
-
-        // Act
-        var result = _parser.ParseArguments(args);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.True(boolParam.Value);
-    }
-
-    [Fact]
-    public void ParseArguments_ValidMode_SetsStringParameterCorrectly()
-    {
-        // Arrange
-        var stringParam = new LaunchParameter<string>("param1", "String Parameter", false);
-        var mode = new TestLaunchMode("testMode", "Test mode", new Dictionary<string, ILaunchParameter>
-        {
-            { "param1", stringParam }
-        });
-
-        _mockModeProvider.Setup(m => m.GetAvailableModes()).Returns(new Dictionary<string, LaunchModeBase>
-        {
-            { "testMode", mode }
-        });
-
         var args = new[] { "--launch-mode=testMode", "--param1=value1" };
+        var mockLaunchMode = new Mock<LaunchModeBase>();
+
+        _mockSerializer.Setup(s => s.Deserialize(args))
+            .Returns(mockLaunchMode.Object);
 
         // Act
         var result = _parser.ParseArguments(args);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("value1", stringParam.Value);
-    }
-
-    [Fact]
-    public void ParseArguments_ValidMode_HandlesMultipleAliases()
-    {
-        // Arrange
-        var stringParam = new LaunchParameter<string>("param1", "String Parameter", false, "alias1", "alias2");
-        var mode = new TestLaunchMode("testMode", "Test mode", new Dictionary<string, ILaunchParameter>
-        {
-            { "param1", stringParam }
-        });
-
-        _mockModeProvider.Setup(m => m.GetAvailableModes()).Returns(new Dictionary<string, LaunchModeBase>
-        {
-            { "testMode", mode }
-        });
-
-        var args = new[] { "--launch-mode=testMode", "--alias2=value2" };
-
-        // Act
-        var result = _parser.ParseArguments(args);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("value2", stringParam.Value);
-    }
-
-    private class TestLaunchMode(string name, string description, Dictionary<string, ILaunchParameter> parameters) : LaunchModeBase
-    {
-        public override string Name { get; } = name;
-
-        public override string Description { get; } = description;
-
-        protected override void InitializeParameters()
-        {
-            foreach (var parameter in parameters.Values)
-            {
-                switch (parameter)
-                {
-                    case ILaunchParameter<string> stringParam:
-                        AddParameter(stringParam);
-                        break;
-                    case ILaunchParameter<bool> boolParam:
-                        AddParameter(boolParam);
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unsupported parameter type: {parameter.GetType()}");
-                }
-            }
-        }
-
-        public override Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
+        Assert.Equal(mockLaunchMode.Object, result);
+        _mockHelpService.Verify(h => h.PrintHelp(It.IsAny<string?>()), Times.Never);
     }
 }
