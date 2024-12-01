@@ -4,7 +4,7 @@
 
 using RemoteMaster.Host.Windows.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Models;
+namespace RemoteMaster.Host.Windows.WindowsServices;
 
 public class HostService : AbstractService
 {
