@@ -8,7 +8,7 @@ public interface IParameterSerializer
 {
     bool CanHandle(ILaunchParameter parameter);
 
-    void Deserialize(string[] args, ILaunchParameter parameter, string name);
+    void Deserialize(string? value, ILaunchParameter parameter);
 
     string? Serialize(ILaunchParameter parameter, string name);
 }

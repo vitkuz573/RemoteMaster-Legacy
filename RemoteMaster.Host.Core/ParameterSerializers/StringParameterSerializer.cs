@@ -8,35 +8,16 @@ namespace RemoteMaster.Host.Core.ParameterSerializers;
 
 public class StringParameterSerializer : BaseParameterSerializer<string>
 {
-    protected override object? ExtractValue(string[] args, string name, bool isRequired)
-    {
-        var argument = args.FirstOrDefault(arg => arg.StartsWith($"--{name}=", StringComparison.OrdinalIgnoreCase));
-
-        if (argument != null)
-        {
-            return argument[(argument.IndexOf('=') + 1)..];
-        }
-
-        if (isRequired)
-        {
-            throw new ArgumentException($"Required parameter '{name}' is missing.");
-        }
-
-        return null;
-    }
-
-    protected override void SetValue(ILaunchParameter<string> parameter, object? value)
+    protected override void SetValue(ILaunchParameter<string> parameter, string? value)
     {
         ArgumentNullException.ThrowIfNull(parameter);
 
-        if (value is string str && !string.IsNullOrWhiteSpace(str))
+        if (string.IsNullOrWhiteSpace(value) && parameter.IsRequired)
         {
-            parameter.SetValue(str);
+            throw new ArgumentException($"Required parameter '{parameter.Name}' is missing or empty.");
         }
-        else
-        {
-            parameter.SetValue(null);
-        }
+
+        parameter.SetValue(value);
     }
 
     protected override string? GetSerializedValue(ILaunchParameter<string> parameter, string name)

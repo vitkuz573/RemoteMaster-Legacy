@@ -59,20 +59,27 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
         {
             var serializer = serializers.FirstOrDefault(s => s.CanHandle(parameter)) ?? throw new NotSupportedException($"No serializer found for parameter '{name}'.");
 
-            var aliases = new[] { name }.Concat(parameter.Aliases);
+            var aliases = new[] { name }.Concat(parameter.Aliases).ToList();
 
-            var matchedAlias = aliases.FirstOrDefault(alias => args.Any(arg =>
+            var matchedArg = args.FirstOrDefault(arg => aliases.Any(alias =>
                 arg.Equals($"--{alias}", StringComparison.OrdinalIgnoreCase) ||
                 arg.Equals($"-{alias}", StringComparison.OrdinalIgnoreCase) ||
                 arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase) ||
                 arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase)));
 
-            if (matchedAlias == null)
+            if (matchedArg == null)
             {
                 continue;
             }
 
-            serializer.Deserialize(args, parameter, matchedAlias);
+            string? argumentValue = null;
+
+            if (matchedArg.Contains('='))
+            {
+                argumentValue = matchedArg[(matchedArg.IndexOf('=') + 1)..];
+            }
+
+            serializer.Deserialize(argumentValue, parameter);
         }
 
         ValidateRequiredParameters(mode);

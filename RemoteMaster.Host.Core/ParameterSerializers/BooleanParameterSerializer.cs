@@ -8,16 +8,11 @@ namespace RemoteMaster.Host.Core.ParameterSerializers;
 
 public class BooleanParameterSerializer : BaseParameterSerializer<bool>
 {
-    protected override object? ExtractValue(string[] args, string name, bool isRequired)
-    {
-        return args.Any(arg => arg.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
-    }
-
-    protected override void SetValue(ILaunchParameter<bool> parameter, object? value)
+    protected override void SetValue(ILaunchParameter<bool> parameter, string? value)
     {
         ArgumentNullException.ThrowIfNull(parameter);
 
-        parameter.SetValue(value is true);
+        parameter.SetValue(true);
     }
 
     protected override string? GetSerializedValue(ILaunchParameter<bool> parameter, string name)

@@ -15,16 +15,14 @@ public abstract class BaseParameterSerializer<T> : IParameterSerializer
         return parameter is ILaunchParameter<T>;
     }
 
-    public void Deserialize(string[] args, ILaunchParameter parameter, string name)
+    public void Deserialize(string? value, ILaunchParameter parameter)
     {
         ArgumentNullException.ThrowIfNull(parameter);
 
         if (parameter is not ILaunchParameter<T> typedParameter)
         {
-            throw new ArgumentException($"Invalid parameter type for {name}", nameof(parameter));
+            throw new ArgumentException($"Invalid parameter type for {parameter.Name}", nameof(parameter));
         }
-
-        var value = ExtractValue(args, name, typedParameter.IsRequired);
 
         SetValue(typedParameter, value);
     }
@@ -39,9 +37,7 @@ public abstract class BaseParameterSerializer<T> : IParameterSerializer
         return GetSerializedValue(typedParameter, name);
     }
 
-    protected abstract object? ExtractValue(string[] args, string name, bool isRequired);
-
-    protected abstract void SetValue(ILaunchParameter<T> parameter, object? value);
+    protected abstract void SetValue(ILaunchParameter<T> parameter, string? value);
 
     protected abstract string? GetSerializedValue(ILaunchParameter<T> parameter, string name);
 }
