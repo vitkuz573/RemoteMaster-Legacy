@@ -61,12 +61,14 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
 
             var aliases = new[] { name }.Concat(parameter.Aliases);
 
-            var matchedAlias = aliases.FirstOrDefault(alias => args.Any(arg => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
+            var matchedAlias = aliases.FirstOrDefault(alias => args.Any(arg => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase) || arg.StartsWith($"-{alias}=", StringComparison.OrdinalIgnoreCase)));
 
-            if (matchedAlias != null)
+            if (matchedAlias == null)
             {
-                serializer.Deserialize(args, parameter, matchedAlias);
+                continue;
             }
+
+            serializer.Deserialize(args, parameter, matchedAlias);
         }
 
         ValidateRequiredParameters(mode);
@@ -80,7 +82,7 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
             .Where(p => p.Value.IsRequired && (p.Value.Value == null || (p.Value.Value is string str && string.IsNullOrWhiteSpace(str))))
             .ToList();
 
-        if (missingParameters.Count != 0)
+        if (missingParameters.Count > 0)
         {
             throw new MissingParametersException(mode.Name, missingParameters);
         }
