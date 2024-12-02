@@ -61,9 +61,11 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
 
             var aliases = new[] { name }.Concat(parameter.Aliases);
 
-            foreach (var alias in aliases)
+            var matchedAlias = aliases.FirstOrDefault(alias => args.Any(arg => arg.StartsWith($"--{alias}=", StringComparison.OrdinalIgnoreCase)));
+
+            if (matchedAlias != null)
             {
-                serializer.Deserialize(args, parameter, alias);
+                serializer.Deserialize(args, parameter, matchedAlias);
             }
         }
 
