@@ -12,7 +12,7 @@ using RemoteMaster.Host.Core.HttpClientHandlers;
 using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Core.NamedOptionsConfigurations;
-using RemoteMaster.Host.Core.ParameterHandlers;
+using RemoteMaster.Host.Core.ParameterSerializers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
 using TimeProvider = RemoteMaster.Host.Core.Services.TimeProvider;
@@ -21,14 +21,16 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    private static void AddCoreParameterHandlers(this IServiceCollection services)
+    private static void AddCoreParameterSerializers(this IServiceCollection services)
     {
-        services.AddTransient<IParameterHandler, StringParameterHandler>();
-        services.AddTransient<IParameterHandler, BooleanParameterHandler>();
+        services.AddTransient<IParameterSerializer, StringParameterSerializer>();
+        services.AddTransient<IParameterSerializer, BooleanParameterSerializer>();
     }
 
     private static void AddCommonCoreServices(this IServiceCollection services)
     {
+        services.AddCoreParameterSerializers();
+
         services.AddTransient<HostInfoEnricher>();
         services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
@@ -40,7 +42,6 @@ public static class ServiceCollectionExtensions
     public static void AddMinimalCoreServices(this IServiceCollection services)
     {
         services.AddCommonCoreServices();
-        services.AddCoreParameterHandlers();
         services.AddMinimalSharedServices();
 
         services.AddSingleton<IArgumentParser, ArgumentParser>();

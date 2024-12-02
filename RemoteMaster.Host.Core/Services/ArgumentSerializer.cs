@@ -8,7 +8,7 @@ using RemoteMaster.Host.Core.Helpers;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IParameterHandler> handlers) : IArgumentSerializer
+public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IParameterSerializer> serializers) : IArgumentSerializer
 {
     public string[] Serialize(LaunchModeBase mode)
     {
@@ -33,38 +33,13 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
                 processedKeys.Add(alias);
             }
 
-            switch (parameter.Value)
+            var serializer = serializers.FirstOrDefault(s => s.CanHandle(parameter)) ?? throw new NotSupportedException($"No serializer found for parameter '{name}'.");
+
+            var serializedValue = serializer.Serialize(parameter, name);
+
+            if (!string.IsNullOrEmpty(serializedValue))
             {
-                case bool boolValue:
-                {
-                    if (boolValue)
-                    {
-                        arguments.Add($"--{name}");
-                    }
-
-                    break;
-                }
-                case string stringValue when !string.IsNullOrWhiteSpace(stringValue):
-                    arguments.Add($"--{name}={stringValue}");
-                    break;
-                case string:
-                {
-                    if (parameter.IsRequired)
-                    {
-                        arguments.Add($"--{name}=");
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    if (parameter.Value != null)
-                    {
-                        arguments.Add($"--{name}={parameter.Value}");
-                    }
-
-                    break;
-                }
+                arguments.Add(serializedValue);
             }
         }
 
@@ -74,7 +49,7 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
     public LaunchModeBase Deserialize(string[] args)
     {
         var modeName = ArgumentUtils.ExtractLaunchModeName(args);
-        
+
         if (string.IsNullOrEmpty(modeName) || !modeProvider.GetAvailableModes().TryGetValue(modeName, out var mode))
         {
             throw new ArgumentException("Invalid or missing launch mode.");
@@ -82,8 +57,14 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
 
         foreach (var (name, parameter) in mode.Parameters)
         {
-            var handler = handlers.FirstOrDefault(h => h.CanHandle(parameter)) ?? throw new NotSupportedException($"No handler found for parameter '{name}'.");
-            handler.Handle(args, parameter, name);
+            var serializer = serializers.FirstOrDefault(s => s.CanHandle(parameter)) ?? throw new NotSupportedException($"No serializer found for parameter '{name}'.");
+
+            var aliases = new[] { name }.Concat(parameter.Aliases);
+
+            foreach (var alias in aliases)
+            {
+                serializer.Deserialize(args, parameter, alias);
+            }
         }
 
         ValidateRequiredParameters(mode);

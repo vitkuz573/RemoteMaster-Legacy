@@ -4,9 +4,11 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IParameterHandler
+public interface IParameterSerializer
 {
     bool CanHandle(ILaunchParameter parameter);
 
-    void Handle(string[] args, ILaunchParameter parameter, string name);
+    void Deserialize(string[] args, ILaunchParameter parameter, string name);
+
+    string? Serialize(ILaunchParameter parameter, string name);
 }
