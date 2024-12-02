@@ -269,6 +269,10 @@ public partial class Home
     {
         try
         {
+            var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(_currentUser!.Id);
+
+            _accessToken = accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+
             const string url = "hubs/control?thumbnail=true";
 
             if (cancellationToken.IsCancellationRequested)
