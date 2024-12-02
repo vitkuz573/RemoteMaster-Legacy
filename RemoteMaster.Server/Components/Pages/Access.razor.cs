@@ -61,6 +61,8 @@ public partial class Access : IAsyncDisposable
     private bool _firstRenderCompleted;
     private bool _disposed;
 
+    private string? _accessToken;
+
     protected override void OnParametersSet()
     {
         if (string.IsNullOrEmpty(_title))

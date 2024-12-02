@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Compression;
+using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -28,20 +29,26 @@ public partial class UpdateDialog
     private readonly Dictionary<HostDto, HostResults> _resultsPerHost = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
-    protected override void OnInitialized()
+    private string? _accessToken;
+
+    protected async override Task OnInitializedAsync()
     {
         _folderPath = UpdateOptions.Value.ExecutablesRoot;
         _username = UpdateOptions.Value.UserName;
         _password = UpdateOptions.Value.Password;
         _forceUpdate = UpdateOptions.Value.ForceUpdate;
         _allowDowngrade = UpdateOptions.Value.AllowDowngrade;
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        var user = httpContext.User;
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
+        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+        _accessToken = accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
     }
 
     private async Task Confirm()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext!.User);
-
         var updateTasks = new List<Task>();
 
         foreach (var (host, connection) in Hosts)
@@ -51,12 +58,7 @@ public partial class UpdateDialog
                 var updaterConnection = new HubConnectionBuilder()
                 .WithUrl($"https://{host.IpAddress}:6001/hubs/updater", options =>
                 {
-                    options.AccessTokenProvider = async () =>
-                    {
-                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId!);
-
-                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
-                    };
+                    options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
                 })
                 .AddMessagePackProtocol(options => options.Configure())
                 .Build();

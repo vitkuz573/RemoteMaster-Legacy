@@ -49,7 +49,6 @@ public class HostAccessService(IAuthorizationService authorizationService, IHttp
         logger.LogWarning("Access token retrieval failed before rendering.");
 
         result.IsAccessDenied = true;
-
         result.ErrorMessage = "Authorization failed. Please log in again.";
 
         return result;

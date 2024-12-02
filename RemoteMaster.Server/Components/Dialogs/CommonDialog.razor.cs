@@ -68,6 +68,8 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
     private readonly ConcurrentDictionary<HostDto, bool> _loadingStates = new();
     private readonly ConcurrentDictionary<HostDto, string> _errorMessages = new();
 
+    private string? _accessToken;
+
     protected async void Cancel()
     {
         await DisposeAsync();
@@ -78,11 +80,11 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
-
         var user = httpContext.User;
-
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
-        await AccessTokenProvider.GetAccessTokenAsync(userId);
+        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+        _accessToken = accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
 
         if (RequireConnections)
         {
@@ -102,7 +104,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
             try
             {
                 var userId = UserManager.GetUserId(httpContext.User);
-                var connection = await SetupConnection(userId, host, HubPath, StartConnection, CancellationToken.None);
+                var connection = await SetupConnection(host, HubPath, StartConnection, CancellationToken.None);
                 Hosts[host] = connection;
             }
             catch (Exception ex)
@@ -135,7 +137,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
         return !result?.Canceled ?? throw new InvalidOperationException("Result not found.");
     }
 
-    private async Task<HubConnection> SetupConnection(string userId, HostDto host, string hubPath, bool startConnection, CancellationToken cancellationToken)
+    private async Task<HubConnection> SetupConnection(HostDto host, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{host.IpAddress}:5001/{hubPath}", options =>
@@ -203,12 +205,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
                     return handler;
                 };
 
-                options.AccessTokenProvider = async () =>
-                {
-                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
-
-                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
-                };
+                options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
             })
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
@@ -247,7 +244,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
             var httpContext = HttpContextAccessor.HttpContext;
 
             var userId = UserManager.GetUserId(httpContext.User);
-            var newConnection = await SetupConnection(userId, host, HubPath, StartConnection, CancellationToken.None);
+            var newConnection = await SetupConnection(host, HubPath, StartConnection, CancellationToken.None);
             Hosts[host] = newConnection;
             _errorMessages.TryRemove(host, out _);
         }

@@ -45,6 +45,8 @@ public partial class Home
 
     private CancellationTokenSource? _logonCts;
 
+    private string? _accessToken;
+
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
@@ -84,13 +86,8 @@ public partial class Home
         _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).ToList();
 
         var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
-        
-        if (!accessTokenResult.IsSuccess)
-        {
-            Logger.LogError("Failed to retrieve access token for user {UserId}", _currentUser.Id);
-            
-            return;
-        }
+
+        _accessToken = accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
 
         _messages = await NotificationService.GetNotifications();
     }
@@ -431,18 +428,6 @@ public partial class Home
 
     private async Task<HubConnection> SetupConnection(HostDto hostDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
-        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
-
-        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
-
-        if (!accessTokenResult.IsSuccess)
-        {
-            Logger.LogError("Failed to retrieve access token for user {UserId}", userId);
-            throw new InvalidOperationException("Failed to retrieve access token.");
-        }
-
-        var token = accessTokenResult.Value;
-
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostDto.IpAddress}:5001/{hubPath}", options =>
             {
@@ -513,7 +498,7 @@ public partial class Home
                     return handler;
                 };
 
-                options.AccessTokenProvider = () => Task.FromResult(token);
+                options.AccessTokenProvider = () => Task.FromResult(_accessToken);
             })
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
