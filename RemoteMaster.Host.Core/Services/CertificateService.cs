@@ -170,14 +170,27 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
 
     private void LogCertificateDetails(X509Certificate2 certificate)
     {
+        ArgumentNullException.ThrowIfNull(certificate);
+
         logger.LogInformation("Certificate Details:");
 
         logger.LogInformation("    Subject: {Subject}", certificate.Subject);
         logger.LogInformation("    Issuer: {Issuer}", certificate.Issuer);
-        logger.LogInformation("    Valid From: {ValidFrom}", certificate.NotBefore);
-        logger.LogInformation("    Valid To: {ValidTo}", certificate.NotAfter);
+        logger.LogInformation("    Valid From: {ValidFrom:O}", certificate.NotBefore);
+        logger.LogInformation("    Valid To: {ValidTo:O}", certificate.NotAfter);
         logger.LogInformation("    Serial Number: {SerialNumber}", certificate.SerialNumber);
         logger.LogInformation("    Thumbprint: {Thumbprint}", certificate.Thumbprint);
         logger.LogInformation("    Version: {Version}", certificate.Version);
+        logger.LogInformation("    Signature Algorithm: {Algorithm}", certificate.SignatureAlgorithm.FriendlyName);
+        logger.LogInformation("    Public Key Algorithm: {Algorithm}", certificate.PublicKey.Oid.FriendlyName);
+
+        var rsaKey = certificate.GetRSAPublicKey();
+
+        if (rsaKey != null)
+        {
+            logger.LogInformation("    Public Key Length: {KeySize} bits", rsaKey.KeySize);
+        }
+
+        logger.LogInformation("    Has Private Key: {HasPrivateKey}", certificate.HasPrivateKey);
     }
 }
