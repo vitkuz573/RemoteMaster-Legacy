@@ -22,5 +22,5 @@ public class DeviceDto(string name, string deviceClass, string manufacturer, str
 
     public string DeviceInstanceId { get; } = deviceInstanceId;
 
-    public bool IsEnabled { get; set; } = isEnabled;
+    public bool IsEnabled { get; } = isEnabled;
 }

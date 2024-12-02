@@ -69,7 +69,7 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
         try
         {
             var sourceExecutablePath = processService.GetProcessPath();
-            var targetExecutablePath = Path.Combine(targetDirectoryPath, Path.GetFileName(sourceExecutablePath));
+            var targetExecutablePath = fileSystem.Path.Combine(targetDirectoryPath, fileSystem.Path.GetFileName(sourceExecutablePath));
 
             fileService.CopyFile(sourceExecutablePath, targetExecutablePath, true);
         }

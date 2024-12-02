@@ -11,7 +11,7 @@ namespace RemoteMaster.Host.Core.Services;
 public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITimeProvider timeProvider, ILogger<ServerAvailabilityService> logger) : IServerAvailabilityService
 {
     public const int MaxConnectionAttempts = 5;
-    public const int ConnectionRetryDelay = 1000;
+    private const int ConnectionRetryDelay = 1000;
     private const int MaxRetryDelay = 5000;
 
     public async Task<bool> IsServerAvailableAsync(string server, CancellationToken cancellationToken = default)

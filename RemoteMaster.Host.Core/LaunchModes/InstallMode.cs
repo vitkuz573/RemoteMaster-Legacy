@@ -32,7 +32,7 @@ public class InstallMode : LaunchModeBase
 
         var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
 
-        if (!await serverAvailabilityService.IsServerAvailableAsync(server))
+        if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
         {
             logger.LogError("The server {Server} is unavailable. Installation will not proceed.", server);
             Environment.Exit(1);

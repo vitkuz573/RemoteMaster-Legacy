@@ -23,42 +23,48 @@ public class ArgumentSerializer(ILaunchModeProvider modeProvider, IEnumerable<IP
 
         foreach (var (name, parameter) in mode.Parameters)
         {
-            if (processedKeys.Contains(name))
+            if (!processedKeys.Add(name))
             {
                 continue;
             }
 
-            processedKeys.Add(name);
-
-            if (parameter.Aliases != null)
+            foreach (var alias in parameter.Aliases)
             {
-                foreach (var alias in parameter.Aliases)
-                {
-                    processedKeys.Add(alias);
-                }
+                processedKeys.Add(alias);
             }
 
-            if (parameter.Value is bool boolValue)
+            switch (parameter.Value)
             {
-                if (boolValue)
+                case bool boolValue:
                 {
-                    arguments.Add($"--{name}");
+                    if (boolValue)
+                    {
+                        arguments.Add($"--{name}");
+                    }
+
+                    break;
                 }
-            }
-            else if (parameter.Value is string stringValue)
-            {
-                if (!string.IsNullOrWhiteSpace(stringValue))
-                {
+                case string stringValue when !string.IsNullOrWhiteSpace(stringValue):
                     arguments.Add($"--{name}={stringValue}");
-                }
-                else if (parameter.IsRequired)
+                    break;
+                case string:
                 {
-                    arguments.Add($"--{name}=");
+                    if (parameter.IsRequired)
+                    {
+                        arguments.Add($"--{name}=");
+                    }
+
+                    break;
                 }
-            }
-            else if (parameter.Value != null)
-            {
-                arguments.Add($"--{name}={parameter.Value}");
+                default:
+                {
+                    if (parameter.Value != null)
+                    {
+                        arguments.Add($"--{name}={parameter.Value}");
+                    }
+
+                    break;
+                }
             }
         }
 

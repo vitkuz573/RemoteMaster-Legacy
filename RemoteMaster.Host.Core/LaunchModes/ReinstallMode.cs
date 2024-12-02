@@ -42,7 +42,7 @@ public class ReinstallMode : LaunchModeBase
             Environment.Exit(1);
         }
 
-        if (!await serverAvailabilityService.IsServerAvailableAsync(server))
+        if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
         {
             logger.LogError("The server {Server} is unavailable. Reinstallation will not proceed.", server);
             Environment.Exit(1);

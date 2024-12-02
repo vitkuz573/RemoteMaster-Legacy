@@ -9,21 +9,16 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class LaunchModeProvider : ILaunchModeProvider
 {
-    private readonly IReadOnlyDictionary<string, LaunchModeBase> _modes;
-
-    public LaunchModeProvider()
+    private readonly IReadOnlyDictionary<string, LaunchModeBase> _modes = new Dictionary<string, LaunchModeBase>(StringComparer.OrdinalIgnoreCase)
     {
-        _modes = new Dictionary<string, LaunchModeBase>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "User", new UserMode() },
-            { "Service", new ServiceMode() },
-            { "Install", new InstallMode() },
-            { "Updater", new UpdaterMode() },
-            { "Uninstall", new UninstallMode() },
-            { "Reinstall", new ReinstallMode() },
-            { "Chat", new ChatMode() }
-        };
-    }
+        { "User", new UserMode() },
+        { "Service", new ServiceMode() },
+        { "Install", new InstallMode() },
+        { "Updater", new UpdaterMode() },
+        { "Uninstall", new UninstallMode() },
+        { "Reinstall", new ReinstallMode() },
+        { "Chat", new ChatMode() }
+    };
 
     public IReadOnlyDictionary<string, LaunchModeBase> GetAvailableModes() => _modes;
 }

@@ -29,7 +29,7 @@ public class UninstallMode : LaunchModeBase
 
         var server = currentConfig.Server;
 
-        if (!await serverAvailabilityService.IsServerAvailableAsync(server))
+        if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
         {
             logger.LogError("The server {Server} is unavailable. Uninstallation will not proceed.", server);
             Environment.Exit(1);

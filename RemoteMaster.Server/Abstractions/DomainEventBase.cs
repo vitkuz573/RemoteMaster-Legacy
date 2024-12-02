@@ -6,5 +6,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public abstract class DomainEventBase : IDomainEvent
 {
-    public DateTime OccurredOn { get; private set; } = DateTime.UtcNow;
+    public DateTime OccurredOn { get; } = DateTime.UtcNow;
 }

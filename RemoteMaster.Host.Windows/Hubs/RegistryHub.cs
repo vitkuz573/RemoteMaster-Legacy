@@ -159,13 +159,13 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
                         }
                         break;
                     case RegistryValueKind.None:
-                        // logger.LogWarning($"Registry value kind 'None' for valueName: {valueName}");
+                        logger.LogDebug($"Registry value kind 'None' for valueName: {valueName}");
                         break;
                     case RegistryValueKind.Unknown:
-                        // logger.LogWarning($"Registry value kind 'Unknown' for valueName: {valueName}");
+                        logger.LogDebug($"Registry value kind 'Unknown' for valueName: {valueName}");
                         break;
                     default:
-                        logger.LogWarning("Unsupported registry value type: {ValueKind} for valueName: {ValueName}", valueKind, valueName);
+                        logger.LogDebug("Unsupported registry value type: {ValueKind} for valueName: {ValueName}", valueKind, valueName);
                         break;
                 }
             }

@@ -25,7 +25,7 @@ public class ArgumentParser(IArgumentSerializer serializer, IHelpService helpSer
         }
         catch (ArgumentException)
         {
-            helpService.PrintHelp(null);
+            helpService.PrintHelp();
             throw;
         }
     }
