@@ -2,7 +2,7 @@
   "profiles": {
     "RemoteMaster.Host.Windows": {
       "commandName": "Project",
-      "commandLineArgs": "--launch-mode=chat"
+      "commandLineArgs": "chat"
     }
   }
 }

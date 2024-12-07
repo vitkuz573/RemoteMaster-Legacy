@@ -9,19 +9,18 @@ using RemoteMaster.Host.Core.EventArguments;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileService fileService, IArgumentSerializer argumentSerializer, ILogger<InstanceManagerService> logger) : IInstanceManagerService
+public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IProcessWrapperFactory processWrapperFactory, IFileService fileService, ILogger<InstanceManagerService> logger) : IInstanceManagerService
 {
     public event EventHandler<InstanceStartedEventArgs>? InstanceStarted;
 
-    public int StartNewInstance(string? destinationPath, LaunchModeBase launchMode, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
+    public int StartNewInstance(string? destinationPath, string commandName, string[] arguments, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
     {
-        ArgumentNullException.ThrowIfNull(launchMode);
         ArgumentNullException.ThrowIfNull(startInfo);
 
         var executablePath = PrepareExecutable(destinationPath);
 
         startInfo.FileName = executablePath;
-        startInfo.Arguments = string.Join(" ", argumentSerializer.Serialize(launchMode));
+        startInfo.Arguments = string.Join(" ", new[] { commandName }.Concat(arguments));
 
         var process = options != null
             ? nativeProcessFactory.Create(options)
@@ -29,7 +28,7 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
 
         var processId = StartProcess(process, startInfo);
 
-        OnInstanceStarted(new InstanceStartedEventArgs(processId, launchMode));
+        InstanceStarted?.Invoke(this, new InstanceStartedEventArgs(processId, commandName, arguments));
 
         return processId;
     }
@@ -71,10 +70,5 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
 
         return executablePath;
-    }
-
-    protected virtual void OnInstanceStarted(InstanceStartedEventArgs e)
-    {
-        InstanceStarted?.Invoke(this, e);
     }
 }

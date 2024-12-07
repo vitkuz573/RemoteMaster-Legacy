@@ -5,7 +5,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
 using Serilog;
 using Serilog.Events;
@@ -14,15 +13,15 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {
-    public static void ConfigureCoreUrls(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance, ICertificateLoaderService certificateLoaderService)
+    public static void ConfigureCoreUrls(this WebApplicationBuilder builder, string commandName, ICertificateLoaderService certificateLoaderService)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            switch (launchModeInstance)
+            switch (commandName)
             {
-                case UserMode:
+                case "user":
                     options.ListenAnyIP(5001, listenOptions =>
                     {
                         listenOptions.UseHttps(adapterOptions =>
@@ -31,7 +30,7 @@ public static class WebApplicationBuilderExtensions
                         });
                     });
                     break;
-                case UpdaterMode:
+                case "update":
                     options.ListenAnyIP(6001, listenOptions =>
                     {
                         listenOptions.UseHttps(adapterOptions =>
@@ -40,17 +39,17 @@ public static class WebApplicationBuilderExtensions
                         });
                     });
                     break;
-                case ChatMode:
+                case "chat":
                     options.ListenLocalhost(7001);
                     break;
-                case ServiceMode:
+                case "service":
                     options.ListenLocalhost(7002);
                     break;
             }
         });
     }
 
-    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance, IHostConfigurationService hostConfigurationService, HostInfoEnricher hostInfoEnricher)
+    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, string commandName, string? server, IHostConfigurationService hostConfigurationService, HostInfoEnricher hostInfoEnricher)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(hostConfigurationService);
@@ -59,13 +58,7 @@ public static class WebApplicationBuilderExtensions
         var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host-.log");
         var errorLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host_Error-.log");
 
-        string server;
-
-        if (launchModeInstance is InstallMode installMode)
-        {
-            server = installMode.GetParameter<string>("server").Value ?? throw new InvalidOperationException("Server is required.");
-        }
-        else
+        if (commandName != "install")
         {
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
             server = hostConfiguration.Server;

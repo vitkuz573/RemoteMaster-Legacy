@@ -14,22 +14,22 @@ public partial class RemoteCommandDialog
 
     private string _host = string.Empty;
     private string _localFilePath = string.Empty;
-    private string _launchMode = "install";
+    private string _command = "install";
     private string _arguments = string.Empty;
 
     private void Confirm()
     {
-        var result = RemoteExecutionService.ExecuteApplication(_host, _localFilePath, $"--launch-mode={_launchMode} {_arguments}");
+        var result = RemoteExecutionService.ExecuteApplication(_host, _localFilePath, $"{_command} {_arguments}");
 
         if (result.IsSuccess)
         {
-            Snackbar.Add("Remote command executed successfully.", Severity.Success);
+            SnackBar.Add("Remote command executed successfully.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(true));
         }
         else
         {
             var errorMessage = result.Errors.FirstOrDefault()?.Message ?? "Unknown error occurred.";
-            Snackbar.Add($"Failed to execute remote command: {errorMessage}", Severity.Error);
+            SnackBar.Add($"Failed to execute remote command: {errorMessage}", Severity.Error);
         }
     }
 

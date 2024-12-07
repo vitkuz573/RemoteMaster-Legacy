@@ -7,9 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Exceptions;
 using RemoteMaster.Host.Core.Extensions;
-using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Hubs;
@@ -27,85 +25,62 @@ internal class Program
         ConfigureMinimalServices(minimalServices);
         var minimalServiceProvider = minimalServices.BuildServiceProvider();
 
-        try
+        var commandName = args[0];
+
+        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
         {
-            var argumentParser = minimalServiceProvider.GetRequiredService<IArgumentParser>();
-            var launchModeInstance = argumentParser.ParseArguments(args);
+            ContentRootPath = AppContext.BaseDirectory
+        });
 
-            if (launchModeInstance == null)
-            {
-                Environment.Exit(0);
-            }
+        builder.Host.UseWindowsService();
 
-            var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
-            {
-                ContentRootPath = AppContext.BaseDirectory
-            });
-
-            builder.Configuration.AddCommandLine(args);
-
-            builder.Host.UseWindowsService();
-
-            ConfigureServices(builder.Services, launchModeInstance);
-
-            var hostInfoEnricher = minimalServiceProvider.GetRequiredService<HostInfoEnricher>();
-            var hostConfigurationService = minimalServiceProvider.GetRequiredService<IHostConfigurationService>();
-            var certificateLoaderService = minimalServiceProvider.GetRequiredService<ICertificateLoaderService>();
-
-            await builder.ConfigureSerilog(launchModeInstance, hostConfigurationService, hostInfoEnricher);
-            builder.ConfigureCoreUrls(launchModeInstance, certificateLoaderService);
-
-            var app = builder.Build();
-
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Error");
-            }
-
-            if (launchModeInstance is not InstallMode)
-            {
-                app.UseAuthentication();
-                app.UseAuthorization();
-            }
-
-            app.MapCoreHubs(launchModeInstance);
-
-            if (launchModeInstance is UserMode)
-            {
-                app.MapHub<ServiceHub>("/hubs/service");
-                app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
-                app.MapHub<RegistryHub>("/hubs/registry");
-            }
-
-            app.Lifetime.ApplicationStarted.Register(Callback);
-
-            await app.RunAsync();
-
-            async void Callback()
-            {
-                await launchModeInstance.ExecuteAsync(app.Services);
-            }
-        }
-        catch (MissingParametersException ex)
+        var switchMappings = new Dictionary<string, string>
         {
-            var helpService = minimalServiceProvider.GetRequiredService<IHelpService>();
+            { "--srv", "server" },
+            { "--server", "server" }
+        };
 
-            helpService.PrintMissingParametersError(ex.LaunchModeName, ex.MissingParameters);
+        builder.Configuration.AddCommandLine(args, switchMappings);
 
-            Environment.Exit(1);
-        }
-        catch (ArgumentException ex)
+        ConfigureServices(builder.Services, commandName);
+
+        var hostInfoEnricher = minimalServiceProvider.GetRequiredService<HostInfoEnricher>();
+        var hostConfigurationService = minimalServiceProvider.GetRequiredService<IHostConfigurationService>();
+        var certificateLoaderService = minimalServiceProvider.GetRequiredService<ICertificateLoaderService>();
+
+        var serverValue = builder.Configuration["server"];
+
+        await builder.ConfigureSerilog(commandName, commandName == "install" ? serverValue : null, hostConfigurationService, hostInfoEnricher);
+        builder.ConfigureCoreUrls(commandName, certificateLoaderService);
+
+        var app = builder.Build();
+
+        var rootCommand = app.Services.ConfigureCommands();
+        var parseResult = rootCommand.Parse(args);
+        
+        await parseResult.InvokeAsync();
+
+        if (!app.Environment.IsDevelopment())
         {
-            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
-
-            Environment.Exit(1);
+            app.UseExceptionHandler("/Error");
         }
-        catch (Exception ex)
+
+        if (commandName != "install")
         {
-            await Console.Error.WriteLineAsync($"An unexpected error occurred: {ex.Message}");
-
-            Environment.Exit(1);
+            app.UseAuthentication();
+            app.UseAuthorization();
         }
+
+        app.MapCoreHubs(commandName);
+
+        if (commandName == "user")
+        {
+            app.MapHub<ServiceHub>("/hubs/service");
+            app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
+            app.MapHub<RegistryHub>("/hubs/registry");
+        }
+
+        await app.RunAsync();
     }
 
     private static void ConfigureMinimalServices(IServiceCollection services)
@@ -113,11 +88,11 @@ internal class Program
         services.AddMinimalCoreServices();        
     }
 
-    private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
+    private static void ConfigureServices(IServiceCollection services, string commandName)
     {
         services.AddHttpContextAccessor();
 
-        services.AddCoreServices(launchModeInstance);
+        services.AddCoreServices(commandName);
         
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
@@ -149,19 +124,19 @@ internal class Program
 
         services.AddSingleton<IScreenOverlay, CursorOverlay>();
 
-        switch (launchModeInstance)
+        switch (commandName)
         {
-            case UserMode:
+            case "user":
                 services.AddHostedService<WoLInitializationService>();
                 services.AddHostedService<FirewallInitializationService>();
                 services.AddHostedService<SasInitializationService>();
                 services.AddHostedService<TrayIconHostedService>();
                 break;
-            case ServiceMode:
+            case "service":
                 services.AddHostedService<CommandListenerService>();
                 services.AddHostedService<MessageLoopService>();
                 break;
-            case ChatMode:
+            case "chat":
                 services.AddHostedService<ChatWindowService>();
                 break;
         }

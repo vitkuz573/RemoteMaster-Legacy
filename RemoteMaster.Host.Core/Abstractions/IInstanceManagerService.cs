@@ -11,5 +11,5 @@ public interface IInstanceManagerService
 {
     event EventHandler<InstanceStartedEventArgs>? InstanceStarted;
 
-    int StartNewInstance(string? destinationPath, LaunchModeBase launchMode, ProcessStartInfo startInfo, INativeProcessOptions? options = null);
+    int StartNewInstance(string? destinationPath, string commandName, string[] arguments, ProcessStartInfo startInfo, INativeProcessOptions? options = null);
 }

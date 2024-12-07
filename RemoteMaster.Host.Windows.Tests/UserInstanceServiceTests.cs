@@ -7,7 +7,6 @@ using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows.Tests;
@@ -39,7 +38,8 @@ public class UserInstanceServiceTests
         _instanceStarterServiceMock
             .Setup(x => x.StartNewInstance(
                 It.IsAny<string>(),
-                It.Is<LaunchModeBase>(mode => mode is UserMode),
+                It.Is<string>(mode => mode == "user"),
+                It.IsAny<string[]>(),
                 It.IsAny<ProcessStartInfo>(),
                 It.IsAny<INativeProcessOptions>()))
             .Returns(processId);
@@ -51,7 +51,8 @@ public class UserInstanceServiceTests
         _instanceStarterServiceMock.Verify(
             x => x.StartNewInstance(
                 null,
-                It.Is<LaunchModeBase>(mode => mode is UserMode),
+                It.Is<string>(mode => mode == "user"),
+                It.IsAny<string[]>(),
                 It.IsAny<ProcessStartInfo>(),
                 It.IsAny<INativeProcessOptions>()),
             Times.Once);
@@ -63,7 +64,7 @@ public class UserInstanceServiceTests
         // Arrange
         var processMock = new Mock<IProcess>();
         processMock.Setup(p => p.Id).Returns(1234);
-        processMock.Setup(p => p.GetCommandLine()).Returns("host.exe --launch-mode=user");
+        processMock.Setup(p => p.GetCommandLine()).Returns("host.exe user");
         var processes = new[] { processMock.Object };
 
         _processServiceMock
@@ -71,7 +72,7 @@ public class UserInstanceServiceTests
             .Returns(processes);
 
         _processServiceMock
-            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "--launch-mode=user"))
+            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "user"))
             .Returns(true);
 
         // Act
@@ -86,7 +87,7 @@ public class UserInstanceServiceTests
     {
         // Arrange
         var processMock = new Mock<IProcess>();
-        processMock.Setup(p => p.GetCommandLine()).Returns("--launch-mode=user");
+        processMock.Setup(p => p.GetCommandLine()).Returns("user");
         var processes = new[] { processMock.Object };
 
         _processServiceMock
@@ -94,7 +95,7 @@ public class UserInstanceServiceTests
             .Returns(processes);
 
         _processServiceMock
-            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "--launch-mode=user"))
+            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "user"))
             .Returns(true);
 
         // Act

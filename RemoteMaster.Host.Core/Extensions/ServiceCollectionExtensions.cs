@@ -9,10 +9,8 @@ using Microsoft.Extensions.Options;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.HttpClientHandlers;
-using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Core.NamedOptionsConfigurations;
-using RemoteMaster.Host.Core.ParameterSerializers;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
 using TimeProvider = RemoteMaster.Host.Core.Services.TimeProvider;
@@ -21,33 +19,20 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    private static void AddCoreParameterSerializers(this IServiceCollection services)
-    {
-        services.AddTransient<IParameterSerializer, StringParameterSerializer>();
-        services.AddTransient<IParameterSerializer, BooleanParameterSerializer>();
-    }
-
     private static void AddCommonCoreServices(this IServiceCollection services)
     {
-        services.AddCoreParameterSerializers();
-
         services.AddTransient<HostInfoEnricher>();
-        services.AddSingleton<IHelpService, HelpService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
-        services.AddSingleton<IArgumentSerializer, ArgumentSerializer>();
-        services.AddSingleton<ILaunchModeProvider, LaunchModeProvider>();
     }
 
     public static void AddMinimalCoreServices(this IServiceCollection services)
     {
         services.AddCommonCoreServices();
         services.AddMinimalSharedServices();
-
-        services.AddSingleton<IArgumentParser, ArgumentParser>();
     }
 
-    public static void AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)
+    public static void AddCoreServices(this IServiceCollection services, string commandName)
     {
         services.AddCommonCoreServices();
         services.AddSharedServices();
@@ -86,7 +71,7 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
-        if (launchModeInstance is not InstallMode)
+        if (commandName != "install")
         {
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer();
@@ -98,12 +83,12 @@ public static class ServiceCollectionExtensions
 
         services.AddSignalR().AddMessagePackProtocol(options => options.Configure());
 
-        switch (launchModeInstance)
+        switch (commandName)
         {
-            case UserMode:
+            case "user":
                 services.AddHostedService<InputBackgroundService>();
                 break;
-            case ServiceMode:
+            case "service":
                 services.AddHostedService<CertificateManagementService>();
                 services.AddHostedService<HostProcessMonitorService>();
                 services.AddHostedService<HostRegistrationMonitorService>();

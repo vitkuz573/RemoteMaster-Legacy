@@ -7,7 +7,6 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
-using RemoteMaster.Host.Core.LaunchModes;
 using RemoteMaster.Host.Windows.Models;
 using static Windows.Win32.PInvoke;
 
@@ -15,7 +14,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public sealed class UserInstanceService : IUserInstanceService
 {
-    private const string Argument = "--launch-mode=user";
+    private const string Command = "user";
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
     private readonly IInstanceManagerService _instanceManagerService;
@@ -25,7 +24,7 @@ public sealed class UserInstanceService : IUserInstanceService
 
     public bool IsRunning => _processService
         .FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
-        .Any(p => _processService.HasProcessArgument(p, Argument));
+        .Any(p => _processService.HasProcessArgument(p, Command));
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
     {
@@ -45,11 +44,11 @@ public sealed class UserInstanceService : IUserInstanceService
         {
             var processId = StartNewInstance();
 
-            _logger.LogInformation("Successfully started a new instance of the host.");
+            _logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", _currentExecutablePath);
+            _logger.LogError(ex, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
         }
     }
 
@@ -59,20 +58,20 @@ public sealed class UserInstanceService : IUserInstanceService
 
         foreach (var process in processes)
         {
-            if (!_processService.HasProcessArgument(process, Argument))
+            if (!_processService.HasProcessArgument(process, Command))
             {
                 continue;
             }
 
             try
             {
-                _logger.LogInformation("Attempting to kill process with ID: {ProcessId}.", process.Id);
+                _logger.LogInformation("Attempting to kill {Command} instance with ID: {ProcessId}.", Command, process.Id);
                 process.Kill();
-                _logger.LogInformation("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
+                _logger.LogInformation("Successfully stopped an {Command} instance of the host. Process ID: {ProcessId}", Command, process.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error stopping instance of the host. Process ID: {ProcessId}. Message: {Message}", process.Id, ex.Message);
+                _logger.LogError(ex, "Error stopping {Command} instance of the host. Process ID: {ProcessId}. Message: {Message}", Command, process.Id, ex.Message);
             }
         }
     }
@@ -91,8 +90,6 @@ public sealed class UserInstanceService : IUserInstanceService
 
     private int StartNewInstance()
     {
-        var userMode = new UserMode();
-
         var startInfo = new ProcessStartInfo
         {
             CreateNoWindow = true
@@ -105,7 +102,7 @@ public sealed class UserInstanceService : IUserInstanceService
             UseCurrentUserToken = false
         };
 
-        return _instanceManagerService.StartNewInstance(null, userMode, startInfo, options);
+        return _instanceManagerService.StartNewInstance(null, Command, [], startInfo, options);
     }
 
     private void OnSessionChanged(object? sender, SessionChangeEventArgs e)

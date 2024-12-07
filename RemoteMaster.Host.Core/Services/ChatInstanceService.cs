@@ -6,19 +6,18 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.LaunchModes;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class ChatInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, IProcessService processService, ILogger<ChatInstanceService> logger) : IChatInstanceService
 {
-    private const string Argument = "--launch-mode=chat";
+    private const string Command = "chat";
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => processService
         .FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
-        .Any(p => processService.HasProcessArgument(p, Argument));
+        .Any(p => processService.HasProcessArgument(p, Command));
 
     public void Start()
     {
@@ -26,11 +25,11 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
         {
             StartNewInstance();
 
-            logger.LogInformation("Successfully started a new chat instance of the host.");
+            logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting new instance of the host. Executable path: {Path}", _currentExecutablePath);
+            logger.LogError(ex, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
         }
     }
 
@@ -40,20 +39,20 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
         foreach (var process in processes)
         {
-            if (!processService.HasProcessArgument(process, Argument))
+            if (!processService.HasProcessArgument(process, Command))
             {
                 continue;
             }
 
             try
             {
-                logger.LogInformation("Attempting to kill process with ID: {ProcessId}.", process.Id);
+                logger.LogInformation("Attempting to kill {Command} instance with ID: {ProcessId}.", Command, process.Id);
                 process.Kill();
-                logger.LogInformation("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
+                logger.LogInformation("Successfully stopped an {Command} instance of the host. Process ID: {ProcessId}", Command, process.Id);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error stopping instance of the host. Process ID: {ProcessId}. Message: {Message}", process.Id, ex.Message);
+                logger.LogError(ex, "Error stopping {Command} instance of the host. Process ID: {ProcessId}. Message: {Message}", Command, process.Id, ex.Message);
             }
         }
     }
@@ -72,13 +71,11 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     private int StartNewInstance()
     {
-        var chatMode = new ChatMode();
-
         var startInfo = new ProcessStartInfo
         {
             CreateNoWindow = true
         };
 
-        return instanceManagerService.StartNewInstance(null, chatMode, startInfo);
+        return instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 }

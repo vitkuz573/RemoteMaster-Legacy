@@ -4,17 +4,15 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Host.Core.LaunchModes;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
 public static class EndpointRouteBuilderExtensions
 {
-    public static void MapCoreHubs(this IEndpointRouteBuilder endpoints, LaunchModeBase launchModeBase)
+    public static void MapCoreHubs(this IEndpointRouteBuilder endpoints, string commandName)
     {
-        if (launchModeBase is UserMode)
+        if (commandName == "user")
         {
             endpoints.MapHub<ControlHub>("/hubs/control");
             endpoints.MapHub<CertificateHub>("/hubs/certificate");
@@ -26,7 +24,7 @@ public static class EndpointRouteBuilderExtensions
             endpoints.MapHub<LogHub>("/hubs/log");
         }
 
-        if (launchModeBase is UserMode or UpdaterMode)
+        if (commandName is "user" or "update")
         {
             endpoints.MapHub<UpdaterHub>("/hubs/updater");
         }
