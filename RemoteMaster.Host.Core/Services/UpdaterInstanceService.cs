@@ -71,7 +71,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
         try
         {
-            _instanceManagerService.StartNewInstance(_updaterExecutablePath, "update", arguments.ToArray(), startInfo);
+            _instanceManagerService.StartNewInstance(_updaterExecutablePath, "update", [.. arguments], startInfo);
         }
         catch (Exception ex)
         {

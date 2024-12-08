@@ -70,15 +70,22 @@ public class HostUpdater : IHostUpdater
         await _updaterHubClient.InvokeAsync("NotifyPortReady", 6001);
     }
 
-    public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false)
+    public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false, bool waitForClientConnection = true)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
         try
         {
-            _logger.LogInformation("Waiting for client to connect to UpdaterHub...");
-            await _clientConnectedTcs.Task;
-            _logger.LogInformation("Client connected. Proceeding with update.");
+            if (waitForClientConnection)
+            {
+                _logger.LogInformation("Waiting for client to connect to UpdaterHub...");
+                await _clientConnectedTcs.Task;
+                _logger.LogInformation("Client connected. Proceeding with update.");
+            }
+            else
+            {
+                _logger.LogInformation("Skipping client connection waiting as per configuration.");
+            }
         }
         catch (Exception ex)
         {

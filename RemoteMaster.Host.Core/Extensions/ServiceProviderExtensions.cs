@@ -78,11 +78,17 @@ public static class ServiceProviderExtensions
             Description = "Allows the update operation to proceed with a lower version than the current one."
         };
 
+        var waitForClientConnectionOption = new CliOption<bool>("--wait-for-client-connection", "--wait-connection", "-w")
+        {
+            Description = "Specifies whether the update operation should wait for a client to connect before proceeding."
+        };
+
         command.Options.Add(folderPathOption);
         command.Options.Add(usernameOption);
         command.Options.Add(passwordOption);
         command.Options.Add(forceOption);
         command.Options.Add(allowDowngradeOption);
+        command.Options.Add(waitForClientConnectionOption);
 
         command.SetAction(async (parseResult, _) =>
         {
@@ -91,12 +97,13 @@ public static class ServiceProviderExtensions
             var password = parseResult.GetValue(passwordOption);
             var force = parseResult.GetValue(forceOption);
             var allowDowngrade = parseResult.GetValue(allowDowngradeOption);
+            var waitForClientConnection = parseResult.GetValue(waitForClientConnectionOption);
 
             var hostUpdater = serviceProvider.GetRequiredService<IHostUpdater>();
 
-            await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade);
+            await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade, waitForClientConnection);
 
-            Environment.Exit(0);
+            // Environment.Exit(0);
         });
 
         return command;

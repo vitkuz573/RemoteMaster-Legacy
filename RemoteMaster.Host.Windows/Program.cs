@@ -57,8 +57,8 @@ internal class Program
 
         var rootCommand = app.Services.ConfigureCommands();
         var parseResult = rootCommand.Parse(args);
-        
-        await parseResult.InvokeAsync();
+
+        app.Lifetime.ApplicationStarted.Register(Callback);
 
         if (!app.Environment.IsDevelopment())
         {
@@ -81,6 +81,11 @@ internal class Program
         }
 
         await app.RunAsync();
+
+        async void Callback()
+        {
+            var exitCode = await parseResult.InvokeAsync();
+        }
     }
 
     private static void ConfigureMinimalServices(IServiceCollection services)
