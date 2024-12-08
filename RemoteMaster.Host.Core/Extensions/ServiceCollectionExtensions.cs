@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Host.Core.Abstractions;
@@ -11,6 +12,7 @@ using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.HttpClientHandlers;
 using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Core.NamedOptionsConfigurations;
+using RemoteMaster.Host.Core.OptionsConfigurations;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
 using TimeProvider = RemoteMaster.Host.Core.Services.TimeProvider;
@@ -19,32 +21,20 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    private static void AddCommonCoreServices(this IServiceCollection services)
-    {
-        services.AddTransient<HostInfoEnricher>();
-        services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
-        services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
-    }
-
-    public static void AddMinimalCoreServices(this IServiceCollection services)
-    {
-        services.AddCommonCoreServices();
-        services.AddMinimalSharedServices();
-    }
-
     public static void AddCoreServices(this IServiceCollection services, string commandName)
     {
-        services.AddCommonCoreServices();
         services.AddSharedServices();
 
+        services.AddTransient<HostInfoEnricher>();
         services.AddTransient<CustomHttpClientHandler>();
+        services.AddTransient<IViewerFactory, ViewerFactory>();
+        services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddTransient<ITcpClientFactory, TcpClientFactory>();
         services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
         services.AddSingleton<IHostUninstaller, HostUninstaller>();
         services.AddSingleton<IHostUpdater, HostUpdater>();
-        services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddSingleton<IRsaKeyProvider, RsaKeyProvider>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
@@ -54,7 +44,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
-        services.AddTransient<IViewerFactory, ViewerFactory>();
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
         services.AddSingleton<IFileService, FileService>();
@@ -68,8 +57,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IOverlayManagerService, OverlayManagerService>();
         services.AddSingleton<IServerAvailabilityService, ServerAvailabilityService>();
         services.AddSingleton<ITimeProvider, TimeProvider>();
+        services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
+        services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
+
+        services.AddSingleton<IConfigureOptions<KestrelServerOptions>>(provider => new KestrelConfiguration(commandName, provider.GetRequiredService<ICertificateLoaderService>()));
 
         if (commandName != "install")
         {

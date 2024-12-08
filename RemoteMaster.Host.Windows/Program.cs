@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
-using RemoteMaster.Host.Core.LogEnrichers;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.ScreenOverlays;
@@ -21,10 +20,6 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var minimalServices = new ServiceCollection();
-        ConfigureMinimalServices(minimalServices);
-        var minimalServiceProvider = minimalServices.BuildServiceProvider();
-
         var commandName = args[0];
 
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
@@ -34,24 +29,11 @@ internal class Program
 
         builder.Host.UseWindowsService();
 
-        var switchMappings = new Dictionary<string, string>
-        {
-            { "--srv", "server" },
-            { "--server", "server" }
-        };
-
-        builder.Configuration.AddCommandLine(args, switchMappings);
+        builder.Configuration.AddCommandLine(args);
 
         ConfigureServices(builder.Services, commandName);
 
-        var hostInfoEnricher = minimalServiceProvider.GetRequiredService<HostInfoEnricher>();
-        var hostConfigurationService = minimalServiceProvider.GetRequiredService<IHostConfigurationService>();
-        var certificateLoaderService = minimalServiceProvider.GetRequiredService<ICertificateLoaderService>();
-
-        var serverValue = builder.Configuration["server"];
-
-        await builder.ConfigureSerilog(commandName, commandName == "install" ? serverValue : null, hostConfigurationService, hostInfoEnricher);
-        builder.ConfigureCoreUrls(commandName, certificateLoaderService);
+        builder.ConfigureSerilog();
 
         var app = builder.Build();
 
@@ -84,13 +66,8 @@ internal class Program
 
         async void Callback()
         {
-            var exitCode = await parseResult.InvokeAsync();
+            await parseResult.InvokeAsync();
         }
-    }
-
-    private static void ConfigureMinimalServices(IServiceCollection services)
-    {
-        services.AddMinimalCoreServices();        
     }
 
     private static void ConfigureServices(IServiceCollection services, string commandName)

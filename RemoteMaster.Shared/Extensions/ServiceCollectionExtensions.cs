@@ -12,7 +12,7 @@ namespace RemoteMaster.Shared.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    private static void AddCommonSharedServices(this IServiceCollection services)
+    public static void AddSharedServices(this IServiceCollection services)
     {
         services.AddLogging(loggingBuilder =>
         {
@@ -21,17 +21,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IHostInformationService, HostInformationService>();
-    }
-
-    public static void AddMinimalSharedServices(this IServiceCollection services)
-    {
-        services.AddCommonSharedServices();
-    }
-
-    public static void AddSharedServices(this IServiceCollection services)
-    {
-        services.AddCommonSharedServices();
-
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
     }
