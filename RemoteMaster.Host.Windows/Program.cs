@@ -13,6 +13,7 @@ using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Host.Windows.WindowsServices;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -28,17 +29,29 @@ internal class Program
         });
 
         builder.Host.UseWindowsService();
+        builder.Host.UseSerilog();
 
         builder.Configuration.AddCommandLine(args);
 
         ConfigureServices(builder.Services, commandName);
 
-        builder.ConfigureSerilog();
-
         var app = builder.Build();
 
         var rootCommand = app.Services.ConfigureCommands();
         var parseResult = rootCommand.Parse(args);
+
+        var command = parseResult.CommandResult.Command;
+
+        string? server = null;
+
+        if (command.Name.Equals("install", StringComparison.OrdinalIgnoreCase))
+        {
+            var serverOption = command.Options.First(o => o.Name == "--server");
+
+            server = parseResult.GetValue<string>(serverOption.Name);
+        }
+
+        app.ConfigureSerilog(server);
 
         app.Lifetime.ApplicationStarted.Register(Callback);
 
