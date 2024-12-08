@@ -11,7 +11,6 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.HttpClientHandlers;
 using RemoteMaster.Host.Core.LogEnrichers;
-using RemoteMaster.Host.Core.NamedOptionsConfigurations;
 using RemoteMaster.Host.Core.OptionsConfigurations;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;

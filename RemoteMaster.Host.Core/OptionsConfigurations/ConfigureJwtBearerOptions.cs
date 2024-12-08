@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Core.NamedOptionsConfigurations;
+namespace RemoteMaster.Host.Core.OptionsConfigurations;
 
 public class ConfigureJwtBearerOptions(IRsaKeyProvider rsaKeyProvider) : IConfigureNamedOptions<JwtBearerOptions>
 {
