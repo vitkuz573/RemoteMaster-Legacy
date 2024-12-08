@@ -57,6 +57,15 @@ internal class Program
             server = parseResult.GetValue<string>(serverOption.Name);
         }
 
+        app.MapCoreHubs(commandName);
+
+        if (commandName == "user")
+        {
+            app.MapHub<ServiceHub>("/hubs/service");
+            app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
+            app.MapHub<RegistryHub>("/hubs/registry");
+        }
+
         app.ConfigureSerilog(server);
 
         var oneOffCommands = new HashSet<string> { "install", "update", "uninstall", "reinstall" };
@@ -65,7 +74,13 @@ internal class Program
                            args[0].StartsWith('-') ||
                            (commandResult.Command != rootCommand && oneOffCommands.Contains(commandResult.Command.Name.ToLower()));
 
-        if (shouldInvoke)
+        var isUpdateCommand = commandName == "update";
+
+        if (isUpdateCommand)
+        {
+            app.Lifetime.ApplicationStarted.Register(Callback);
+        }
+        else if (shouldInvoke)
         {
             return await parseResult.InvokeAsync();
         }
@@ -81,18 +96,14 @@ internal class Program
             app.UseAuthorization();
         }
 
-        app.MapCoreHubs(commandName);
-
-        if (commandName == "user")
-        {
-            app.MapHub<ServiceHub>("/hubs/service");
-            app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
-            app.MapHub<RegistryHub>("/hubs/registry");
-        }
-
         await app.RunAsync();
 
         return 0;
+
+        async void Callback()
+        {
+            await parseResult.InvokeAsync();
+        }
     }
 
     private static void ConfigureServices(IServiceCollection services, string commandName)

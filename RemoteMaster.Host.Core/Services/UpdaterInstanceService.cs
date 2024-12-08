@@ -62,9 +62,11 @@ public class UpdaterInstanceService : IUpdaterInstanceService
             arguments.Add("--allow-downgrade");
         }
 
+        arguments.Add("--wait-for-client-connection");
+
         var startInfo = new ProcessStartInfo
         {
-            CreateNoWindow = true,
+            CreateNoWindow = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };

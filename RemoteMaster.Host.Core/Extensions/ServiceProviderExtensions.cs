@@ -103,7 +103,7 @@ public static class ServiceProviderExtensions
 
             await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade, waitForClientConnection);
 
-            // return 0;
+            return 0;
         });
 
         return command;
