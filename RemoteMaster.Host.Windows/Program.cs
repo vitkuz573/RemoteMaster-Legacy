@@ -19,10 +19,8 @@ namespace RemoteMaster.Host.Windows;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
+    private static async Task<int> Main(string[] args)
     {
-        var commandName = args[0];
-
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory
@@ -33,27 +31,64 @@ internal class Program
 
         builder.Configuration.AddCommandLine(args);
 
+        string? commandName = null;
+
+        if (args.Length > 0 && !args[0].StartsWith('-'))
+        {
+            commandName = args[0].ToLower();
+        }
+
         ConfigureServices(builder.Services, commandName);
 
         var app = builder.Build();
 
         var rootCommand = app.Services.ConfigureCommands();
-        var parseResult = rootCommand.Parse(args);
 
-        var command = parseResult.CommandResult.Command;
+        var parseResult = rootCommand.Parse(args);
+        var commandResult = parseResult.CommandResult;
 
         string? server = null;
 
-        if (command.Name.Equals("install", StringComparison.OrdinalIgnoreCase))
+        if (commandResult.Command.Name.Equals("install", StringComparison.OrdinalIgnoreCase))
         {
-            var serverOption = command.Options.First(o => o.Name == "--server");
+            var installCommand = rootCommand.Subcommands.First(c => c.Name == "install");
+            var serverOption = installCommand.Options.First(o => o.Name == "--server");
 
             server = parseResult.GetValue<string>(serverOption.Name);
         }
 
         app.ConfigureSerilog(server);
 
-        app.Lifetime.ApplicationStarted.Register(Callback);
+        var oneOffCommands = new HashSet<string> { "install", "update", "uninstall", "reinstall" };
+
+        if (args.Length == 0)
+        {
+            await parseResult.InvokeAsync();
+
+            return 0;
+        }
+
+        var firstArg = args[0];
+        var isOption = firstArg.StartsWith('-');
+
+        if (isOption)
+        {
+            var exitCode = await parseResult.InvokeAsync();
+
+            return exitCode;
+        }
+
+        if (commandResult.Command != rootCommand)
+        {
+            var commandNameMain = commandResult.Command.Name.ToLower();
+
+            if (oneOffCommands.Contains(commandNameMain))
+            {
+                var exitCode = await parseResult.InvokeAsync();
+
+                return exitCode;
+            }
+        }
 
         if (!app.Environment.IsDevelopment())
         {
@@ -77,10 +112,7 @@ internal class Program
 
         await app.RunAsync();
 
-        async void Callback()
-        {
-            await parseResult.InvokeAsync();
-        }
+        return 0;
     }
 
     private static void ConfigureServices(IServiceCollection services, string commandName)

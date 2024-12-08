@@ -103,7 +103,7 @@ public static class ServiceProviderExtensions
 
             await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade, waitForClientConnection);
 
-            // Environment.Exit(0);
+            // return 0;
         });
 
         return command;
@@ -128,12 +128,12 @@ public static class ServiceProviderExtensions
             {
                 logger.LogError("The server {Server} is unavailable. Uninstallation will not proceed.", server);
 
-                Environment.Exit(1);
+                return 1;
             }
 
             await hostUninstaller.UninstallAsync();
 
-            Environment.Exit(0);
+            return 0;
         });
 
         return command;
@@ -179,14 +179,14 @@ public static class ServiceProviderExtensions
             {
                 logger.LogError("The server {Server} is unavailable. Installation will not proceed.", server);
 
-                Environment.Exit(1);
+                return 1;
             }
 
             var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
 
             await hostInstaller.InstallAsync(installRequest);
 
-            Environment.Exit(0);
+            return 0;
         });
 
         return command;
@@ -237,14 +237,14 @@ public static class ServiceProviderExtensions
             {
                 logger.LogError("The configuration is incomplete or invalid.");
 
-                Environment.Exit(1);
+                return 1;
             }
 
             if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Reinstallation will not proceed.", server);
 
-                Environment.Exit(1);
+                return 1;
             }
 
             await hostUninstaller.UninstallAsync();
@@ -253,7 +253,7 @@ public static class ServiceProviderExtensions
 
             await hostInstaller.InstallAsync(installRequest);
 
-            Environment.Exit(0);
+            return 0;
         });
 
         return command;
