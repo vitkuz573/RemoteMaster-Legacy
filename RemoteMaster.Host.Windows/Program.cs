@@ -61,33 +61,13 @@ internal class Program
 
         var oneOffCommands = new HashSet<string> { "install", "update", "uninstall", "reinstall" };
 
-        if (args.Length == 0)
+        var shouldInvoke = args.Length == 0 ||
+                           args[0].StartsWith('-') ||
+                           (commandResult.Command != rootCommand && oneOffCommands.Contains(commandResult.Command.Name.ToLower()));
+
+        if (shouldInvoke)
         {
-            await parseResult.InvokeAsync();
-
-            return 0;
-        }
-
-        var firstArg = args[0];
-        var isOption = firstArg.StartsWith('-');
-
-        if (isOption)
-        {
-            var exitCode = await parseResult.InvokeAsync();
-
-            return exitCode;
-        }
-
-        if (commandResult.Command != rootCommand)
-        {
-            var commandNameMain = commandResult.Command.Name.ToLower();
-
-            if (oneOffCommands.Contains(commandNameMain))
-            {
-                var exitCode = await parseResult.InvokeAsync();
-
-                return exitCode;
-            }
+            return await parseResult.InvokeAsync();
         }
 
         if (!app.Environment.IsDevelopment())
