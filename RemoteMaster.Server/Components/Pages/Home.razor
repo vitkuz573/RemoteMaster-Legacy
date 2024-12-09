@@ -225,7 +225,7 @@
                             </MudTabPanel>
 
                             <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
-                                @if (context.User.HasClaim("HostInformation", "View"))
+                                @if (context.User.HasClaim("HostManagement", "View"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedHosts.Count != 1)" Class="mr-2">Host Info</MudButton>
                                 }
