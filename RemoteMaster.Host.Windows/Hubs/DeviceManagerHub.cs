@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Enums;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -9,6 +10,7 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
+[Authorize(Roles = "Administrator")]
 public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<IDeviceManagerClient>
 {
     public async Task GetDevices()
