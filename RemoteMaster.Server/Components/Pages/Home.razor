@@ -66,11 +66,16 @@
         <MudNavMenu>
             <AuthorizeView>
                 <Authorized>
-                    @if (context.User.IsInRole("Administrator"))
+                    @if (context.User.HasClaim("CertificateManagement", "ViewTasks"))
                     {
                         <MudNavLink Match="NavLinkMatch.All" OnClick="OpenCertificateRenewTasks">Certificate tasks</MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("CertificateManagement", "PublishCRL"))
+                    {
                         <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
                     }
+
                     <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">Profile</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
                 </Authorized>

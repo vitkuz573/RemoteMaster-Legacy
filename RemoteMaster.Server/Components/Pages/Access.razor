@@ -31,60 +31,103 @@
             </MudText>
         </MudDrawerHeader>
         <MudNavMenu Color="Color.Info">
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
-                <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
-                    @foreach (var displayItem in GetDisplayItems())
-                    {
-                        <MudSelectItem Value="@displayItem.Name">@displayItem.DisplayName</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudNavLink>
-            
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Hd">
-                <MudSelect Value="@_selectedCodec" ValueChanged="OnChangeCodec" Label="Codec" T="string?" Dense="true">
-                    @foreach (var codecItem in _codecs)
-                    {
-                        <MudSelectItem Value="@codecItem">@codecItem</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudNavLink>
-            
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Speed">
-                <MudText>Frame Rate</MudText>
-                <MudSlider T="int" Value="@_frameRate" Min="10" Max="100" ValueChanged="ChangeFrameRate" />
-            </MudNavLink>
-
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
-                <MudText>Image Quality</MudText>
-                <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="ChangeQuality" />
-            </MudNavLink>
-
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
-                <MudText>Draw Cursor</MudText>
-                <MudSwitch T="bool" Value="@_drawCursor" ValueChanged="ToggleDrawCursor" />
-            </MudNavLink>
-
-            <AuthorizeView Roles="Administrator">
+            <AuthorizeView>
                 <Authorized>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
-                        <MudText>Input</MudText>
-                        <MudSwitch T="bool" Value="@_isInputEnabled" ValueChanged="EnableInput" />
-                    </MudNavLink>
+                    @if (context.User.HasClaim("Screen", "Change"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
+                            <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
+                                @foreach (var displayItem in GetDisplayItems())
+                                {
+                                    <MudSelectItem Value="@displayItem.Name">@displayItem.DisplayName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudNavLink>
+                    }
 
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
-                        <MudText>User Input</MudText>
-                        <MudSwitch T="bool" Value="@_isUserInputEnabled" ValueChanged="ToggleUserInput" />
-                    </MudNavLink>
+                    @if (context.User.HasClaim("Screen", "SetCodec"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Hd">
+                            <MudSelect Value="@_selectedCodec" ValueChanged="OnChangeCodec" Label="Codec" T="string?" Dense="true">
+                                @foreach (var codecItem in _codecs)
+                                {
+                                    <MudSelectItem Value="@codecItem">@codecItem</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudNavLink>
+                    }
 
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="TerminateHost">Terminate Host</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Lock" OnClick="LockWorkStation">Lock Workstation</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout" OnClick="LogOffUser">Logoff User</MudNavLink>
+                    @if (context.User.HasClaim("Screen", "SetFrameRate"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Speed">
+                            <MudText>Frame Rate</MudText>
+                            <MudSlider T="int" Value="@_frameRate" Min="10" Max="100" ValueChanged="ChangeFrameRate"/>
+                        </MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("Screen", "SetQuality"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
+                            <MudText>Image Quality</MudText>
+                            <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="ChangeQuality"/>
+                        </MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("Screen", "ToggleCursor"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
+                            <MudText>Draw Cursor</MudText>
+                            <MudSwitch T="bool" Value="@_drawCursor" ValueChanged="ToggleDrawCursor"/>
+                        </MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("Input", "Toggle"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
+                            <MudText>Input</MudText>
+                            <MudSwitch T="bool" Value="@_isInputEnabled" ValueChanged="EnableInput"/>
+                        </MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("Input", "Block"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
+                            <MudText>User Input</MudText>
+                            <MudSwitch T="bool" Value="@_isUserInputEnabled" ValueChanged="ToggleUserInput"/>
+                        </MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("HostManagement", "Terminate"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="TerminateHost">Terminate Host</MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("Security", "LockWorkStation"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Lock" OnClick="LockWorkStation">Lock Workstation</MudNavLink>
+                    }
+
+                    @if (context.User.HasClaim("Security", "LogOffUser"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout" OnClick="LogOffUser">Logoff User</MudNavLink>
+                    }
+
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(_viewers.All(v => v.AuthenticationType != "RemoteMaster Security"))">Send Ctrl+Alt+Del</MudNavLink>
-                    
-                    <MudNavGroup Title="Power" Icon="@Icons.Material.Filled.Power">
-                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootHost">Reboot Host</MudNavLink>
-                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownHost">Shutdown Host</MudNavLink>
-                    </MudNavGroup>
+
+                    @if (context.User.HasClaim("Power", "Reboot") || context.User.HasClaim("Power", "Shutdown"))
+                    {
+                        <MudNavGroup Title="Power" Icon="@Icons.Material.Filled.Power">
+                            @if (context.User.HasClaim("Power", "Reboot"))
+                            {
+                                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootHost">Reboot Host</MudNavLink>
+                            }
+
+                            @if (context.User.HasClaim("Power", "Shutdown"))
+                            {
+                                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownHost">Shutdown Host</MudNavLink>
+                            }
+                        </MudNavGroup>
+                    }
                 </Authorized>
             </AuthorizeView>
             
