@@ -10,6 +10,7 @@
         <MudSelect T="string" Label="Command" @bind-Value="@_command" Dense="true">
             <MudSelectItem Value="@("install")">Install</MudSelectItem>
             <MudSelectItem Value="@("uninstall")">Uninstall</MudSelectItem>
+            <MudSelectItem Value="@("reinstall")">Reinstall</MudSelectItem>
         </MudSelect>
         <MudTextField T="string" Label="Arguments" @bind-Value="@_arguments"/>
     </DialogContent>
