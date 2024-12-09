@@ -106,11 +106,8 @@ public partial class Home
 
     private void ToggleDrawer() => DrawerOpen = !DrawerOpen;
 
-    [Authorize(Roles = "Administrator")]
     private void OpenCertificateRenewTasks() => NavigationManager.NavigateTo("/certificates/tasks");
 
-
-    [Authorize(Roles = "Administrator")]
     private async Task PublishCrl()
     {
         var crlResult = await CrlService.GenerateCrlAsync();
