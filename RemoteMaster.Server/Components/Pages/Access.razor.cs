@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -177,13 +178,40 @@ public partial class Access : IAsyncDisposable
     {
         if (!_disposed && _connection is { State: HubConnectionState.Connected })
         {
-            await _connection.InvokeAsync("SetFrameRate", _frameRate);
-            await _connection.InvokeAsync("SetImageQuality", _imageQuality);
-            await _connection.InvokeAsync("ToggleDrawCursor", _drawCursor);
+            try
+            {
+                await _connection.InvokeAsync("SetFrameRate", _frameRate);
+            }
+            catch (HubException ex)
+            {
+                Logger.LogWarning(ex, "Unauthorized to invoke 'SetFrameRate'.");
+            }
 
-            if (await IsPolicyPermittedAsync("ToggleInputPolicy"))
+            try
+            {
+                await _connection.InvokeAsync("SetImageQuality", _imageQuality);
+            }
+            catch (HubException ex)
+            {
+                Logger.LogWarning(ex, "Unauthorized to invoke 'SetImageQuality'.");
+            }
+
+            try
+            {
+                await _connection.InvokeAsync("ToggleDrawCursor", _drawCursor);
+            }
+            catch (HubException ex)
+            {
+                Logger.LogWarning(ex, "Unauthorized to invoke 'ToggleDrawCursor'.");
+            }
+
+            try
             {
                 await _connection.InvokeAsync("ToggleInput", _isInputEnabled);
+            }
+            catch (HubException ex)
+            {
+                Logger.LogWarning(ex, "Unauthorized to invoke 'ToggleInput'.");
             }
         }
     }
@@ -651,18 +679,6 @@ public partial class Access : IAsyncDisposable
             { nameof(DisconnectViewerDialog.HubConnection), _connection },
             { nameof(DisconnectViewerDialog.Viewer), viewer }
         });
-    }
-
-    private async Task<bool> IsPolicyPermittedAsync(string policyName)
-    {
-        if (_user == null)
-        {
-            return false;
-        }
-
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, policyName);
-
-        return authorizationResult.Succeeded;
     }
 
     [JSInvokable]

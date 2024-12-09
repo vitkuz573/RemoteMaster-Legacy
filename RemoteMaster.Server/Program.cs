@@ -107,9 +107,6 @@ public static class Program
         services.AddAuthentication(IdentityConstants.ApplicationScheme)
             .AddIdentityCookies();
 
-        services.AddAuthorizationBuilder()
-            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "Toggle"));
-
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CrlDbContext>();
         services.AddDbContext<CertificateTaskDbContext>();
