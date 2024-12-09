@@ -10,11 +10,11 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
 {
     private readonly string _logDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Host");
 
+    [Authorize(Policy = "ViewLogFilesPolicy")]
     public async Task GetLogFiles()
     {
         if (!fileSystem.Directory.Exists(_logDirectory))
@@ -30,6 +30,7 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
         await Clients.Caller.ReceiveLogFiles(fileNames);
     }
 
+    [Authorize(Policy = "ViewLogContentPolicy")]
     public async Task GetLog(string fileName)
     {
         var filePath = fileSystem.Path.Combine(_logDirectory, fileName);
@@ -56,6 +57,7 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
         }
     }
 
+    [Authorize(Policy = "FilterLogPolicy")]
     public async Task GetFilteredLog(string fileName, string? level, DateTime? startDate, DateTime? endDate)
     {
         var filePath = fileSystem.Path.Combine(_logDirectory, fileName);
@@ -101,6 +103,7 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
         }
     }
 
+    [Authorize(Policy = "DeleteLogsPolicy")]
     public async Task DeleteAllLogs()
     {
         if (!fileSystem.Directory.Exists(_logDirectory))

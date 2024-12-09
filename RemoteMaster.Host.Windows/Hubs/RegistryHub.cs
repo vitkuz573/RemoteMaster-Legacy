@@ -12,9 +12,9 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> logger) : Hub<IRegistryClient>
 {
+    [Authorize(Policy = "GetRootKeysPolicy")]
     public async Task GetRootKeys()
     {
         var rootKeys = registryService.GetRootKeys()
@@ -24,6 +24,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveRootKeys(rootKeys);
     }
 
+    [Authorize(Policy = "GetRegistryValuePolicy")]
     public async Task GetRegistryValue(RegistryHive hive, string keyPath, string valueName, object defaultValue)
     {
         var value = registryService.GetValue(hive, keyPath, valueName, defaultValue);
@@ -31,6 +32,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveRegistryValue(value);
     }
 
+    [Authorize(Policy = "SetRegistryValuePolicy")]
     public async Task SetRegistryValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)
     {
         registryService.SetValue(hive, keyPath, valueName, value, valueKind);
@@ -38,6 +40,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveOperationResult("Value set successfully.");
     }
 
+    [Authorize(Policy = "GetSubKeyNamesPolicy")]
     public async Task GetSubKeyNames(RegistryHive hive, string? keyPath, string parentKey)
     {
         logger.LogInformation("Fetching subkeys for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
@@ -61,6 +64,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveSubKeyNames(subKeyNames, parentKey);
     }
 
+    [Authorize(Policy = "GetAllRegistryValuesPolicy")]
     public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
     {
         logger.LogInformation("Fetching all registry values for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath);
@@ -79,6 +83,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
         await Clients.Caller.ReceiveAllRegistryValues(values);
     }
 
+    [Authorize(Policy = "ExportRegistryBranchPolicy")]
     public async Task<byte[]> ExportRegistryBranch(RegistryHive hive, string? keyPath)
     {
         logger.LogInformation("Exporting registry branch for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");

@@ -9,14 +9,15 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class DomainMembershipHub(IDomainService domainService) : Hub<IDomainMembershipClient>
 {
+    [Authorize(Policy = "JoinDomainPolicy")]
     public void SendJoinToDomain(DomainJoinRequest domainJoinRequest)
     {
         domainService.JoinToDomain(domainJoinRequest);
     }
 
+    [Authorize(Policy = "UnjoinDomainPolicy")]
     public void SendUnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
     {
         domainService.UnjoinFromDomain(domainUnjoinRequest);

@@ -37,6 +37,7 @@ public class UpdaterHub(IUpdaterInstanceService updaterInstanceService, IHostUpd
         await base.OnConnectedAsync();
     }
 
+    [Authorize(Policy = "StartUpdaterPolicy")]
     public void SendStartUpdater(UpdateRequest updateRequest)
     {
         updaterInstanceService.Start(updateRequest);

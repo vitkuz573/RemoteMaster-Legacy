@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
@@ -10,6 +11,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
+[Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
 public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient>
 {
     private static readonly ConcurrentQueue<ChatMessage> Messages = new();
@@ -33,6 +35,7 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
         await base.OnConnectedAsync();
     }
 
+    [Authorize(Policy = "SendMessagePolicy")]
     public async Task SendMessage(ChatMessageDto chatMessageDto)
     {
         ArgumentNullException.ThrowIfNull(chatMessageDto);
@@ -62,6 +65,7 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
         await Clients.All.ReceiveMessage(chatMessageDto);
     }
 
+    [Authorize(Policy = "DeleteMessagePolicy")]
     public async Task DeleteMessage(string id, string user)
     {
         var messagesList = Messages.ToList();

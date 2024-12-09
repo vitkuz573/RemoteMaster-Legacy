@@ -183,19 +183,19 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
-    [Authorize(Policy = "MouseInputPolicy")]
+    [Authorize(Policy = "HandleInputPolicy")]
     public void HandleMouseInput(MouseInputDto dto)
     {
         ExecuteActionForViewer(viewer => inputService.HandleMouseInput(dto, viewer.ScreenCapturing));
     }
 
-    [Authorize(Policy = "KeyboardInputPolicy")]
+    [Authorize(Policy = "HandleInputPolicy")]
     public void HandleKeyboardInput(KeyboardInputDto dto)
     {
         inputService.HandleKeyboardInput(dto);
     }
 
-    [Authorize(Policy = "ChangeSelectedScreenPolicy")]
+    [Authorize(Policy = "ChangeScreenPolicy")]
     public void ChangeSelectedScreen(string displayName)
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))

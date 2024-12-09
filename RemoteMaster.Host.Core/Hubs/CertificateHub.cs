@@ -22,6 +22,7 @@ public class CertificateHub(ICertificateService certificateService, IHostConfigu
         await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 
+    [Authorize(Policy = "GetCertificateSerialNumberPolicy")]
     public async Task GetCertificateSerialNumber()
     {
         var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());

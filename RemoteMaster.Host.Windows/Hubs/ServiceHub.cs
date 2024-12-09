@@ -9,9 +9,9 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-[Authorize]
 public class ServiceHub(IPsExecService psExecService) : Hub<IServiceClient>
 {
+    [Authorize(Policy = "SetPsExecRulesPolicy")]
     public async Task SetPsExecRules(bool enable)
     {
         psExecService.Disable();

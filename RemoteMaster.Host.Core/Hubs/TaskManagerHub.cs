@@ -8,21 +8,25 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class TaskManagerHub(ITaskManagerService taskManagerService) : Hub<ITaskManagerClient>
 {
+    [Authorize(Policy = "ViewProcessesPolicy")]
     public async Task GetRunningProcesses()
     {
         var processes = taskManagerService.GetRunningProcesses();
+
         await Clients.Caller.ReceiveRunningProcesses(processes);
     }
 
+    [Authorize(Policy = "KillProcessPolicy")]
     public async Task KillProcess(int processId)
     {
         taskManagerService.KillProcess(processId);
+
         await GetRunningProcesses();
     }
 
+    [Authorize(Policy = "StartProcessPolicy")]
     public void StartProcess(string processPath)
     {
         taskManagerService.StartProcess(processPath);

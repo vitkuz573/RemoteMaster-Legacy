@@ -10,9 +10,9 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<IDeviceManagerClient>
 {
+    [Authorize(Policy = "ViewDevicesPolicy")]
     public async Task GetDevices()
     {
         var devices = deviceManagerService.GetDeviceList();
@@ -20,6 +20,7 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
         await Clients.Caller.ReceiveDeviceList(devices);
     }
 
+    [Authorize(Policy = "DisableDevicePolicy")]
     public async Task DisableDevice(string deviceInstanceId)
     {
         var result = deviceManagerService.DisableDeviceByInstanceId(deviceInstanceId);
@@ -34,6 +35,7 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
         }
     }
 
+    [Authorize(Policy = "EnableDevicePolicy")]
     public async Task EnableDevice(string deviceInstanceId)
     {
         var result = deviceManagerService.EnableDeviceByInstanceId(deviceInstanceId);
@@ -48,6 +50,7 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
         }
     }
 
+    [Authorize(Policy = "UpdateDeviceDriverPolicy")]
     public void UpdateDeviceDriver(DriverUpdateRequest driveUpdateRequest)
     {
         ArgumentNullException.ThrowIfNull(driveUpdateRequest);

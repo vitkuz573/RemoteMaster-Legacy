@@ -103,17 +103,17 @@
                     <MudTabPanel Text="Main" Icon="@Icons.Material.Filled.Api">
                         <AuthorizeView>
                             <Authorized>
-                                @if (context.User.HasClaim("Power", "RebootHost") || context.User.HasClaim("Power", "ShutdownHost"))
+                                @if (context.User.HasClaim("Power", "Reboot") || context.User.HasClaim("Power", "Shutdown"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Power</MudButton>
                                 }             
 
-                                @if (context.User.HasClaim("Power", "WakeUpHost"))
+                                @if (context.User.HasClaim("Power", "WakeUp"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedHosts.Count == 0 || _selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Wake Up</MudButton>
                                 }
                                 
-                                @if (context.User.HasClaim("Connect", "View") || context.User.HasClaim("Connect", "Control"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "Connect"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Connect</MudButton>
                                 }      
@@ -150,71 +150,70 @@
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Set Monitor State</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Execution", "ManagePsExecRules"))
+                                @if (context.User.HasClaim("Execution", "Scripts"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">PSExec Rules</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Screen", "Recording"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "ScreenRecording"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Screen Recorder</MudButton>
-
                                 }
 
-                                @if (context.User.HasClaim("Domain", "Membership"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "DomainManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Domain Membership</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("HostManagement", "Update"))
+                                @if (context.User.HasClaim("UpdaterManagement", "Start"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Update</MudButton>
                                 }
                             </MudTabPanel>
 
                             <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                                @if (context.User.HasClaim("HostManagement", "BootWim"))
+                                @if (context.User.HasClaim("Execution", "Scripts"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WimBoot" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">WIM Boot</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Tasks", "Manager"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "TaskManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Task Manager</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Devices", "Manager"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "DeviceManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenDeviceManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Device Manager</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Files", "Manager"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "FileManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">File Manager</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Files", "Upload"))
+                                @if (context.User.HasClaim("FileManagement", "Upload"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Upload File</MudButton>
                                 }
                                 
-                                @if (context.User.HasClaim("Registry", "Editor"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "RegistryManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenRegistryEditor" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Registry Editor</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Communication", "MessageBox"))
+                                @if (context.User.HasClaim("Execution", "Scripts"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Message Box</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Communication", "Chat"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "ChatManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SendMessage" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Send Message</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenChat" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Chat</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("Logs", "Manager"))
+                                @if (context.User.Claims.Any(claim => claim.Type == "LogManagement"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenLogsManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Logs Viewer</MudButton>
                                 }
@@ -236,7 +235,7 @@
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostRemoveDialog" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">Remove</MudButton>
                                 }
 
-                                @if (context.User.HasClaim("HostManagement", "RenewCertificate"))
+                                @if (context.User.HasClaim("CertificateManagement", "Renew"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Renew Certificate</MudButton>
                                 }

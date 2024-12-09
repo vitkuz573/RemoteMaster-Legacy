@@ -10,9 +10,9 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileManagerService) : Hub<IFileManagerClient>
 {
+    [Authorize(Policy = "UploadFilePolicy")]
     public async Task UploadFile(FileUploadDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -20,6 +20,7 @@ public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileMana
         await fileManagerService.UploadFileAsync(dto.DestinationPath, dto.Name, dto.Data);
     }
 
+    [Authorize(Policy = "DownloadFilePolicy")]
     public async Task DownloadFile(string path)
     {
         using var stream = fileManagerService.DownloadFile(path) as MemoryStream ?? throw new InvalidOperationException("Expected a MemoryStream");
@@ -28,6 +29,7 @@ public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileMana
         await Clients.Caller.ReceiveFile(bytes, fileSystem.Path.GetFileName(path));
     }
 
+    [Authorize(Policy = "ViewFilesPolicy")]
     public async Task GetFilesAndDirectories(string path)
     {
         var items = fileManagerService.GetFilesAndDirectories(path);
@@ -35,6 +37,7 @@ public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileMana
         await Clients.Caller.ReceiveFilesAndDirectories(items);
     }
 
+    [Authorize(Policy = "GetDrivesPolicy")]
     public async Task GetAvailableDrives()
     {
         var drives = await fileManagerService.GetAvailableDrivesAsync();

@@ -9,14 +9,15 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Roles = "Administrator")]
 public class ScreenRecorderHub(IScreenRecorderService screenRecorderService) : Hub<IScreenRecorderClient>
 {
+    [Authorize(Policy = "StartScreenRecordingPolicy")]
     public async Task SendStartScreenRecording(ScreenRecordingRequest screenRecordingRequest)
     {
         await screenRecorderService.StartRecordingAsync(screenRecordingRequest);
     }
 
+    [Authorize(Policy = "StopScreenRecordingPolicy")]
     public async Task SendStopScreenRecording()
     {
         await screenRecorderService.StopRecordingAsync();
