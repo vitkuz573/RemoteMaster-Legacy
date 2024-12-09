@@ -11,7 +11,6 @@ public static class AuthorizationBuilderExtensions
 {
     public static AuthorizationBuilder AddCorePolicies(this AuthorizationBuilder builder)
     {
-        builder.AddCommonRequirements();
         builder.AddFileManagerPolicies();
         builder.AddLogHubPolicies();
         builder.AddScreenRecorderPolicies();
@@ -25,7 +24,7 @@ public static class AuthorizationBuilderExtensions
         return builder;
     }
 
-    private static AuthorizationBuilder AddCommonRequirements(this AuthorizationBuilder builder)
+    public static AuthorizationBuilder AddCoreRequirements(this AuthorizationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 

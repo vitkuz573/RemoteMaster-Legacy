@@ -150,6 +150,7 @@ internal class Program
         if (commandName != "install")
         {
             services.AddAuthorizationBuilder()
+                .AddCoreRequirements()
                 .AddCorePolicies()
                 .AddWindowsPolicies();
         }
