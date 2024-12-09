@@ -112,7 +112,10 @@
                         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout" OnClick="LogOffUser">Logoff User</MudNavLink>
                     }
 
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(_viewers.All(v => v.AuthenticationType != "RemoteMaster Security"))">Send Ctrl+Alt+Del</MudNavLink>
+                    @if (context.User.HasClaim("Security", "SendCtrlAltDel"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(_viewers.All(v => v.AuthenticationType != "RemoteMaster Security"))">Send Ctrl+Alt+Del</MudNavLink>
+                    }
 
                     @if (context.User.HasClaim("Power", "Reboot") || context.User.HasClaim("Power", "Shutdown"))
                     {

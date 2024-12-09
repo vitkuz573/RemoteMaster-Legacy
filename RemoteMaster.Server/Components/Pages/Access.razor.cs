@@ -193,20 +193,13 @@ public partial class Access : IAsyncDisposable
         _drawerOpen = !_drawerOpen;
     }
 
-    private async Task SafeInvokeAsync(Func<Task> action, bool requireAdmin = false)
+    private async Task SafeInvokeAsync(Func<Task> action)
     {
         var result = await ResiliencePipeline.ExecuteAsync(async _ =>
         {
             if (_connection is not { State: HubConnectionState.Connected })
             {
                 throw new InvalidOperationException("Connection is not active");
-            }
-
-            if (requireAdmin && (_user == null || !_user.IsInRole("Administrator")))
-            {
-                await Task.CompletedTask;
-
-                return "Failed";
             }
 
             await action();
@@ -249,7 +242,7 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("TerminateHost"), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("TerminateHost"));
     }
 
     private async Task LockWorkStation()
@@ -259,7 +252,7 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("LockWorkStation"), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("LockWorkStation"));
     }
 
     private async Task LogOffUser()
@@ -269,7 +262,7 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("LogOffUser", true), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("LogOffUser", true));
     }
 
     private async Task SendCtrlAltDel()
@@ -279,7 +272,7 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
     }
 
     private async Task RebootHost()
@@ -296,7 +289,7 @@ public partial class Access : IAsyncDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootHost", powerActionRequest), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootHost", powerActionRequest));
     }
 
     private async Task ShutdownHost()
@@ -313,7 +306,7 @@ public partial class Access : IAsyncDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest));
     }
 
     private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors, CertificateInfo certificateInfo)
@@ -552,7 +545,7 @@ public partial class Access : IAsyncDisposable
 
         _isInputEnabled = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value));
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
