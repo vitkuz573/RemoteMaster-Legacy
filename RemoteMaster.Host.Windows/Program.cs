@@ -19,7 +19,7 @@ namespace RemoteMaster.Host.Windows;
 
 internal class Program
 {
-    private static async Task<int> Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
         {
@@ -82,7 +82,9 @@ internal class Program
         }
         else if (shouldInvoke)
         {
-            return await parseResult.InvokeAsync();
+            var exitCode = await parseResult.InvokeAsync();
+
+            Environment.Exit(exitCode);
         }
 
         if (!app.Environment.IsDevelopment())
@@ -98,11 +100,13 @@ internal class Program
 
         await app.RunAsync();
 
-        return 0;
+        return;
 
         async void Callback()
         {
-            await parseResult.InvokeAsync();
+            var exitCode = await parseResult.InvokeAsync();
+
+            Environment.Exit(exitCode);
         }
     }
 

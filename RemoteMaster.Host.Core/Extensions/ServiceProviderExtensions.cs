@@ -102,7 +102,7 @@ public static class ServiceProviderExtensions
             var hostUpdater = serviceProvider.GetRequiredService<IHostUpdater>();
 
             await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade, waitForClientConnection);
-
+            
             return 0;
         });
 

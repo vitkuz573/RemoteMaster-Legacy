@@ -50,7 +50,7 @@ public class HostUpdater : IHostUpdater
         _baseFolderPath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
         _updateFolderPath = _fileSystem.Path.Combine(_baseFolderPath, "Update");
 
-        Task.Run(async () => await InitializeHubClient());
+        Task.Run(InitializeHubClient);
     }
 
     private async Task InitializeHubClient()
@@ -538,6 +538,8 @@ public class HostUpdater : IHostUpdater
 
     private async Task<bool> NeedUpdate()
     {
+        _logger.LogInformation("Starting the update check...");
+
         var updateFiles = _fileSystem.Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories)
             .Select(_fileSystem.Path.GetFullPath);
 
@@ -547,14 +549,24 @@ public class HostUpdater : IHostUpdater
 
             if (!_fileSystem.File.Exists(targetFile))
             {
+                _logger.LogInformation("File {TargetFile} does not exist in the base folder. Update needed.", targetFile);
+
                 return true;
             }
 
-            if (await VerifyChecksum(file, targetFile, expectDifference: true))
+            var checksumsDiffer = await VerifyChecksum(file, targetFile, true);
+
+            if (checksumsDiffer)
             {
+                _logger.LogInformation("File {TargetFile} has a different checksum. Update needed.", targetFile);
+
                 return true;
             }
+
+            _logger.LogInformation("File {TargetFile} is identical. No update needed for this file.", targetFile);
         }
+
+        _logger.LogInformation("All files are up to date. No update is needed.");
 
         return false;
     }

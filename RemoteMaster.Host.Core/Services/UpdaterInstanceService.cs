@@ -42,7 +42,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
         if (updateRequest.UserCredentials != null && !string.IsNullOrWhiteSpace(updateRequest.UserCredentials.UserName))
         {
-            arguments.Add("--username");
+            arguments.Add("-u");
             arguments.Add(updateRequest.UserCredentials.UserName);
         }
 
@@ -66,7 +66,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
         var startInfo = new ProcessStartInfo
         {
-            CreateNoWindow = false,
+            CreateNoWindow = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
