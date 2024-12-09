@@ -609,13 +609,17 @@ public partial class Home
             throw new InvalidOperationException("User is not initialized.");
         }
 
-        if (_user.IsInRole("Viewer"))
+        if (_user.HasClaim(c => c is { Type: "Connect", Value: "Control" }))
+        {
+            await ExecuteAction<ConnectDialog>("Connect");
+        }
+        else if (_user.HasClaim(c => c is { Type: "Connect", Value: "View" }))
         {
             await ConnectAsViewer();
         }
         else
         {
-            await ExecuteAction<ConnectDialog>("Connect");
+            SnackBar.Add("You do not have the required permissions to connect.", Severity.Warning);
         }
     }
 
