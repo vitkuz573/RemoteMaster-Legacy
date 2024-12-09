@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Host.Windows.Services;
@@ -145,6 +146,13 @@ internal class Program
         services.AddSingleton<ISessionService, SessionService>();
 
         services.AddSingleton<IScreenOverlay, CursorOverlay>();
+
+        if (commandName != "install")
+        {
+            services.AddAuthorizationBuilder()
+                .AddCorePolicies()
+                .AddWindowsPolicies();
+        }
 
         switch (commandName)
         {

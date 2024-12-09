@@ -9,10 +9,9 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class AuthorizationBuilderExtensions
 {
-    public static AuthorizationBuilder AddCustomPolicies(this AuthorizationBuilder builder)
+    public static AuthorizationBuilder AddCorePolicies(this AuthorizationBuilder builder)
     {
         builder.AddCommonRequirements();
-        builder.AddDeviceManagerPolicies();
         builder.AddFileManagerPolicies();
         builder.AddLogHubPolicies();
         builder.AddScreenRecorderPolicies();
@@ -21,8 +20,6 @@ public static class AuthorizationBuilderExtensions
         builder.AddDomainMembershipPolicies();
         builder.AddChatHubPolicies();
         builder.AddCertificateHubPolicies();
-        builder.AddRegistryHubPolicies();
-        builder.AddServiceHubPolicies();
         builder.AddControlHubPolicies();
 
         return builder;
@@ -34,25 +31,6 @@ public static class AuthorizationBuilderExtensions
 
         builder.AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
             policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()));
-
-        return builder;
-    }
-
-    private static AuthorizationBuilder AddDeviceManagerPolicies(this AuthorizationBuilder builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        builder.AddPolicy("ViewDevicesPolicy", policy =>
-            policy.RequireClaim("DeviceManagement", "View"));
-
-        builder.AddPolicy("DisableDevicePolicy", policy =>
-            policy.RequireClaim("DeviceManagement", "Disable"));
-
-        builder.AddPolicy("EnableDevicePolicy", policy =>
-            policy.RequireClaim("DeviceManagement", "Enable"));
-
-        builder.AddPolicy("UpdateDeviceDriverPolicy", policy =>
-            policy.RequireClaim("DeviceManagement", "UpdateDriver"));
 
         return builder;
     }
@@ -169,41 +147,6 @@ public static class AuthorizationBuilderExtensions
 
         builder.AddPolicy("GetCertificateSerialNumberPolicy", policy =>
             policy.RequireClaim("CertificateManagement", "GetSerialNumber"));
-
-        return builder;
-    }
-
-    private static AuthorizationBuilder AddRegistryHubPolicies(this AuthorizationBuilder builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        builder.AddPolicy("GetRootKeysPolicy", policy =>
-            policy.RequireClaim("RegistryManagement", "GetRootKeys"));
-
-        builder.AddPolicy("GetRegistryValuePolicy", policy =>
-            policy.RequireClaim("RegistryManagement", "GetValue"));
-
-        builder.AddPolicy("SetRegistryValuePolicy", policy =>
-            policy.RequireClaim("RegistryManagement", "SetValue"));
-
-        builder.AddPolicy("GetSubKeyNamesPolicy", policy =>
-            policy.RequireClaim("RegistryManagement", "GetSubKeys"));
-
-        builder.AddPolicy("GetAllRegistryValuesPolicy", policy =>
-            policy.RequireClaim("RegistryManagement", "GetAllValues"));
-
-        builder.AddPolicy("ExportRegistryBranchPolicy", policy =>
-            policy.RequireClaim("RegistryManagement", "ExportBranch"));
-
-        return builder;
-    }
-
-    private static AuthorizationBuilder AddServiceHubPolicies(this AuthorizationBuilder builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        builder.AddPolicy("SetPsExecRulesPolicy", policy =>
-            policy.RequireClaim("ServiceManagement", "SetPsExecRules"));
 
         return builder;
     }

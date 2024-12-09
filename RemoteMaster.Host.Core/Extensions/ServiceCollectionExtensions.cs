@@ -69,8 +69,6 @@ public static class ServiceCollectionExtensions
                 .AddJwtBearer();
 
             services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
-
-            services.AddAuthorizationBuilder().AddCustomPolicies();
         }
 
         services.AddSignalR().AddMessagePackProtocol(options => options.Configure());

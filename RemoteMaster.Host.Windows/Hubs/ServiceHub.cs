@@ -11,7 +11,7 @@ namespace RemoteMaster.Host.Windows.Hubs;
 
 public class ServiceHub(IPsExecService psExecService) : Hub<IServiceClient>
 {
-    [Authorize(Policy = "SetPsExecRulesPolicy")]
+    [Authorize(Policy = "ExecuteScriptPolicy")]
     public async Task SetPsExecRules(bool enable)
     {
         psExecService.Disable();
