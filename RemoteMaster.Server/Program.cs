@@ -108,7 +108,7 @@ public static class Program
             .AddIdentityCookies();
 
         services.AddAuthorizationBuilder()
-            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "MouseInput"));
+            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "Toggle"));
 
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CrlDbContext>();
