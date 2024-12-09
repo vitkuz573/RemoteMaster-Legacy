@@ -26,7 +26,7 @@ public partial class Access
 
     private async Task OnMouseEvent(MouseEventArgs e)
     {
-        if (_connection == null)
+        if (_connection == null || !_isInputEnabled)
         {
             return;
         }
@@ -60,7 +60,7 @@ public partial class Access
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        if (_connection == null)
+        if (_connection == null || !_isInputEnabled)
         {
             return;
         }
@@ -73,7 +73,7 @@ public partial class Access
 
     private async Task HandleKeyboardInput(string code, bool isPressed)
     {
-        if (_connection == null)
+        if (_connection == null || !_isInputEnabled)
         {
             return;
         }

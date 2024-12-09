@@ -143,6 +143,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
 
     private static readonly List<Claim> ViewerClaims =
     [
+        new Claim("Connect", "View"),
         new Claim("Screen", "ToggleCursor"),
         new Claim("Screen", "SetQuality"),
         new Claim("Screen", "SetFrameRate"),
