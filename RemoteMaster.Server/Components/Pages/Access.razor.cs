@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
@@ -708,6 +709,8 @@ public partial class Access : IAsyncDisposable
             builder.AddAttribute(6, "class", cssClass);
 
             builder.AddEventPreventDefaultAttribute(7, "oncontextmenu", true);
+
+            builder.AddAttribute(8, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, () => Task.CompletedTask));
 
             builder.AddAttribute(9, "draggable", "false");
 
