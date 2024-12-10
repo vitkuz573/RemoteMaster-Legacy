@@ -704,6 +704,8 @@ public partial class Access : IAsyncDisposable
                 ? "h-auto max-w-full object-contain mx-auto"
                 : "max-h-full w-auto object-contain mx-auto";
 
+            builder.AddEventPreventDefaultAttribute(5, "oncontextmenu", true);
+
             var attributes = new Dictionary<string, object>
             {
                 { "src", _screenDataUrl },
@@ -719,9 +721,9 @@ public partial class Access : IAsyncDisposable
                 { "alt", string.Empty }
             };
 
-            builder.AddMultipleAttributes(5, attributes);
+            builder.AddMultipleAttributes(6, attributes);
 
-            builder.AddElementReferenceCapture(6, element => _screenImageElement = element);
+            builder.AddElementReferenceCapture(7, element => _screenImageElement = element);
 
             builder.CloseElement();
         }
