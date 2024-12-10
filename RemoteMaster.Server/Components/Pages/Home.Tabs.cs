@@ -11,35 +11,38 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
-    private RenderFragment RenderTabs() => builder =>
+    private RenderFragment RenderTabs()
     {
-        var seq = 0;
-
-        foreach (var tab in GetTabs().Where(tab => tab.Actions.Any(a => a.IsVisible())))
+        return builder =>
         {
-            builder.OpenComponent<MudTabPanel>(seq++);
-            builder.AddAttribute(seq++, "Text", tab.Title);
-            builder.AddAttribute(seq++, "Icon", tab.Icon);
-            builder.AddAttribute(seq++, "ChildContent", (RenderFragment)(tabBuilder =>
+            var seq = 0;
+
+            foreach (var tab in GetTabs().Where(tab => tab.Actions.Any(a => a.IsVisible())))
             {
-                var innerSeq = 0;
-
-                foreach (var action in tab.Actions.Where(a => a.IsVisible()))
+                builder.OpenComponent<MudTabPanel>(seq++);
+                builder.AddAttribute(seq++, "Text", tab.Title);
+                builder.AddAttribute(seq++, "Icon", tab.Icon);
+                builder.AddAttribute(seq++, "ChildContent", (RenderFragment)(tabBuilder =>
                 {
-                    tabBuilder.OpenComponent<MudButton>(innerSeq++);
-                    tabBuilder.AddAttribute(innerSeq++, "Color", Color.Primary);
-                    tabBuilder.AddAttribute(innerSeq++, "Variant", Variant.Filled);
-                    tabBuilder.AddAttribute(innerSeq++, "OnClick", action.OnClick);
-                    tabBuilder.AddAttribute(innerSeq++, "Disabled", action.IsDisabled());
-                    tabBuilder.AddAttribute(innerSeq++, "Class", action.Class);
-                    tabBuilder.AddAttribute(innerSeq++, "ChildContent", (RenderFragment)(cb => cb.AddContent(0, action.Label)));
-                    tabBuilder.CloseComponent();
-                }
-            }));
+                    var innerSeq = 0;
 
-            builder.CloseComponent();
-        }
-    };
+                    foreach (var action in tab.Actions.Where(a => a.IsVisible()))
+                    {
+                        tabBuilder.OpenComponent<MudButton>(innerSeq++);
+                        tabBuilder.AddAttribute(innerSeq++, "Color", Color.Primary);
+                        tabBuilder.AddAttribute(innerSeq++, "Variant", Variant.Filled);
+                        tabBuilder.AddAttribute(innerSeq++, "OnClick", action.OnClick);
+                        tabBuilder.AddAttribute(innerSeq++, "Disabled", action.IsDisabled());
+                        tabBuilder.AddAttribute(innerSeq++, "Class", action.Class);
+                        tabBuilder.AddAttribute(innerSeq++, "ChildContent", (RenderFragment)(cb => cb.AddContent(0, action.Label)));
+                        tabBuilder.CloseComponent();
+                    }
+                }));
+
+                builder.CloseComponent();
+            }
+        };
+    }
 
     private List<TabDefinition> GetTabs()
     {
