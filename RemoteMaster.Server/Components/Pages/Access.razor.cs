@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
@@ -701,31 +700,28 @@ public partial class Access : IAsyncDisposable
         {
             builder.OpenElement(4, "img");
 
-            builder.AddAttribute(5, "src", _screenDataUrl);
-
             var cssClass = _selectedDisplay == "VIRTUAL_SCREEN"
                 ? "h-auto max-w-full object-contain mx-auto"
                 : "max-h-full w-auto object-contain mx-auto";
-            builder.AddAttribute(6, "class", cssClass);
 
-            builder.AddEventPreventDefaultAttribute(7, "oncontextmenu", true);
+            var attributes = new Dictionary<string, object>
+            {
+                { "src", _screenDataUrl },
+                { "class", cssClass },
+                { "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, () => Task.CompletedTask) },
+                { "draggable", "false" },
+                { "onload", EventCallback.Factory.Create<EventArgs>(this, OnLoad) },
+                { "onmousemove", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
+                { "onmousedown", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
+                { "onmouseup", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
+                { "onmouseover", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
+                { "onmousewheel", EventCallback.Factory.Create<WheelEventArgs>(this, OnMouseWheel) },
+                { "alt", string.Empty }
+            };
 
-            builder.AddAttribute(8, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, () => Task.CompletedTask));
+            builder.AddMultipleAttributes(5, attributes);
 
-            builder.AddAttribute(9, "draggable", "false");
-
-            builder.AddAttribute(10, "onload", EventCallback.Factory.Create<EventArgs>(this, OnLoad));
-
-            builder.AddAttribute(11, "onmousemove", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
-            builder.AddAttribute(12, "onmousedown", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
-            builder.AddAttribute(13, "onmouseup", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
-            builder.AddAttribute(14, "onmouseover", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
-
-            builder.AddAttribute(15, "onmousewheel", EventCallback.Factory.Create<WheelEventArgs>(this, OnMouseWheel));
-
-            builder.AddAttribute(16, "alt", string.Empty);
-
-            builder.AddElementReferenceCapture(17, element => _screenImageElement = element);
+            builder.AddElementReferenceCapture(6, element => _screenImageElement = element);
 
             builder.CloseElement();
         }
