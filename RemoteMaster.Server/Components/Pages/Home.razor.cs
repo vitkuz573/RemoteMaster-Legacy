@@ -525,54 +525,6 @@ public partial class Home
         return connection;
     }
 
-    private void SelectAllPendingHosts()
-    {
-        foreach (var host in _pendingHosts.Values)
-        {
-            SelectHost(host, true);
-        }
-    }
-
-    private void DeselectAllPendingHosts()
-    {
-        foreach (var host in _pendingHosts.Values)
-        {
-            SelectHost(host, false);
-        }
-    }
-
-    private void SelectAllAvailableHosts()
-    {
-        foreach (var host in _availableHosts.Values)
-        {
-            SelectHost(host, true);
-        }
-    }
-
-    private void DeselectAllAvailableHosts()
-    {
-        foreach (var host in _availableHosts.Values)
-        {
-            SelectHost(host, false);
-        }
-    }
-
-    private void SelectAllUnavailableHosts()
-    {
-        foreach (var host in _unavailableHosts.Values)
-        {
-            SelectHost(host, true);
-        }
-    }
-
-    private void DeselectAllUnavailableHosts()
-    {
-        foreach (var host in _unavailableHosts.Values)
-        {
-            SelectHost(host, false);
-        }
-    }
-
     private void SelectHost(HostDto hostDto, bool isSelected)
     {
         if (isSelected)
@@ -879,21 +831,6 @@ public partial class Home
 
             await InvokeAsync(StateHasChanged);
         }
-    }
-
-    private static IEnumerable<HostDto> GetSortedHosts(ConcurrentDictionary<IPAddress, HostDto> hosts)
-    {
-        return hosts.Values.OrderBy(host => host.Name);
-    }
-
-    private bool CanSelectAll(ConcurrentDictionary<IPAddress, HostDto> hosts)
-    {
-        return hosts.Any(host => !_selectedHosts.Contains(host.Value));
-    }
-
-    private bool CanDeselectAll(ConcurrentDictionary<IPAddress, HostDto> hosts)
-    {
-        return hosts.Any(host => _selectedHosts.Contains(host.Value));
     }
 
     private void ResetSelections()

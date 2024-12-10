@@ -110,69 +110,38 @@
 
                 <div class="flex flex-col gap-4">
                     <MudExpansionPanels MultiExpansion="true">
-                        <MudExpansionPanel Text="@("Available hosts (" + _availableHosts.Count + ")")" Expanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllAvailableHosts" Disabled="@(!CanSelectAll(_availableHosts))">Select All</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllAvailableHosts" Disabled="@(!CanDeselectAll(_availableHosts))">Deselect All</MudButton>
-                            <div class="mt-4 flex flex-wrap gap-4">
-                                @if (_availableHosts.Any())
-                                {
-                                    @foreach (var host in GetSortedHosts(_availableHosts))
+                        @foreach (var category in GetHostCategories())
+                        {
+                            <MudExpansionPanel @key="category.Title" Text="@($"{category.Title} ({category.Count})")" Expanded="true">
+                                <div class="mb-4 flex gap-2">
+                                    <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="category.SelectAllAction" Disabled="@(!category.CanSelectAll())" >
+                                        Select All
+                                    </MudButton>
+
+                                    <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="category.DeselectAllAction" Disabled="@(!category.CanDeselectAll())">
+                                        Deselect All
+                                    </MudButton>
+                                </div>
+
+                                <div class="mt-4 flex flex-wrap gap-4">
+                                    @if (category.Hosts.Any())
                                     {
-                                        <div class="w-1/6">
-                                            <HostCard @key="host" Host="host" IsSelectedChanged="@(isSelected => SelectHost(host, isSelected))" IsSelected="_selectedHosts.Contains(host)" />
+                                        @foreach (var host in GetSortedHosts(category.Hosts))
+                                        {
+                                            <div class="w-1/6">
+                                                <HostCard @key="host.IpAddress" Host="host" IsSelectedChanged="@(isSelected => SelectHost(host, isSelected))" IsSelected="_selectedHosts.Contains(host)" />
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="w-full p-4 text-center">
+                                            <MudText Typo="Typo.body1">No @category.Title.ToLower()</MudText>
                                         </div>
                                     }
-                                }
-                                else
-                                {
-                                    <div class="w-full p-4 text-center">
-                                        <MudText Typo="Typo.body1">No available hosts</MudText>
-                                    </div>
-                                }
-                            </div>
-                        </MudExpansionPanel>
-                        <MudExpansionPanel Text="@("Unavailable hosts (" + _unavailableHosts.Count + ")")" Expanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllUnavailableHosts" Disabled="@(!CanSelectAll(_unavailableHosts))">Select All</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllUnavailableHosts" Disabled="@(!CanDeselectAll(_unavailableHosts))">Deselect All</MudButton>
-                            <div class="mt-4 flex flex-wrap gap-4">
-                                @if (_unavailableHosts.Any())
-                                {
-                                    @foreach (var host in GetSortedHosts(_unavailableHosts))
-                                    {
-                                        <div class="w-1/6">
-                                            <HostCard @key="host" Host="host" IsSelectedChanged="@(isSelected => SelectHost(host, isSelected))" IsSelected="_selectedHosts.Contains(host)" />
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <div class="w-full p-4 text-center">
-                                        <MudText Typo="Typo.body1">No unavailable hosts</MudText>
-                                    </div>
-                                }
-                            </div>
-                        </MudExpansionPanel>
-                        <MudExpansionPanel Text="@("Pending hosts (" + _pendingHosts.Count + ")")" Expanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllPendingHosts" Disabled="@(!CanSelectAll(_pendingHosts))">Select All</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllPendingHosts" Disabled="@(!CanDeselectAll(_pendingHosts))">Deselect all</MudButton>
-                            <div class="mt-4 flex flex-wrap gap-4">
-                                @if (_pendingHosts.Any())
-                                {
-                                    @foreach (var host in GetSortedHosts(_pendingHosts))
-                                    {
-                                        <div class="w-1/6">
-                                            <HostCard @key="host" Host="host" IsSelectedChanged="@(isSelected => SelectHost(host, isSelected))" IsSelected="_selectedHosts.Contains(host)" />
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <div class="w-full p-4 text-center">
-                                        <MudText Typo="Typo.body1">No pending hosts</MudText>
-                                    </div>
-                                }
-                            </div>
-                        </MudExpansionPanel>
+                                </div>
+                            </MudExpansionPanel>
+                        }
                     </MudExpansionPanels>
                 </div>
             </div>
