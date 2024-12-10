@@ -94,6 +94,10 @@ public partial class Home
 
     private bool DrawerOpen { get; set; }
 
+    private bool UserHasClaim(string claimType, string claimValue) => _user?.HasClaim(claimType, claimValue) ?? false;
+
+    private bool UserHasAnyClaim(params string[] claimTypes)  => claimTypes.Any(ct => _user?.Claims.Any(claim => claim.Type == ct) ?? false);
+
     private async Task<IEnumerable<Organization>> LoadNodes()
     {
         if (_currentUser == null)
