@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -680,6 +681,52 @@ public partial class Access : IAsyncDisposable
             { nameof(DisconnectViewerDialog.Viewer), viewer }
         });
     }
+
+    private RenderFragment RenderScreenImage() => builder =>
+    {
+        if (_isAccessDenied)
+        {
+            builder.OpenElement(0, "p");
+            builder.AddContent(1, "Access Denied. Please contact the administrator");
+            builder.CloseElement();
+        }
+        else if (string.IsNullOrEmpty(_screenDataUrl))
+        {
+            builder.OpenElement(2, "p");
+            builder.AddContent(3, "Establishing connection...");
+            builder.CloseElement();
+        }
+        else
+        {
+            builder.OpenElement(4, "img");
+
+            builder.AddAttribute(5, "src", _screenDataUrl);
+
+            var cssClass = _selectedDisplay == "VIRTUAL_SCREEN"
+                ? "h-auto max-w-full object-contain mx-auto"
+                : "max-h-full w-auto object-contain mx-auto";
+            builder.AddAttribute(6, "class", cssClass);
+
+            builder.AddEventPreventDefaultAttribute(7, "oncontextmenu", true);
+
+            builder.AddAttribute(9, "draggable", "false");
+
+            builder.AddAttribute(10, "onload", EventCallback.Factory.Create<EventArgs>(this, OnLoad));
+
+            builder.AddAttribute(11, "onmousemove", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
+            builder.AddAttribute(12, "onmousedown", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
+            builder.AddAttribute(13, "onmouseup", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
+            builder.AddAttribute(14, "onmouseover", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent));
+
+            builder.AddAttribute(15, "onmousewheel", EventCallback.Factory.Create<WheelEventArgs>(this, OnMouseWheel));
+
+            builder.AddAttribute(16, "alt", string.Empty);
+
+            builder.AddElementReferenceCapture(17, element => _screenImageElement = element);
+
+            builder.CloseElement();
+        }
+    };
 
     [JSInvokable]
     public async Task OnBeforeUnload()

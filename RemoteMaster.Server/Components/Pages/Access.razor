@@ -171,18 +171,7 @@
 
     <MudMainContent>
         <div class="flex h-screen items-center justify-center bg-gray-800 pb-14 text-white">
-            @if (_isAccessDenied)
-            {
-                <p>Access Denied. Please contact the administrator.</p>
-            }
-            else if (!string.IsNullOrEmpty(_screenDataUrl))
-            {
-                <img @ref="_screenImageElement" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="_ => { }" draggable="false" class="@( _selectedDisplay == "VIRTUAL_SCREEN" ? "h-auto max-w-full" : "max-h-full w-auto" ) object-contain mx-auto" onload="@(async () => await OnLoad())" @onmousemove="OnMouseEvent" @onmousedown="OnMouseEvent" @onmouseup="OnMouseEvent" @onmouseover="OnMouseEvent" @onmousewheel="OnMouseWheel" alt="" />
-            }
-            else
-            {
-                <p>Establishing connection...</p>
-            }
+            @RenderScreenImage()
         </div>
     </MudMainContent>
 </MudLayout>
