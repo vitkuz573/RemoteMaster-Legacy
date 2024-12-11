@@ -46,7 +46,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
         services.AddSingleton<IFileService, FileService>();
-        services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddSingleton<ISyncIndicatorService, SyncIndicatorService>();
         services.AddSingleton<IProcessService, ProcessService>();
         services.AddSingleton<IInstanceManagerService, InstanceManagerService>();
