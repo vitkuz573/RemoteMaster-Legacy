@@ -116,7 +116,7 @@ public partial class UpdateDialog
             _resultsPerHost[host] = results;
         }
 
-        if (message.Meta == "pid")
+        if (message.Meta == MessageMeta.ProcessIdInformation)
         {
             results.LastPid = int.Parse(message.Text);
         }

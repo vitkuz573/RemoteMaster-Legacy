@@ -29,7 +29,7 @@ public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext,
 
             await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageSeverity.Service)
             {
-                Meta = "pid"
+                Meta = MessageMeta.ProcessIdInformation
             });
 
             var readErrorTask = ReadStreamAsync(process.StandardError, MessageSeverity.Error);

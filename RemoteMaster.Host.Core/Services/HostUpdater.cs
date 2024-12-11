@@ -204,7 +204,7 @@ public class HostUpdater : IHostUpdater
     {
         await _hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageSeverity.Service)
         {
-            Meta = "pid"
+            Meta = MessageMeta.ProcessIdInformation
         });
     }
 

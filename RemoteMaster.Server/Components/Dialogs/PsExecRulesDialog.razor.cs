@@ -45,7 +45,7 @@ public partial class PsExecRulesDialog
             _resultsPerHost[host] = results;
         }
 
-        if (scriptResult.Meta == "pid")
+        if (scriptResult.Meta == MessageMeta.ProcessIdInformation)
         {
             results.LastPid = int.Parse(scriptResult.Text);
         }

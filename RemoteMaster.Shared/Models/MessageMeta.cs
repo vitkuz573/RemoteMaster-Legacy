@@ -6,6 +6,7 @@ namespace RemoteMaster.Shared.Models;
 
 public static class MessageMeta
 {
+    public const string ProcessIdInformation = "pidInformation";
     public const string ConnectionError = "connectionError";
     public const string AuthorizationError = "authorizationError";
     public const string ScreencastError = "screencastError";
