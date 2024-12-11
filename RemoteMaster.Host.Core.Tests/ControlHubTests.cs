@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -10,7 +9,6 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Tests;
 
@@ -22,9 +20,6 @@ public class ControlHubTests
     private readonly Mock<IPowerService> _mockPowerService;
     private readonly Mock<IHardwareService> _mockHardwareService;
     private readonly Mock<IShutdownService> _mockShutdownService;
-    private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
-    private readonly Mock<ICertificateService> _mockCertificateService;
-    private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<HubCallerContext> _mockHubCallerContext;
     private readonly ControlHub _controlHub;
@@ -39,12 +34,9 @@ public class ControlHubTests
         _mockHardwareService = new Mock<IHardwareService>();
         _mockShutdownService = new Mock<IShutdownService>();
         Mock<IScreenCapturingService> mockScreenCapturingService = new();
-        _mockHostConfigurationService = new Mock<IHostConfigurationService>();
-        _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         Mock<IWorkStationSecurityService> mockWorkStationSecurityService = new();
         Mock<IScreenCastingService> mockScreenCastingService = new();
         Mock<IOperatingSystemInformationService> mockOperatingSystemInformationService = new();
-        _mockCertificateService = new();
         Mock<ILogger<ControlHub>> mockLogger = new();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         Mock<IGroupManager> mockGroups = new();
@@ -62,12 +54,9 @@ public class ControlHubTests
             _mockHardwareService.Object,
             _mockShutdownService.Object,
             mockScreenCapturingService.Object,
-            _mockHostConfigurationService.Object,
-            _mockHostLifecycleService.Object,
             mockWorkStationSecurityService.Object,
             mockScreenCastingService.Object,
             mockOperatingSystemInformationService.Object,
-            _mockCertificateService.Object,
             mockLogger.Object)
         {
             Clients = _mockClients.Object,
@@ -285,34 +274,5 @@ public class ControlHubTests
 
         // Assert
         _mockScriptService.Verify(s => s.Execute(scriptExecutionRequest), Times.Once);
-    }
-
-    [Fact]
-    public async Task Move_ShouldUpdateHostConfigurationAndRenewCertificate()
-    {
-        // Arrange
-        var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
-
-        var hostMoveRequest = new HostMoveRequest(macAddress, "NewOrg", ["NewOU"]);
-
-        var subject = new SubjectDto("OldOrg", ["OldOU"]);
-
-        var hostConfiguration = new HostConfiguration(It.IsAny<string>(), subject, It.IsAny<HostDto>());
-
-        var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
-
-        _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync()).ReturnsAsync(hostConfiguration);
-        _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<string>())).ReturnsAsync(organizationAddress);
-
-        // Act
-        await _controlHub.MoveHost(hostMoveRequest);
-
-        // Assert
-        _mockHostConfigurationService.Verify(h => h.SaveConfigurationAsync(It.Is<HostConfiguration>(hc =>
-            hc.Subject.Organization == hostMoveRequest.Organization &&
-            hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.OrganizationalUnit)
-        )), Times.Once);
-
-        _mockCertificateService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
     }
 }

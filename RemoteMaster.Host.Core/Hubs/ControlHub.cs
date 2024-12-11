@@ -19,7 +19,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService, ICertificateService certificateService, ILogger<ControlHub> logger) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -371,20 +371,5 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void LogOffUser(bool force)
     {
         workStationSecurityService.LogOffUser(force);
-    }
-
-    [Authorize(Policy = "MoveHostPolicy")]
-    public async Task MoveHost(HostMoveRequest hostMoveRequest)
-    {
-        ArgumentNullException.ThrowIfNull(hostMoveRequest);
-
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-
-        hostConfiguration.Subject = new SubjectDto(hostMoveRequest.Organization, hostMoveRequest.OrganizationalUnit);
-
-        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
-
-        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-        await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 }

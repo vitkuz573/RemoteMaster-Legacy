@@ -22,6 +22,7 @@ public static class EndpointRouteBuilderExtensions
             endpoints.MapHub<DomainMembershipHub>("/hubs/domainmembership");
             endpoints.MapHub<ChatHub>("/hubs/chat");
             endpoints.MapHub<LogHub>("/hubs/log");
+            endpoints.MapHub<ManagementHub>("/hubs/management");
         }
 
         if (commandName is "user" or "update")

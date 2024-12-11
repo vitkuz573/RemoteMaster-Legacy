@@ -654,11 +654,11 @@ public partial class Home
 
         var dialogParameters = new DialogParameters
         {
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.Hosts), hosts },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.HubPath), "hubs/control" },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.StartConnection), true },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.RequireConnections), true },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.AdditionalParameters), additionalParameters }
+            { nameof(CommonDialogWrapper<BootToWimDialog>.Hosts), hosts },
+            { nameof(CommonDialogWrapper<BootToWimDialog>.HubPath), "hubs/control" },
+            { nameof(CommonDialogWrapper<BootToWimDialog>.StartConnection), true },
+            { nameof(CommonDialogWrapper<BootToWimDialog>.RequireConnections), true },
+            { nameof(CommonDialogWrapper<BootToWimDialog>.AdditionalParameters), additionalParameters }
         };
 
         await ExecuteDialog<BootToWimDialog>("WIM Boot", dialogParameters, dialogOptions);
@@ -787,7 +787,7 @@ public partial class Home
         var dialogParameters = new DialogParameters
         {
             { nameof(CommonDialogWrapper<MoveHostsDialog>.Hosts), hosts },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.HubPath), "hubs/control" },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.HubPath), "hubs/management" },
             { nameof(CommonDialogWrapper<MoveHostsDialog>.StartConnection), true },
             { nameof(CommonDialogWrapper<MoveHostsDialog>.RequireConnections), true },
             { nameof(CommonDialogWrapper<MoveHostsDialog>.AdditionalParameters), additionalParameters }
