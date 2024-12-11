@@ -448,15 +448,19 @@ public partial class Access : IAsyncDisposable
 
             await TryStartConnectionAsync();
 
-            if (action == "control")
+            await SetImageQuality(25);
+            await SetFrameRate(60);
+
+            switch (action)
             {
-                await ToggleDrawCursor(false);
-                await EnableInput(true);
-            }
-            else if (action == "view")
-            {
-                await ToggleDrawCursor(true);
-                await EnableInput(false);
+                case "control":
+                    await ToggleDrawCursor(false);
+                    await EnableInput(true);
+                    break;
+                case "view":
+                    await ToggleDrawCursor(true);
+                    await EnableInput(false);
+                    break;
             }
         }
         catch (Exception ex)
@@ -575,7 +579,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
     }
 
-    private async Task ChangeFrameRate(int frameRate)
+    private async Task SetFrameRate(int frameRate)
     {
         if (_connection == null)
         {
@@ -587,7 +591,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetFrameRate", frameRate));
     }
 
-    private async Task ChangeQuality(int quality)
+    private async Task SetImageQuality(int quality)
     {
         if (_connection == null)
         {

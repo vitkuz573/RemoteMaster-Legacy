@@ -58,7 +58,7 @@
                     {
                         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Speed">
                             <MudText>Frame Rate</MudText>
-                            <MudSlider T="int" Value="@_frameRate" Min="10" Max="100" ValueChanged="ChangeFrameRate"/>
+                            <MudSlider T="int" Value="@_frameRate" Min="10" Max="100" ValueChanged="SetFrameRate"/>
                         </MudNavLink>
                     }
 
@@ -66,7 +66,7 @@
                     {
                         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
                             <MudText>Image Quality</MudText>
-                            <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="ChangeQuality"/>
+                            <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="SetImageQuality"/>
                         </MudNavLink>
                     }
 
