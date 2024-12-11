@@ -288,25 +288,6 @@ public class ControlHubTests
     }
 
     [Fact]
-    public async Task SendCommandToService_ShouldSendCommandToGroup()
-    {
-        // Arrange
-        const string command = "TestCommand";
-        const string connectionId = "testConnectionId";
-
-        SetHubContext(connectionId);
-
-        var mockGroupClient = new Mock<IControlClient>();
-        _mockClients.Setup(c => c.Group("Services")).Returns(mockGroupClient.Object);
-
-        // Act
-        await _controlHub.SendCommandToService(command);
-
-        // Assert
-        mockGroupClient.Verify(c => c.ReceiveCommand(command), Times.Once);
-    }
-
-    [Fact]
     public async Task Move_ShouldUpdateHostConfigurationAndRenewCertificate()
     {
         // Arrange

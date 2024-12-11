@@ -94,8 +94,6 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
 
     private async Task ConnectHosts()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-
         var tasks = Hosts.Select(async kvp =>
         {
             var host = kvp.Key;
@@ -103,7 +101,6 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
 
             try
             {
-                var userId = UserManager.GetUserId(httpContext.User);
                 var connection = await SetupConnection(host, HubPath, StartConnection, CancellationToken.None);
                 Hosts[host] = connection;
             }

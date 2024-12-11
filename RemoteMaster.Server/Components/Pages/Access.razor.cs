@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
@@ -59,6 +60,7 @@ public partial class Access : IAsyncDisposable
 
     private string? _title;
     private bool _isConnecting;
+    private bool _connectionFailed;
     private int _retryCount;
     private bool _firstRenderCompleted;
     private bool _disposed;
@@ -111,108 +113,17 @@ public partial class Access : IAsyncDisposable
             }
             else
             {
-                await InitializeHostConnectionAsync();
-            }
+                var uri = new Uri(NavigationManager.Uri);
+                var queryParams = QueryHelpers.ParseQuery(uri.Query);
 
-            await SetParametersFromUriAsync();
-        }
-    }
+                if (!queryParams.TryGetValue("action", out var action) || string.IsNullOrEmpty(action))
+                {
+                    SnackBar.Add("Invalid URL: 'action' parameter is missing.", Severity.Error);
 
-    private async Task SetParametersFromUriAsync()
-    {
-        var uri = new Uri(NavigationManager.Uri);
-        var newUri = uri.ToString();
+                    return;
+                }
 
-        var frameRateResult = QueryParameterService.GetParameter("frameRate", 60);
-        var imageQualityResult = QueryParameterService.GetParameter("imageQuality", 25);
-        var drawCursorResult = QueryParameterService.GetParameter("drawCursor", false);
-        var inputEnabledResult = QueryParameterService.GetParameter("inputEnabled", true);
-
-        if (frameRateResult.IsSuccess)
-        {
-            _frameRate = frameRateResult.Value;
-        }
-        else
-        {
-            Logger.LogError("Error getting frame rate parameter: {Error}", frameRateResult.Errors.First().Message);
-        }
-
-        if (imageQualityResult.IsSuccess)
-        {
-            _imageQuality = imageQualityResult.Value;
-        }
-        else
-        {
-            Logger.LogError("Error getting image quality parameter: {Error}", imageQualityResult.Errors.First().Message);
-        }
-
-        if (drawCursorResult.IsSuccess)
-        {
-            _drawCursor = drawCursorResult.Value;
-        }
-        else
-        {
-            Logger.LogError("Error getting draw cursor parameter: {Error}", drawCursorResult.Errors.First().Message);
-        }
-
-        if (inputEnabledResult.IsSuccess)
-        {
-            _isInputEnabled = inputEnabledResult.Value;
-        }
-        else
-        {
-            Logger.LogError("Error getting input enabled parameter: {Error}", inputEnabledResult.Errors.First().Message);
-        }
-
-        if (newUri != uri.ToString())
-        {
-            NavigationManager.NavigateTo(newUri, true);
-        }
-
-        if (!_disposed && _connection is { State: HubConnectionState.Connected })
-        {
-            await UpdateServerParameters();
-        }
-    }
-
-    private async Task UpdateServerParameters()
-    {
-        if (!_disposed && _connection is { State: HubConnectionState.Connected })
-        {
-            try
-            {
-                await _connection.InvokeAsync("SetFrameRate", _frameRate);
-            }
-            catch (HubException ex)
-            {
-                Logger.LogWarning(ex, "Unauthorized to invoke 'SetFrameRate'.");
-            }
-
-            try
-            {
-                await _connection.InvokeAsync("SetImageQuality", _imageQuality);
-            }
-            catch (HubException ex)
-            {
-                Logger.LogWarning(ex, "Unauthorized to invoke 'SetImageQuality'.");
-            }
-
-            try
-            {
-                await _connection.InvokeAsync("ToggleDrawCursor", _drawCursor);
-            }
-            catch (HubException ex)
-            {
-                Logger.LogWarning(ex, "Unauthorized to invoke 'ToggleDrawCursor'.");
-            }
-
-            try
-            {
-                await _connection.InvokeAsync("ToggleInput", _isInputEnabled);
-            }
-            catch (HubException ex)
-            {
-                Logger.LogWarning(ex, "Unauthorized to invoke 'ToggleInput'.");
+                await InitializeHostConnectionAsync(action);
             }
         }
     }
@@ -301,7 +212,26 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
+
+        var connection = new HubConnectionBuilder()
+            .WithUrl($"https://{Host}:5001/hubs/service", options =>
+            {
+                options.AccessTokenProvider = async () =>
+                {
+                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                };
+            })
+            .AddMessagePackProtocol(options => options.Configure())
+            .Build();
+
+        await connection.StartAsync();
+
+        await SafeInvokeAsync(() => connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+
+        await connection.StopAsync();
     }
 
     private async Task RebootHost()
@@ -353,7 +283,7 @@ public partial class Access : IAsyncDisposable
         return !result?.Canceled ?? throw new InvalidOperationException("Result not found.");
     }
 
-    private async Task InitializeHostConnectionAsync()
+    private async Task InitializeHostConnectionAsync(string action)
     {
         try
         {
@@ -368,7 +298,7 @@ public partial class Access : IAsyncDisposable
             var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
             _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{Host}:5001/hubs/control?screencast=true", options =>
+                .WithUrl($"https://{Host}:5001/hubs/control?screencast=true&action={action}", options =>
                 {
                     options.HttpMessageHandlerFactory = handler =>
                     {
@@ -428,7 +358,6 @@ public partial class Access : IAsyncDisposable
                                 );
 
                                 return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors, certificateInfo)).Result;
-
                             };
                         }
 
@@ -476,22 +405,59 @@ public partial class Access : IAsyncDisposable
                 InvokeAsync(StateHasChanged);
             });
 
+            _connection.On<Message>("ReceiveMessage", async message =>
+            {
+                var snackBarSeverity = message.Severity switch
+                {
+                    Message.MessageSeverity.Information => Severity.Info,
+                    Message.MessageSeverity.Warning => Severity.Warning,
+                    Message.MessageSeverity.Error => Severity.Error
+                };
+
+                SnackBar.Add(message.Text, snackBarSeverity);
+
+                if (!string.IsNullOrEmpty(message.Meta))
+                {
+                    switch (message.Meta)
+                    {
+                        case MessageMeta.ConnectionError:
+                        case MessageMeta.AuthorizationError:
+                        case MessageMeta.ScreencastError:
+                            _connectionFailed = true;
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+                }
+            });
+
             _connection.Closed += async _ =>
             {
                 if (!_disposed && _retryCount < 3)
                 {
                     _retryCount++;
-
                     await Task.Delay(TimeSpan.FromSeconds(5));
                     await TryStartConnectionAsync();
                 }
                 else
                 {
+                    _connectionFailed = true;
+                    await InvokeAsync(StateHasChanged);
                     SnackBar.Add("Unable to reconnect. Please check the host status and try again later.", Severity.Error);
                 }
             };
 
             await TryStartConnectionAsync();
+
+            if (action == "control")
+            {
+                await ToggleDrawCursor(false);
+                await EnableInput(true);
+            }
+            else if (action == "view")
+            {
+                await ToggleDrawCursor(true);
+                await EnableInput(false);
+            }
         }
         catch (Exception ex)
         {
@@ -519,21 +485,29 @@ public partial class Access : IAsyncDisposable
         {
             Logger.LogError(ex, "HTTP request error during connection to host {Host}", Host);
             SnackBar.Add("Unable to connect to the host. Please check the host status and try again later.", Severity.Error);
+            _connectionFailed = true;
+            await InvokeAsync(StateHasChanged);
         }
         catch (TimeoutException ex)
         {
             Logger.LogError(ex, "Timeout error during connection to host {Host}", Host);
             SnackBar.Add("Connection to the host timed out. Please try again later.", Severity.Error);
+            _connectionFailed = true;
+            await InvokeAsync(StateHasChanged);
         }
         catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Task was canceled during connection to host {Host}", Host);
             SnackBar.Add("Connection to the host was canceled. Please try again later.", Severity.Error);
+            _connectionFailed = true;
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "An error occurred during connection to host {Host}", Host);
             SnackBar.Add("An error occurred while connecting to the host. Please try again later.", Severity.Error);
+            _connectionFailed = true;
+            await InvokeAsync(StateHasChanged);
         }
         finally
         {
@@ -575,7 +549,6 @@ public partial class Access : IAsyncDisposable
         _isInputEnabled = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value));
-        QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
     private async Task ToggleUserInput(bool value)
@@ -588,7 +561,6 @@ public partial class Access : IAsyncDisposable
         _isUserInputEnabled = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", !value));
-        QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
     private async Task ToggleDrawCursor(bool value)
@@ -601,7 +573,6 @@ public partial class Access : IAsyncDisposable
         _drawCursor = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
-        QueryParameterService.UpdateParameter("drawCursor", value.ToString());
     }
 
     private async Task ChangeFrameRate(int frameRate)
@@ -614,7 +585,6 @@ public partial class Access : IAsyncDisposable
         _frameRate = frameRate;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetFrameRate", frameRate));
-        QueryParameterService.UpdateParameter("frameRate", frameRate.ToString());
     }
 
     private async Task ChangeQuality(int quality)
@@ -627,7 +597,6 @@ public partial class Access : IAsyncDisposable
         _imageQuality = quality;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetImageQuality", quality));
-        QueryParameterService.UpdateParameter("imageQuality", quality.ToString());
     }
 
     private async void OnChangeScreen(string display)
@@ -690,21 +659,27 @@ public partial class Access : IAsyncDisposable
             builder.AddContent(1, "Access Denied. Please contact the administrator");
             builder.CloseElement();
         }
-        else if (string.IsNullOrEmpty(_screenDataUrl))
+        else if (_connectionFailed)
         {
             builder.OpenElement(2, "p");
-            builder.AddContent(3, "Establishing connection...");
+            builder.AddContent(3, "Unable to establish connection. Please try again later.");
+            builder.CloseElement();
+        }
+        else if (string.IsNullOrEmpty(_screenDataUrl))
+        {
+            builder.OpenElement(4, "p");
+            builder.AddContent(5, "Establishing connection...");
             builder.CloseElement();
         }
         else
         {
-            builder.OpenElement(4, "img");
+            builder.OpenElement(6, "img");
 
             var cssClass = _selectedDisplay == "VIRTUAL_SCREEN"
                 ? "h-auto max-w-full object-contain mx-auto"
                 : "max-h-full w-auto object-contain mx-auto";
 
-            builder.AddEventPreventDefaultAttribute(5, "oncontextmenu", true);
+            builder.AddEventPreventDefaultAttribute(7, "oncontextmenu", true);
 
             var attributes = new Dictionary<string, object>
             {
@@ -721,9 +696,9 @@ public partial class Access : IAsyncDisposable
                 { "alt", string.Empty }
             };
 
-            builder.AddMultipleAttributes(6, attributes);
+            builder.AddMultipleAttributes(8, attributes);
 
-            builder.AddElementReferenceCapture(7, element => _screenImageElement = element);
+            builder.AddElementReferenceCapture(9, element => _screenImageElement = element);
 
             builder.CloseElement();
         }

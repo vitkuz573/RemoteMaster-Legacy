@@ -565,29 +565,7 @@ public partial class Home
             throw new InvalidOperationException("User is not initialized.");
         }
 
-        if (_user.HasClaim(c => c is { Type: "Connect", Value: "Control" }))
-        {
-            await ExecuteAction<ConnectDialog>("Connect");
-        }
-        else if (_user.HasClaim(c => c is { Type: "Connect", Value: "View" }))
-        {
-            await ConnectAsViewer();
-        }
-        else
-        {
-            SnackBar.Add("You do not have the required permissions to connect.", Severity.Warning);
-        }
-    }
-
-    private async Task ConnectAsViewer()
-    {
-        var hosts = _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList();
-
-        foreach (var host in hosts)
-        {
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
-            await module.InvokeVoidAsync("openNewWindow", $"/{host.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
-        }
+        await ExecuteAction<ConnectDialog>("Connect");
     }
 
     private async Task Lock() => await ExecuteAction<LockWorkStationDialog>("Lock Workstation");

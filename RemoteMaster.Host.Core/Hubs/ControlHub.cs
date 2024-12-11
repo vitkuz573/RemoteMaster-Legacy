@@ -19,7 +19,6 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
 public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService, ICertificateService certificateService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
@@ -28,53 +27,126 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         var user = Context.User;
 
-        if (user != null)
+        if (user == null)
         {
-            var userName = user.FindFirstValue(ClaimTypes.Name);
-            var role = user.FindFirstValue(ClaimTypes.Role);
-            var authenticationType = GetAuthenticationType(user);
-            var httpContext = Context.GetHttpContext();
-
-            if (httpContext != null)
+            var message = new Message("User is not authenticated.", Message.MessageSeverity.Error)
             {
-                var query = httpContext.Request.Query;
-                var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
+                Meta = MessageMeta.AuthorizationError
+            };
 
-                if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
+            await Clients.Caller.ReceiveMessage(message);
+
+            Context.Abort();
+
+            return;
+        }
+
+        var httpContext = Context.GetHttpContext();
+
+        if (httpContext == null)
+        {
+            var message = new Message("HTTP context is unavailable.", Message.MessageSeverity.Error)
+            {
+                Meta = MessageMeta.ConnectionError
+            };
+
+            await Clients.Caller.ReceiveMessage(message);
+
+            Context.Abort();
+
+            return;
+        }
+
+        var query = httpContext.Request.Query;
+        var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
+
+        if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
+        {
+            await HandleThumbnailRequest();
+
+            return;
+        }
+
+        var isScreencast = query.ContainsKey("screencast") && query["screencast"] == "true";
+
+        if (isScreencast)
+        {
+            if (!query.TryGetValue("action", out var action) || string.IsNullOrEmpty(action))
+            {
+                logger.LogWarning("Missing or invalid action parameter for screencast from user {UserName} with IP {IpAddress}.", user.FindFirstValue(ClaimTypes.Name), ipAddress);
+
+                var message = new Message("Missing or invalid action parameter for screencast.", Message.MessageSeverity.Error)
                 {
-                    await HandleThumbnailRequest();
-                    
-                    return;
-                }
+                    Meta = MessageMeta.AuthorizationError
+                };
 
-                if (query.ContainsKey("screencast") && query["screencast"] == "true" && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
-                {
-                    await HandleScreenCastRequest(userName, role, ipAddress, authenticationType);
-                }
+                await Clients.Caller.ReceiveMessage(message);
 
-                if (role == "Windows Service" && userName == "RCHost")
-                {
-                    var viewer = viewerFactory.Create(Context.ConnectionId, Context, "Services", userName, role, ipAddress, authenticationType);
-                    
-                    if (appState.TryAddViewer(viewer))
-                    {
-                        logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} added to viewers.", userName, role, ipAddress);
-                    }
-                    else
-                    {
-                        logger.LogError("Failed to add viewer for user {UserName} with role {Role} from IP {IpAddress}.", userName, role, ipAddress);
-                    }
+                Context.Abort();
 
-                    await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
-                }
-
-                if (OperatingSystem.IsWindows())
-                {
-                    var codecs = GetAvailableCodecs();
-                    
-                    await Clients.Caller.ReceiveAvailableCodecs(codecs);
-                }
+                return;
             }
+
+            var hasControlClaim = user.HasClaim(c => c is { Type: "Connect", Value: "Control" });
+            var hasViewClaim = user.HasClaim(c => c is { Type: "Connect", Value: "View" });
+            var userName = user.FindFirstValue(ClaimTypes.Name);
+
+            var actionString = action.ToString();
+
+            var isAuthorized = actionString switch
+            {
+                "control" when hasControlClaim => true,
+                "view" when hasViewClaim => true,
+                _ => false
+            };
+
+            if (!isAuthorized)
+            {
+                logger.LogWarning("Unauthorized attempt for action '{Action}' by user {UserName} with IP {IpAddress}.", action, userName, ipAddress);
+
+                var message = new Message($"Unauthorized for action '{action}'.", Message.MessageSeverity.Error)
+                {
+                    Meta = MessageMeta.AuthorizationError
+                };
+
+                await Clients.Caller.ReceiveMessage(message);
+
+                Context.Abort();
+
+                return;
+            }
+
+            try
+            {
+                var role = user.FindFirstValue(ClaimTypes.Role) ?? "Unknown";
+                var authenticationType = GetAuthenticationType(user);
+
+                await HandleScreenCastRequest(userName, role, ipAddress, authenticationType);
+
+                logger.LogInformation("Screencast started for user {UserName} with IP {IpAddress}.", userName, ipAddress);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to start screencast for user {UserName} with IP {IpAddress}.", userName, ipAddress);
+
+                var message = new Message("Failed to start screencast.", Message.MessageSeverity.Error)
+                {
+                    Meta = MessageMeta.ScreencastError
+                };
+
+                await Clients.Caller.ReceiveMessage(message);
+
+                Context.Abort();
+
+                return;
+            }
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            var codecs = GetAvailableCodecs();
+
+            await Clients.Caller.ReceiveAvailableCodecs(codecs);
         }
 
         await base.OnConnectedAsync();
@@ -299,13 +371,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void LogOffUser(bool force)
     {
         workStationSecurityService.LogOffUser(force);
-    }
-
-    public async Task SendCommandToService(string command)
-    {
-        logger.LogInformation("Received command: {Command}", command);
-
-        await Clients.Group("Services").ReceiveCommand(command);
     }
 
     [Authorize(Policy = "MoveHostPolicy")]

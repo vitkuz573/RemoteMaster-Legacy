@@ -96,7 +96,7 @@ public class CommandListenerService : IHostedService
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
 
             _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/control", options =>
+                .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/service", options =>
                 {
                     options.Headers.Add("X-Service-Flag", "true");
                 })

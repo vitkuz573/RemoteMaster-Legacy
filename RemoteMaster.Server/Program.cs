@@ -134,7 +134,6 @@ public static class Program
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<ICertificateRenewalTaskRepository, CertificateRenewalTaskRepository>();
-        services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IHostCommandService, HostCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();

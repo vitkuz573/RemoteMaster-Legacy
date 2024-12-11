@@ -9,4 +9,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IServiceClient
 {
     Task ReceiveMessage(Message message);
+
+    Task ReceiveCommand(string command);
 }

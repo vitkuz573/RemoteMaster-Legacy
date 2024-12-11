@@ -18,8 +18,6 @@ public interface IControlClient
 
     Task ReceiveMessage(Message message);
 
-    Task ReceiveCommand(string command);
-
     Task ReceiveHostVersion(string version);
 
     Task ReceiveCloseConnection();
