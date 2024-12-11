@@ -455,11 +455,11 @@ public partial class Access : IAsyncDisposable
             {
                 case "control":
                     await ToggleDrawCursor(false);
-                    await EnableInput(true);
+                    await ToggleInput(true);
                     break;
                 case "view":
                     await ToggleDrawCursor(true);
-                    await EnableInput(false);
+                    await ToggleInput(false);
                     break;
             }
         }
@@ -543,7 +543,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task EnableInput(bool value)
+    private async Task ToggleInput(bool value)
     {
         if (_connection == null)
         {
