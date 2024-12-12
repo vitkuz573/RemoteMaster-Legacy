@@ -9,7 +9,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
@@ -654,59 +653,6 @@ public partial class Access : IAsyncDisposable
             { nameof(DisconnectViewerDialog.Viewer), viewer }
         });
     }
-
-    private RenderFragment RenderScreenImage() => builder =>
-    {
-        if (_isAccessDenied)
-        {
-            builder.OpenElement(0, "p");
-            builder.AddContent(1, "Access Denied. Please contact the administrator");
-            builder.CloseElement();
-        }
-        else if (_connectionFailed)
-        {
-            builder.OpenElement(2, "p");
-            builder.AddContent(3, "Unable to establish connection. Please try again later.");
-            builder.CloseElement();
-        }
-        else if (string.IsNullOrEmpty(_screenDataUrl))
-        {
-            builder.OpenElement(4, "p");
-            builder.AddContent(5, "Establishing connection...");
-            builder.CloseElement();
-        }
-        else
-        {
-            builder.OpenElement(6, "img");
-
-            var cssClass = _selectedDisplay == "VIRTUAL_SCREEN"
-                ? "h-auto max-w-full object-contain mx-auto"
-                : "max-h-full w-auto object-contain mx-auto";
-
-            builder.AddEventPreventDefaultAttribute(7, "oncontextmenu", true);
-
-            var attributes = new Dictionary<string, object>
-            {
-                { "src", _screenDataUrl },
-                { "class", cssClass },
-                { "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, () => Task.CompletedTask) },
-                { "draggable", "false" },
-                { "onload", EventCallback.Factory.Create<EventArgs>(this, OnLoad) },
-                { "onmousemove", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
-                { "onmousedown", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
-                { "onmouseup", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
-                { "onmouseover", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
-                { "onmousewheel", EventCallback.Factory.Create<WheelEventArgs>(this, OnMouseWheel) },
-                { "alt", string.Empty }
-            };
-
-            builder.AddMultipleAttributes(8, attributes);
-
-            builder.AddElementReferenceCapture(9, element => _screenImageElement = element);
-
-            builder.CloseElement();
-        }
-    };
 
     [JSInvokable]
     public async Task OnBeforeUnload()
