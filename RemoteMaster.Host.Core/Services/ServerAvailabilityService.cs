@@ -31,12 +31,12 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
             }
             catch (SocketException)
             {
-                logger.LogWarning("Attempt {Attempt} failed due to socket error. Retrying in {RetryDelay}ms...", attempt, currentRetryDelay);
-
                 if (attempt == maxAttempts)
                 {
                     break;
                 }
+
+                logger.LogWarning("Attempt {Attempt} failed due to socket error. Retrying in {RetryDelay}ms...", attempt, currentRetryDelay);
 
                 await timeProvider.Delay(currentRetryDelay, cancellationToken);
 
