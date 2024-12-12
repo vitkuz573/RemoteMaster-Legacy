@@ -10,12 +10,9 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITimeProvider timeProvider, ILogger<ServerAvailabilityService> logger) : IServerAvailabilityService
 {
-    private const int ConnectionRetryDelay = 1000;
-    private const int MaxRetryDelay = 5000;
-
-    public async Task<bool> IsServerAvailableAsync(string server, int maxAttempts, CancellationToken cancellationToken = default)
+    public async Task<bool> IsServerAvailableAsync(string server, int maxAttempts, int initialRetryDelay, int maxRetryDelay, CancellationToken cancellationToken = default)
     {
-        var currentRetryDelay = ConnectionRetryDelay;
+        var currentRetryDelay = initialRetryDelay;
 
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -43,7 +40,7 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
 
                 await timeProvider.Delay(currentRetryDelay, cancellationToken);
 
-                currentRetryDelay = Math.Min(currentRetryDelay * 2, MaxRetryDelay);
+                currentRetryDelay = Math.Min(currentRetryDelay * 2, maxRetryDelay);
             }
             catch (OperationCanceledException)
             {

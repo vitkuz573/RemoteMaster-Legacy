@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IServerAvailabilityService
 {
-    Task<bool> IsServerAvailableAsync(string server, int maxAttempts, CancellationToken cancellationToken = default);
+    Task<bool> IsServerAvailableAsync(string server, int maxAttempts, int initialRetryDelay, int maxRetryDelay, CancellationToken cancellationToken = default);
 }

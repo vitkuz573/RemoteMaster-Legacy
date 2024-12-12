@@ -130,11 +130,49 @@ public static class ServiceProviderExtensions
             }
         });
 
+        var initialRetryDelayOption = new CliOption<int>("--initial-retry-delay", "--ir")
+        {
+            Description = "Specifies the initial delay before retrying a connection attempt (in milliseconds).",
+            Required = false,
+            DefaultValueFactory = _ => 1000
+        };
+
+        initialRetryDelayOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --initial-retry-delay option must be a non-negative integer.");
+            }
+        });
+
+        var maxRetryDelayOption = new CliOption<int>("--max-retry-delay", "--mr")
+        {
+            Description = "Specifies the maximum delay between connection attempts (in milliseconds).",
+            Required = false,
+            DefaultValueFactory = _ => 5000
+        };
+
+        maxRetryDelayOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --max-retry-delay option must be a non-negative integer.");
+            }
+        });
+
         command.Options.Add(maxAttemptsOption);
+        command.Options.Add(initialRetryDelayOption);
+        command.Options.Add(maxRetryDelayOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var maxAttempts = parseResult.GetValue(maxAttemptsOption);
+            var initialRetryDelay = parseResult.GetValue(initialRetryDelayOption);
+            var maxRetryDelay = parseResult.GetValue(maxRetryDelayOption);
 
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Uninstall");
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
@@ -145,7 +183,7 @@ public static class ServiceProviderExtensions
 
             var server = currentConfig.Server;
 
-            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, cancellationToken))
+            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, initialRetryDelay, maxRetryDelay, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Uninstallation will not proceed.", server);
 
@@ -199,14 +237,52 @@ public static class ServiceProviderExtensions
             }
         });
 
+        var initialRetryDelayOption = new CliOption<int>("--initial-retry-delay", "--ir")
+        {
+            Description = "Specifies the initial delay before retrying a connection attempt (in milliseconds).",
+            Required = false,
+            DefaultValueFactory = _ => 1000
+        };
+
+        initialRetryDelayOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --initial-retry-delay option must be a non-negative integer.");
+            }
+        });
+
+        var maxRetryDelayOption = new CliOption<int>("--max-retry-delay", "--mr")
+        {
+            Description = "Specifies the maximum delay between connection attempts (in milliseconds).",
+            Required = false,
+            DefaultValueFactory = _ => 5000
+        };
+
+        maxRetryDelayOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --max-retry-delay option must be a non-negative integer.");
+            }
+        });
+
         command.Options.Add(serverOption);
         command.Options.Add(organizationOption);
         command.Options.Add(organizationalUnitOption);
         command.Options.Add(maxAttemptsOption);
+        command.Options.Add(initialRetryDelayOption);
+        command.Options.Add(maxRetryDelayOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var maxAttempts = parseResult.GetValue(maxAttemptsOption);
+            var initialRetryDelay = parseResult.GetValue(initialRetryDelayOption);
+            var maxRetryDelay = parseResult.GetValue(maxRetryDelayOption);
 
             var server = parseResult.GetValue(serverOption);
             var organization = parseResult.GetValue(organizationOption);
@@ -216,7 +292,7 @@ public static class ServiceProviderExtensions
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
             var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
 
-            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, cancellationToken))
+            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, initialRetryDelay, maxRetryDelay, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Installation will not proceed.", server);
 
@@ -269,10 +345,46 @@ public static class ServiceProviderExtensions
             }
         });
 
+        var initialRetryDelayOption = new CliOption<int>("--initial-retry-delay", "--ir")
+        {
+            Description = "Specifies the initial delay before retrying a connection attempt (in milliseconds).",
+            Required = false,
+            DefaultValueFactory = _ => 1000
+        };
+
+        initialRetryDelayOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --initial-retry-delay option must be a non-negative integer.");
+            }
+        });
+
+        var maxRetryDelayOption = new CliOption<int>("--max-retry-delay", "--mr")
+        {
+            Description = "Specifies the maximum delay between connection attempts (in milliseconds).",
+            Required = false,
+            DefaultValueFactory = _ => 5000
+        };
+
+        maxRetryDelayOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --max-retry-delay option must be a non-negative integer.");
+            }
+        });
+
         command.Options.Add(serverOption);
         command.Options.Add(organizationOption);
         command.Options.Add(organizationalUnitOption);
         command.Options.Add(maxAttemptsOption);
+        command.Options.Add(initialRetryDelayOption);
+        command.Options.Add(maxRetryDelayOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
@@ -280,6 +392,8 @@ public static class ServiceProviderExtensions
             var organization = parseResult.GetValue(organizationOption);
             var organizationalUnit = parseResult.GetValue(organizationalUnitOption);
             var maxAttempts = parseResult.GetValue(maxAttemptsOption);
+            var initialRetryDelay = parseResult.GetValue(initialRetryDelayOption);
+            var maxRetryDelay = parseResult.GetValue(maxRetryDelayOption);
 
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Reinstall");
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
@@ -300,7 +414,7 @@ public static class ServiceProviderExtensions
                 return 1;
             }
 
-            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, cancellationToken))
+            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, initialRetryDelay, maxRetryDelay, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Reinstallation will not proceed.", server);
 
