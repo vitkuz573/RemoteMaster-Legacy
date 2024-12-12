@@ -10,21 +10,20 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITimeProvider timeProvider, ILogger<ServerAvailabilityService> logger) : IServerAvailabilityService
 {
-    public const int MaxConnectionAttempts = 5;
     private const int ConnectionRetryDelay = 1000;
     private const int MaxRetryDelay = 5000;
 
-    public async Task<bool> IsServerAvailableAsync(string server, CancellationToken cancellationToken = default)
+    public async Task<bool> IsServerAvailableAsync(string server, int maxAttempts, CancellationToken cancellationToken = default)
     {
         var currentRetryDelay = ConnectionRetryDelay;
 
-        for (var attempt = 1; attempt <= MaxConnectionAttempts; attempt++)
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
-                logger.LogInformation("Checking server availability, attempt {Attempt} of {MaxAttempts}...", attempt, MaxConnectionAttempts);
+                logger.LogInformation("Checking server availability, attempt {Attempt} of {MaxAttempts}...", attempt, maxAttempts);
 
                 using var tcpClient = tcpClientFactory.Create();
                 await tcpClient.ConnectAsync(server, 5254, cancellationToken);
@@ -37,7 +36,7 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
             {
                 logger.LogWarning("Attempt {Attempt} failed due to socket error. Retrying in {RetryDelay}ms...", attempt, currentRetryDelay);
 
-                if (attempt == MaxConnectionAttempts)
+                if (attempt == maxAttempts)
                 {
                     break;
                 }
@@ -53,7 +52,7 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
             }
         }
 
-        logger.LogError("Server {Server} is unavailable after {MaxAttempts} attempts.", server, MaxConnectionAttempts);
+        logger.LogError("Server {Server} is unavailable after {MaxAttempts} attempts.", server, maxAttempts);
 
         return false;
     }

@@ -113,8 +113,29 @@ public static class ServiceProviderExtensions
     {
         var command = new CliCommand("uninstall", "Removes the program and its components.");
 
-        command.SetAction(async (_, cancellationToken) =>
+        var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
         {
+            Description = "Specifies the maximum number of connection attempts to check server availability.",
+            Required = false,
+            DefaultValueFactory = _ => 5
+        };
+
+        maxAttemptsOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value <= 0)
+            {
+                result.AddError("The --max-attempts option must be a positive integer.");
+            }
+        });
+
+        command.Options.Add(maxAttemptsOption);
+
+        command.SetAction(async (parseResult, cancellationToken) =>
+        {
+            var maxAttempts = parseResult.GetValue(maxAttemptsOption);
+
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Uninstall");
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
             var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
@@ -124,7 +145,7 @@ public static class ServiceProviderExtensions
 
             var server = currentConfig.Server;
 
-            if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
+            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Uninstallation will not proceed.", server);
 
@@ -161,12 +182,32 @@ public static class ServiceProviderExtensions
             Required = true
         };
 
+        var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
+        {
+            Description = "Specifies the maximum number of connection attempts to check server availability.",
+            Required = false,
+            DefaultValueFactory = _ => 5
+        };
+
+        maxAttemptsOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value <= 0)
+            {
+                result.AddError("The --max-attempts option must be a positive integer.");
+            }
+        });
+
         command.Options.Add(serverOption);
         command.Options.Add(organizationOption);
         command.Options.Add(organizationalUnitOption);
+        command.Options.Add(maxAttemptsOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
+            var maxAttempts = parseResult.GetValue(maxAttemptsOption);
+
             var server = parseResult.GetValue(serverOption);
             var organization = parseResult.GetValue(organizationOption);
             var organizationalUnit = parseResult.GetValue(organizationalUnitOption);
@@ -175,7 +216,7 @@ public static class ServiceProviderExtensions
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
             var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
 
-            if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
+            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Installation will not proceed.", server);
 
@@ -211,15 +252,34 @@ public static class ServiceProviderExtensions
             Description = "Overrides the current configuration organizational unit."
         };
 
+        var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
+        {
+            Description = "Specifies the maximum number of connection attempts to check server availability.",
+            Required = false,
+            DefaultValueFactory = _ => 5
+        };
+
+        maxAttemptsOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value <= 0)
+            {
+                result.AddError("The --max-attempts option must be a positive integer.");
+            }
+        });
+
         command.Options.Add(serverOption);
         command.Options.Add(organizationOption);
         command.Options.Add(organizationalUnitOption);
+        command.Options.Add(maxAttemptsOption);
 
         command.SetAction(async (parseResult, cancellationToken) =>
         {
             var server = parseResult.GetValue(serverOption);
             var organization = parseResult.GetValue(organizationOption);
             var organizationalUnit = parseResult.GetValue(organizationalUnitOption);
+            var maxAttempts = parseResult.GetValue(maxAttemptsOption);
 
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Reinstall");
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
@@ -240,7 +300,7 @@ public static class ServiceProviderExtensions
                 return 1;
             }
 
-            if (!await serverAvailabilityService.IsServerAvailableAsync(server, cancellationToken))
+            if (!await serverAvailabilityService.IsServerAvailableAsync(server, maxAttempts, cancellationToken))
             {
                 logger.LogError("The server {Server} is unavailable. Reinstallation will not proceed.", server);
 
