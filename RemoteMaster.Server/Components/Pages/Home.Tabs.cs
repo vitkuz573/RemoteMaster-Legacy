@@ -654,8 +654,6 @@ public partial class Home
     
             if (cancellationToken.IsCancellationRequested)
             {
-                Logger.LogWarning("Logon canceled before connecting for host {IPAddress}", hostDto.IpAddress);
-    
                 return;
             }
     
@@ -663,9 +661,8 @@ public partial class Home
     
             if (cancellationToken.IsCancellationRequested || connection.State != HubConnectionState.Connected)
             {
-                Logger.LogWarning("Logon canceled or failed for host {IPAddress}", hostDto.IpAddress);
-    
                 await MoveToUnavailable(hostDto, cancellationToken);
+
                 return;
             }
     
@@ -674,6 +671,7 @@ public partial class Home
                 if (cancellationToken.IsCancellationRequested)
                 {
                     Logger.LogWarning("Thumbnail reception canceled for host {IPAddress}", hostDto.IpAddress);
+
                     return;
                 }
     
@@ -694,8 +692,6 @@ public partial class Home
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    Logger.LogWarning("Close connection canceled for host {IPAddress}", hostDto.IpAddress);
-    
                     return;
                 }
     
@@ -730,8 +726,6 @@ public partial class Home
     {
         if (cancellationToken.IsCancellationRequested)
         {
-            Logger.LogWarning("Skipping MoveToAvailable for {IPAddress} due to cancellation", hostDto.IpAddress);
-
             return;
         }
 
@@ -753,8 +747,6 @@ public partial class Home
     {
         if (cancellationToken.IsCancellationRequested)
         {
-            Logger.LogWarning("Skipping MoveToUnavailable for {IPAddress} due to cancellation", hostDto.IpAddress);
-
             return;
         }
 

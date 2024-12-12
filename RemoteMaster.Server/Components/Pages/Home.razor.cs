@@ -59,8 +59,6 @@ public partial class Home
 
         if (_currentUser == null)
         {
-            Logger.LogWarning("User not found in database.");
-
             return;
         }
 
@@ -71,8 +69,6 @@ public partial class Home
     {
         if (_currentUser == null)
         {
-            Logger.LogWarning("Current user not found");
-            
             return;
         }
 
@@ -162,30 +158,20 @@ public partial class Home
 
         if (node == null)
         {
-            Logger.LogWarning("Node is null");
-            
             return;
         }
 
         switch (node)
         {
             case Organization:
-                Logger.LogInformation("Organization node selected.");
                 break;
-
             case OrganizationalUnit orgUnit:
                 if (!orgUnit.Hosts.Any())
                 {
-                    Logger.LogWarning("Selected organizational unit has no hosts.");
-                    
                     return;
                 }
 
                 await LoadHosts(orgUnit, _logonCts.Token);
-                break;
-
-            default:
-                Logger.LogWarning("Unsupported node type selected: {NodeType}", node.GetType());
                 break;
         }
 
