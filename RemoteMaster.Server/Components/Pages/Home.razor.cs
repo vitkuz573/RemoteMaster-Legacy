@@ -189,7 +189,7 @@ public partial class Home
             var hostDto = new HostDto(host.Name, host.IpAddress, host.MacAddress)
             {
                 Id = host.Id,
-                OrganizationId = host.Parent!.OrganizationId,
+                OrganizationId = host.Parent.OrganizationId,
                 OrganizationalUnitId = host.ParentId,
                 Thumbnail = null
             };
