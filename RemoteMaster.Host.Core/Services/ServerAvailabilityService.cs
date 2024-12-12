@@ -45,6 +45,11 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
 
                 currentRetryDelay = Math.Min(currentRetryDelay * 2, MaxRetryDelay);
             }
+            catch (OperationCanceledException)
+            {
+                logger.LogInformation("Operation was canceled by the user.");
+                throw;
+            }
             catch (Exception ex)
             {
                 logger.LogError(ex, "An unexpected error occurred while checking server availability.");
@@ -52,7 +57,10 @@ public class ServerAvailabilityService(ITcpClientFactory tcpClientFactory, ITime
             }
         }
 
-        logger.LogError("Server {Server} is unavailable after {MaxAttempts} attempts.", server, maxAttempts);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError("Server {Server} is unavailable after {MaxAttempts} attempts.", server, maxAttempts);
+        }
 
         return false;
     }
