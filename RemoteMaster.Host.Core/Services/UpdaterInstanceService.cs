@@ -62,7 +62,8 @@ public class UpdaterInstanceService : IUpdaterInstanceService
             arguments.Add("--allow-downgrade");
         }
 
-        arguments.Add("--wait-for-client-connection");
+        arguments.Add("--wait-for-client-connection-timeout");
+        arguments.Add("0");
 
         var startInfo = new ProcessStartInfo
         {

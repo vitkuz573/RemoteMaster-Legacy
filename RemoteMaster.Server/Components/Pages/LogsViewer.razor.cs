@@ -11,6 +11,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using RemoteMaster.Shared.Extensions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -105,18 +106,16 @@ public partial class LogsViewer : IAsyncDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        _connection.On<string>("ReceiveMessage", message =>
+        _connection.On<Message>("ReceiveMessage", message =>
         {
-            _logContent = message;
+            var snackBarSeverity = message.Severity switch
+            {
+                Message.MessageSeverity.Information => Severity.Info,
+                Message.MessageSeverity.Warning => Severity.Warning,
+                Message.MessageSeverity.Error => Severity.Error
+            };
 
-            InvokeAsync(StateHasChanged);
-        });
-
-        _connection.On<string>("ReceiveError", errorMessage =>
-        {
-            _logContent = errorMessage;
-
-            InvokeAsync(StateHasChanged);
+            SnackBar.Add(message.Text, snackBarSeverity);
         });
 
         await _connection.StartAsync();

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
@@ -19,7 +20,9 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
     {
         if (!fileSystem.Directory.Exists(_logDirectory))
         {
-            await Clients.Caller.ReceiveError("Log directory not found.");
+            var message = new Message("Log directory not found.", Message.MessageSeverity.Error);
+
+            await Clients.Caller.ReceiveMessage(message);
 
             return;
         }
@@ -48,12 +51,16 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
             }
             catch (Exception ex)
             {
-                await Clients.Caller.ReceiveError($"Error reading log file: {ex.Message}");
+                var message = new Message($"Error reading log file: {ex.Message}", Message.MessageSeverity.Error);
+
+                await Clients.Caller.ReceiveMessage(message);
             }
         }
         else
         {
-            await Clients.Caller.ReceiveError("Log file not found.");
+            var message = new Message("Log file not found.", Message.MessageSeverity.Error);
+
+            await Clients.Caller.ReceiveMessage(message);
         }
     }
 
@@ -64,7 +71,9 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
 
         if (!fileSystem.File.Exists(filePath))
         {
-            await Clients.Caller.ReceiveError("Log file not found.");
+            var message = new Message("Log file not found.", Message.MessageSeverity.Error);
+
+            await Clients.Caller.ReceiveMessage(message);
 
             return;
         }
@@ -99,7 +108,9 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
         }
         catch (Exception ex)
         {
-            await Clients.Caller.ReceiveError($"Error reading log file: {ex.Message}");
+            var message = new Message($"Error reading log file: {ex.Message}", Message.MessageSeverity.Error);
+
+            await Clients.Caller.ReceiveMessage(message);
         }
     }
 
@@ -108,7 +119,9 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
     {
         if (!fileSystem.Directory.Exists(_logDirectory))
         {
-            await Clients.Caller.ReceiveError("Log directory not found.");
+            var message = new Message("Log file not found.", Message.MessageSeverity.Error);
+
+            await Clients.Caller.ReceiveMessage(message);
 
             return;
         }
@@ -119,7 +132,7 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
 
             if (logFiles.Length == 0)
             {
-                await Clients.Caller.ReceiveError("No log files found to delete.");
+                await Clients.Caller.ReceiveMessage(new Message("No log files found to delete.", Message.MessageSeverity.Error));
 
                 return;
             }
@@ -129,11 +142,15 @@ public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
                 fileSystem.File.Delete(logFile);
             }
 
-            await Clients.Caller.ReceiveMessage("All log files have been deleted.");
+            var message = new Message("All log files have been deleted.", Message.MessageSeverity.Information);
+
+            await Clients.Caller.ReceiveMessage(message);
         }
         catch (Exception ex)
         {
-            await Clients.Caller.ReceiveError($"Error deleting log files: {ex.Message}");
+            var message = new Message($"Error deleting log files: {ex.Message}", Message.MessageSeverity.Error);
+
+            await Clients.Caller.ReceiveMessage(message);
         }
     }
 }

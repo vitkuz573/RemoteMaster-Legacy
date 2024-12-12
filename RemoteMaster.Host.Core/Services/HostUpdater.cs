@@ -70,21 +70,38 @@ public class HostUpdater : IHostUpdater
         await _updaterHubClient.InvokeAsync("NotifyPortReady", 6001);
     }
 
-    public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false, bool waitForClientConnection = true)
+    public async Task UpdateAsync(string folderPath, string? username, string? password, bool force, bool allowDowngrade, int waitForClientConnectionTimeout)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
         try
         {
-            if (waitForClientConnection)
+            if (waitForClientConnectionTimeout != 0)
             {
-                _logger.LogInformation("Waiting for client to connect to UpdaterHub...");
-                await _clientConnectedTcs.Task;
-                _logger.LogInformation("Client connected. Proceeding with update.");
+                _logger.LogInformation($"Waiting for client to connect to UpdaterHub with a timeout of {waitForClientConnectionTimeout} ms...");
+                
+                var completedTask = await Task.WhenAny(_clientConnectedTcs.Task, Task.Delay(waitForClientConnectionTimeout));
+
+                if (completedTask == _clientConnectedTcs.Task)
+                {
+                    _logger.LogInformation("Client connected. Proceeding with update.");
+                }
+                else
+                {
+                    _logger.LogWarning($"Timeout of {waitForClientConnectionTimeout} ms reached while waiting for client connection.");
+                    
+                    await Notify("Timeout reached while waiting for client connection. Update aborted.", MessageSeverity.Warning);
+                    
+                    return;
+                }
             }
             else
             {
-                _logger.LogInformation("Skipping client connection waiting as per configuration.");
+                _logger.LogInformation("Waiting indefinitely for client to connect to UpdaterHub...");
+
+                await _clientConnectedTcs.Task;
+
+                _logger.LogInformation("Client connected. Proceeding with update.");
             }
         }
         catch (Exception ex)

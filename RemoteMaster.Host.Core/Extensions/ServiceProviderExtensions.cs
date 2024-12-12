@@ -78,17 +78,28 @@ public static class ServiceProviderExtensions
             Description = "Allows the update operation to proceed with a lower version than the current one."
         };
 
-        var waitForClientConnectionOption = new CliOption<bool>("--wait-for-client-connection", "--wait-connection", "-w")
+        var waitForClientConnectionTimeoutOption = new CliOption<int>("--wait-for-client-connection-timeout", "--wait-connection-timeout", "-w")
         {
-            Description = "Specifies whether the update operation should wait for a client to connect before proceeding."
+            Description = "Specifies the maximum time to wait for a client to connect before proceeding with the update, in milliseconds.",
+            DefaultValueFactory = _ => 0
         };
+
+        waitForClientConnectionTimeoutOption.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<int>();
+
+            if (value < 0)
+            {
+                result.AddError("The --wait-for-client-connection-timeout option must be a positive integer.");
+            }
+        });
 
         command.Options.Add(folderPathOption);
         command.Options.Add(usernameOption);
         command.Options.Add(passwordOption);
         command.Options.Add(forceOption);
         command.Options.Add(allowDowngradeOption);
-        command.Options.Add(waitForClientConnectionOption);
+        command.Options.Add(waitForClientConnectionTimeoutOption);
 
         command.SetAction(async (parseResult, _) =>
         {
@@ -97,11 +108,11 @@ public static class ServiceProviderExtensions
             var password = parseResult.GetValue(passwordOption);
             var force = parseResult.GetValue(forceOption);
             var allowDowngrade = parseResult.GetValue(allowDowngradeOption);
-            var waitForClientConnection = parseResult.GetValue(waitForClientConnectionOption);
+            var waitForClientConnectionTimeout = parseResult.GetValue(waitForClientConnectionTimeoutOption);
 
             var hostUpdater = serviceProvider.GetRequiredService<IHostUpdater>();
 
-            await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade, waitForClientConnection);
+            await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade, waitForClientConnectionTimeout);
             
             return 0;
         });

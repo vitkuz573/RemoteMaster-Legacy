@@ -2,15 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.Models;
+
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ILogClient
 {
     Task ReceiveLog(string logContent);
 
-    Task ReceiveError(string message);
-
-    Task ReceiveMessage(string message);
+    Task ReceiveMessage(Message message);
 
     Task ReceiveLogFiles(List<string> logFiles);
 }
