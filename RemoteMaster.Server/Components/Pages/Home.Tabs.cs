@@ -5,13 +5,13 @@
 using System.Collections.Concurrent;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Channels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Extensions;
@@ -613,35 +613,18 @@ public partial class Home
         {
             return;
         }
-    
-        var channel = Channel.CreateUnbounded<HostDto>();
-    
+
         var logonTasks = _selectedHosts.Select(async host =>
         {
             await LogonHost(host, _logonCts!.Token);
-            await channel.Writer.WriteAsync(host);
+            await InvokeAsync(StateHasChanged);
         });
-    
-        var readTask = Task.Run(async () =>
-        {
-            await foreach (var _ in channel.Reader.ReadAllAsync())
-            {
-                if (_logonCts?.Token.IsCancellationRequested ?? true)
-                {
-                    break;
-                }
-    
-                await InvokeAsync(StateHasChanged);
-            }
-        });
-    
+
         await Task.WhenAll(logonTasks);
-        channel.Writer.Complete();
-        await readTask;
-    
+
         ResetSelections();
     }
-    
+
     private async Task LogonHost(HostDto hostDto, CancellationToken cancellationToken)
     {
         try
@@ -661,7 +644,7 @@ public partial class Home
     
             if (cancellationToken.IsCancellationRequested || connection.State != HubConnectionState.Connected)
             {
-                await MoveToUnavailable(hostDto, cancellationToken);
+                await SetHostState(hostDto, HostState.Unavailable, cancellationToken);
 
                 return;
             }
@@ -678,11 +661,12 @@ public partial class Home
                 if (thumbnailBytes.Length > 0)
                 {
                     hostDto.Thumbnail = thumbnailBytes;
-                    await MoveToAvailable(hostDto, cancellationToken);
+
+                    await SetHostState(hostDto, HostState.Available, cancellationToken);
                 }
                 else
                 {
-                    await MoveToUnavailable(hostDto, cancellationToken);
+                    await SetHostState(hostDto, HostState.Unavailable, cancellationToken);
                 }
     
                 await InvokeAsync(StateHasChanged);
@@ -704,82 +688,59 @@ public partial class Home
             {
                 Logger.LogError("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
     
-                await MoveToUnavailable(hostDto, cancellationToken);
+                await SetHostState(hostDto, HostState.Unavailable, cancellationToken);
             }
         }
     }
     
     private async Task LogoffHosts()
     {
+        if (_logonCts?.Token.IsCancellationRequested ?? true)
+        {
+            return;
+        }
+
+        var cancellationToken = _logonCts.Token;
+
         var tasks = _selectedHosts
             .Where(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress))
-            .Select(LogoffHost);
-    
+            .Select(host => LogoffHost(host, cancellationToken));
+
         await Task.WhenAll(tasks);
     
         ResetSelections();
     }
     
-    private async Task LogoffHost(HostDto hostDto) => await MoveToPending(hostDto);
+    private async Task LogoffHost(HostDto hostDto, CancellationToken cancellationToken) => await SetHostState(hostDto, HostState.Pending, cancellationToken);
 
-    private async Task MoveToAvailable(HostDto hostDto, CancellationToken cancellationToken)
+    private async Task SetHostState(HostDto hostDto, HostState targetState, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        if (_pendingHosts.ContainsKey(hostDto.IpAddress))
+        if (targetState is HostState.Unavailable or HostState.Pending)
         {
-            _pendingHosts.TryRemove(hostDto.IpAddress, out _);
-        }
-        else if (_unavailableHosts.ContainsKey(hostDto.IpAddress))
-        {
-            _unavailableHosts.TryRemove(hostDto.IpAddress, out _);
+            hostDto.Thumbnail = null;
         }
 
-        _availableHosts.TryAdd(hostDto.IpAddress, hostDto);
+        _availableHosts.TryRemove(hostDto.IpAddress, out _);
+        _unavailableHosts.TryRemove(hostDto.IpAddress, out _);
+        _pendingHosts.TryRemove(hostDto.IpAddress, out _);
 
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task MoveToUnavailable(HostDto hostDto, CancellationToken cancellationToken)
-    {
-        if (cancellationToken.IsCancellationRequested)
+        switch (targetState)
         {
-            return;
+            case HostState.Available:
+                _availableHosts.TryAdd(hostDto.IpAddress, hostDto);
+                break;
+            case HostState.Unavailable:
+                _unavailableHosts.TryAdd(hostDto.IpAddress, hostDto);
+                break;
+            case HostState.Pending:
+                _pendingHosts.TryAdd(hostDto.IpAddress, hostDto);
+                break;
         }
-
-        hostDto.Thumbnail = null;
-
-        if (_pendingHosts.ContainsKey(hostDto.IpAddress))
-        {
-            _pendingHosts.TryRemove(hostDto.IpAddress, out _);
-        }
-        else if (_availableHosts.ContainsKey(hostDto.IpAddress))
-        {
-            _availableHosts.TryRemove(hostDto.IpAddress, out _);
-        }
-
-        _unavailableHosts.TryAdd(hostDto.IpAddress, hostDto);
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task MoveToPending(HostDto hostDto)
-    {
-        hostDto.Thumbnail = null;
-
-        if (_availableHosts.ContainsKey(hostDto.IpAddress))
-        {
-            _availableHosts.TryRemove(hostDto.IpAddress, out _);
-        }
-        else if (_unavailableHosts.ContainsKey(hostDto.IpAddress))
-        {
-            _unavailableHosts.TryRemove(hostDto.IpAddress, out _);
-        }
-
-        _pendingHosts.TryAdd(hostDto.IpAddress, hostDto);
 
         await InvokeAsync(StateHasChanged);
     }
