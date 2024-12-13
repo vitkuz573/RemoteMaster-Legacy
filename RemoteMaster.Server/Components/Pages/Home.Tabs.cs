@@ -822,6 +822,7 @@ public partial class Home
 
                         };
                     }
+
                     return handler;
                 };
 
