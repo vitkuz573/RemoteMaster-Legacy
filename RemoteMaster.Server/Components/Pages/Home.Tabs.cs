@@ -380,13 +380,20 @@ public partial class Home
         await DialogService.ShowAsync<CommonDialogWrapper<TDialog>>(title, parametersWithAdditional, options);
     }
 
-    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true) where TDialog : ComponentBase
+    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true, bool includeHosts = true) where TDialog : ComponentBase
     {
-        var hosts = onlyAvailable ? _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList() : [.. _selectedHosts];
-    
-        if (hosts.Count == 0)
+        var hosts = new List<HostDto>();
+
+        if (includeHosts)
         {
-            return;
+            hosts = onlyAvailable
+                ? _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList()
+                : _selectedHosts.ToList();
+
+            if (hosts.Count == 0)
+            {
+                return;
+            }
         }
     
         dialogOptions ??= new DialogOptions
@@ -394,15 +401,17 @@ public partial class Home
             MaxWidth = MaxWidth.ExtraExtraLarge,
             FullWidth = true
         };
-    
-        var dialogParameters = new DialogParameters
+
+        var dialogParameters = new DialogParameters();
+
+        if (includeHosts)
         {
-            { nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<HostDto, HubConnection?>(hosts.ToDictionary(c => c, _ => (HubConnection?)null)) },
-            { nameof(CommonDialogWrapper<TDialog>.HubPath), hubPath },
-            { nameof(CommonDialogWrapper<TDialog>.StartConnection), startConnection },
-            { nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections }
-        };
-    
+            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<HostDto, HubConnection?>(hosts.ToDictionary(c => c, _ => (HubConnection?)null)));
+            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.HubPath), hubPath);
+            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.StartConnection), startConnection);
+            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections);
+        }
+
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
@@ -533,16 +542,7 @@ public partial class Home
 
     private async Task OpenHostInfo() => await ExecuteAction<HostDialog>("Host Info", false, false, requireConnections: false);
 
-    private async Task RemoteExecutor()
-    {
-        var dialogOptions = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraExtraLarge,
-            FullWidth = true
-        };
-
-        await DialogService.ShowAsync<RemoteCommandDialog>("Remote Command", dialogOptions);
-    }
+    private async Task RemoteExecutor() => await ExecuteAction<RemoteCommandDialog>("Remote Command", includeHosts: false);
 
     private async Task Power() => await ExecuteAction<PowerDialog>("Power");
 
