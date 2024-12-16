@@ -284,6 +284,7 @@ public static class Program
         }
 
         app.UseMiddleware<RegistrationRestrictionMiddleware>();
+        app.UseMiddleware<PortRestrictionMiddleware>(5254);
 
         app.UseAntiforgery();
 
