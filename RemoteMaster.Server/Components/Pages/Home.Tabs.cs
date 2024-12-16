@@ -531,21 +531,7 @@ public partial class Home
         }
     }
 
-    private async Task OpenHostInfo()
-    {
-        var dialogOptions = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraExtraLarge,
-            FullWidth = true
-        };
-
-        var dialogParameters = new DialogParameters<HostDialog>
-        {
-            { d => d.HostDto, _selectedHosts.First() }
-        };
-
-        await DialogService.ShowAsync<HostDialog>("Host Info", dialogParameters, dialogOptions);
-    }
+    private async Task OpenHostInfo() => await ExecuteAction<HostDialog>("Host Info", false, false, requireConnections: false);
 
     private async Task RemoteExecutor()
     {

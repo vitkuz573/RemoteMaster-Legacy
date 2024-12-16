@@ -1,11 +1,10 @@
-﻿<MudDialog>
-    <DialogContent>
-        <MudTextField Label="Identifier" Value="HostDto.Id" ReadOnly="true" />
-        <MudTextField Label="Name" Value="HostDto.Name" ReadOnly="true" />
-        <MudTextField Label="IP Address" Value="HostDto.IpAddress" ReadOnly="true" />
-        <MudTextField Label="MAC Address" Value="HostDto.MacAddress" ReadOnly="true" />
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-    </DialogActions>
-</MudDialog>
+﻿@inherits CommonDialogBase
+
+<CommonDialog>
+    <Content>
+        <MudTextField Label="Identifier" Value="@_hostDto.Id" ReadOnly="true" />
+        <MudTextField Label="Name" Value="@_hostDto.Name" ReadOnly="true" />
+        <MudTextField Label="IP Address" Value="@_hostDto.IpAddress" ReadOnly="true" />
+        <MudTextField Label="MAC Address" Value="@_hostDto.MacAddress" ReadOnly="true" />
+    </Content>
+</CommonDialog>

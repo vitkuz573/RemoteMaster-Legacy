@@ -2,22 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class HostDialog
 {
-    [CascadingParameter]
-    protected MudDialogInstance MudDialog { get; set; } = default!;
+    private HostDto _hostDto;
 
-    [Parameter]
-    public HostDto HostDto { get; set; } = default!;
-
-    private void Cancel()
+    protected override void OnInitialized()
     {
-        MudDialog.Cancel();
+        _hostDto = Hosts.First().Key;
     }
 }
