@@ -380,22 +380,19 @@ public partial class Home
         await DialogService.ShowAsync<CommonDialogWrapper<TDialog>>(title, parametersWithAdditional, options);
     }
 
-    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true, bool includeHosts = true) where TDialog : ComponentBase
+    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true, bool includeHosts = true, Dictionary<string, object>? additionalParameters = null) where TDialog : ComponentBase
     {
-        var hosts = new List<HostDto>();
-
-        if (includeHosts)
-        {
-            hosts = onlyAvailable
+        var hosts = includeHosts
+            ? onlyAvailable
                 ? _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList()
-                : _selectedHosts.ToList();
+                : _selectedHosts.ToList()
+            : [];
 
-            if (hosts.Count == 0)
-            {
-                return;
-            }
+        if (includeHosts && hosts.Count == 0)
+        {
+            return;
         }
-    
+
         dialogOptions ??= new DialogOptions
         {
             MaxWidth = MaxWidth.ExtraExtraLarge,
@@ -412,34 +409,22 @@ public partial class Home
             dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections);
         }
 
+        if (additionalParameters != null)
+        {
+            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.AdditionalParameters), additionalParameters);
+        }
+
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
     private async Task WimBoot()
     {
-        var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
-
-        var dialogOptions = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraExtraLarge,
-            FullWidth = true
-        };
-
         var additionalParameters = new Dictionary<string, object>
         {
             { nameof(BootToWimDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemoved) }
         };
 
-        var dialogParameters = new DialogParameters
-        {
-            { nameof(CommonDialogWrapper<BootToWimDialog>.Hosts), hosts },
-            { nameof(CommonDialogWrapper<BootToWimDialog>.HubPath), "hubs/control" },
-            { nameof(CommonDialogWrapper<BootToWimDialog>.StartConnection), true },
-            { nameof(CommonDialogWrapper<BootToWimDialog>.RequireConnections), true },
-            { nameof(CommonDialogWrapper<BootToWimDialog>.AdditionalParameters), additionalParameters }
-        };
-
-        await ExecuteDialog<BootToWimDialog>("WIM Boot", dialogParameters, dialogOptions);
+        await ExecuteAction<BootToWimDialog>("WIM Boot", hubPath: "hubs/control", additionalParameters: additionalParameters);
 
         return;
 
@@ -459,28 +444,12 @@ public partial class Home
 
     private async Task OpenHostRemoveDialog()
     {
-        var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
-
-        var dialogOptions = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraExtraLarge,
-            FullWidth = true
-        };
-
         var additionalParameters = new Dictionary<string, object>
         {
             { nameof(RemoveHostsDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemoved) }
         };
 
-        var dialogParameters = new DialogParameters
-        {
-            { nameof(CommonDialogWrapper<RemoveHostsDialog>.Hosts), hosts },
-            { nameof(CommonDialogWrapper<RemoveHostsDialog>.StartConnection), false },
-            { nameof(CommonDialogWrapper<RemoveHostsDialog>.RequireConnections), false },
-            { nameof(CommonDialogWrapper<RemoveHostsDialog>.AdditionalParameters), additionalParameters }
-        };
-
-        await ExecuteDialog<RemoveHostsDialog>("Remove Hosts", dialogParameters, dialogOptions);
+        await ExecuteAction<RemoveHostsDialog>("Remove Hosts", onlyAvailable: false, startConnection: false, requireConnections: false, additionalParameters: additionalParameters);
 
         return;
 
@@ -500,29 +469,12 @@ public partial class Home
 
     private async Task OpenHostMoveDialog()
     {
-        var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
-
-        var dialogOptions = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraExtraLarge,
-            FullWidth = true
-        };
-
         var additionalParameters = new Dictionary<string, object>
         {
             { nameof(MoveHostsDialog.OnHostsMoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
         };
 
-        var dialogParameters = new DialogParameters
-        {
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.Hosts), hosts },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.HubPath), "hubs/management" },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.StartConnection), true },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.RequireConnections), true },
-            { nameof(CommonDialogWrapper<MoveHostsDialog>.AdditionalParameters), additionalParameters }
-        };
-
-        await ExecuteDialog<MoveHostsDialog>("Move Hosts", dialogParameters, dialogOptions);
+        await ExecuteAction<MoveHostsDialog>("Move Hosts", onlyAvailable: false, hubPath: "hubs/management", additionalParameters: additionalParameters);
 
         return;
 
