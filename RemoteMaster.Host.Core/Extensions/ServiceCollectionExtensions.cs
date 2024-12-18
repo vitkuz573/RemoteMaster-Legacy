@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITimeProvider, TimeProvider>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
+        services.AddSingleton<ITaskManagerService, TaskManagerService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
@@ -76,6 +77,7 @@ public static class ServiceCollectionExtensions
         {
             case "user":
                 services.AddHostedService<InputBackgroundService>();
+                services.AddHostedService<TrayIconHostedService>();
                 break;
             case "service":
                 services.AddHostedService<CertificateManagementService>();

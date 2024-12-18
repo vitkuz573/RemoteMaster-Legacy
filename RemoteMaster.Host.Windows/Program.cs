@@ -131,7 +131,6 @@ internal class Program
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<IDomainService, DomainService>();
         services.AddSingleton<IScriptService, ScriptService>();
-        services.AddSingleton<ITaskManagerService, TaskManagerService>();
         services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         services.AddSingleton<IPsExecService, PsExecService>();
         services.AddSingleton<IFirewallService, FirewallService>();
@@ -161,7 +160,6 @@ internal class Program
                 services.AddHostedService<WoLInitializationService>();
                 services.AddHostedService<FirewallInitializationService>();
                 services.AddHostedService<SasInitializationService>();
-                services.AddHostedService<TrayIconHostedService>();
                 break;
             case "service":
                 services.AddHostedService<CommandListenerService>();

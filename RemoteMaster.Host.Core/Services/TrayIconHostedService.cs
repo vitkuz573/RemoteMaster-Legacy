@@ -4,9 +4,8 @@
 
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class TrayIconHostedService(ITrayIconManager trayIconManager) : IHostedService
 {
