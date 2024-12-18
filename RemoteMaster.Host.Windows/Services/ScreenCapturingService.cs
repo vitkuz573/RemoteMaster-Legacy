@@ -123,9 +123,11 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
         var originalScreen = capturingContext?.SelectedScreen;
 
-        if (HasMultipleScreens)
+        var targetScreen = HasMultipleScreens ? Screen.VirtualScreen : Screen.PrimaryScreen;
+
+        if (targetScreen != null)
         {
-            SetSelectedScreen(connectionId, Screen.VirtualScreen);
+            SetSelectedScreen(connectionId, targetScreen);
         }
 
         var frame = GetNextFrame(connectionId);
