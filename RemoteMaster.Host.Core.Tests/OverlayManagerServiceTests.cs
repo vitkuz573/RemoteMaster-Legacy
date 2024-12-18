@@ -41,7 +41,7 @@ public class OverlayManagerServiceTests
         _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Act
-        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        var activeOverlays = _service.GetActiveOverlays("Connection1").ToList();
 
         // Assert
         Assert.Single(activeOverlays);
