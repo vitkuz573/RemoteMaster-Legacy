@@ -19,7 +19,7 @@ public class OverlayManagerServiceTests
         _mockOverlay1.SetupGet(o => o.Name).Returns("Overlay1");
         _mockOverlay2.SetupGet(o => o.Name).Returns("Overlay2");
 
-        _service = new OverlayManagerService(new[] { _mockOverlay1.Object, _mockOverlay2.Object });
+        _service = new OverlayManagerService([_mockOverlay1.Object, _mockOverlay2.Object]);
     }
 
     #region GetActiveOverlays Tests

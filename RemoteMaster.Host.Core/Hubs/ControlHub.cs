@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Shared.Claims;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -187,11 +188,28 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     private async Task HandleThumbnailRequest()
     {
-        var thumbnail = screenCapturingService.GetThumbnail(Context.ConnectionId);
-
-        if (thumbnail != null)
+        if (!appState.TryGetCapturingContext(Context.ConnectionId, out _))
         {
-            await Clients.Caller.ReceiveThumbnail(thumbnail);
+            using var tempContext = new CapturingContext(Context.ConnectionId);
+            appState.TryAddCapturingContext(tempContext);
+
+            var thumbnail = screenCapturingService.GetThumbnail(Context.ConnectionId);
+
+            appState.TryRemoveCapturingContext(Context.ConnectionId);
+
+            if (thumbnail != null)
+            {
+                await Clients.Caller.ReceiveThumbnail(thumbnail);
+            }
+        }
+        else
+        {
+            var thumbnail = screenCapturingService.GetThumbnail(Context.ConnectionId);
+
+            if (thumbnail != null)
+            {
+                await Clients.Caller.ReceiveThumbnail(thumbnail);
+            }
         }
 
         await Clients.Caller.ReceiveCloseConnection();
