@@ -6,11 +6,11 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IOverlayManagerService
 {
-    IEnumerable<IScreenOverlay> ActiveOverlays { get; }
-    
-    bool IsOverlayActive(string name);
-    
-    void ActivateOverlay(string name);
-    
-    void DeactivateOverlay(string name);
+    IEnumerable<IScreenOverlay> GetActiveOverlays(string connectionId);
+
+    bool IsOverlayActive(string name, string connectionId);
+
+    void ActivateOverlay(string name, string connectionId);
+
+    void DeactivateOverlay(string name, string connectionId);
 }

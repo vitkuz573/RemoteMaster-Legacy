@@ -8,13 +8,14 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.DTOs;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService(IDesktopService desktopService, ILogger<InputService> logger) : IInputService
+public sealed class InputService(IDesktopService desktopService, IAppState appState, ILogger<InputService> logger) : IInputService
 {
     private readonly ConcurrentQueue<Action> _operationQueue = new();
     private readonly ManualResetEvent _queueEvent = new(false);
@@ -58,12 +59,22 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
         _workerThread.Start();
     }
 
-    private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturingService screenCapturing)
+    private PointF GetAbsolutePercentFromRelativePercent(string connectionId, PointF? position)
     {
-        var absoluteX = screenCapturing.CurrentScreenBounds.Width * position.GetValueOrDefault().X + screenCapturing.CurrentScreenBounds.Left - screenCapturing.VirtualScreenBounds.Left;
-        var absoluteY = screenCapturing.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturing.CurrentScreenBounds.Top - screenCapturing.VirtualScreenBounds.Top;
+        appState.TryGetCapturingContext(connectionId, out var capturingContext);
 
-        return new PointF(absoluteX / screenCapturing.VirtualScreenBounds.Width, absoluteY / screenCapturing.VirtualScreenBounds.Height);
+        if (capturingContext?.SelectedScreen == null)
+        {
+            throw new InvalidOperationException($"SelectedScreen is null for connection ID {connectionId}");
+        }
+
+        var selectedScreenBounds = capturingContext.SelectedScreen.Bounds;
+        var virtualScreenBounds = Screen.VirtualScreen.Bounds;
+
+        var absoluteX = selectedScreenBounds.Width * position.GetValueOrDefault().X + selectedScreenBounds.Left - virtualScreenBounds.Left;
+        var absoluteY = selectedScreenBounds.Height * position.GetValueOrDefault().Y + selectedScreenBounds.Top - virtualScreenBounds.Top;
+
+        return new PointF(absoluteX / virtualScreenBounds.Width, absoluteY / virtualScreenBounds.Height);
     }
 
     private void HandleBlockInput(bool block)
@@ -146,7 +157,7 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
         ReturnInput(input);
     }
 
-    public void HandleMouseInput(MouseInputDto dto, IScreenCapturingService screenCapturing)
+    public void HandleMouseInput(MouseInputDto dto, string connectionId)
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 
@@ -165,7 +176,7 @@ public sealed class InputService(IDesktopService desktopService, ILogger<InputSe
             }
             else
             {
-                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.Position, screenCapturing);
+                var xyPercent = GetAbsolutePercentFromRelativePercent(connectionId, dto.Position);
 
                 dx = (int)(xyPercent.X * 65535F);
                 dy = (int)(xyPercent.Y * 65535F);

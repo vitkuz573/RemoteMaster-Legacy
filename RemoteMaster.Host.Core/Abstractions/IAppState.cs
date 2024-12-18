@@ -10,7 +10,13 @@ public interface IAppState
 
     event EventHandler<IViewer?> ViewerRemoved;
 
+    event EventHandler<ICapturingContext>? CapturingContextAdded;
+
+    event EventHandler<ICapturingContext?>? CapturingContextRemoved;
+
     IReadOnlyDictionary<string, IViewer> Viewers { get; }
+
+    IReadOnlyDictionary<string, ICapturingContext> CapturingContexts { get; }
 
     bool TryGetViewer(string connectionId, out IViewer? viewer);
 
@@ -19,4 +25,10 @@ public interface IAppState
     bool TryRemoveViewer(string connectionId);
 
     IReadOnlyList<IViewer> GetAllViewers();
+
+    bool TryGetCapturingContext(string connectionId, out ICapturingContext? capturingContext);
+
+    bool TryAddCapturingContext(ICapturingContext capturingContext);
+
+    bool TryRemoveCapturingContext(string connectionId);
 }

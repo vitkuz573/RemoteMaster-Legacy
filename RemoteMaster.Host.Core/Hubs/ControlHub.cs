@@ -187,7 +187,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     private async Task HandleThumbnailRequest()
     {
-        var thumbnail = screenCapturingService.GetThumbnail(500, 300);
+        var thumbnail = screenCapturingService.GetThumbnail(Context.ConnectionId);
 
         if (thumbnail != null)
         {
@@ -199,8 +199,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     private async Task HandleScreenCastRequest(string userName, string role, IPAddress ipAddress, string authenticationType)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, Context, "Users", userName, role, ipAddress, authenticationType);
+        var viewer = viewerFactory.Create(Context, "Users", Context.ConnectionId, userName, role, ipAddress, authenticationType);
         appState.TryAddViewer(viewer);
+        appState.TryAddCapturingContext(viewer.CapturingContext);
 
         screenCastingService.StartStreaming(viewer, 60);
 
@@ -229,6 +230,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             screenCastingService.StopStreaming(viewer);
             appState.TryRemoveViewer(Context.ConnectionId);
+            appState.TryRemoveCapturingContext(Context.ConnectionId);
         }
         else
         {
@@ -258,7 +260,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "HandleInputPolicy")]
     public void HandleMouseInput(MouseInputDto dto)
     {
-        ExecuteActionForViewer(viewer => inputService.HandleMouseInput(dto, viewer.ScreenCapturing));
+        ExecuteActionForViewer(viewer => inputService.HandleMouseInput(dto, viewer.ConnectionId));
     }
 
     [Authorize(Policy = "HandleInputPolicy")]
@@ -270,9 +272,18 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "ChangeScreenPolicy")]
     public void ChangeSelectedScreen(string displayName)
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        if (appState.TryGetCapturingContext(Context.ConnectionId, out var capturingContext))
         {
-            viewer?.ScreenCapturing.SetSelectedScreen(displayName);
+            var screen = screenCapturingService.FindScreenByName(displayName);
+
+            if (screen != null)
+            {
+                capturingContext.SelectedScreen = screen;
+            }
+            else
+            {
+                logger.LogError("Screen with name '{DisplayName}' not found for connection ID {ConnectionId}.", displayName, Context.ConnectionId);
+            }
         }
         else
         {
@@ -295,25 +306,25 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "SetFrameRatePolicy")]
     public void SetFrameRate(int frameRate)
     {
-        ExecuteActionForViewer(viewer => viewer.FrameRate = frameRate);
+        ExecuteActionForViewer(viewer => viewer.CapturingContext.FrameRate = frameRate);
     }
 
     [Authorize(Policy = "SetImageQualityPolicy")]
     public void SetImageQuality(int quality)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.ImageQuality = quality);
+        ExecuteActionForViewer(viewer => viewer.CapturingContext.ImageQuality = quality);
     }
 
     [Authorize(Policy = "SetCodecPolicy")]
     public void SetCodec(string codec)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.SelectedCodec = codec);
+        ExecuteActionForViewer(viewer => viewer.CapturingContext.SelectedCodec = codec);
     }
 
     [Authorize(Policy = "ToggleDrawCursorPolicy")]
     public void ToggleDrawCursor(bool drawCursor)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.DrawCursor = drawCursor);
+        ExecuteActionForViewer(viewer => viewer.CapturingContext.DrawCursor = drawCursor);
     }
 
     [Authorize(Policy = "TerminateHostPolicy")]

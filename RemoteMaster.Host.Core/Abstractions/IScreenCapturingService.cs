@@ -2,30 +2,19 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IScreenCapturingService : IDisposable
 {
-    bool DrawCursor { get; set; }
-
-    int ImageQuality { get; set; }
-
-    string? SelectedCodec { get; set; }
-
-    Rectangle CurrentScreenBounds { get; }
-
-    Rectangle VirtualScreenBounds { get; }
-
-    string SelectedScreen { get; }
-
-    byte[]? GetNextFrame();
+    byte[]? GetNextFrame(string connectionId);
 
     IEnumerable<Display> GetDisplays();
 
-    void SetSelectedScreen(string displayName);
+    IScreen? FindScreenByName(string displayName);
 
-    byte[]? GetThumbnail(int maxWidth, int maxHeight);
+    void SetSelectedScreen(string connectionId, IScreen display);
+
+    byte[]? GetThumbnail(string connectionId);
 }

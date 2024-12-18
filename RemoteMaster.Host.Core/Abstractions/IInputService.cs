@@ -11,10 +11,9 @@ public interface IInputService : IDisposable
     bool InputEnabled { get; set; }
 
     bool BlockUserInput { get; set; }
-
     void Start();
 
-    void HandleMouseInput(MouseInputDto dto, IScreenCapturingService screenCapturing);
+    void HandleMouseInput(MouseInputDto dto, string connectionId);
 
     void HandleKeyboardInput(KeyboardInputDto dto);
 }

@@ -9,5 +9,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IViewerFactory
 {
-    IViewer Create(string connectionId, HubCallerContext context, string group, string userName, string role, IPAddress ipAddress, string authenticationType);
+    IViewer Create(HubCallerContext context, string group, string connectionId, string userName, string role, IPAddress ipAddress, string authenticationType);
 }

@@ -9,10 +9,14 @@ using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ViewerFactory(IScreenCapturingService screenCapturingService) : IViewerFactory
+public class ViewerFactory : IViewerFactory
 {
-    public IViewer Create(string connectionId, HubCallerContext context, string group, string userName, string role, IPAddress ipAddress, string authenticationType)
+    public IViewer Create(HubCallerContext context, string group, string connectionId, string userName, string role, IPAddress ipAddress, string authenticationType)
     {
-        return new Viewer(screenCapturingService, connectionId, context, group, userName, role, ipAddress, authenticationType);
+#pragma warning disable CA2000
+        var capturingContext = new CapturingContext(connectionId);
+#pragma warning restore CA2000
+
+        return new Viewer(capturingContext, context, group, connectionId, userName, role, ipAddress, authenticationType);
     }
 }

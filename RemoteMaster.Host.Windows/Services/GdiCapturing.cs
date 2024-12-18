@@ -5,29 +5,28 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using Microsoft.Extensions.Logging;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
-using RemoteMaster.Host.Core.Abstractions;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class GdiCapturing : ScreenCapturingService
 {
-    private Bitmap _bitmap;
-    private Graphics _memoryGraphics;
+    private Bitmap? _bitmap;
+    private Graphics? _memoryGraphics;
+    private readonly IAppState _appState;
     private readonly IOverlayManagerService _overlayManagerService;
     private readonly ILogger<ScreenCapturingService> _logger;
 
-    public GdiCapturing(IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger) : base(desktopService, overlayManagerService, logger)
+    public GdiCapturing(IAppState appState, IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger) : base(appState, desktopService, overlayManagerService, logger)
     {
+        _appState = appState;
         _overlayManagerService = overlayManagerService;
         _logger = logger;
-        
-        _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
-        _memoryGraphics = Graphics.FromImage(_bitmap);
     }
 
     protected override void Init()
@@ -40,85 +39,94 @@ public class GdiCapturing : ScreenCapturingService
         }
     }
 
-    protected override byte[]? GetFrame()
+    protected override byte[]? GetFrame(string connectionId)
     {
         try
         {
-            return SelectedScreen == VirtualScreen ? GetVirtualScreenFrame() : GetSingleScreenFrame();
+            _appState.TryGetCapturingContext(connectionId, out var capturingContext);
+
+            if (capturingContext?.SelectedScreen != null)
+            {
+                return capturingContext.SelectedScreen.DeviceName == Screen.VirtualScreen.DeviceName
+                    ? GetVirtualScreenFrame(connectionId, capturingContext.ImageQuality, capturingContext.SelectedCodec)
+                    : GetSingleScreenFrame(connectionId, capturingContext.SelectedScreen.Bounds, capturingContext.ImageQuality, capturingContext.SelectedCodec);
+            }
+
+            _logger.LogWarning("CapturingContext not found or SelectedScreen is null for connectionId: {ConnectionId}", connectionId);
+
+            return null;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Capturing error in GetFrame.");
-
             return null;
         }
     }
 
-    private byte[] CaptureScreen(int width, int height, int left, int top)
+    private byte[] CaptureScreen(string connectionId, Rectangle bounds, int imageQuality, string codec)
     {
-        if (_bitmap.Width != width || _bitmap.Height != height)
+        if (_bitmap == null || _bitmap.Width != bounds.Width || _bitmap.Height != bounds.Height)
         {
-            _bitmap.Dispose();
-            _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            _memoryGraphics.Dispose();
+            _bitmap?.Dispose();
+            _bitmap = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format32bppArgb);
+
+            _memoryGraphics?.Dispose();
             _memoryGraphics = Graphics.FromImage(_bitmap);
         }
 
         var dc1 = GetDC(HWND.Null);
-        var dc2 = (HDC)_memoryGraphics.GetHdc();
+        var dc2 = (HDC)_memoryGraphics!.GetHdc();
 
-        BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
+        BitBlt(dc2, 0, 0, bounds.Width, bounds.Height, dc1, bounds.Left, bounds.Top, ROP_CODE.SRCCOPY);
 
         _memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);
 
-        foreach (var overlay in _overlayManagerService.ActiveOverlays)
+        var activeOverlays = _overlayManagerService.GetActiveOverlays(connectionId);
+
+        foreach (var overlay in activeOverlays)
         {
-            overlay.Draw(_memoryGraphics, CurrentScreenBounds);
+            overlay.Draw(_memoryGraphics, bounds);
         }
 
-        return BitmapToByteArray(_bitmap, ImageQuality, SelectedCodec);
+        return BitmapToByteArray(_bitmap, imageQuality, codec);
     }
 
-    private byte[] GetVirtualScreenFrame()
+    private byte[] GetVirtualScreenFrame(string connectionId, int imageQuality, string codec)
     {
-        return CaptureScreen(VirtualScreenBounds.Width, VirtualScreenBounds.Height, VirtualScreenBounds.Left, VirtualScreenBounds.Top);
+        return CaptureScreen(connectionId, Screen.VirtualScreen.Bounds, imageQuality, codec);
     }
 
-    private byte[] GetSingleScreenFrame()
+    private byte[] GetSingleScreenFrame(string connectionId, Rectangle bounds, int imageQuality, string codec)
     {
-        return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
+        return CaptureScreen(connectionId, bounds, imageQuality, codec);
     }
 
-    public override void SetSelectedScreen(string displayName)
+    public override void SetSelectedScreen(string connectionId, IScreen display)
     {
-        if (displayName == SelectedScreen)
+        _appState.TryGetCapturingContext(connectionId, out var capturingContext);
+
+        if (capturingContext == null)
+        {
+            _logger.LogError("CapturingContext not found for ConnectionId: {ConnectionId}", connectionId);
+
+            return;
+        }
+
+        if (capturingContext.SelectedScreen != null && capturingContext.SelectedScreen.Equals(display))
         {
             return;
         }
 
-        if (displayName == VirtualScreen || Screens.ContainsKey(displayName))
-        {
-            SelectedScreen = displayName;
-        }
-        else
-        {
-            SelectedScreen = Screens.Keys.First();
-        }
-
-        RefreshCurrentScreenBounds();
-    }
-
-    protected override void RefreshCurrentScreenBounds()
-    {
-        CurrentScreenBounds = SelectedScreen == VirtualScreen ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
+        capturingContext.SelectedScreen = display;
     }
 
     public override void Dispose()
     {
         base.Dispose();
-        _bitmap.Dispose();
-        _memoryGraphics.Dispose();
+
+        _bitmap?.Dispose();
+        _memoryGraphics?.Dispose();
     }
 
     private static byte[] BitmapToByteArray(Bitmap bitmap, int quality, string? codec)

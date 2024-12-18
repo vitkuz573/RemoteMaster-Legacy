@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.ScreenOverlays;
@@ -15,101 +16,97 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public abstract class ScreenCapturingService : IScreenCapturingService
 {
-    protected const string VirtualScreen = "VIRTUAL_SCREEN";
-
+    private readonly IAppState _appState;
     private readonly IDesktopService _desktopService;
     private readonly IOverlayManagerService _overlayManagerService;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
 
-    public bool DrawCursor
-    {
-        get => _overlayManagerService.ActiveOverlays.Any(o => o.Name == nameof(CursorOverlay));
-        set
-        {
-            if (value == DrawCursor)
-            {
-                return;
-            }
-
-            if (value)
-            {
-                _overlayManagerService.ActivateOverlay(nameof(CursorOverlay));
-            }
-            else
-            {
-                _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay));
-            }
-        }
-    }
-
-    public int ImageQuality { get; set; } = 25;
-
-    public string? SelectedCodec { get; set; } = "image/jpeg";
-
     protected Dictionary<string, int> Screens { get; } = [];
-
-    public Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
-
-    public Rectangle VirtualScreenBounds { get; } = SystemInformation.VirtualScreen;
-
-    public string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
     private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
-    protected ScreenCapturingService(IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger)
+    protected ScreenCapturingService(IAppState appState, IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger)
     {
+        _appState = appState;
         _desktopService = desktopService;
         _overlayManagerService = overlayManagerService;
         _logger = logger;
 
         Init();
+
+        _appState.CapturingContextAdded += OnCapturingContextAdded;
+        _appState.CapturingContextRemoved += OnCapturingContextRemoved;
+
+        foreach (var context in _appState.CapturingContexts.Values)
+        {
+            SubscribeToCapturingContext(context);
+        }
     }
 
     protected abstract void Init();
 
-    protected abstract byte[]? GetFrame();
+    protected abstract byte[]? GetFrame(string connectionId);
 
     public IEnumerable<Display> GetDisplays()
     {
-        var screens = Screen.AllScreens.Select(screen => new Display
-        {
-            Name = screen.DeviceName,
-            IsPrimary = screen.Primary,
-            Resolution = screen.Bounds.Size,
-        }).ToList();
+        var screens = Screen.AllScreens
+            .Select(screen => new Display
+            {
+                Name = screen.DeviceName,
+                IsPrimary = screen.Primary,
+                Resolution = screen.Bounds.Size,
+            })
+            .ToList();
 
         if (Screen.AllScreens.Length > 1)
         {
             screens.Add(new Display
             {
-                Name = VirtualScreen,
+                Name = Screen.VirtualScreen.DeviceName,
                 IsPrimary = false,
-                Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
+                Resolution = Screen.VirtualScreen.Bounds.Size,
             });
         }
 
         return screens;
     }
 
-    public abstract void SetSelectedScreen(string displayName);
+    public IScreen? FindScreenByName(string displayName)
+    {
+        var allScreens = Screen.AllScreens.Cast<IScreen>().ToList();
 
-    protected abstract void RefreshCurrentScreenBounds();
+        if (HasMultipleScreens)
+        {
+            allScreens.Add(Screen.VirtualScreen);
+        }
 
-    public byte[]? GetNextFrame()
+        return allScreens.FirstOrDefault(screen => screen.DeviceName == displayName);
+    }
+
+    public abstract void SetSelectedScreen(string connectionId, IScreen display);
+
+    public byte[]? GetNextFrame(string connectionId)
     {
         using (_screenBoundsLock.EnterScope())
         {
             try
             {
-                RefreshCurrentScreenBounds();
+                _appState.TryGetCapturingContext(connectionId, out var capturingContext);
 
-                if (!_desktopService.SwitchToInputDesktop())
+                if (capturingContext?.SelectedScreen != null)
                 {
-                    _logger.LogDebug("Failed to switch to input desktop. Last Win32 error code: {ErrorCode}", Marshal.GetLastWin32Error());
+                    if (!_desktopService.SwitchToInputDesktop())
+                    {
+                        _logger.LogDebug("Failed to switch to input desktop. Last Win32 error code: {ErrorCode}", Marshal.GetLastWin32Error());
+                    }
+
+                    return GetFrame(connectionId);
                 }
 
-                return GetFrame();
+                _logger.LogWarning("Selected screen is null for connection ID {ConnectionId}", connectionId);
+
+                return null;
             }
             catch (Exception ex)
             {
@@ -120,20 +117,75 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         }
     }
 
-    public byte[]? GetThumbnail(int maxWidth, int maxHeight)
+    public byte[]? GetThumbnail(string connectionId)
     {
-        var originalScreen = SelectedScreen;
+        _appState.TryGetCapturingContext(connectionId, out var capturingContext);
+
+        var originalScreen = capturingContext?.SelectedScreen;
 
         if (HasMultipleScreens)
         {
-            SetSelectedScreen(VirtualScreen);
+            SetSelectedScreen(connectionId, Screen.VirtualScreen);
         }
 
-        var frame = GetNextFrame();
+        var frame = GetNextFrame(connectionId);
 
-        SetSelectedScreen(originalScreen);
+        if (originalScreen != null)
+        {
+            SetSelectedScreen(connectionId, originalScreen);
+        }
 
         return frame ?? null;
+    }
+
+    private void OnCapturingContextAdded(object? sender, ICapturingContext? e)
+    {
+        if (e is CapturingContext context)
+        {
+            SubscribeToCapturingContext(context);
+        }
+    }
+
+    private void OnCapturingContextRemoved(object? sender, ICapturingContext? e)
+    {
+        if (e is CapturingContext context)
+        {
+            UnsubscribeFromCapturingContext(context);
+        }
+    }
+
+    private void SubscribeToCapturingContext(ICapturingContext context)
+    {
+        context.OnDrawCursorChanged += HandleDrawCursorChanged;
+
+        if (context.DrawCursor)
+        {
+            _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+        }
+    }
+
+    private void UnsubscribeFromCapturingContext(ICapturingContext context)
+    {
+        context.OnDrawCursorChanged -= HandleDrawCursorChanged;
+
+        _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+    }
+
+    private void HandleDrawCursorChanged(object? sender, EventArgs e)
+    {
+        if (sender is not CapturingContext context)
+        {
+            return;
+        }
+
+        if (context.DrawCursor)
+        {
+            _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+        }
+        else
+        {
+            _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+        }
     }
 
     public virtual void Dispose()

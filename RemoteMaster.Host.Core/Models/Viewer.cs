@@ -8,17 +8,15 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class Viewer(IScreenCapturingService screenCapturing, string connectionId, HubCallerContext context, string group, string userName, string role, IPAddress ipAddress, string authenticationType) : IViewer
+public class Viewer(ICapturingContext capturingContext, HubCallerContext context, string group, string connectionId, string userName, string role, IPAddress ipAddress, string authenticationType) : IViewer
 {
-    public IScreenCapturingService ScreenCapturing { get; } = screenCapturing;
+    public ICapturingContext CapturingContext { get; } = capturingContext;
 
-    public int FrameRate { get; set; }
+    public HubCallerContext Context { get; } = context;
 
     public string Group { get; } = group;
 
     public string ConnectionId { get; } = connectionId;
-
-    public HubCallerContext Context { get; } = context;
 
     public string UserName { get; } = userName;
 
@@ -30,8 +28,6 @@ public class Viewer(IScreenCapturingService screenCapturing, string connectionId
 
     public string AuthenticationType { get; } = authenticationType;
 
-    public CancellationTokenSource CancellationTokenSource { get; } = new();
-
     private bool _disposed;
 
     public void Dispose()
@@ -41,8 +37,7 @@ public class Viewer(IScreenCapturingService screenCapturing, string connectionId
             return;
         }
 
-        CancellationTokenSource.Cancel();
-        CancellationTokenSource.Dispose();
+        CapturingContext.Dispose();
 
         _disposed = true;
     }

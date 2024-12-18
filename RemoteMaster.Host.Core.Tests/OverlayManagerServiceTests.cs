@@ -19,16 +19,43 @@ public class OverlayManagerServiceTests
         _mockOverlay1.SetupGet(o => o.Name).Returns("Overlay1");
         _mockOverlay2.SetupGet(o => o.Name).Returns("Overlay2");
 
-        _service = new OverlayManagerService([_mockOverlay1.Object, _mockOverlay2.Object]);
+        _service = new OverlayManagerService(new[] { _mockOverlay1.Object, _mockOverlay2.Object });
     }
 
-    #region Constructor Tests
+    #region GetActiveOverlays Tests
 
     [Fact]
-    public void Constructor_ShouldInitializeServiceWithOverlays()
+    public void GetActiveOverlays_ShouldReturnEmptyList_WhenNoOverlaysAreActive()
     {
         // Act
-        var activeOverlays = _service.ActiveOverlays;
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+
+        // Assert
+        Assert.Empty(activeOverlays);
+    }
+
+    [Fact]
+    public void GetActiveOverlays_ShouldReturnActiveOverlaysForSpecificConnection()
+    {
+        // Arrange
+        _service.ActivateOverlay("Overlay1", "Connection1");
+
+        // Act
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+
+        // Assert
+        Assert.Single(activeOverlays);
+        Assert.Contains(_mockOverlay1.Object, activeOverlays);
+    }
+
+    [Fact]
+    public void GetActiveOverlays_ShouldReturnEmptyList_ForDifferentConnection()
+    {
+        // Arrange
+        _service.ActivateOverlay("Overlay1", "Connection1");
+
+        // Act
+        var activeOverlays = _service.GetActiveOverlays("Connection2");
 
         // Assert
         Assert.Empty(activeOverlays);
@@ -42,7 +69,7 @@ public class OverlayManagerServiceTests
     public void IsOverlayActive_ShouldReturnFalse_WhenOverlayIsNotActive()
     {
         // Act
-        var result = _service.IsOverlayActive("Overlay1");
+        var result = _service.IsOverlayActive("Overlay1", "Connection1");
 
         // Assert
         Assert.False(result);
@@ -52,10 +79,10 @@ public class OverlayManagerServiceTests
     public void IsOverlayActive_ShouldReturnTrue_WhenOverlayIsActive()
     {
         // Arrange
-        _service.ActivateOverlay("Overlay1");
+        _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Act
-        var result = _service.IsOverlayActive("Overlay1");
+        var result = _service.IsOverlayActive("Overlay1", "Connection1");
 
         // Assert
         Assert.True(result);
@@ -69,33 +96,32 @@ public class OverlayManagerServiceTests
     public void ActivateOverlay_ShouldActivateOverlay_WhenOverlayExists()
     {
         // Act
-        _service.ActivateOverlay("Overlay1");
+        _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Assert
-        Assert.Contains(_mockOverlay1.Object, _service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.Contains(_mockOverlay1.Object, activeOverlays);
     }
 
     [Fact]
-    public void ActivateOverlay_ShouldNotActivateOverlay_WhenOverlayDoesNotExist()
+    public void ActivateOverlay_ShouldThrowArgumentException_WhenOverlayDoesNotExist()
     {
-        // Act
-        _service.ActivateOverlay("NonExistentOverlay");
-
-        // Assert
-        Assert.Empty(_service.ActiveOverlays);
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => _service.ActivateOverlay("NonExistentOverlay", "Connection1"));
     }
 
     [Fact]
     public void ActivateOverlay_ShouldNotAddDuplicateOverlay_WhenOverlayIsAlreadyActive()
     {
         // Arrange
-        _service.ActivateOverlay("Overlay1");
+        _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Act
-        _service.ActivateOverlay("Overlay1");
+        _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Assert
-        Assert.Single(_service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.Single(activeOverlays);
     }
 
     #endregion
@@ -106,33 +132,50 @@ public class OverlayManagerServiceTests
     public void DeactivateOverlay_ShouldDeactivateOverlay_WhenOverlayIsActive()
     {
         // Arrange
-        _service.ActivateOverlay("Overlay1");
+        _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Act
-        _service.DeactivateOverlay("Overlay1");
+        _service.DeactivateOverlay("Overlay1", "Connection1");
 
         // Assert
-        Assert.DoesNotContain(_mockOverlay1.Object, _service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.DoesNotContain(_mockOverlay1.Object, activeOverlays);
     }
 
     [Fact]
     public void DeactivateOverlay_ShouldDoNothing_WhenOverlayIsNotActive()
     {
         // Act
-        _service.DeactivateOverlay("Overlay1");
+        _service.DeactivateOverlay("Overlay1", "Connection1");
 
         // Assert
-        Assert.Empty(_service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.Empty(activeOverlays);
     }
 
     [Fact]
     public void DeactivateOverlay_ShouldDoNothing_WhenOverlayDoesNotExist()
     {
         // Act
-        _service.DeactivateOverlay("NonExistentOverlay");
+        _service.DeactivateOverlay("NonExistentOverlay", "Connection1");
 
         // Assert
-        Assert.Empty(_service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.Empty(activeOverlays);
+    }
+
+    [Fact]
+    public void DeactivateOverlay_ShouldRemoveConnectionEntry_WhenNoOverlaysRemain()
+    {
+        // Arrange
+        _service.ActivateOverlay("Overlay1", "Connection1");
+
+        // Act
+        _service.DeactivateOverlay("Overlay1", "Connection1");
+
+        // Assert
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.Empty(activeOverlays);
     }
 
     #endregion
@@ -143,44 +186,47 @@ public class OverlayManagerServiceTests
     public void ActivateOverlay_ShouldHandleCaseInsensitiveNames()
     {
         // Act
-        _service.ActivateOverlay("overlay1");
+        _service.ActivateOverlay("overlay1", "Connection1");
 
         // Assert
-        Assert.Contains(_mockOverlay1.Object, _service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.Contains(_mockOverlay1.Object, activeOverlays);
     }
 
     [Fact]
     public void DeactivateOverlay_ShouldHandleCaseInsensitiveNames()
     {
         // Arrange
-        _service.ActivateOverlay("Overlay1");
+        _service.ActivateOverlay("Overlay1", "Connection1");
 
         // Act
-        _service.DeactivateOverlay("overlay1");
+        _service.DeactivateOverlay("overlay1", "Connection1");
 
         // Assert
-        Assert.DoesNotContain(_mockOverlay1.Object, _service.ActiveOverlays);
+        var activeOverlays = _service.GetActiveOverlays("Connection1");
+        Assert.DoesNotContain(_mockOverlay1.Object, activeOverlays);
     }
 
     [Fact]
     public void ActivateOverlay_ShouldNotThrow_WhenOverlayCollectionIsEmpty()
     {
         // Arrange
-        var service = new OverlayManagerService([]);
+        var service = new OverlayManagerService(new List<IScreenOverlay>());
 
         // Act & Assert
-        var exception = Record.Exception(() => service.ActivateOverlay("Overlay1"));
-        Assert.Null(exception);
+        var exception = Record.Exception(() => service.ActivateOverlay("Overlay1", "Connection1"));
+        Assert.NotNull(exception);
+        Assert.IsType<ArgumentException>(exception);
     }
 
     [Fact]
     public void DeactivateOverlay_ShouldNotThrow_WhenOverlayCollectionIsEmpty()
     {
         // Arrange
-        var service = new OverlayManagerService([]);
+        var service = new OverlayManagerService(new List<IScreenOverlay>());
 
         // Act & Assert
-        var exception = Record.Exception(() => service.DeactivateOverlay("Overlay1"));
+        var exception = Record.Exception(() => service.DeactivateOverlay("Overlay1", "Connection1"));
         Assert.Null(exception);
     }
 

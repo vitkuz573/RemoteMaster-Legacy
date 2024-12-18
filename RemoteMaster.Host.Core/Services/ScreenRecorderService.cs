@@ -60,7 +60,7 @@ public class ScreenRecorderService(IScreenCapturingService screenCapturingServic
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var frameData = screenCapturingService.GetNextFrame();
+            var frameData = screenCapturingService.GetNextFrame("dummy");
 
             if (frameData == null)
             {

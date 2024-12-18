@@ -379,17 +379,19 @@ public partial class Access : IAsyncDisposable
 
                 var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
 
-                if (primaryDisplay != null)
+                if (primaryDisplay == null)
                 {
-                    _selectedDisplay = primaryDisplay.Name;
+                    return;
                 }
+
+                OnChangeScreen(primaryDisplay.Name);
             });
 
             _connection.On<IEnumerable<string>>("ReceiveAvailableCodecs", codecs =>
             {
                 _codecs = codecs.ToList();
 
-                _selectedCodec = _codecs.FirstOrDefault();
+                OnChangeCodec(_codecs.FirstOrDefault());
             });
 
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);

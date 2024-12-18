@@ -5,6 +5,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.Services;
@@ -13,27 +14,33 @@ namespace RemoteMaster.Host.Windows.Tests;
 
 public class GdiCapturingTests : IDisposable
 {
+    private readonly Mock<IAppState> _mockAppState;
     private readonly Mock<IDesktopService> _mockDesktopService;
     private readonly Mock<IOverlayManagerService> _mockOverlayManagerService;
     private readonly GdiCapturing _gdiCapturing;
 
     public GdiCapturingTests()
     {
+        _mockAppState = new Mock<IAppState>();
         _mockDesktopService = new Mock<IDesktopService>();
         _mockOverlayManagerService = new Mock<IOverlayManagerService>();
         Mock<ILogger<ScreenCapturingService>> mockLogger = new();
 
-        _gdiCapturing = new GdiCapturing(_mockDesktopService.Object, _mockOverlayManagerService.Object, mockLogger.Object);
+        _mockAppState.Setup(a => a.CapturingContexts).Returns(new Dictionary<string, ICapturingContext>());
+
+        _gdiCapturing = new GdiCapturing(_mockAppState.Object, _mockDesktopService.Object, _mockOverlayManagerService.Object, mockLogger.Object);
     }
 
     [Fact]
     public void GetDisplays_ShouldReturnDisplays()
     {
+        // Act
         var displays = _gdiCapturing.GetDisplays();
 
+        // Assert
         Assert.NotNull(displays);
         var displayList = displays.ToList();
-        Assert.True(displayList.Count > 0);
+        Assert.NotEmpty(displayList);
 
         var primaryDisplay = displayList.First(d => d.IsPrimary);
         Assert.Equal(Screen.PrimaryScreen.DeviceName, primaryDisplay.Name);
@@ -43,31 +50,73 @@ public class GdiCapturingTests : IDisposable
     [Fact]
     public void SetSelectedScreen_ShouldSetSelectedScreen()
     {
+        // Arrange
         var displays = _gdiCapturing.GetDisplays().ToList();
         var newDisplay = displays.FirstOrDefault(d => !d.IsPrimary)?.Name ?? displays.First().Name;
 
-        _gdiCapturing.SetSelectedScreen(newDisplay);
+        using var context = new CapturingContext("Connection1");
+        _mockAppState.Setup(a => a.TryGetCapturingContext("Connection1", out It.Ref<ICapturingContext>.IsAny))
+            .Returns((string _, out ICapturingContext c) => {
+                c = context;
+                return true;
+            });
 
-        Assert.Equal(newDisplay, _gdiCapturing.SelectedScreen);
+        var selectedScreen = Mock.Of<IScreen>(s => s.DeviceName == newDisplay);
+
+        // Act
+        _gdiCapturing.SetSelectedScreen("Connection1", selectedScreen);
+
+        // Assert
+        Assert.Equal(newDisplay, context.SelectedScreen?.DeviceName);
     }
 
     [Fact]
     public void GetNextFrame_ShouldReturnFrame()
     {
+        // Arrange
         _mockDesktopService.Setup(ds => ds.SwitchToInputDesktop()).Returns(true);
 
-        var frame = _gdiCapturing.GetNextFrame();
+        var primaryScreen = Screen.PrimaryScreen;
+        var selectedScreenMock = new Mock<IScreen>();
+        selectedScreenMock.Setup(s => s.DeviceName).Returns(primaryScreen.DeviceName);
+        selectedScreenMock.Setup(s => s.Bounds).Returns(primaryScreen.Bounds);
 
+        using var context = new CapturingContext("Connection1")
+        {
+            SelectedScreen = selectedScreenMock.Object
+        };
+        _mockAppState.Setup(a => a.TryGetCapturingContext("Connection1", out It.Ref<ICapturingContext>.IsAny))
+            .Returns((string _, out ICapturingContext c) => {
+                c = context;
+                return true;
+            });
+
+        // Act
+        var frame = _gdiCapturing.GetNextFrame("Connection1");
+
+        // Assert
         Assert.NotNull(frame);
     }
 
     [Fact]
     public void GetThumbnail_ShouldReturnThumbnail()
     {
+        // Arrange
         _mockDesktopService.Setup(ds => ds.SwitchToInputDesktop()).Returns(true);
+        using var context = new CapturingContext("Connection1")
+        {
+            SelectedScreen = Mock.Of<IScreen>(s => s.DeviceName == Screen.PrimaryScreen.DeviceName)
+        };
+        _mockAppState.Setup(a => a.TryGetCapturingContext("Connection1", out It.Ref<ICapturingContext>.IsAny))
+            .Returns((string _, out ICapturingContext c) => {
+                c = context;
+                return true;
+            });
 
-        var thumbnail = _gdiCapturing.GetThumbnail(100, 100);
+        // Act
+        var thumbnail = _gdiCapturing.GetThumbnail("Connection1");
 
+        // Assert
         Assert.NotNull(thumbnail);
     }
 

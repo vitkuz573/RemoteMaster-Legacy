@@ -9,15 +9,13 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IViewer : IDisposable
 {
-    IScreenCapturingService ScreenCapturing { get; }
-
-    string ConnectionId { get; }
+    ICapturingContext CapturingContext { get; }
 
     HubCallerContext Context { get; }
 
-    int FrameRate { get; set; }
-
     string Group { get; }
+
+    string ConnectionId { get; }
 
     string UserName { get; }
 
@@ -28,6 +26,4 @@ public interface IViewer : IDisposable
     public IPAddress IpAddress { get; }
 
     public string AuthenticationType { get; }
-
-    CancellationTokenSource CancellationTokenSource { get; }
 }

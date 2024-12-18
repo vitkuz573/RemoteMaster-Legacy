@@ -9,10 +9,11 @@ using System.Drawing;
 using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.Graphics.Gdi;
+using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 
-public partial class Screen
+public partial class Screen : IScreen
 {
     private readonly HMONITOR _hmonitor;
 
@@ -63,6 +64,13 @@ public partial class Screen
         {
             PInvoke.DeleteDC(screenDC);
         }
+    }
+
+    internal Screen(Rectangle bounds, string deviceName, bool primary = false)
+    {
+        _bounds = bounds;
+        _deviceName = deviceName;
+        _primary = primary;
     }
 
     public static unsafe Screen[] AllScreens
@@ -125,6 +133,8 @@ public partial class Screen
             }
         }
     }
+
+    public static Screen VirtualScreen => new(SystemInformation.VirtualScreen, "VIRTUAL_SCREEN");
 
     public override bool Equals(object? obj) => obj is Screen comp && _hmonitor == comp._hmonitor;
 
