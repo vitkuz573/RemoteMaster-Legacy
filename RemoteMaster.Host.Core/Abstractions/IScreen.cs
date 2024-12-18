@@ -11,4 +11,6 @@ public interface IScreen
     Rectangle Bounds { get; }
 
     string DeviceName { get; }
+
+    bool Primary { get; }
 }

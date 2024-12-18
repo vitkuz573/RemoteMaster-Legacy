@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -119,25 +118,18 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public byte[]? GetThumbnail(string connectionId)
     {
-        _appState.TryGetCapturingContext(connectionId, out var capturingContext);
-
-        var originalScreen = capturingContext?.SelectedScreen;
-
         var targetScreen = HasMultipleScreens ? Screen.VirtualScreen : Screen.PrimaryScreen;
 
-        if (targetScreen != null)
+        if (targetScreen == null)
         {
-            SetSelectedScreen(connectionId, targetScreen);
+            _logger.LogError("No screens available for thumbnail generation.");
+
+            return null;
         }
 
-        var frame = GetNextFrame(connectionId);
+        SetSelectedScreen(connectionId, targetScreen);
 
-        if (originalScreen != null)
-        {
-            SetSelectedScreen(connectionId, originalScreen);
-        }
-
-        return frame ?? null;
+        return GetNextFrame(connectionId);
     }
 
     private void OnCapturingContextAdded(object? sender, ICapturingContext? e)

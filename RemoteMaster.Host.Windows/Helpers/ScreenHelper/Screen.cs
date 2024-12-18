@@ -7,9 +7,9 @@
 
 using System.Drawing;
 using Microsoft.Win32;
+using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Graphics.Gdi;
-using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 
@@ -23,7 +23,7 @@ public partial class Screen : IScreen
 
     private static readonly HMONITOR s_primaryMonitor = (HMONITOR)unchecked((nint)0xBAADF00D);
 
-    private static Screen[]? s_screens;
+    private static IScreen[]? s_screens;
 
     internal Screen(HMONITOR monitor) : this(monitor, default)
     {
@@ -73,7 +73,7 @@ public partial class Screen : IScreen
         _primary = primary;
     }
 
-    public static unsafe Screen[] AllScreens
+    public static unsafe IScreen[] AllScreens
     {
         get
         {
@@ -89,7 +89,7 @@ public partial class Screen : IScreen
                         return true;
                     });
 
-                    s_screens = screens.Count > 0 ? [.. screens] : [new(s_primaryMonitor)];
+                    s_screens = screens.Count > 0 ? [.. screens] : [new Screen(s_primaryMonitor)];
                 }
                 else
                 {
@@ -109,7 +109,7 @@ public partial class Screen : IScreen
 
     public bool Primary => _primary;
 
-    public static Screen? PrimaryScreen
+    public static IScreen? PrimaryScreen
     {
         get
         {
@@ -119,7 +119,7 @@ public partial class Screen : IScreen
 
                 for (var i = 0; i < screens.Length; i++)
                 {
-                    if (screens[i]._primary)
+                    if (screens[i].Primary)
                     {
                         return screens[i];
                     }
@@ -134,7 +134,7 @@ public partial class Screen : IScreen
         }
     }
 
-    public static Screen VirtualScreen => new(SystemInformation.VirtualScreen, "VIRTUAL_SCREEN");
+    public static IScreen VirtualScreen => new Screen(SystemInformation.VirtualScreen, "VIRTUAL_SCREEN");
 
     public override bool Equals(object? obj) => obj is Screen comp && _hmonitor == comp._hmonitor;
 
