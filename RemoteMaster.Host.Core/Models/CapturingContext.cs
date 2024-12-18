@@ -18,7 +18,7 @@ public class CapturingContext(string connectionId) : ICapturingContext
 
     public int ImageQuality { get; set; }
 
-    public int FrameRate { get; set; }
+    public int FrameRate { get; set; } = 60;
 
     public bool DrawCursor
     {

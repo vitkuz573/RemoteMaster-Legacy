@@ -11,11 +11,9 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturingService screenCapturingService, ILogger<ScreenCastingService> logger) : IScreenCastingService
 {
-    public void StartStreaming(IViewer viewer, int frameRate)
+    public void StartStreaming(IViewer viewer)
     {
         ArgumentNullException.ThrowIfNull(viewer);
-
-        viewer.CapturingContext.FrameRate = frameRate;
 
         logger.LogInformation("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
 

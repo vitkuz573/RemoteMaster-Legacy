@@ -221,7 +221,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         appState.TryAddViewer(viewer);
         appState.TryAddCapturingContext(viewer.CapturingContext);
 
-        screenCastingService.StartStreaming(viewer, 60);
+        screenCastingService.StartStreaming(viewer);
 
         var transportFeature = Context.Features.Get<IHttpTransportFeature>();
         var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
