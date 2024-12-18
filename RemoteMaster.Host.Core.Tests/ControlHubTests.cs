@@ -84,7 +84,7 @@ public class ControlHubTests : IDisposable
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out viewer)).Returns(viewer != null);
     }
 
-    private void SetupCapturingContext(string connectionId, ICapturingContext capturingContext)
+    private void SetupCapturingContext(string connectionId, ICapturingContext? capturingContext)
     {
         _mockAppState.Setup(a => a.TryGetCapturingContext(connectionId, out capturingContext)).Returns(true);
     }
@@ -116,7 +116,7 @@ public class ControlHubTests : IDisposable
     }
 
     [Fact]
-    public async Task HandleMouseInput_ShouldCallHandleMouseInputAsync()
+    public void HandleMouseInput_ShouldCallHandleMouseInput()
     {
         // Arrange
         var dto = new MouseInputDto();
@@ -134,7 +134,7 @@ public class ControlHubTests : IDisposable
 
         // Act
         _controlHub.HandleMouseInput(dto);
-
+        
         // Assert
         _mockInputService.Verify(i => i.HandleMouseInput(dto, connectionId), Times.Once);
     }
