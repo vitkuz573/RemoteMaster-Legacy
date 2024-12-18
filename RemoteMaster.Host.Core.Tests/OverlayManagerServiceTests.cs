@@ -211,7 +211,7 @@ public class OverlayManagerServiceTests
     public void ActivateOverlay_ShouldNotThrow_WhenOverlayCollectionIsEmpty()
     {
         // Arrange
-        var service = new OverlayManagerService(new List<IScreenOverlay>());
+        var service = new OverlayManagerService([]);
 
         // Act & Assert
         var exception = Record.Exception(() => service.ActivateOverlay("Overlay1", "Connection1"));
@@ -223,7 +223,7 @@ public class OverlayManagerServiceTests
     public void DeactivateOverlay_ShouldNotThrow_WhenOverlayCollectionIsEmpty()
     {
         // Arrange
-        var service = new OverlayManagerService(new List<IScreenOverlay>());
+        var service = new OverlayManagerService([]);
 
         // Act & Assert
         var exception = Record.Exception(() => service.DeactivateOverlay("Overlay1", "Connection1"));
