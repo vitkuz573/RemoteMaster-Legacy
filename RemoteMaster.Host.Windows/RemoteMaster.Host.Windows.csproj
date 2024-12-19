@@ -39,6 +39,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
     <PackageReference Include="Microsoft.Windows.WDK.Win32Metadata" />
+    <PackageReference Include="NAudio.Wasapi" />
   </ItemGroup>
 
   <ItemGroup>

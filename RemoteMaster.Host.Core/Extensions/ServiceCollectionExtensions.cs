@@ -58,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
         services.AddSingleton<ITaskManagerService, TaskManagerService>();
+        services.AddSingleton<IAudioStreamingService, AudioStreamingService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

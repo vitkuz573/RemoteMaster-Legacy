@@ -23,6 +23,7 @@ public class ControlHubTests : IDisposable
     private readonly Mock<IHardwareService> _mockHardwareService;
     private readonly Mock<IShutdownService> _mockShutdownService;
     private readonly Mock<IScreenCapturingService> _mockScreenCapturingService;
+    private readonly Mock<IAudioStreamingService> _mockAudioStreamingService;
     private readonly Mock<IWorkStationSecurityService> _mockWorkStationSecurityService;
     private readonly Mock<IScreenCastingService> _mockScreenCastingService;
     private readonly Mock<IOperatingSystemInformationService> _mockOperatingSystemInformationService;
@@ -45,6 +46,7 @@ public class ControlHubTests : IDisposable
         _mockScreenCapturingService = new Mock<IScreenCapturingService>();
         _mockWorkStationSecurityService = new Mock<IWorkStationSecurityService>();
         _mockScreenCastingService = new Mock<IScreenCastingService>();
+        _mockAudioStreamingService = new Mock<IAudioStreamingService>();
         _mockOperatingSystemInformationService = new Mock<IOperatingSystemInformationService>();
         _mockLogger = new Mock<ILogger<ControlHub>>();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
@@ -65,6 +67,7 @@ public class ControlHubTests : IDisposable
             _mockScreenCapturingService.Object,
             _mockWorkStationSecurityService.Object,
             _mockScreenCastingService.Object,
+            _mockAudioStreamingService.Object,
             _mockOperatingSystemInformationService.Object,
             _mockLogger.Object)
         {
@@ -147,6 +150,7 @@ public class ControlHubTests : IDisposable
         var screenMock = new Mock<IScreen>();
         screenMock.Setup(s => s.DeviceName).Returns(displayName);
         screenMock.Setup(s => s.Bounds).Returns(new Rectangle(0, 0, 1920, 1080));
+        screenMock.Setup(s => s.Primary).Returns(true);
 
         _mockScreenCapturingService.Setup(s => s.FindScreenByName(displayName)).Returns(screenMock.Object);
 

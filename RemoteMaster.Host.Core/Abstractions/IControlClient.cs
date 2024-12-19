@@ -33,4 +33,6 @@ public interface IControlClient
     Task ReceiveDotNetVersion(Version version);
 
     Task ReceiveOperatingSystemVersion(string version);
+
+    Task ReceiveAudioUpdate(byte[] audioUpdate);
 }

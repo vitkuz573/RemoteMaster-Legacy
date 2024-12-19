@@ -73,7 +73,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public IScreen? FindScreenByName(string displayName)
     {
-        var allScreens = Screen.AllScreens.Cast<IScreen>().ToList();
+        var allScreens = Screen.AllScreens.ToList();
 
         if (HasMultipleScreens)
         {

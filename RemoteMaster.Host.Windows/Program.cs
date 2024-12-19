@@ -143,6 +143,7 @@ internal class Program
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
         services.AddSingleton<ISessionService, SessionService>();
+        services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
 
         services.AddSingleton<IScreenOverlay, CursorOverlay>();
 

@@ -9,7 +9,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.JSInterop;
@@ -105,6 +104,10 @@ public partial class Access : IAsyncDisposable
             await module.InvokeVoidAsync("addKeyDownEventListener", objectReference);
             await module.InvokeVoidAsync("addKeyUpEventListener", objectReference);
             await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
+
+            var audioModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
+
+            await audioModule.InvokeVoidAsync("initAudioContext");
 
             if (_isAccessDenied)
             {
@@ -395,6 +398,7 @@ public partial class Access : IAsyncDisposable
             });
 
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
+            _connection.On<byte[]>("ReceiveAudioUpdate", HandleAudioUpdate);
             _connection.On<string>("ReceiveOperatingSystemVersion", operatingSystem => _operatingSystem = operatingSystem);
             _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion.ToString());
             _connection.On<string>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
@@ -529,6 +533,18 @@ public partial class Access : IAsyncDisposable
             _screenDataUrl = await module.InvokeAsync<string>("createImageBlobUrl", screenData);
 
             await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task HandleAudioUpdate(byte[] audioData)
+    {
+        Logger.LogInformation(audioData.Length.ToString());
+
+        if (!_disposed && _firstRenderCompleted)
+        {
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
+
+            await module.InvokeVoidAsync("playAudioChunk", audioData);
         }
     }
 

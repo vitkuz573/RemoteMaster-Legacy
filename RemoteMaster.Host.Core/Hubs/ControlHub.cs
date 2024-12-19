@@ -20,7 +20,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -222,6 +222,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         appState.TryAddCapturingContext(viewer.CapturingContext);
 
         screenCastingService.StartStreaming(viewer);
+        // audioStreamingService.StartStreaming(viewer);
 
         var transportFeature = Context.Features.Get<IHttpTransportFeature>();
         var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
@@ -247,6 +248,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             screenCastingService.StopStreaming(viewer);
+            // audioStreamingService.StopStreaming(viewer);
             appState.TryRemoveViewer(Context.ConnectionId);
             appState.TryRemoveCapturingContext(Context.ConnectionId);
         }
