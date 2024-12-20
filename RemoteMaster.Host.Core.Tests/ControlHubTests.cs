@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -87,35 +86,25 @@ public class ControlHubTests : IDisposable
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out viewer)).Returns(viewer != null);
     }
 
-    private void SetupCapturingContext(string connectionId, ICapturingContext? capturingContext)
-    {
-        _mockAppState.Setup(a => a.TryGetCapturingContext(connectionId, out capturingContext)).Returns(true);
-    }
-
     [Fact]
     public async Task OnDisconnectedAsync_ShouldRemoveViewer_WhenViewerExists()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
         const string connectionId = "connectionId";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
 
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewerMock.Object);
 
         _mockAppState.Setup(a => a.TryRemoveViewer(connectionId))
-            .Returns(true)
-            .Callback(() => viewerMock.Object.Dispose());
-
-        _mockAppState.Setup(a => a.TryRemoveCapturingContext(connectionId))
             .Returns(true);
 
         // Act
         await _controlHub.OnDisconnectedAsync(null);
 
         // Assert
-        viewerMock.Verify(v => v.Dispose(), Times.Once);
         _mockAppState.Verify(a => a.TryRemoveViewer(connectionId), Times.Once);
-        _mockAppState.Verify(a => a.TryRemoveCapturingContext(connectionId), Times.Once);
     }
 
     [Fact]
@@ -123,21 +112,16 @@ public class ControlHubTests : IDisposable
     {
         // Arrange
         var dto = new MouseInputDto();
-
-        var capturingContextMock = new Mock<ICapturingContext>();
-        capturingContextMock.SetupGet(c => c.SelectedScreen).Returns(Mock.Of<IScreen>());
         var viewerMock = new Mock<IViewer>();
-        viewerMock.Setup(v => v.CapturingContext).Returns(capturingContextMock.Object);
         viewerMock.Setup(v => v.ConnectionId).Returns("connectionId");
 
         const string connectionId = "connectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewerMock.Object);
-        SetupCapturingContext(connectionId, capturingContextMock.Object);
 
         // Act
         _controlHub.HandleMouseInput(dto);
-        
+
         // Assert
         _mockInputService.Verify(i => i.HandleMouseInput(dto, connectionId), Times.Once);
     }
@@ -149,8 +133,6 @@ public class ControlHubTests : IDisposable
         const string displayName = "Display1";
         var screenMock = new Mock<IScreen>();
         screenMock.Setup(s => s.DeviceName).Returns(displayName);
-        screenMock.Setup(s => s.Bounds).Returns(new Rectangle(0, 0, 1920, 1080));
-        screenMock.Setup(s => s.Primary).Returns(true);
 
         _mockScreenCapturingService.Setup(s => s.FindScreenByName(displayName)).Returns(screenMock.Object);
 
@@ -164,7 +146,6 @@ public class ControlHubTests : IDisposable
         const string connectionId = "connectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewerMock.Object);
-        SetupCapturingContext(connectionId, capturingContextMock.Object);
 
         // Act
         _controlHub.ChangeSelectedScreen(displayName);
@@ -190,7 +171,6 @@ public class ControlHubTests : IDisposable
         const string connectionId = "connectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewerMock.Object);
-        SetupCapturingContext(connectionId, capturingContextMock.Object);
 
         // Act
         _controlHub.SetImageQuality(quality);
@@ -215,7 +195,6 @@ public class ControlHubTests : IDisposable
         const string connectionId = "connectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewerMock.Object);
-        SetupCapturingContext(connectionId, capturingContextMock.Object);
 
         // Act
         _controlHub.ToggleDrawCursor(drawCursor);

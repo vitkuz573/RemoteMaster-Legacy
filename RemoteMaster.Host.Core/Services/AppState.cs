@@ -76,7 +76,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
         }
         finally
         {
-            viewer?.Dispose();
+            viewer.Dispose();
         }
 
         logger.LogInformation("Viewer with connection ID {ConnectionId} removed successfully.", connectionId);
