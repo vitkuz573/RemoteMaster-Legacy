@@ -7,7 +7,6 @@ using System.Drawing.Imaging;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -29,32 +28,7 @@ public class GdiCapturing : ScreenCapturingService
         _logger = logger;
     }
 
-    protected override byte[]? GetFrame(string connectionId)
-    {
-        try
-        {
-            if (!_appState.TryGetViewer(connectionId, out var viewer) || viewer?.CapturingContext.SelectedScreen == null)
-            {
-                _logger.LogWarning("Viewer not found or SelectedScreen is null for ConnectionId: {ConnectionId}", connectionId);
-                
-                return null;
-            }
-
-            var capturingContext = viewer.CapturingContext;
-
-            return capturingContext.SelectedScreen.DeviceName == Screen.VirtualScreen.DeviceName
-                ? GetVirtualScreenFrame(connectionId, capturingContext.ImageQuality, capturingContext.SelectedCodec)
-                : GetSingleScreenFrame(connectionId, capturingContext.SelectedScreen.Bounds, capturingContext.ImageQuality, capturingContext.SelectedCodec);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred in GetFrame for ConnectionId: {ConnectionId}", connectionId);
-            
-            return null;
-        }
-    }
-
-    private byte[] CaptureScreen(string connectionId, Rectangle bounds, int imageQuality, string codec)
+    protected override byte[] CaptureScreen(string connectionId, Rectangle bounds, int imageQuality, string codec)
     {
         if (_bitmap == null || _bitmap.Width != bounds.Width || _bitmap.Height != bounds.Height)
         {
@@ -83,82 +57,11 @@ public class GdiCapturing : ScreenCapturingService
         return BitmapToByteArray(_bitmap, imageQuality, codec);
     }
 
-    private byte[] GetVirtualScreenFrame(string connectionId, int imageQuality, string codec)
-    {
-        return CaptureScreen(connectionId, Screen.VirtualScreen.Bounds, imageQuality, codec);
-    }
-
-    private byte[] GetSingleScreenFrame(string connectionId, Rectangle bounds, int imageQuality, string codec)
-    {
-        return CaptureScreen(connectionId, bounds, imageQuality, codec);
-    }
-
-    public override void SetSelectedScreen(string connectionId, IScreen display)
-    {
-        ArgumentNullException.ThrowIfNull(display);
-
-        if (!_appState.TryGetViewer(connectionId, out var viewer) || viewer == null)
-        {
-            _logger.LogError("Viewer not found for ConnectionId: {ConnectionId}", connectionId);
-
-            return;
-        }
-
-        var capturingContext = viewer.CapturingContext;
-
-        if (capturingContext.SelectedScreen != null && capturingContext.SelectedScreen.Equals(display))
-        {
-            _logger.LogInformation("SelectedScreen is already set to {ScreenName} for ConnectionId: {ConnectionId}. No action taken.", display.DeviceName, connectionId);
-            
-            return;
-        }
-
-        capturingContext.SelectedScreen = display;
-
-        _logger.LogInformation("SelectedScreen set to {ScreenName} for ConnectionId: {ConnectionId}", display.DeviceName, connectionId);
-    }
-
     public override void Dispose()
     {
         base.Dispose();
 
         _bitmap?.Dispose();
         _memoryGraphics?.Dispose();
-    }
-
-    private static byte[] BitmapToByteArray(Bitmap bitmap, int quality, string? codec)
-    {
-        using var memoryStream = new MemoryStream();
-        using var encoderParameters = new EncoderParameters(1);
-        encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
-
-        var imageCodec = GetEncoderInfo(codec);
-
-        if (imageCodec != null)
-        {
-            bitmap.Save(memoryStream, imageCodec, encoderParameters);
-        }
-        else
-        {
-            var pngCodec = GetEncoderInfo("image/png");
-
-            if (pngCodec != null)
-            {
-                bitmap.Save(memoryStream, pngCodec, null);
-            }
-            else
-            {
-                throw new InvalidOperationException("No suitable codec found");
-            }
-        }
-
-        return memoryStream.ToArray();
-    }
-
-    private static ImageCodecInfo? GetEncoderInfo(string? mimeType)
-    {
-        var codecs = ImageCodecInfo.GetImageEncoders();
-
-        return codecs.FirstOrDefault(codec => codec.MimeType == mimeType);
     }
 }
