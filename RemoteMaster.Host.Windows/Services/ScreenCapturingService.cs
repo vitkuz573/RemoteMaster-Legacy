@@ -35,7 +35,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         _appState.ViewerAdded += OnViewerAdded;
         _appState.ViewerRemoved += OnViewerRemoved;
 
-        foreach (var viewer in _appState.Viewers.Values)
+        foreach (var viewer in _appState.GetAllViewers())
         {
             SubscribeToViewer(viewer);
         }
@@ -197,7 +197,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         _appState.ViewerAdded -= OnViewerAdded;
         _appState.ViewerRemoved -= OnViewerRemoved;
 
-        foreach (var viewer in _appState.Viewers.Values)
+        foreach (var viewer in _appState.GetAllViewers())
         {
             UnsubscribeFromViewer(viewer);
         }

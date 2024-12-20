@@ -54,7 +54,7 @@ public class AppStateTests : IDisposable
         // Assert
         Assert.True(result);
         Assert.True(_viewerAddedEventTriggered);
-        Assert.Contains(_viewerMock.Object, _appState.Viewers.Values);
+        Assert.Contains(_viewerMock.Object, _appState.GetAllViewers());
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class AppStateTests : IDisposable
         // Assert
         Assert.True(result);
         Assert.True(_viewerRemovedEventTriggered);
-        Assert.DoesNotContain(_viewerMock.Object, _appState.Viewers.Values);
+        Assert.DoesNotContain(_viewerMock.Object, _appState.GetAllViewers());
     }
 
     [Fact]

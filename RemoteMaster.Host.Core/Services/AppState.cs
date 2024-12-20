@@ -99,7 +99,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
 
     private void UpdateTrayIcon()
     {
-        var activeConnections = _viewers.Values.Count(v => !_ignoredUsers.Contains(v.UserName));
+        var activeConnections = GetAllViewers().Count(v => !_ignoredUsers.Contains(v.UserName));
         var icon = activeConnections > 0
             ? Icons.with_connections
             : Icons.without_connections;
