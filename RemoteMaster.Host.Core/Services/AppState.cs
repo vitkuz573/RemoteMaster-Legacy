@@ -18,17 +18,11 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
 
     private readonly HashSet<string> _ignoredUsers = ["RCHost"];
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
-    private readonly ConcurrentDictionary<string, ICapturingContext> _capturingContexts = new();
     
     public event EventHandler<IViewer>? ViewerAdded;
     public event EventHandler<IViewer?>? ViewerRemoved;
 
-    public event EventHandler<ICapturingContext>? CapturingContextAdded;
-    public event EventHandler<ICapturingContext?>? CapturingContextRemoved;
-
     public IReadOnlyDictionary<string, IViewer> Viewers => _viewers.AsReadOnly();
-
-    public IReadOnlyDictionary<string, ICapturingContext> CapturingContexts => _capturingContexts.AsReadOnly();
 
     public bool TryGetViewer(string connectionId, out IViewer? viewer)
     {
@@ -91,58 +85,6 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
     }
 
     public IReadOnlyList<IViewer> GetAllViewers() => [.. _viewers.Values];
-
-    public bool TryGetCapturingContext(string connectionId, out ICapturingContext? capturingContext)
-    {
-        return _capturingContexts.TryGetValue(connectionId, out capturingContext);
-    }
-
-    public bool TryAddCapturingContext(ICapturingContext capturingContext)
-    {
-        ArgumentNullException.ThrowIfNull(capturingContext);
-
-        var result = _capturingContexts.TryAdd(capturingContext.ConnectionId, capturingContext);
-
-        if (result)
-        {
-            using (EventLock.EnterScope())
-            {
-                CapturingContextAdded?.Invoke(this, capturingContext);
-            }
-        }
-        else
-        {
-            logger.LogError("Failed to add capturing context with connection ID {ConnectionId}.", capturingContext.ConnectionId);
-        }
-
-        return result;
-    }
-
-    public bool TryRemoveCapturingContext(string connectionId)
-    {
-        if (!_capturingContexts.TryRemove(connectionId, out var capturingContext))
-        {
-            logger.LogError("Failed to remove capturing context with connection ID {ConnectionId}.", connectionId);
-
-            return false;
-        }
-
-        try
-        {
-            using (EventLock.EnterScope())
-            {
-                CapturingContextRemoved?.Invoke(this, capturingContext);
-            }
-        }
-        finally
-        {
-            capturingContext.Dispose();
-        }
-
-        logger.LogInformation("Capturing context with connection ID {ConnectionId} removed successfully.", connectionId);
-
-        return true;
-    }
 
     private void NotifyViewersChanged()
     {

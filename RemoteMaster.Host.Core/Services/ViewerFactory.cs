@@ -13,10 +13,6 @@ public class ViewerFactory : IViewerFactory
 {
     public IViewer Create(HubCallerContext context, string group, string connectionId, string userName, string role, IPAddress ipAddress, string authenticationType)
     {
-#pragma warning disable CA2000
-        var capturingContext = new CapturingContext(connectionId);
-#pragma warning restore CA2000
-
-        return new Viewer(capturingContext, context, group, connectionId, userName, role, ipAddress, authenticationType);
+        return new Viewer(context, group, connectionId, userName, role, ipAddress, authenticationType);
     }
 }

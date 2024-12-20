@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.ScreenOverlays;
@@ -21,7 +21,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
 
-    protected Dictionary<string, int> Screens { get; } = [];
+    private readonly ConcurrentDictionary<string, EventHandler> _drawCursorHandlers = new();
 
     private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
@@ -32,18 +32,14 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         _overlayManagerService = overlayManagerService;
         _logger = logger;
 
-        Init();
+        _appState.ViewerAdded += OnViewerAdded;
+        _appState.ViewerRemoved += OnViewerRemoved;
 
-        _appState.CapturingContextAdded += OnCapturingContextAdded;
-        _appState.CapturingContextRemoved += OnCapturingContextRemoved;
-
-        foreach (var context in _appState.CapturingContexts.Values)
+        foreach (var viewer in _appState.Viewers.Values)
         {
-            SubscribeToCapturingContext(context);
+            SubscribeToViewer(viewer);
         }
     }
-
-    protected abstract void Init();
 
     protected abstract byte[]? GetFrame(string connectionId);
 
@@ -91,7 +87,9 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         {
             try
             {
-                _appState.TryGetCapturingContext(connectionId, out var capturingContext);
+                _appState.TryGetViewer(connectionId, out var viewer);
+
+                var capturingContext = viewer?.CapturingContext;
 
                 if (capturingContext?.SelectedScreen != null)
                 {
@@ -132,57 +130,76 @@ public abstract class ScreenCapturingService : IScreenCapturingService
         return GetNextFrame(connectionId);
     }
 
-    private void OnCapturingContextAdded(object? sender, ICapturingContext? e)
+    private void OnViewerAdded(object? sender, IViewer? viewer)
     {
-        if (e is CapturingContext context)
+        if (viewer != null)
         {
-            SubscribeToCapturingContext(context);
+            SubscribeToViewer(viewer);
         }
     }
 
-    private void OnCapturingContextRemoved(object? sender, ICapturingContext? e)
+    private void OnViewerRemoved(object? sender, IViewer? viewer)
     {
-        if (e is CapturingContext context)
+        if (viewer != null)
         {
-            UnsubscribeFromCapturingContext(context);
+            UnsubscribeFromViewer(viewer);
         }
     }
 
-    private void SubscribeToCapturingContext(ICapturingContext context)
+    private void SubscribeToViewer(IViewer viewer)
     {
-        context.OnDrawCursorChanged += HandleDrawCursorChanged;
+        var context = viewer.CapturingContext;
+
+        EventHandler handler = (_, _) => HandleDrawCursorChanged(viewer);
+        context.OnDrawCursorChanged += handler;
+
+        _drawCursorHandlers.TryAdd(viewer.ConnectionId, handler);
 
         if (context.DrawCursor)
         {
-            _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+            _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
         }
     }
 
-    private void UnsubscribeFromCapturingContext(ICapturingContext context)
+    private void UnsubscribeFromViewer(IViewer viewer)
     {
-        context.OnDrawCursorChanged -= HandleDrawCursorChanged;
+        var context = viewer.CapturingContext;
 
-        _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+        if (_drawCursorHandlers.TryRemove(viewer.ConnectionId, out var handler))
+        {
+            context.OnDrawCursorChanged -= handler;
+        }
+
+        _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
     }
 
-    private void HandleDrawCursorChanged(object? sender, EventArgs e)
+    private void HandleDrawCursorChanged(IViewer? viewer)
     {
-        if (sender is not CapturingContext context)
+        if (viewer == null)
         {
+            _logger.LogWarning("Viewer is null when handling DrawCursorChanged event.");
+
             return;
         }
 
-        if (context.DrawCursor)
+        if (viewer.CapturingContext.DrawCursor)
         {
-            _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+            _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
         }
         else
         {
-            _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), context.ConnectionId);
+            _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
         }
     }
 
     public virtual void Dispose()
     {
+        _appState.ViewerAdded -= OnViewerAdded;
+        _appState.ViewerRemoved -= OnViewerRemoved;
+
+        foreach (var viewer in _appState.Viewers.Values)
+        {
+            UnsubscribeFromViewer(viewer);
+        }
     }
 }

@@ -6,11 +6,9 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class CapturingContext(string connectionId) : ICapturingContext
+public class CapturingContext : ICapturingContext
 {
     public event EventHandler? OnDrawCursorChanged;
-
-    public string ConnectionId { get; } = connectionId;
 
     public IScreen? SelectedScreen { get; set; }
 

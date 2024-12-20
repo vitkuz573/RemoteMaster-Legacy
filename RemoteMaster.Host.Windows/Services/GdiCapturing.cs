@@ -29,36 +29,27 @@ public class GdiCapturing : ScreenCapturingService
         _logger = logger;
     }
 
-    protected override void Init()
-    {
-        Screens.Clear();
-
-        for (var i = 0; i < Screen.AllScreens.Length; i++)
-        {
-            Screens.Add(Screen.AllScreens[i].DeviceName, i);
-        }
-    }
-
     protected override byte[]? GetFrame(string connectionId)
     {
         try
         {
-            _appState.TryGetCapturingContext(connectionId, out var capturingContext);
-
-            if (capturingContext?.SelectedScreen != null)
+            if (!_appState.TryGetViewer(connectionId, out var viewer) || viewer?.CapturingContext.SelectedScreen == null)
             {
-                return capturingContext.SelectedScreen.DeviceName == Screen.VirtualScreen.DeviceName
-                    ? GetVirtualScreenFrame(connectionId, capturingContext.ImageQuality, capturingContext.SelectedCodec)
-                    : GetSingleScreenFrame(connectionId, capturingContext.SelectedScreen.Bounds, capturingContext.ImageQuality, capturingContext.SelectedCodec);
+                _logger.LogWarning("Viewer not found or SelectedScreen is null for ConnectionId: {ConnectionId}", connectionId);
+                
+                return null;
             }
 
-            _logger.LogWarning("CapturingContext not found or SelectedScreen is null for connectionId: {ConnectionId}", connectionId);
+            var capturingContext = viewer.CapturingContext;
 
-            return null;
+            return capturingContext.SelectedScreen.DeviceName == Screen.VirtualScreen.DeviceName
+                ? GetVirtualScreenFrame(connectionId, capturingContext.ImageQuality, capturingContext.SelectedCodec)
+                : GetSingleScreenFrame(connectionId, capturingContext.SelectedScreen.Bounds, capturingContext.ImageQuality, capturingContext.SelectedCodec);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Capturing error in GetFrame.");
+            _logger.LogError(ex, "Error occurred in GetFrame for ConnectionId: {ConnectionId}", connectionId);
+            
             return null;
         }
     }
@@ -104,21 +95,27 @@ public class GdiCapturing : ScreenCapturingService
 
     public override void SetSelectedScreen(string connectionId, IScreen display)
     {
-        _appState.TryGetCapturingContext(connectionId, out var capturingContext);
+        ArgumentNullException.ThrowIfNull(display);
 
-        if (capturingContext == null)
+        if (!_appState.TryGetViewer(connectionId, out var viewer) || viewer == null)
         {
-            _logger.LogError("CapturingContext not found for ConnectionId: {ConnectionId}", connectionId);
+            _logger.LogError("Viewer not found for ConnectionId: {ConnectionId}", connectionId);
 
             return;
         }
 
+        var capturingContext = viewer.CapturingContext;
+
         if (capturingContext.SelectedScreen != null && capturingContext.SelectedScreen.Equals(display))
         {
+            _logger.LogInformation("SelectedScreen is already set to {ScreenName} for ConnectionId: {ConnectionId}. No action taken.", display.DeviceName, connectionId);
+            
             return;
         }
 
         capturingContext.SelectedScreen = display;
+
+        _logger.LogInformation("SelectedScreen set to {ScreenName} for ConnectionId: {ConnectionId}", display.DeviceName, connectionId);
     }
 
     public override void Dispose()

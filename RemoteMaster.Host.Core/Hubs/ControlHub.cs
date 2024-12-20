@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Shared.Claims;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -36,9 +35,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             };
 
             await Clients.Caller.ReceiveMessage(message);
-
+            
             Context.Abort();
-
+            
             return;
         }
 
@@ -52,19 +51,20 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             };
 
             await Clients.Caller.ReceiveMessage(message);
-
             Context.Abort();
-
             return;
         }
 
         var query = httpContext.Request.Query;
         var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
 
+        var userName = user.FindFirstValue(ClaimTypes.Name) ?? "UnknownUser";
+        var role = user.FindFirstValue(ClaimTypes.Role) ?? "UnknownRole";
+        var authenticationType = GetAuthenticationType(user);
+
         if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
         {
-            await HandleThumbnailRequest();
-
+            await HandleThumbnailRequest(userName, role, ipAddress, authenticationType);
             return;
         }
 
@@ -74,7 +74,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             if (!query.TryGetValue("action", out var action) || string.IsNullOrEmpty(action))
             {
-                logger.LogWarning("Missing or invalid action parameter for screencast from user {UserName} with IP {IpAddress}.", user.FindFirstValue(ClaimTypes.Name), ipAddress);
+                logger.LogWarning("Missing or invalid action parameter for screencast from user {UserName} with IP {IpAddress}.", userName, ipAddress);
 
                 var message = new Message("Missing or invalid action parameter for screencast.", Message.MessageSeverity.Error)
                 {
@@ -82,15 +82,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 };
 
                 await Clients.Caller.ReceiveMessage(message);
-
+                
                 Context.Abort();
-
+                
                 return;
             }
 
             var hasControlClaim = user.HasClaim(c => c is { Type: "Connect", Value: "Control" });
             var hasViewClaim = user.HasClaim(c => c is { Type: "Connect", Value: "View" });
-            var userName = user.FindFirstValue(ClaimTypes.Name);
 
             var actionString = action.ToString();
 
@@ -111,19 +110,16 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 };
 
                 await Clients.Caller.ReceiveMessage(message);
-
+                
                 Context.Abort();
-
+                
                 return;
             }
 
             try
             {
-                var role = user.FindFirstValue(ClaimTypes.Role) ?? "Unknown";
-                var authenticationType = GetAuthenticationType(user);
-
                 await HandleScreenCastRequest(userName, role, ipAddress, authenticationType);
-
+                
                 logger.LogInformation("Screencast started for user {UserName} with IP {IpAddress}.", userName, ipAddress);
             }
             catch (Exception ex)
@@ -136,9 +132,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 };
 
                 await Clients.Caller.ReceiveMessage(message);
-
+                
                 Context.Abort();
-
+                
                 return;
             }
         }
@@ -146,7 +142,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         if (OperatingSystem.IsWindows())
         {
             var codecs = GetAvailableCodecs();
-
+            
             await Clients.Caller.ReceiveAvailableCodecs(codecs);
         }
 
@@ -186,29 +182,65 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         return authenticationType ?? "Unknown";
     }
 
-    private async Task HandleThumbnailRequest()
+    private async Task HandleThumbnailRequest(string userName, string role, IPAddress ipAddress, string authenticationType)
     {
-        if (!appState.TryGetCapturingContext(Context.ConnectionId, out _))
+        var tempViewer = viewerFactory.Create(Context, "ThumbnailGroup", Context.ConnectionId, userName, role, ipAddress, authenticationType);
+        var added = appState.TryAddViewer(tempViewer);
+
+        if (!added)
         {
-            using var tempContext = new CapturingContext(Context.ConnectionId);
-            appState.TryAddCapturingContext(tempContext);
+            logger.LogError("Failed to add viewer for thumbnail request with ConnectionId {ConnectionId}.", Context.ConnectionId);
+            
+            var message = new Message("Failed to add viewer for thumbnail request.", Message.MessageSeverity.Error)
+            {
+                Meta = MessageMeta.ConnectionError
+            };
 
-            var thumbnail = screenCapturingService.GetThumbnail(Context.ConnectionId);
+            await Clients.Caller.ReceiveMessage(message);
 
-            appState.TryRemoveCapturingContext(Context.ConnectionId);
+            Context.Abort();
+
+            return;
+        }
+
+        try
+        {
+            var thumbnail = screenCapturingService.GetThumbnail(tempViewer.ConnectionId);
 
             if (thumbnail != null)
             {
                 await Clients.Caller.ReceiveThumbnail(thumbnail);
             }
-        }
-        else
-        {
-            var thumbnail = screenCapturingService.GetThumbnail(Context.ConnectionId);
-
-            if (thumbnail != null)
+            else
             {
-                await Clients.Caller.ReceiveThumbnail(thumbnail);
+                logger.LogError("Failed to generate thumbnail for ConnectionId {ConnectionId}.", tempViewer.ConnectionId);
+
+                var message = new Message("Failed to generate thumbnail.", Message.MessageSeverity.Error)
+                {
+                    Meta = MessageMeta.ThumbnailError
+                };
+
+                await Clients.Caller.ReceiveMessage(message);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Exception occurred while generating thumbnail for ConnectionId {ConnectionId}.", tempViewer.ConnectionId);
+            
+            var message = new Message("An error occurred while generating the thumbnail.", Message.MessageSeverity.Error)
+            {
+                Meta = MessageMeta.ThumbnailError
+            };
+
+            await Clients.Caller.ReceiveMessage(message);
+        }
+        finally
+        {
+            var removed = appState.TryRemoveViewer(tempViewer.ConnectionId);
+
+            if (!removed)
+            {
+                logger.LogWarning("Failed to remove temporary viewer for ConnectionId {ConnectionId}.", tempViewer.ConnectionId);
             }
         }
 
@@ -218,28 +250,57 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     private async Task HandleScreenCastRequest(string userName, string role, IPAddress ipAddress, string authenticationType)
     {
         var viewer = viewerFactory.Create(Context, "Users", Context.ConnectionId, userName, role, ipAddress, authenticationType);
-        appState.TryAddViewer(viewer);
-        appState.TryAddCapturingContext(viewer.CapturingContext);
+        var added = appState.TryAddViewer(viewer);
 
-        screenCastingService.StartStreaming(viewer);
-        // audioStreamingService.StartStreaming(viewer);
+        if (!added)
+        {
+            logger.LogError("Failed to add viewer for screencast request with ConnectionId {ConnectionId}.", Context.ConnectionId);
 
-        var transportFeature = Context.Features.Get<IHttpTransportFeature>();
-        var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
+            var message = new Message("Failed to add viewer for screencast request.", Message.MessageSeverity.Error)
+            {
+                Meta = MessageMeta.ConnectionError
+            };
 
-        await Clients.Caller.ReceiveTransportType(transportType);
-        await Clients.Caller.ReceiveDotNetVersion(Environment.Version);
+            await Clients.Caller.ReceiveMessage(message);
 
-        var osBitness = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
+            Context.Abort();
 
-        await Clients.Caller.ReceiveOperatingSystemVersion($"{operatingSystemInformationService.GetName()} ({osBitness})");
+            return;
+        }
 
-        var assembly = Assembly.GetEntryAssembly();
-        var fileVersion = assembly?
-            .GetCustomAttribute<AssemblyFileVersionAttribute>()?
-            .Version ?? string.Empty;
+        try
+        {
+            screenCastingService.StartStreaming(viewer);
+            // audioStreamingService.StartStreaming(viewer);
 
-        await Clients.Caller.ReceiveHostVersion(fileVersion);
+            var transportFeature = Context.Features.Get<IHttpTransportFeature>();
+            var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
+
+            await Clients.Caller.ReceiveTransportType(transportType);
+            await Clients.Caller.ReceiveDotNetVersion(Environment.Version);
+
+            var osBitness = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
+
+            await Clients.Caller.ReceiveOperatingSystemVersion($"{operatingSystemInformationService.GetName()} ({osBitness})");
+
+            var assembly = Assembly.GetEntryAssembly();
+            var fileVersion = assembly?
+                .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+                .Version ?? string.Empty;
+
+            await Clients.Caller.ReceiveHostVersion(fileVersion);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Exception occurred while starting screencast for ConnectionId {ConnectionId}.", Context.ConnectionId);
+            var message = new Message("An error occurred while starting the screencast.", Message.MessageSeverity.Error)
+            {
+                Meta = MessageMeta.ScreencastError
+            };
+            await Clients.Caller.ReceiveMessage(message);
+            appState.TryRemoveViewer(viewer.ConnectionId);
+            Context.Abort();
+        }
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
@@ -249,8 +310,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             screenCastingService.StopStreaming(viewer);
             // audioStreamingService.StopStreaming(viewer);
-            appState.TryRemoveViewer(Context.ConnectionId);
-            appState.TryRemoveCapturingContext(Context.ConnectionId);
+            appState.TryRemoveViewer(viewer.ConnectionId);
         }
         else
         {
@@ -292,13 +352,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "ChangeScreenPolicy")]
     public void ChangeSelectedScreen(string displayName)
     {
-        if (appState.TryGetCapturingContext(Context.ConnectionId, out var capturingContext))
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
         {
             var screen = screenCapturingService.FindScreenByName(displayName);
 
             if (screen != null)
             {
-                capturingContext.SelectedScreen = screen;
+                viewer.CapturingContext.SelectedScreen = screen;
             }
             else
             {

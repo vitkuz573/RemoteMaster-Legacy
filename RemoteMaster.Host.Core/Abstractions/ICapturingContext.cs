@@ -8,8 +8,6 @@ public interface ICapturingContext : IDisposable
 {
     event EventHandler? OnDrawCursorChanged;
 
-    string ConnectionId { get; } 
-    
     IScreen? SelectedScreen { get; set; }
     
     string SelectedCodec { get; set; }

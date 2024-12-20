@@ -10,4 +10,5 @@ public static class MessageMeta
     public const string ConnectionError = "connectionError";
     public const string AuthorizationError = "authorizationError";
     public const string ScreencastError = "screencastError";
+    public const string ThumbnailError = "thumbnailError";
 }

@@ -8,9 +8,9 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class Viewer(ICapturingContext capturingContext, HubCallerContext context, string group, string connectionId, string userName, string role, IPAddress ipAddress, string authenticationType) : IViewer
+public class Viewer(HubCallerContext context, string group, string connectionId, string userName, string role, IPAddress ipAddress, string authenticationType) : IViewer
 {
-    public ICapturingContext CapturingContext { get; } = capturingContext;
+    public ICapturingContext CapturingContext { get; } = new CapturingContext();
 
     public HubCallerContext Context { get; } = context;
 

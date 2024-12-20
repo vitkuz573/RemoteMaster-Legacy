@@ -59,22 +59,34 @@ public sealed class InputService(IDesktopService desktopService, IAppState appSt
         _workerThread.Start();
     }
 
-    private PointF GetAbsolutePercentFromRelativePercent(string connectionId, PointF? position)
+    private PointF? GetAbsolutePercentFromRelativePercent(string connectionId, PointF? position)
     {
-        appState.TryGetCapturingContext(connectionId, out var capturingContext);
-
-        if (capturingContext?.SelectedScreen == null)
+        if (position == null)
         {
-            throw new InvalidOperationException($"SelectedScreen is null for connection ID {connectionId}");
+            logger.LogWarning("Position is null for connection ID {ConnectionId}", connectionId);
+
+            return null;
         }
 
-        var selectedScreenBounds = capturingContext.SelectedScreen.Bounds;
+        if (!appState.TryGetViewer(connectionId, out var viewer) || viewer?.CapturingContext.SelectedScreen == null)
+        {
+            logger.LogWarning("CapturingContext not found or SelectedScreen is null for connection ID {ConnectionId}", connectionId);
+
+            return null;
+        }
+
+        var selectedScreenBounds = viewer.CapturingContext.SelectedScreen.Bounds;
         var virtualScreenBounds = Screen.VirtualScreen.Bounds;
 
-        var absoluteX = selectedScreenBounds.Width * position.GetValueOrDefault().X + selectedScreenBounds.Left - virtualScreenBounds.Left;
-        var absoluteY = selectedScreenBounds.Height * position.GetValueOrDefault().Y + selectedScreenBounds.Top - virtualScreenBounds.Top;
+        var absoluteX = selectedScreenBounds.Width * position.Value.X + selectedScreenBounds.Left - virtualScreenBounds.Left;
+        var absoluteY = selectedScreenBounds.Height * position.Value.Y + selectedScreenBounds.Top - virtualScreenBounds.Top;
 
-        return new PointF(absoluteX / virtualScreenBounds.Width, absoluteY / virtualScreenBounds.Height);
+        var normalizedX = absoluteX / virtualScreenBounds.Width;
+        var normalizedY = absoluteY / virtualScreenBounds.Height;
+
+        logger.LogDebug("Converted relative position {RelativePosition} to normalized absolute position ({NormalizedX}, {NormalizedY}) for ConnectionId: {ConnectionId}", position, normalizedX, normalizedY, connectionId);
+
+        return new PointF(normalizedX, normalizedY);
     }
 
     private void HandleBlockInput(bool block)
@@ -178,35 +190,34 @@ public sealed class InputService(IDesktopService desktopService, IAppState appSt
             {
                 var xyPercent = GetAbsolutePercentFromRelativePercent(connectionId, dto.Position);
 
-                dx = (int)(xyPercent.X * 65535F);
-                dy = (int)(xyPercent.Y * 65535F);
-
-                switch (dto)
+                if (!xyPercent.HasValue)
                 {
-                    case { Button: not null, IsPressed: true }:
-                        mouseEventFlags |= dto.Button.Value switch
-                        {
-                            0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                            1 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                            2 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                            _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
-                        };
-                        break;
+                    logger.LogWarning("Failed to convert relative position for ConnectionId: {ConnectionId}", connectionId);
 
-                    case { Button: not null, IsPressed: false }:
-                        mouseEventFlags |= dto.Button.Value switch
-                        {
-                            0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
-                            1 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
-                            2 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
-                            _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
-                        };
-                        break;
-
-                    default:
-                        mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE;
-                        break;
+                    return;
                 }
+
+                dx = (int)(xyPercent.Value.X * 65535F);
+                dy = (int)(xyPercent.Value.Y * 65535F);
+
+                mouseEventFlags |= dto switch
+                {
+                    { Button: not null, IsPressed: true } => dto.Button.Value switch
+                    {
+                        0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                        1 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                        2 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                        _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                    },
+                    { Button: not null, IsPressed: false } => dto.Button.Value switch
+                    {
+                        0 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                        1 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                        2 => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                        _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                    },
+                    _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE
+                };
             }
 
             PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, _) =>
