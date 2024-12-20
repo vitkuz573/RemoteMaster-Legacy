@@ -63,6 +63,10 @@ public partial class Access : IAsyncDisposable
     private bool _firstRenderCompleted;
     private bool _disposed;
 
+    private IJSObjectReference? _blobUtilsModule;
+    private IJSObjectReference? _audioUtilsModule;
+    private IJSObjectReference? _eventListenersModule;
+
     private string? _accessToken;
 
     protected override void OnParametersSet()
@@ -95,37 +99,47 @@ public partial class Access : IAsyncDisposable
         {
             _firstRenderCompleted = true;
 
-            var objectReference = DotNetObjectReference.Create(this);
-
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
-
-            await module.InvokeVoidAsync("addPreventCtrlSListener");
-            await module.InvokeVoidAsync("addBeforeUnloadListener", objectReference);
-            await module.InvokeVoidAsync("addKeyDownEventListener", objectReference);
-            await module.InvokeVoidAsync("addKeyUpEventListener", objectReference);
-            await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
-
-            var audioModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
-
-            await audioModule.InvokeVoidAsync("initAudioContext");
-
-            if (_isAccessDenied)
+            try
             {
-                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
-            }
-            else
-            {
-                var uri = new Uri(NavigationManager.Uri);
-                var queryParams = QueryHelpers.ParseQuery(uri.Query);
+                var objectReference = DotNetObjectReference.Create(this);
 
-                if (!queryParams.TryGetValue("action", out var action) || string.IsNullOrEmpty(action))
+                _eventListenersModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
+
+                await _eventListenersModule.InvokeVoidAsync("addPreventCtrlSListener");
+                await _eventListenersModule.InvokeVoidAsync("addBeforeUnloadListener", objectReference);
+                await _eventListenersModule.InvokeVoidAsync("addKeyDownEventListener", objectReference);
+                await _eventListenersModule.InvokeVoidAsync("addKeyUpEventListener", objectReference);
+                await _eventListenersModule.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
+
+                _audioUtilsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
+
+                await _audioUtilsModule.InvokeVoidAsync("initAudioContext");
+
+                _blobUtilsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+
+                if (_isAccessDenied)
                 {
-                    SnackBar.Add("Invalid URL: 'action' parameter is missing.", Severity.Error);
-
-                    return;
+                    SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
                 }
+                else
+                {
+                    var uri = new Uri(NavigationManager.Uri);
+                    var queryParams = QueryHelpers.ParseQuery(uri.Query);
 
-                await InitializeHostConnectionAsync(action);
+                    if (!queryParams.TryGetValue("action", out var action) || string.IsNullOrEmpty(action))
+                    {
+                        SnackBar.Add("Invalid URL: 'action' parameter is missing.", Severity.Error);
+
+                        return;
+                    }
+
+                    await InitializeHostConnectionAsync(action);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "An error occurred while importing JS modules.");
+                SnackBar.Add("An error occurred while initializing the application. Please try again later.", Severity.Error);
             }
         }
     }
@@ -528,9 +542,9 @@ public partial class Access : IAsyncDisposable
     {
         if (!_disposed && _firstRenderCompleted)
         {
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+            _blobUtilsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
 
-            _screenDataUrl = await module.InvokeAsync<string>("createImageBlobUrl", screenData);
+            _screenDataUrl = await _blobUtilsModule.InvokeAsync<string>("createImageBlobUrl", screenData);
 
             await InvokeAsync(StateHasChanged);
         }
@@ -540,9 +554,9 @@ public partial class Access : IAsyncDisposable
     {
         if (!_disposed && _firstRenderCompleted)
         {
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
+            _audioUtilsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
 
-            await module.InvokeVoidAsync("playAudioChunk", base64Data);
+            await _audioUtilsModule.InvokeVoidAsync("playAudioChunk", base64Data);
         }
     }
 
@@ -550,11 +564,11 @@ public partial class Access : IAsyncDisposable
     {
         if (!_disposed && _firstRenderCompleted)
         {
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+            _blobUtilsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
 
-            var src = await module.InvokeAsync<string>("getElementAttribute", _screenImageElement, "src");
+            var src = await _blobUtilsModule.InvokeAsync<string>("getElementAttribute", _screenImageElement, "src");
 
-            await module.InvokeAsync<string>("revokeUrl", src);
+            await _blobUtilsModule.InvokeVoidAsync("revokeUrl", src);
         }
     }
 
@@ -670,13 +684,6 @@ public partial class Access : IAsyncDisposable
         });
     }
 
-    private async Task ResumeAudioContext()
-    {
-        var audioModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
-
-        await audioModule.InvokeVoidAsync("resumeAudioContext");
-    }
-
     [JSInvokable]
     public async Task OnBeforeUnload()
     {
@@ -699,6 +706,42 @@ public partial class Access : IAsyncDisposable
             catch (Exception ex)
             {
                 Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+            }
+        }
+
+        if (_eventListenersModule != null)
+        {
+            try
+            {
+                await _eventListenersModule.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "An error occurred while disposing _eventListenersModule for host {Host}", Host);
+            }
+        }
+
+        if (_blobUtilsModule != null)
+        {
+            try
+            {
+                await _blobUtilsModule.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "An error occurred while disposing _blobUtilsModule for host {Host}", Host);
+            }
+        }
+
+        if (_audioUtilsModule != null)
+        {
+            try
+            {
+                await _audioUtilsModule.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "An error occurred while disposing _audioUtilsModule for host {Host}", Host);
             }
         }
 
