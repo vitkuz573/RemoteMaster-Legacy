@@ -10,8 +10,6 @@ public interface IAppState
 
     event EventHandler<IViewer?> ViewerRemoved;
 
-    IReadOnlyDictionary<string, IViewer> Viewers { get; }
-
     bool TryGetViewer(string connectionId, out IViewer? viewer);
 
     bool TryAddViewer(IViewer viewer);

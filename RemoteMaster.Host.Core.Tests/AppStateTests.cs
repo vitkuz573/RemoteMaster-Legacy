@@ -225,7 +225,7 @@ public class AppStateTests : IDisposable
         Parallel.ForEach(viewers, viewer => _appState.TryAddViewer(viewer.Object));
 
         // Assert
-        Assert.Equal(100, _appState.Viewers.Count);
+        Assert.Equal(100, _appState.GetAllViewers().Count);
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public class AppStateTests : IDisposable
 
         // Assert
         Assert.False(result);
-        Assert.Single(_appState.Viewers);
+        Assert.Single(_appState.GetAllViewers());
     }
 
     [Fact]

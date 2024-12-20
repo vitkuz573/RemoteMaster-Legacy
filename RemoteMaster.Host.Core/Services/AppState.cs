@@ -22,8 +22,6 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
     public event EventHandler<IViewer>? ViewerAdded;
     public event EventHandler<IViewer?>? ViewerRemoved;
 
-    public IReadOnlyDictionary<string, IViewer> Viewers => _viewers.AsReadOnly();
-
     public bool TryGetViewer(string connectionId, out IViewer? viewer)
     {
         return _viewers.TryGetValue(connectionId, out viewer);
