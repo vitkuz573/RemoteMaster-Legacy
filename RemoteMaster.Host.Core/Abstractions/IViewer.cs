@@ -23,7 +23,9 @@ public interface IViewer : IDisposable
 
     DateTime ConnectedTime { get; }
 
-    public IPAddress IpAddress { get; }
+    IPAddress IpAddress { get; }
 
-    public string AuthenticationType { get; }
+    string AuthenticationType { get; }
+
+    CancellationTokenSource CancellationTokenSource { get; }
 }

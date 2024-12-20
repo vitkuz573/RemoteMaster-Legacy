@@ -34,21 +34,5 @@ public class CapturingContext : ICapturingContext
         }
     }
 
-    public CancellationTokenSource CancellationTokenSource { get; } = new();
-
     private bool _drawCursor;
-    private bool _disposed;
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        CancellationTokenSource.Cancel();
-        CancellationTokenSource.Dispose();
-
-        _disposed = true;
-    }
 }

@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface ICapturingContext : IDisposable
+public interface ICapturingContext
 {
     event EventHandler? OnDrawCursorChanged;
 
@@ -17,6 +17,4 @@ public interface ICapturingContext : IDisposable
     int FrameRate { get; set; }
 
     bool DrawCursor { get; set; }
-
-    CancellationTokenSource CancellationTokenSource { get; }
 }

@@ -19,7 +19,7 @@ public class AudioStreamingService(IHubContext<ControlHub, IControlClient> hubCo
 
         audioCapturingService.StartRecording();
 
-        Task.Run(async () => await StreamAudioDataAsync(viewer, viewer.CapturingContext.CancellationTokenSource.Token), viewer.CapturingContext.CancellationTokenSource.Token);
+        Task.Run(async () => await StreamAudioDataAsync(viewer, viewer.CancellationTokenSource.Token), viewer.CancellationTokenSource.Token);
     }
 
     public void StopStreaming(IViewer viewer)

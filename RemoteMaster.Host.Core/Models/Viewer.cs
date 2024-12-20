@@ -28,6 +28,8 @@ public class Viewer(HubCallerContext context, string group, string connectionId,
 
     public string AuthenticationType { get; } = authenticationType;
 
+    public CancellationTokenSource CancellationTokenSource { get; } = new();
+
     private bool _disposed;
 
     public void Dispose()
@@ -37,7 +39,8 @@ public class Viewer(HubCallerContext context, string group, string connectionId,
             return;
         }
 
-        CapturingContext.Dispose();
+        CancellationTokenSource.Cancel();
+        CancellationTokenSource.Dispose();
 
         _disposed = true;
     }
