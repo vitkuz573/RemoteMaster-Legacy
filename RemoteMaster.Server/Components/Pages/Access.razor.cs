@@ -538,13 +538,10 @@ public partial class Access : IAsyncDisposable
 
     private async Task HandleAudioUpdateBase64(string base64Data)
     {
-        Logger.LogInformation($"Received base64 audio data length: {base64Data.Length}");
-
         if (!_disposed && _firstRenderCompleted)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
 
-            // Теперь вызываем JS метод playAudioChunk, который ожидает строку base64
             await module.InvokeVoidAsync("playAudioChunk", base64Data);
         }
     }

@@ -1,4 +1,10 @@
 let audioContext = null;
+let audioAccumulator = [];
+let playTimer = null;
+const CHUNK_ACCUMULATION_COUNT = 5;
+const SAMPLE_RATE = 48000;
+const NUMBER_OF_CHANNELS = 2;
+const PLAY_INTERVAL_MS = 500;
 export function initAudioContext() {
     if (!audioContext) {
         audioContext = new AudioContext();
@@ -14,14 +20,9 @@ export function resumeAudioContext() {
         audioContext = new AudioContext();
     }
     if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-            console.log("AudioContext resumed by user action.");
-        }).catch(err => {
+        audioContext.resume().catch(err => {
             console.error("Failed to resume AudioContext:", err);
         });
-    }
-    else {
-        console.log("AudioContext is already running or closed.");
     }
 }
 function base64ToUint8Array(base64) {
@@ -41,49 +42,49 @@ export async function playAudioChunk(audioDataBase64) {
     }
     const audioData = base64ToUint8Array(audioDataBase64);
     if (audioData.length === 0) {
-        console.error("Received empty audio data.");
         return;
     }
-    console.log("Received audioData length:", audioData.length);
-    const count = Math.min(20, audioData.length);
-    const hexBytes = [];
-    const decBytes = [];
-    for (let i = 0; i < count; i++) {
-        const val = audioData[i];
-        hexBytes.push(val.toString(16).padStart(2, '0'));
-        decBytes.push(val);
+    const samples = audioData.length / 4;
+    const float32Data = new Float32Array(samples);
+    const dataView = new DataView(audioData.buffer);
+    for (let i = 0; i < samples; i++) {
+        float32Data[i] = dataView.getFloat32(i * 4, true);
     }
-    console.log(`Raw first ${count} bytes (hex):`, hexBytes.join(' '));
-    console.log(`Raw first ${count} bytes (decimal):`, decBytes);
-    try {
-        const sampleRate = 48000;
-        const numberOfChannels = 2;
-        const samples = audioData.length / 4;
-        const float32Data = new Float32Array(samples);
-        const dataView = new DataView(audioData.buffer);
-        for (let i = 0; i < samples; i++) {
-            float32Data[i] = dataView.getFloat32(i * 4, true);
-        }
-        if (float32Data.length === 0) {
-            console.error("No valid audio data to process.");
-            return;
-        }
-        console.log("First 10 float samples:", float32Data.slice(0, 10));
-        const samplesPerChannel = Math.floor(float32Data.length / numberOfChannels);
-        const audioBuffer = audioContext.createBuffer(numberOfChannels, samplesPerChannel, sampleRate);
-        for (let channel = 0; channel < numberOfChannels; channel++) {
-            const channelData = audioBuffer.getChannelData(channel);
-            for (let i = 0; i < samplesPerChannel; i++) {
-                channelData[i] = float32Data[i * numberOfChannels + channel];
-            }
-        }
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        source.start();
+    audioAccumulator.push(float32Data);
+    if (playTimer !== null) {
+        clearTimeout(playTimer);
     }
-    catch (error) {
-        console.error("Error decoding and playing audio chunk:", error);
+    playTimer = window.setTimeout(playAccumulatedChunks, PLAY_INTERVAL_MS);
+    if (audioAccumulator.length >= CHUNK_ACCUMULATION_COUNT) {
+        playAccumulatedChunks();
     }
+}
+function playAccumulatedChunks() {
+    if (!audioContext || audioAccumulator.length === 0) {
+        return;
+    }
+    let totalLength = 0;
+    for (const chunk of audioAccumulator) {
+        totalLength += chunk.length;
+    }
+    const combined = new Float32Array(totalLength);
+    let offset = 0;
+    for (const chunk of audioAccumulator) {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+    }
+    audioAccumulator = [];
+    const samplesPerChannel = Math.floor(combined.length / NUMBER_OF_CHANNELS);
+    const audioBuffer = audioContext.createBuffer(NUMBER_OF_CHANNELS, samplesPerChannel, SAMPLE_RATE);
+    for (let ch = 0; ch < NUMBER_OF_CHANNELS; ch++) {
+        const channelData = audioBuffer.getChannelData(ch);
+        for (let i = 0; i < samplesPerChannel; i++) {
+            channelData[i] = combined[i * NUMBER_OF_CHANNELS + ch];
+        }
+    }
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+    source.start();
 }
 //# sourceMappingURL=audioUtils.js.map
