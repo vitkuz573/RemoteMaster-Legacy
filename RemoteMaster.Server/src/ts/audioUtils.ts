@@ -16,8 +16,6 @@ export async function initAudioContext(): Promise<void> {
         await audioContext.resume();
     }
 
-    // Load the AudioWorklet script compiled from audio-worklet-processor.ts to JS
-    // Make sure 'audio-worklet-processor.js' is accessible (e.g. in the same directory)
     await audioContext.audioWorklet.addModule('js/audio-worklet-processor.js');
 
     workletNode = new AudioWorkletNode(audioContext, 'streaming-processor', {
@@ -66,7 +64,7 @@ export async function playAudioChunk(audioDataBase64: string): Promise<void> {
 
     const audioData = base64ToUint8Array(audioDataBase64);
     if (audioData.length === 0) {
-        return; // empty data, ignore
+        return;
     }
 
     const samples = audioData.length / 4;
@@ -77,6 +75,5 @@ export async function playAudioChunk(audioDataBase64: string): Promise<void> {
         float32Data[i] = dataView.getFloat32(i * 4, true);
     }
 
-    // Send samples to the worklet
     workletNode.port.postMessage(float32Data);
 }
