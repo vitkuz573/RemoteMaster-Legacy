@@ -7,6 +7,4 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IScreenCastingService
 {
     void StartStreaming(IViewer viewer);
-
-    void StopStreaming(IViewer viewer);
 }

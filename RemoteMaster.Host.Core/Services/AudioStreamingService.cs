@@ -28,7 +28,6 @@ public class AudioStreamingService(IHubContext<ControlHub, IControlClient> hubCo
 
         audioCapturingService.StopRecording();
 
-        // viewer.Dispose();
         logger.LogInformation("Stopped audio streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
     }
 

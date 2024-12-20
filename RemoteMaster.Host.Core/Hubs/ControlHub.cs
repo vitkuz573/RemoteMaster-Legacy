@@ -307,7 +307,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
         {
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
-            screenCastingService.StopStreaming(viewer);
+            
             appState.TryRemoveViewer(viewer.ConnectionId);
         }
         else
@@ -325,9 +325,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         if (appState.TryGetViewer(disconnectRequest.ConnectionId, out var viewer) && viewer != null)
         {
-            screenCastingService.StopStreaming(viewer);
-            appState.TryRemoveViewer(disconnectRequest.ConnectionId);
             await Clients.Client(disconnectRequest.ConnectionId).ReceiveDisconnected(disconnectRequest.Reason);
+
+            appState.TryRemoveViewer(disconnectRequest.ConnectionId);
         }
         else
         {
@@ -465,9 +465,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "AudioStreamingPolicy")]
     public void StartAudioStreaming()
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
         {
             audioStreamingService.StartStreaming(viewer);
+
             logger.LogInformation("Audio streaming started for viewer {ConnectionId}", Context.ConnectionId);
         }
         else
@@ -479,9 +480,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "AudioStreamingPolicy")]
     public void StopAudioStreaming()
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
         {
             audioStreamingService.StopStreaming(viewer);
+
             logger.LogInformation("Audio streaming stopped for viewer {ConnectionId}", Context.ConnectionId);
         }
         else
