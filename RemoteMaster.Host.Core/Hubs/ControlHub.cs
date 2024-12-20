@@ -51,7 +51,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             };
 
             await Clients.Caller.ReceiveMessage(message);
+
             Context.Abort();
+
             return;
         }
 
@@ -65,6 +67,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
         {
             await HandleThumbnailRequest(userName, role, ipAddress, authenticationType);
+
             return;
         }
 
@@ -304,35 +307,27 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
+        ExecuteActionForViewer(viewer =>
         {
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             
             appState.TryRemoveViewer(viewer.ConnectionId);
-        }
-        else
-        {
-            logger.LogDebug("Failed to find a viewer for connection ID {ConnectionId} during disconnection.", Context.ConnectionId);
-        }
+        });
 
         await base.OnDisconnectedAsync(exception);
     }
 
     [Authorize(Policy = "DisconnectClientPolicy")]
-    public async Task DisconnectClient(ViewerDisconnectRequest disconnectRequest)
+    public void DisconnectClient(ViewerDisconnectRequest disconnectRequest)
     {
         ArgumentNullException.ThrowIfNull(disconnectRequest);
 
-        if (appState.TryGetViewer(disconnectRequest.ConnectionId, out var viewer) && viewer != null)
+        ExecuteActionForViewer(async viewer =>
         {
             await Clients.Client(disconnectRequest.ConnectionId).ReceiveDisconnected(disconnectRequest.Reason);
-
-            appState.TryRemoveViewer(disconnectRequest.ConnectionId);
-        }
-        else
-        {
-            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", disconnectRequest.ConnectionId);
-        }
+            
+            appState.TryRemoveViewer(viewer.ConnectionId);
+        });
     }
 
     [Authorize(Policy = "HandleInputPolicy")]
@@ -350,7 +345,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "ChangeScreenPolicy")]
     public void ChangeSelectedScreen(string displayName)
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
+        ExecuteActionForViewer(viewer =>
         {
             var screen = screenCapturingService.FindScreenByName(displayName);
 
@@ -362,11 +357,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             {
                 logger.LogError("Screen with name '{DisplayName}' not found for connection ID {ConnectionId}.", displayName, Context.ConnectionId);
             }
-        }
-        else
-        {
-            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
-        }
+        });
     }
 
     [Authorize(Policy = "ToggleInputPolicy")]
@@ -465,30 +456,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "AudioStreamingPolicy")]
     public void StartAudioStreaming()
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
-        {
-            audioStreamingService.StartStreaming(viewer);
-
-            logger.LogInformation("Audio streaming started for viewer {ConnectionId}", Context.ConnectionId);
-        }
-        else
-        {
-            logger.LogError("Failed to find viewer for connection {ConnectionId}", Context.ConnectionId);
-        }
+        ExecuteActionForViewer(audioStreamingService.StartStreaming);
     }
 
     [Authorize(Policy = "AudioStreamingPolicy")]
     public void StopAudioStreaming()
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer) && viewer != null)
-        {
-            audioStreamingService.StopStreaming(viewer);
-
-            logger.LogInformation("Audio streaming stopped for viewer {ConnectionId}", Context.ConnectionId);
-        }
-        else
-        {
-            logger.LogError("Failed to find viewer for connection {ConnectionId}", Context.ConnectionId);
-        }
+        ExecuteActionForViewer(audioStreamingService.StopStreaming);
     }
 }
