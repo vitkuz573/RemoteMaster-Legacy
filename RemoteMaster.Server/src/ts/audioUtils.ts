@@ -77,11 +77,3 @@ export async function playAudioChunk(audioDataBase64: string): Promise<void> {
 
     workletNode.port.postMessage(float32Data);
 }
-
-document.body.addEventListener('click', async () => {
-    if (audioContext && audioContext.state === 'suspended') {
-        await audioContext.resume();
-    } else if (!audioContext) {
-        await initAudioContext();
-    }
-}, { once: true });

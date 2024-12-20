@@ -93,6 +93,14 @@
                             <MudSwitch T="bool" Value="@_isUserInputEnabled" ValueChanged="ToggleUserInput"/>
                         </MudNavLink>
                     }
+                    
+                    @if (context.User.HasClaim("Audio", "StartStop"))
+                    {
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.VolumeUp">
+                            <MudText>Audio Streaming</MudText>
+                            <MudSwitch T="bool" Value="@_isAudioStreaming" ValueChanged="ToggleAudioStreaming"/>
+                        </MudNavLink>
+                    }
 
                     @if (context.User.HasClaim("HostManagement", "Terminate"))
                     {

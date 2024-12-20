@@ -78,6 +78,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
         new ApplicationClaim("Power", "WakeUp", "Wake Up Host", "Allow waking up the host"),
         new ApplicationClaim("Connect", "Control", "Control Connection", "Allow connecting for control"),
         new ApplicationClaim("Connect", "View", "View Connection", "Allow connecting for viewing"),
+        new ApplicationClaim("Audio", "StartStop", "Start/Stop Audio Streaming", "Allow start/stop audio streaming"),
     ];
 
     private static readonly List<Claim> AdministratorClaims =
@@ -136,7 +137,8 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
         new Claim("Power", "Shutdown"),
         new Claim("Power", "WakeUp"),
         new Claim("Connect", "Control"),
-        new Claim("Connect", "View")
+        new Claim("Connect", "View"),
+        new Claim("Audio", "StartStop"),
     ];
 
     private static readonly List<Claim> ViewerClaims =
@@ -146,7 +148,8 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
         new Claim("Screen", "SetQuality"),
         new Claim("Screen", "SetFrameRate"),
         new Claim("Screen", "SetCodec"),
-        new Claim("Screen", "Change")
+        new Claim("Screen", "Change"),
+        new Claim("Audio", "StartStop"),
     ];
 
     private static readonly List<Claim> ServiceUserClaims =

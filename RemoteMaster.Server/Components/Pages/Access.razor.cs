@@ -52,6 +52,7 @@ public partial class Access : IAsyncDisposable
     private List<string> _codecs = [];
     private string _selectedDisplay = string.Empty;
     private string? _selectedCodec = string.Empty;
+    private bool _isAudioStreaming;
     private ElementReference _screenImageElement;
     private List<ViewerDto> _viewers = [];
     private bool _isAccessDenied;
@@ -110,10 +111,6 @@ public partial class Access : IAsyncDisposable
                 await _eventListenersModule.InvokeVoidAsync("addKeyDownEventListener", objectReference);
                 await _eventListenersModule.InvokeVoidAsync("addKeyUpEventListener", objectReference);
                 await _eventListenersModule.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
-
-                _audioUtilsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
-
-                await _audioUtilsModule.InvokeVoidAsync("initAudioContext");
 
                 _blobUtilsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
 
@@ -596,6 +593,29 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", !value));
     }
 
+    private async Task ToggleAudioStreaming(bool value)
+    {
+        if (_connection == null)
+        {
+            return;
+        }
+
+        _isAudioStreaming = value;
+
+        if (value)
+        {
+            _audioUtilsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
+
+            await _audioUtilsModule.InvokeVoidAsync("initAudioContext");
+
+            await SafeInvokeAsync(() => _connection.InvokeAsync("StartAudioStreaming"));
+        }
+        else
+        {
+            await SafeInvokeAsync(() => _connection.InvokeAsync("StopAudioStreaming"));
+        }
+    }
+
     private async Task ToggleDrawCursor(bool value)
     {
         if (_connection == null)
@@ -706,42 +726,6 @@ public partial class Access : IAsyncDisposable
             catch (Exception ex)
             {
                 Logger.LogError(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
-            }
-        }
-
-        if (_eventListenersModule != null)
-        {
-            try
-            {
-                await _eventListenersModule.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "An error occurred while disposing _eventListenersModule for host {Host}", Host);
-            }
-        }
-
-        if (_blobUtilsModule != null)
-        {
-            try
-            {
-                await _blobUtilsModule.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "An error occurred while disposing _blobUtilsModule for host {Host}", Host);
-            }
-        }
-
-        if (_audioUtilsModule != null)
-        {
-            try
-            {
-                await _audioUtilsModule.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "An error occurred while disposing _audioUtilsModule for host {Host}", Host);
             }
         }
 

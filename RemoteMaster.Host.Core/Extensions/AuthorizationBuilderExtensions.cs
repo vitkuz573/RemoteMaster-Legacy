@@ -205,6 +205,9 @@ public static class AuthorizationBuilderExtensions
         builder.AddPolicy("ShutdownHostPolicy", policy =>
             policy.RequireClaim("Power", "Shutdown"));
 
+        builder.AddPolicy("AudioStreamingPolicy", policy =>
+            policy.RequireClaim("Audio", "StartStop"));
+
         return builder;
     }
 }

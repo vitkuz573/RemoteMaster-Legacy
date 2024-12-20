@@ -271,7 +271,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         try
         {
             screenCastingService.StartStreaming(viewer);
-            audioStreamingService.StartStreaming(viewer);
 
             var transportFeature = Context.Features.Get<IHttpTransportFeature>();
             var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
@@ -309,7 +308,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             screenCastingService.StopStreaming(viewer);
-            audioStreamingService.StopStreaming(viewer);
             appState.TryRemoveViewer(viewer.ConnectionId);
         }
         else
@@ -462,5 +460,33 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void LogOffUser(bool force)
     {
         workStationSecurityService.LogOffUser(force);
+    }
+
+    [Authorize(Policy = "AudioStreamingPolicy")]
+    public void StartAudioStreaming()
+    {
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        {
+            audioStreamingService.StartStreaming(viewer);
+            logger.LogInformation("Audio streaming started for viewer {ConnectionId}", Context.ConnectionId);
+        }
+        else
+        {
+            logger.LogError("Failed to find viewer for connection {ConnectionId}", Context.ConnectionId);
+        }
+    }
+
+    [Authorize(Policy = "AudioStreamingPolicy")]
+    public void StopAudioStreaming()
+    {
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        {
+            audioStreamingService.StopStreaming(viewer);
+            logger.LogInformation("Audio streaming stopped for viewer {ConnectionId}", Context.ConnectionId);
+        }
+        else
+        {
+            logger.LogError("Failed to find viewer for connection {ConnectionId}", Context.ConnectionId);
+        }
     }
 }
