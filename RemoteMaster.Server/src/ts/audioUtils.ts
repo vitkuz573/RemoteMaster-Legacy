@@ -1,46 +1,47 @@
 ﻿let audioContext: AudioContext | null = null;
-let audioAccumulator: Float32Array[] = [];
-let playTimer: number | null = null;
+let workletNode: AudioWorkletNode | null = null;
 
-const CHUNK_ACCUMULATION_COUNT = 5;    // Number of chunks to accumulate before playing
-const SAMPLE_RATE = 48000;             // Your audio sample rate
-const NUMBER_OF_CHANNELS = 2;          // Your number of channels (e.g., 2 for stereo)
-const PLAY_INTERVAL_MS = 500;          // Play accumulated chunks every 500ms (adjust as needed)
+const SAMPLE_RATE = 48000;
+const NUMBER_OF_CHANNELS = 2;
 
 /**
- * Initializes the AudioContext if not already initialized.
- * If the AudioContext is suspended, attempts to resume it.
+ * Initializes AudioContext and loads the AudioWorklet module.
+ * Call this once after user gesture.
  */
-export function initAudioContext(): void {
+export async function initAudioContext(): Promise<void> {
     if (!audioContext) {
-        audioContext = new AudioContext();
+        audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
     }
     if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(err => {
-            console.warn("AudioContext resume attempt failed:", err);
-        });
+        await audioContext.resume();
+    }
+
+    // Load the AudioWorklet script compiled from audio-worklet-processor.ts to JS
+    // Make sure 'audio-worklet-processor.js' is accessible (e.g. in the same directory)
+    await audioContext.audioWorklet.addModule('js/audio-worklet-processor.js');
+
+    workletNode = new AudioWorkletNode(audioContext, 'streaming-processor', {
+        numberOfInputs: 0,
+        numberOfOutputs: 1,
+        outputChannelCount: [NUMBER_OF_CHANNELS]
+    });
+
+    workletNode.connect(audioContext.destination);
+}
+
+/**
+ * Resumes the AudioContext if needed.
+ * Should be called after a user gesture if the context is suspended.
+ */
+export async function resumeAudioContext(): Promise<void> {
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
     }
 }
 
 /**
- * Attempts to resume the AudioContext if it's currently suspended.
- * Should be called after a user gesture (e.g., a button click).
- */
-export function resumeAudioContext(): void {
-    if (!audioContext) {
-        audioContext = new AudioContext();
-    }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(err => {
-            console.error("Failed to resume AudioContext:", err);
-        });
-    }
-}
-
-/**
- * Decodes a base64 string into a Uint8Array of raw bytes.
- * @param base64 The base64 encoded string.
- * @returns A Uint8Array representing the decoded bytes.
+ * Decodes a base64 string to Uint8Array.
+ * @param base64 base64 encoded string
  */
 function base64ToUint8Array(base64: string): Uint8Array {
     const binaryString = atob(base64);
@@ -53,27 +54,21 @@ function base64ToUint8Array(base64: string): Uint8Array {
 }
 
 /**
- * Processes a single audio chunk (base64-encoded float32 PCM),
- * decodes it, converts it to Float32Array samples, and adds it
- * to the accumulator for later playback.
- * @param audioDataBase64 The raw PCM audio data in Base64 format.
+ * Converts base64-encoded float32 PCM samples into a Float32Array
+ * and sends them to the AudioWorkletProcessor for smooth, continuous playback.
+ * @param audioDataBase64 Base64 encoded float32 PCM data
  */
 export async function playAudioChunk(audioDataBase64: string): Promise<void> {
-    initAudioContext();
-
-    if (!audioContext) {
-        console.error("AudioContext is not initialized.");
+    if (!audioContext || !workletNode) {
+        console.error("AudioContext or Worklet not initialized. Call initAudioContext() first.");
         return;
     }
 
-    // Decode base64 to bytes
     const audioData = base64ToUint8Array(audioDataBase64);
     if (audioData.length === 0) {
-        // Empty data, ignore
-        return;
+        return; // empty data, ignore
     }
 
-    // Interpret the bytes as float32 samples
     const samples = audioData.length / 4;
     const float32Data = new Float32Array(samples);
     const dataView = new DataView(audioData.buffer);
@@ -82,62 +77,6 @@ export async function playAudioChunk(audioDataBase64: string): Promise<void> {
         float32Data[i] = dataView.getFloat32(i * 4, true);
     }
 
-    // Accumulate the decoded Float32Array
-    audioAccumulator.push(float32Data);
-
-    // Set or reset a timer to play accumulated chunks after a delay
-    if (playTimer !== null) {
-        clearTimeout(playTimer);
-    }
-    playTimer = window.setTimeout(playAccumulatedChunks, PLAY_INTERVAL_MS);
-
-    // If we've accumulated enough chunks, we can decide to play right now
-    if (audioAccumulator.length >= CHUNK_ACCUMULATION_COUNT) {
-        playAccumulatedChunks();
-    }
-}
-
-/**
- * Combines all accumulated Float32Arrays into one larger Float32Array,
- * creates an AudioBuffer, and plays it back. This reduces pops and clicks
- * compared to playing tiny chunks one by one.
- */
-function playAccumulatedChunks(): void {
-    if (!audioContext || audioAccumulator.length === 0) {
-        return;
-    }
-
-    // Combine all accumulated arrays into one
-    let totalLength = 0;
-    for (const chunk of audioAccumulator) {
-        totalLength += chunk.length;
-    }
-
-    const combined = new Float32Array(totalLength);
-    let offset = 0;
-    for (const chunk of audioAccumulator) {
-        combined.set(chunk, offset);
-        offset += chunk.length;
-    }
-
-    // Clear the accumulator
-    audioAccumulator = [];
-
-    // Create AudioBuffer from combined data
-    const samplesPerChannel = Math.floor(combined.length / NUMBER_OF_CHANNELS);
-    const audioBuffer = audioContext.createBuffer(NUMBER_OF_CHANNELS, samplesPerChannel, SAMPLE_RATE);
-
-    // Distribute samples into channels
-    for (let ch = 0; ch < NUMBER_OF_CHANNELS; ch++) {
-        const channelData = audioBuffer.getChannelData(ch);
-        for (let i = 0; i < samplesPerChannel; i++) {
-            channelData[i] = combined[i * NUMBER_OF_CHANNELS + ch];
-        }
-    }
-
-    // Play the combined buffer
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
-    source.start();
+    // Send samples to the worklet
+    workletNode.port.postMessage(float32Data);
 }

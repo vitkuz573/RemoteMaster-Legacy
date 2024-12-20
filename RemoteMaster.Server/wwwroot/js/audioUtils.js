@@ -1,28 +1,25 @@
 let audioContext = null;
-let audioAccumulator = [];
-let playTimer = null;
-const CHUNK_ACCUMULATION_COUNT = 5;
+let workletNode = null;
 const SAMPLE_RATE = 48000;
 const NUMBER_OF_CHANNELS = 2;
-const PLAY_INTERVAL_MS = 500;
-export function initAudioContext() {
+export async function initAudioContext() {
     if (!audioContext) {
-        audioContext = new AudioContext();
+        audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
     }
     if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(err => {
-            console.warn("AudioContext resume attempt failed:", err);
-        });
+        await audioContext.resume();
     }
+    await audioContext.audioWorklet.addModule('js/audio-worklet-processor.js');
+    workletNode = new AudioWorkletNode(audioContext, 'streaming-processor', {
+        numberOfInputs: 0,
+        numberOfOutputs: 1,
+        outputChannelCount: [NUMBER_OF_CHANNELS]
+    });
+    workletNode.connect(audioContext.destination);
 }
-export function resumeAudioContext() {
-    if (!audioContext) {
-        audioContext = new AudioContext();
-    }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(err => {
-            console.error("Failed to resume AudioContext:", err);
-        });
+export async function resumeAudioContext() {
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
     }
 }
 function base64ToUint8Array(base64) {
@@ -35,9 +32,8 @@ function base64ToUint8Array(base64) {
     return bytes;
 }
 export async function playAudioChunk(audioDataBase64) {
-    initAudioContext();
-    if (!audioContext) {
-        console.error("AudioContext is not initialized.");
+    if (!audioContext || !workletNode) {
+        console.error("AudioContext or Worklet not initialized. Call initAudioContext() first.");
         return;
     }
     const audioData = base64ToUint8Array(audioDataBase64);
@@ -50,41 +46,6 @@ export async function playAudioChunk(audioDataBase64) {
     for (let i = 0; i < samples; i++) {
         float32Data[i] = dataView.getFloat32(i * 4, true);
     }
-    audioAccumulator.push(float32Data);
-    if (playTimer !== null) {
-        clearTimeout(playTimer);
-    }
-    playTimer = window.setTimeout(playAccumulatedChunks, PLAY_INTERVAL_MS);
-    if (audioAccumulator.length >= CHUNK_ACCUMULATION_COUNT) {
-        playAccumulatedChunks();
-    }
-}
-function playAccumulatedChunks() {
-    if (!audioContext || audioAccumulator.length === 0) {
-        return;
-    }
-    let totalLength = 0;
-    for (const chunk of audioAccumulator) {
-        totalLength += chunk.length;
-    }
-    const combined = new Float32Array(totalLength);
-    let offset = 0;
-    for (const chunk of audioAccumulator) {
-        combined.set(chunk, offset);
-        offset += chunk.length;
-    }
-    audioAccumulator = [];
-    const samplesPerChannel = Math.floor(combined.length / NUMBER_OF_CHANNELS);
-    const audioBuffer = audioContext.createBuffer(NUMBER_OF_CHANNELS, samplesPerChannel, SAMPLE_RATE);
-    for (let ch = 0; ch < NUMBER_OF_CHANNELS; ch++) {
-        const channelData = audioBuffer.getChannelData(ch);
-        for (let i = 0; i < samplesPerChannel; i++) {
-            channelData[i] = combined[i * NUMBER_OF_CHANNELS + ch];
-        }
-    }
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
-    source.start();
+    workletNode.port.postMessage(float32Data);
 }
 //# sourceMappingURL=audioUtils.js.map

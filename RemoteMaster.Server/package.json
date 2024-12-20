@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/audioworklet": "^0.0.65",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.4.14"
