@@ -28,7 +28,7 @@ public class GdiCapturingTests : IDisposable
         _mockOverlayManagerService = new Mock<IOverlayManagerService>();
         Mock<ILogger<ScreenCapturingService>> mockLogger = new();
 
-        _mockAppState.Setup(a => a.Viewers).Returns(new Dictionary<string, IViewer>());
+        _mockAppState.Setup(a => a.GetAllViewers()).Returns(new List<IViewer>());
 
         _gdiCapturing = new GdiCapturing(_mockAppState.Object, _mockDesktopService.Object, _mockOverlayManagerService.Object, mockLogger.Object);
     }
