@@ -92,7 +92,7 @@ public sealed class UserInstanceService : IUserInstanceService
     {
         var startInfo = new ProcessStartInfo
         {
-            CreateNoWindow = false
+            CreateNoWindow = true
         };
 
         var options = new NativeProcessOptions
