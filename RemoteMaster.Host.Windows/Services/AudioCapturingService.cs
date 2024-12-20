@@ -24,7 +24,8 @@ public class AudioCapturingService : IAudioCapturingService
         _capture = new WasapiLoopbackCapture();
 
         var waveFormat = _capture.WaveFormat;
-        
+
+        _logger.LogInformation($"WaveFormat encoding: {_capture.WaveFormat.Encoding}");
         _logger.LogInformation($"Audio capture initialized: {waveFormat.SampleRate} Hz, {waveFormat.BitsPerSample}-bit, {waveFormat.Channels} channels");
     }
 

@@ -34,5 +34,5 @@ public interface IControlClient
 
     Task ReceiveOperatingSystemVersion(string version);
 
-    Task ReceiveAudioUpdate(byte[] audioUpdate);
+    Task ReceiveAudioUpdate(string? audioUpdate);
 }

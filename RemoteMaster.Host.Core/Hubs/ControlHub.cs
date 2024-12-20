@@ -271,7 +271,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         try
         {
             screenCastingService.StartStreaming(viewer);
-            // audioStreamingService.StartStreaming(viewer);
+            audioStreamingService.StartStreaming(viewer);
 
             var transportFeature = Context.Features.Get<IHttpTransportFeature>();
             var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
@@ -309,7 +309,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             screenCastingService.StopStreaming(viewer);
-            // audioStreamingService.StopStreaming(viewer);
+            audioStreamingService.StopStreaming(viewer);
             appState.TryRemoveViewer(viewer.ConnectionId);
         }
         else

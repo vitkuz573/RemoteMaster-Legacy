@@ -2,37 +2,73 @@ let audioContext = null;
 export function initAudioContext() {
     if (!audioContext) {
         audioContext = new AudioContext();
-        audioContext.resume();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(err => {
+            console.warn("AudioContext resume attempt failed:", err);
+        });
     }
 }
-function convertPCMToFloat32(audioData) {
-    const samples = audioData.length / 4;
-    const float32Data = new Float32Array(samples);
-    const dataView = new DataView(audioData.buffer);
-    for (let i = 0; i < samples; i++) {
-        const int32 = dataView.getInt32(i * 4, true);
-        float32Data[i] = int32 / 2147483648;
+export function resumeAudioContext() {
+    if (!audioContext) {
+        audioContext = new AudioContext();
     }
-    return float32Data;
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            console.log("AudioContext resumed by user action.");
+        }).catch(err => {
+            console.error("Failed to resume AudioContext:", err);
+        });
+    }
+    else {
+        console.log("AudioContext is already running or closed.");
+    }
 }
-export async function playAudioChunk(audioData) {
+function base64ToUint8Array(base64) {
+    const binaryString = atob(base64);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+export async function playAudioChunk(audioDataBase64) {
     initAudioContext();
     if (!audioContext) {
         console.error("AudioContext is not initialized.");
         return;
     }
+    const audioData = base64ToUint8Array(audioDataBase64);
     if (audioData.length === 0) {
         console.error("Received empty audio data.");
         return;
     }
+    console.log("Received audioData length:", audioData.length);
+    const count = Math.min(20, audioData.length);
+    const hexBytes = [];
+    const decBytes = [];
+    for (let i = 0; i < count; i++) {
+        const val = audioData[i];
+        hexBytes.push(val.toString(16).padStart(2, '0'));
+        decBytes.push(val);
+    }
+    console.log(`Raw first ${count} bytes (hex):`, hexBytes.join(' '));
+    console.log(`Raw first ${count} bytes (decimal):`, decBytes);
     try {
         const sampleRate = 48000;
         const numberOfChannels = 2;
-        const float32Data = convertPCMToFloat32(audioData);
+        const samples = audioData.length / 4;
+        const float32Data = new Float32Array(samples);
+        const dataView = new DataView(audioData.buffer);
+        for (let i = 0; i < samples; i++) {
+            float32Data[i] = dataView.getFloat32(i * 4, true);
+        }
         if (float32Data.length === 0) {
             console.error("No valid audio data to process.");
             return;
         }
+        console.log("First 10 float samples:", float32Data.slice(0, 10));
         const samplesPerChannel = Math.floor(float32Data.length / numberOfChannels);
         const audioBuffer = audioContext.createBuffer(numberOfChannels, samplesPerChannel, sampleRate);
         for (let channel = 0; channel < numberOfChannels; channel++) {

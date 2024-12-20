@@ -131,6 +131,10 @@
                 </Authorized>
             </AuthorizeView>
             
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Headset" OnClick="ResumeAudioContext">
+                Resume Audio
+            </MudNavLink>
+            
             <MudNavGroup Title="System Information" Icon="@Icons.Material.Filled.Info">
                 <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Https">
                     Transport Type: @_transportType

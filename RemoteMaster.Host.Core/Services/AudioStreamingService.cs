@@ -42,7 +42,9 @@ public class AudioStreamingService(IHubContext<ControlHub, IControlClient> hubCo
 
                 if (audioData != null)
                 {
-                    await hubContext.Clients.Client(viewer.ConnectionId).ReceiveAudioUpdate(audioData);
+                    var base64 = Convert.ToBase64String(audioData);
+
+                    await hubContext.Clients.Client(viewer.ConnectionId).ReceiveAudioUpdate(base64);
                 }
 
                 await Task.Delay(20, cancellationToken);

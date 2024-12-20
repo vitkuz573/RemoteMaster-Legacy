@@ -398,7 +398,7 @@ public partial class Access : IAsyncDisposable
             });
 
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
-            _connection.On<byte[]>("ReceiveAudioUpdate", HandleAudioUpdate);
+            _connection.On<string>("ReceiveAudioUpdate", HandleAudioUpdateBase64);
             _connection.On<string>("ReceiveOperatingSystemVersion", operatingSystem => _operatingSystem = operatingSystem);
             _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion.ToString());
             _connection.On<string>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
@@ -536,15 +536,16 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task HandleAudioUpdate(byte[] audioData)
+    private async Task HandleAudioUpdateBase64(string base64Data)
     {
-        Logger.LogInformation(audioData.Length.ToString());
+        Logger.LogInformation($"Received base64 audio data length: {base64Data.Length}");
 
         if (!_disposed && _firstRenderCompleted)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
 
-            await module.InvokeVoidAsync("playAudioChunk", audioData);
+            // Теперь вызываем JS метод playAudioChunk, который ожидает строку base64
+            await module.InvokeVoidAsync("playAudioChunk", base64Data);
         }
     }
 
@@ -670,6 +671,13 @@ public partial class Access : IAsyncDisposable
             { nameof(DisconnectViewerDialog.HubConnection), _connection },
             { nameof(DisconnectViewerDialog.Viewer), viewer }
         });
+    }
+
+    private async Task ResumeAudioContext()
+    {
+        var audioModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
+
+        await audioModule.InvokeVoidAsync("resumeAudioContext");
     }
 
     [JSInvokable]

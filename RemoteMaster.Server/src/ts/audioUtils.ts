@@ -1,38 +1,59 @@
 ﻿let audioContext: AudioContext | null = null;
 
 /**
- * Initializes the AudioContext.
+ * Initializes the AudioContext if it is not already initialized.
+ * If the AudioContext is suspended, attempts to resume it.
  */
 export function initAudioContext(): void {
     if (!audioContext) {
         audioContext = new AudioContext();
-        audioContext.resume();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(err => {
+            console.warn("AudioContext resume attempt failed:", err);
+        });
     }
 }
 
 /**
- * Converts raw PCM data (32-bit, little-endian) to Float32Array.
- * @param audioData The raw PCM audio data as a Uint8Array.
- * @returns A Float32Array representing the audio samples.
+ * Attempts to resume the AudioContext if it's currently suspended.
+ * This should be called after a user gesture (e.g. from a button click).
  */
-function convertPCMToFloat32(audioData: Uint8Array): Float32Array {
-    const samples = audioData.length / 4; // 32-bit audio (4 bytes per sample)
-    const float32Data = new Float32Array(samples);
-    const dataView = new DataView(audioData.buffer);
-
-    for (let i = 0; i < samples; i++) {
-        const int32 = dataView.getInt32(i * 4, true); // little endian
-        float32Data[i] = int32 / 2147483648; // Normalize to [-1, 1] for 32-bit PCM
+export function resumeAudioContext(): void {
+    if (!audioContext) {
+        audioContext = new AudioContext();
     }
-
-    return float32Data;
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            console.log("AudioContext resumed by user action.");
+        }).catch(err => {
+            console.error("Failed to resume AudioContext:", err);
+        });
+    } else {
+        console.log("AudioContext is already running or closed.");
+    }
 }
 
 /**
- * Plays an audio chunk in raw PCM format.
- * @param audioData The raw PCM audio data as a Uint8Array.
+ * Decodes a base64 string to a Uint8Array.
+ * @param base64 The base64 encoded string.
+ * @returns A Uint8Array of the decoded bytes.
  */
-export async function playAudioChunk(audioData: Uint8Array): Promise<void> {
+function base64ToUint8Array(base64: string): Uint8Array {
+    const binaryString = atob(base64);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+/**
+ * Plays an audio chunk that is provided as a base64 string (since C# byte[] is passed as Base64 to JS).
+ * @param audioDataBase64 The raw PCM audio data as a Base64 string.
+ */
+export async function playAudioChunk(audioDataBase64: string): Promise<void> {
     initAudioContext();
 
     if (!audioContext) {
@@ -40,34 +61,49 @@ export async function playAudioChunk(audioData: Uint8Array): Promise<void> {
         return;
     }
 
+    const audioData = base64ToUint8Array(audioDataBase64);
+
     if (audioData.length === 0) {
         console.error("Received empty audio data.");
         return;
     }
 
-    try {
-        const sampleRate = 48000; // 48000 Hz as per your C# capture settings
-        const numberOfChannels = 2; // Stereo
+    console.log("Received audioData length:", audioData.length);
 
-        // Convert PCM to Float32
-        const float32Data = convertPCMToFloat32(audioData);
+    const count = Math.min(20, audioData.length);
+    const hexBytes: string[] = [];
+    const decBytes: number[] = [];
+    for (let i = 0; i < count; i++) {
+        const val = audioData[i];
+        hexBytes.push(val.toString(16).padStart(2, '0'));
+        decBytes.push(val);
+    }
+
+    console.log(`Raw first ${count} bytes (hex):`, hexBytes.join(' '));
+    console.log(`Raw first ${count} bytes (decimal):`, decBytes);
+
+    try {
+        const sampleRate = 48000;
+        const numberOfChannels = 2;
+
+        const samples = audioData.length / 4;
+        const float32Data = new Float32Array(samples);
+        const dataView = new DataView(audioData.buffer);
+
+        for (let i = 0; i < samples; i++) {
+            float32Data[i] = dataView.getFloat32(i * 4, true);
+        }
 
         if (float32Data.length === 0) {
             console.error("No valid audio data to process.");
             return;
         }
 
-        // Calculate the number of samples per channel
+        console.log("First 10 float samples:", float32Data.slice(0, 10));
+
         const samplesPerChannel = Math.floor(float32Data.length / numberOfChannels);
+        const audioBuffer = audioContext.createBuffer(numberOfChannels, samplesPerChannel, sampleRate);
 
-        // Create an AudioBuffer
-        const audioBuffer = audioContext.createBuffer(
-            numberOfChannels,
-            samplesPerChannel,
-            sampleRate
-        );
-
-        // Assign data to each channel
         for (let channel = 0; channel < numberOfChannels; channel++) {
             const channelData = audioBuffer.getChannelData(channel);
             for (let i = 0; i < samplesPerChannel; i++) {
@@ -75,7 +111,6 @@ export async function playAudioChunk(audioData: Uint8Array): Promise<void> {
             }
         }
 
-        // Play the buffer
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
