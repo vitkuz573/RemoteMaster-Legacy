@@ -74,8 +74,8 @@ public class NativeProcess : IProcess
 
         _commandLine = $"{startInfo.FileName} {startInfo.Arguments}";
 
-        var sessionId = _options is { TargetSessionId: not null, ForceConsoleSession: false }
-            ? _sessionService.FindTargetSessionId(_options.TargetSessionId.Value)
+        var sessionId = _options is { SessionId: not null, ForceConsoleSession: false }
+            ? _sessionService.FindTargetSessionId(_options.SessionId.Value)
             : _sessionService.GetActiveConsoleSessionId();
 
 

@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Windows.Models;
 
 public struct NativeProcessOptions() : INativeProcessOptions
 {
-    public int? TargetSessionId { get; set; } = null;
+    public int? SessionId { get; set; } = null;
 
     public bool ForceConsoleSession { get; set; } = true;
 
