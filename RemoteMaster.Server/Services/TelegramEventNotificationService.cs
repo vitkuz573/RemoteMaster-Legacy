@@ -19,7 +19,7 @@ public class TelegramEventNotificationService(IOptions<TelegramBotOptions> teleg
 
         var botOptions = telegramBotOptions.Value;
 
-        if (!botOptions.IsEnabled || !botOptions.ChatIds.Any())
+        if (!botOptions.IsEnabled || botOptions.ChatIds.Count == 0)
         {
             return Result.Fail("Telegram bot is not configured or is disabled.");
         }

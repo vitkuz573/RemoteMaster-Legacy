@@ -71,7 +71,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
 
         var values = registryService.GetAllValues(hive, keyPath).ToList();
 
-        if (values.Any())
+        if (values.Count != 0)
         {
             logger.LogInformation("Fetched {ValuesCount} registry values for keyPath: {KeyPath}", values.Count, keyPath);
         }
@@ -164,10 +164,10 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
                         }
                         break;
                     case RegistryValueKind.None:
-                        logger.LogDebug($"Registry value kind 'None' for valueName: {valueName}");
+                        logger.LogDebug("Registry value kind 'None' for valueName: {ValueName}", valueName);
                         break;
                     case RegistryValueKind.Unknown:
-                        logger.LogDebug($"Registry value kind 'Unknown' for valueName: {valueName}");
+                        logger.LogDebug("Registry value kind 'Unknown' for valueName: {ValueName}", valueName);
                         break;
                     default:
                         logger.LogDebug("Unsupported registry value type: {ValueKind} for valueName: {ValueName}", valueKind, valueName);

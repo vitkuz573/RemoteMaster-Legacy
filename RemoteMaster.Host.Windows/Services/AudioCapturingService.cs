@@ -50,7 +50,7 @@ public class AudioCapturingService(ILogger<AudioCapturingService> logger) : IAud
         }
         catch (Exception ex)
         {
-            logger.LogError($"Error while capturing audio: {ex.Message}");
+            logger.LogError("Error while capturing audio: {Message}", ex.Message);
         }
     }
 

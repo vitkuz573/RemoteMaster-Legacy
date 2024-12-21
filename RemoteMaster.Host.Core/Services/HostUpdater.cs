@@ -78,7 +78,7 @@ public class HostUpdater : IHostUpdater
         {
             if (waitForClientConnectionTimeout != 0)
             {
-                _logger.LogInformation($"Waiting for client to connect to UpdaterHub with a timeout of {waitForClientConnectionTimeout} ms...");
+                _logger.LogInformation("Waiting for client to connect to UpdaterHub with a timeout of {ConnectionTimeout} ms...", waitForClientConnectionTimeout);
                 
                 var completedTask = await Task.WhenAny(_clientConnectedTcs.Task, Task.Delay(waitForClientConnectionTimeout));
 
@@ -88,7 +88,7 @@ public class HostUpdater : IHostUpdater
                 }
                 else
                 {
-                    _logger.LogWarning($"Timeout of {waitForClientConnectionTimeout} ms reached while waiting for client connection.");
+                    _logger.LogWarning("Timeout of {ConnectionTimeout} ms reached while waiting for client connection.", waitForClientConnectionTimeout);
                     
                     await Notify("Timeout reached while waiting for client connection. Update aborted.", MessageSeverity.Warning);
                     
