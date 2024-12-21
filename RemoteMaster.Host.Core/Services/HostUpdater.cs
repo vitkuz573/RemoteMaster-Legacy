@@ -159,7 +159,8 @@ public class HostUpdater : IHostUpdater
 
             if (!await NeedUpdate() && !force)
             {
-                await NotifyNoUpdateNeeded();
+                await Notify("No update required. Files are identical.", MessageSeverity.Information);
+                await Notify("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
 
                 return;
             }
@@ -266,12 +267,6 @@ public class HostUpdater : IHostUpdater
         }
 
         await Notify("Cleanup completed.", MessageSeverity.Information);
-    }
-
-    private async Task NotifyNoUpdateNeeded()
-    {
-        await Notify("No update required. Files are identical.", MessageSeverity.Information);
-        await Notify("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
     }
 
     private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false, int maxAttempts = 5)
