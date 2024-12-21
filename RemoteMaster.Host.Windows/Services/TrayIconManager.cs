@@ -301,7 +301,7 @@ public class TrayIconManager : ITrayIconManager
     {
         _trayMenu = CreatePopupMenu_SafeHandle();
 
-        var versionText = $"Version: {_applicationVersionProvider.GetVersion()}";
+        var versionText = $"Version: {_applicationVersionProvider.GetVersionFromAssembly()}";
         AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING | MENU_ITEM_FLAGS.MF_DISABLED | MENU_ITEM_FLAGS.MF_GRAYED, 0, versionText);
 
         // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);

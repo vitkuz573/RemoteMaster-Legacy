@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -27,6 +26,7 @@ public class HostUpdater : IHostUpdater
 
     private readonly IFileService _fileService;
     private readonly IFileSystem _fileSystem;
+    private readonly IApplicationVersionProvider _applicationVersionProvider;
     private readonly INetworkDriveService _networkDriveService;
     private readonly IUserInstanceService _userInstanceService;
     private readonly IChatInstanceService _chatInstanceService;
@@ -35,10 +35,11 @@ public class HostUpdater : IHostUpdater
     private readonly IHubContext<UpdaterHub, IUpdaterClient> _hubContext;
     private readonly ILogger<HostUpdater> _logger;
 
-    public HostUpdater(IFileService fileService, IFileSystem fileSystem, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
+    public HostUpdater(IFileService fileService, IFileSystem fileSystem, IApplicationVersionProvider applicationVersionProvider, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
     {
         _fileService = fileService;
         _fileSystem = fileSystem;
+        _applicationVersionProvider = applicationVersionProvider;
         _networkDriveService = networkDriveService;
         _userInstanceService = userInstanceService;
         _chatInstanceService = chatInstanceService;
@@ -588,30 +589,15 @@ public class HostUpdater : IHostUpdater
         return false;
     }
 
-    private Version GetCurrentVersion()
-    {
-        var currentExecutablePath = Environment.ProcessPath!;
-
-        return GetVersionFromExecutable(currentExecutablePath);
-    }
-
-    private Version GetUpdateVersion()
+    private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
     {
         var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
 
-        return GetVersionFromExecutable(updateExecutablePath);
-    }
-
-    private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
-    {
-        var currentVersion = GetCurrentVersion();
-        var updateVersion = GetUpdateVersion();
+        var currentVersion = _applicationVersionProvider.GetVersionFromAssembly();
+        var updateVersion = _applicationVersionProvider.GetVersionFromExecutable(updateExecutablePath);
 
         await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
         await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
-
-        var currentExecutablePath = Environment.ProcessPath!;
-        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
 
         if (updateVersion > currentVersion)
         {
@@ -622,7 +608,7 @@ public class HostUpdater : IHostUpdater
 
         if (updateVersion == currentVersion)
         {
-            var checksumsDiffer = await VerifyChecksum(updateExecutablePath, currentExecutablePath, expectDifference: true);
+            var checksumsDiffer = await VerifyChecksum(updateExecutablePath, Environment.ProcessPath!, expectDifference: true);
 
             if (checksumsDiffer)
             {
@@ -651,31 +637,6 @@ public class HostUpdater : IHostUpdater
         await Notify($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
         
         return false;
-    }
-
-    private Version GetVersionFromExecutable(string filePath)
-    {
-        if (!_fileSystem.File.Exists(filePath))
-        {
-            throw new FileNotFoundException("Executable file not found.", filePath);
-        }
-
-        var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
-        var fileVersion = versionInfo.FileVersion;
-
-        if (string.IsNullOrEmpty(fileVersion))
-        {
-            throw new InvalidOperationException("The file version information is missing or invalid.");
-        }
-
-        try
-        {
-            return new Version(fileVersion);
-        }
-        catch (ArgumentException ex)
-        {
-            throw new InvalidOperationException($"Invalid file version format: {fileVersion}", ex);
-        }
     }
 
     private async Task Notify(string message, MessageSeverity messageType)

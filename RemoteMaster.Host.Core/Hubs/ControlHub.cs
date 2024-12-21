@@ -283,7 +283,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
             var osBitness = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
             await Clients.Caller.ReceiveOperatingSystemVersion($"{operatingSystemInformationService.GetName()} ({osBitness})");
-            await Clients.Caller.ReceiveHostVersion(applicationVersionProvider.GetVersion());
+            await Clients.Caller.ReceiveHostVersion(applicationVersionProvider.GetVersionFromAssembly().ToString());
         }
         catch (Exception ex)
         {
