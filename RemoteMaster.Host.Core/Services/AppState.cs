@@ -7,16 +7,14 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Host.Core.Resources;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayIconManager trayIconManager, ILogger<AppState> logger) : IAppState
+public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogger<AppState> logger) : IAppState
 {
     private static readonly Lock EventLock = new();
 
-    private readonly HashSet<string> _ignoredUsers = ["RCHost"];
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
     
     public event EventHandler<IViewer>? ViewerAdded;
@@ -41,7 +39,6 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
             }
 
             NotifyViewersChanged();
-            UpdateTrayIcon();
         }
         else
         {
@@ -70,7 +67,6 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
             }
 
             NotifyViewersChanged();
-            UpdateTrayIcon();
         }
         finally
         {
@@ -89,19 +85,5 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ITrayI
         var viewers = GetAllViewers().Select(v => new ViewerDto(v.ConnectionId, v.Group, v.UserName, v.Role, v.ConnectedTime, v.IpAddress, v.AuthenticationType)).ToList();
 
         hubContext.Clients.All.ReceiveAllViewers(viewers);
-
-        var activeConnections = viewers.Count(v => !_ignoredUsers.Contains(v.UserName));
-
-        trayIconManager.UpdateConnectionCount(activeConnections);
-    }
-
-    private void UpdateTrayIcon()
-    {
-        var activeConnections = GetAllViewers().Count(v => !_ignoredUsers.Contains(v.UserName));
-        var icon = activeConnections > 0
-            ? Icons.with_connections
-            : Icons.without_connections;
-
-        trayIconManager.UpdateIcon(icon);
     }
 }

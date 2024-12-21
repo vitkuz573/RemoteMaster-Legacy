@@ -21,7 +21,8 @@ namespace RemoteMaster.Host.Windows.Services;
 public class TrayIconManager : ITrayIconManager
 {
     private const string ClassName = "TrayIconWindowClass";
-    
+
+    private readonly IAppState _appState;
     private readonly IHostInformationService _hostInformationService;
     private readonly ILogger<TrayIconManager> _logger;
 
@@ -36,10 +37,14 @@ public class TrayIconManager : ITrayIconManager
 
     private static readonly uint WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
 
-    public TrayIconManager(IHostInformationService hostInformationService, ILogger<TrayIconManager> logger)
+    public TrayIconManager(IAppState appState, IHostInformationService hostInformationService, ILogger<TrayIconManager> logger)
     {
+        _appState = appState;
         _hostInformationService = hostInformationService;
         _logger = logger;
+
+        _appState.ViewerAdded += OnViewerChanged;
+        _appState.ViewerRemoved += OnViewerChanged;
 
         _moduleHandle = GetModuleHandle((string)null!) ?? throw new InvalidOperationException("Failed to retrieve module handle.");
 
@@ -356,6 +361,17 @@ public class TrayIconManager : ITrayIconManager
             TranslateMessage(msg);
             DispatchMessage(msg);
         }
+    }
+
+    private void OnViewerChanged(object? sender, IViewer? viewer)
+    {
+        var activeConnections = _appState.GetAllViewers().Count;
+        var icon = activeConnections > 0
+            ? Icons.with_connections
+            : Icons.without_connections;
+
+        UpdateConnectionCount(activeConnections);
+        UpdateIcon(icon);
     }
 
     public void Dispose()
