@@ -109,7 +109,7 @@ public class LocalhostOrAuthenticatedHandlerTests
 
         Assert.NotNull(identity);
         Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Name, Value: "RCHost" });
-        Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Role, Value: "Windows Service" });
+        Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Role, Value: "System Service" });
     }
 
     [Fact]

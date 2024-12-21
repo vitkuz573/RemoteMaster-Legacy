@@ -36,7 +36,7 @@ public class ServiceHub(IPsExecService psExecService, ILogger<ServiceHub> logger
         var userName = user.FindFirstValue(ClaimTypes.Name);
         var role = user.FindFirstValue(ClaimTypes.Role);
 
-        if (role == "Windows Service" && userName == "RCHost")
+        if (role == "System Service" && userName == "RCHost")
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
         }

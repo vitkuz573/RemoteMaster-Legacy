@@ -53,7 +53,7 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Name, "RCHost"),
-                new(ClaimTypes.Role, "Windows Service"),
+                new(ClaimTypes.Role, "System Service"),
                 new(CustomClaimTypes.AuthType, "RemoteMaster Security")
             };
 
