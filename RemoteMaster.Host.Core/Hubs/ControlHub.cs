@@ -4,7 +4,6 @@
 
 using System.Drawing.Imaging;
 using System.Net;
-using System.Reflection;
 using System.Runtime.Versioning;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +18,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IApplicationVersionProvider applicationVersionProvider, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -284,13 +283,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             var osBitness = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
             await Clients.Caller.ReceiveOperatingSystemVersion($"{operatingSystemInformationService.GetName()} ({osBitness})");
-
-            var assembly = Assembly.GetEntryAssembly();
-            var fileVersion = assembly?
-                .GetCustomAttribute<AssemblyFileVersionAttribute>()?
-                .Version ?? string.Empty;
-
-            await Clients.Caller.ReceiveHostVersion(fileVersion);
+            await Clients.Caller.ReceiveHostVersion(applicationVersionProvider.GetVersion());
         }
         catch (Exception ex)
         {

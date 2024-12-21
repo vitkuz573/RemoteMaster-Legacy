@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -24,6 +23,7 @@ public class TrayIconManager : ITrayIconManager
 
     private readonly IAppState _appState;
     private readonly IHostInformationService _hostInformationService;
+    private readonly IApplicationVersionProvider _applicationVersionProvider;
     private readonly ILogger<TrayIconManager> _logger;
 
     private readonly WNDPROC _wndProcDelegate;
@@ -37,10 +37,11 @@ public class TrayIconManager : ITrayIconManager
 
     private static readonly uint WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
 
-    public TrayIconManager(IAppState appState, IHostInformationService hostInformationService, ILogger<TrayIconManager> logger)
+    public TrayIconManager(IAppState appState, IHostInformationService hostInformationService, IApplicationVersionProvider applicationVersionProvider, ILogger<TrayIconManager> logger)
     {
         _appState = appState;
         _hostInformationService = hostInformationService;
+        _applicationVersionProvider = applicationVersionProvider;
         _logger = logger;
 
         _appState.ViewerAdded += OnViewerChanged;
@@ -300,7 +301,7 @@ public class TrayIconManager : ITrayIconManager
     {
         _trayMenu = CreatePopupMenu_SafeHandle();
 
-        var versionText = $"Version: {GetApplicationVersion()}";
+        var versionText = $"Version: {_applicationVersionProvider.GetVersion()}";
         AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING | MENU_ITEM_FLAGS.MF_DISABLED | MENU_ITEM_FLAGS.MF_GRAYED, 0, versionText);
 
         // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
@@ -308,16 +309,6 @@ public class TrayIconManager : ITrayIconManager
         // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING, (uint)TrayIconCommands.Open, "Open");
         // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING, (uint)TrayIconCommands.Restart, "Restart");
         // AppendMenu(_trayMenu, MENU_ITEM_FLAGS.MF_STRING, (uint)TrayIconCommands.Exit, "Exit");
-    }
-
-    private static string GetApplicationVersion()
-    {
-        var assembly = Assembly.GetEntryAssembly();
-        var fileVersion = assembly?
-            .GetCustomAttribute<AssemblyFileVersionAttribute>()?
-            .Version;
-
-        return fileVersion ?? "Unknown";
     }
 
     private void ShowContextMenu()

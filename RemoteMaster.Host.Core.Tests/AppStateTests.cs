@@ -24,7 +24,6 @@ public class AppStateTests : IDisposable
     public AppStateTests()
     {
         Mock<IHubContext<ControlHub, IControlClient>> hubContextMock = new();
-        Mock<ITrayIconManager> trayIconManagerMock = new();
         _controlClientMock = new Mock<IControlClient>();
         var clientsMock = new Mock<IHubClients<IControlClient>>();
         clientsMock.Setup(clients => clients.All).Returns(_controlClientMock.Object);
@@ -33,7 +32,7 @@ public class AppStateTests : IDisposable
 
         Mock<ILogger<AppState>> loggerMock = new();
 
-        _appState = new AppState(hubContextMock.Object, trayIconManagerMock.Object, loggerMock.Object);
+        _appState = new AppState(hubContextMock.Object, loggerMock.Object);
 
         Mock<HubCallerContext> contextMock = new();
 

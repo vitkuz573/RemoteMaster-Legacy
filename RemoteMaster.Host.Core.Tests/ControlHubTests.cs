@@ -15,6 +15,7 @@ namespace RemoteMaster.Host.Core.Tests;
 public class ControlHubTests : IDisposable
 {
     private readonly Mock<IAppState> _mockAppState;
+    private readonly Mock<IApplicationVersionProvider> _mockApplicationVersionProvider;
     private readonly Mock<IViewerFactory> _mockViewerFactory;
     private readonly Mock<IScriptService> _mockScriptService;
     private readonly Mock<IInputService> _mockInputService;
@@ -36,6 +37,7 @@ public class ControlHubTests : IDisposable
     public ControlHubTests()
     {
         _mockAppState = new Mock<IAppState>();
+        _mockApplicationVersionProvider = new Mock<IApplicationVersionProvider>();
         _mockViewerFactory = new Mock<IViewerFactory>();
         _mockScriptService = new Mock<IScriptService>();
         _mockInputService = new Mock<IInputService>();
@@ -57,6 +59,7 @@ public class ControlHubTests : IDisposable
 
         _controlHub = new ControlHub(
             _mockAppState.Object,
+            _mockApplicationVersionProvider.Object,
             _mockViewerFactory.Object,
             _mockScriptService.Object,
             _mockInputService.Object,
