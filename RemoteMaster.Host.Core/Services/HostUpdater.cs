@@ -114,8 +114,9 @@ public class HostUpdater : IHostUpdater
 
         try
         {
-            await NotifyFlags(force, allowDowngrade);
-            await NotifyProcessId();
+            await Notify($"Force update flag: {force}", MessageSeverity.Information);
+            await Notify($"Allow downgrade flag: {allowDowngrade}", MessageSeverity.Information);
+            await Notify(Environment.ProcessId.ToString(), MessageSeverity.Information, MessageMeta.ProcessIdInformation);
 
             var sourceFolderPath = _fileSystem.Path.Combine(folderPath, "Host");
             var isNetworkPath = folderPath.StartsWith(@"\\");
@@ -210,20 +211,6 @@ public class HostUpdater : IHostUpdater
         }
 
         await CleanupUpdateFolder();
-    }
-
-    private async Task NotifyFlags(bool force, bool allowDowngrade)
-    {
-        await Notify($"Force update flag: {force}", MessageSeverity.Information);
-        await Notify($"Allow downgrade flag: {allowDowngrade}", MessageSeverity.Information);
-    }
-
-    private async Task NotifyProcessId()
-    {
-        await _hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageSeverity.Service)
-        {
-            Meta = MessageMeta.ProcessIdInformation
-        });
     }
 
     private async Task<bool> MapNetworkDriveAsync(string folderPath, string? username, string? password)
@@ -639,7 +626,7 @@ public class HostUpdater : IHostUpdater
         return false;
     }
 
-    private async Task Notify(string message, MessageSeverity messageType)
+    private async Task Notify(string message, MessageSeverity messageType, string? meta = null)
     {
         var logLevel = messageType switch
         {
@@ -655,7 +642,10 @@ public class HostUpdater : IHostUpdater
 
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await _hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
+            await _hubContext.Clients.All.ReceiveMessage(new Message(line, messageType)
+            {
+                Meta = meta
+            });
         }
     }
 }

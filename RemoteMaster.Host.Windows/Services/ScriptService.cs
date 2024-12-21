@@ -62,7 +62,7 @@ public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory sh
                 RedirectStandardError = true
             });
 
-            await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageSeverity.Service)
+            await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageSeverity.Information)
             {
                 Meta = MessageMeta.ProcessIdInformation
             });

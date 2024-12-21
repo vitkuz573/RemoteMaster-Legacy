@@ -18,7 +18,6 @@ public class Message(string text, MessageSeverity severity)
     {
         Information,
         Error,
-        Warning,
-        Service
+        Warning
     }
 }
