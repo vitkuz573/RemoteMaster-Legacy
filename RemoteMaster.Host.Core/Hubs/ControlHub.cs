@@ -295,12 +295,16 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         catch (Exception ex)
         {
             logger.LogError(ex, "Exception occurred while starting screencast for ConnectionId {ConnectionId}.", Context.ConnectionId);
+            
             var message = new Message("An error occurred while starting the screencast.", Message.MessageSeverity.Error)
             {
                 Meta = MessageMeta.ScreencastError
             };
+            
             await Clients.Caller.ReceiveMessage(message);
+            
             appState.TryRemoveViewer(viewer.ConnectionId);
+            
             Context.Abort();
         }
     }
@@ -414,21 +418,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         powerService.Shutdown(powerActionRequest);
     }
 
-    private void ExecuteActionForViewer(Action<IViewer> action)
-    {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
-        {
-            if (viewer != null)
-            {
-                action(viewer);
-            }
-        }
-        else
-        {
-            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
-        }
-    }
-
     [Authorize(Policy = "SetMonitorStatePolicy")]
     public void SetMonitorState(MonitorState state)
     {
@@ -463,5 +452,20 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void StopAudioStreaming()
     {
         ExecuteActionForViewer(audioStreamingService.StopStreaming);
+    }
+
+    private void ExecuteActionForViewer(Action<IViewer> action)
+    {
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        {
+            if (viewer != null)
+            {
+                action(viewer);
+            }
+        }
+        else
+        {
+            logger.LogError("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
+        }
     }
 }
