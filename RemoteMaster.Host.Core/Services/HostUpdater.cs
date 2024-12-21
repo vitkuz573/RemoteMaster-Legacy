@@ -641,18 +641,15 @@ public class HostUpdater : IHostUpdater
 
     private async Task Notify(string message, MessageSeverity messageType)
     {
-        switch (messageType)
+        var logLevel = messageType switch
         {
-            case MessageSeverity.Information:
-                _logger.LogInformation("{Message}", message);
-                break;
-            case MessageSeverity.Warning:
-                _logger.LogWarning("{Message}", message);
-                break;
-            case MessageSeverity.Error:
-                _logger.LogError("{Message}", message);
-                break;
-        }
+            MessageSeverity.Information => LogLevel.Information,
+            MessageSeverity.Warning => LogLevel.Warning,
+            MessageSeverity.Error => LogLevel.Error,
+            _ => LogLevel.Information
+        };
+
+        _logger.Log(logLevel, "{Message}", message);
 
         var streamReader = new StringReader(message);
 
