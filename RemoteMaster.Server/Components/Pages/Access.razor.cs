@@ -46,8 +46,8 @@ public partial class Access : IAsyncDisposable
     private int _frameRate;
     private int _imageQuality;
     private string _operatingSystem = string.Empty;
-    private string _dotNetVersion = string.Empty;
-    private string _hostVersion = string.Empty;
+    private Version _dotNetVersion = new Version();
+    private Version _hostVersion = new Version();
     private List<Display> _displays = [];
     private List<string> _codecs = [];
     private string _selectedDisplay = string.Empty;
@@ -411,8 +411,8 @@ public partial class Access : IAsyncDisposable
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
             _connection.On<string>("ReceiveAudioUpdate", HandleAudioUpdateBase64);
             _connection.On<string>("ReceiveOperatingSystemVersion", operatingSystem => _operatingSystem = operatingSystem);
-            _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion.ToString());
-            _connection.On<string>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
+            _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion);
+            _connection.On<Version>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
             _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
 
             _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers =>

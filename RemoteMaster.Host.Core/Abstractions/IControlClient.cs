@@ -18,7 +18,7 @@ public interface IControlClient
 
     Task ReceiveMessage(Message message);
 
-    Task ReceiveHostVersion(string version);
+    Task ReceiveHostVersion(Version version);
 
     Task ReceiveCloseConnection();
 
