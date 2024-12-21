@@ -8,13 +8,11 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ITrayIconManager : IDisposable
 {
-    void ShowTrayIcon();
+    void Show();
 
-    void HideTrayIcon();
+    void Hide();
 
-    void UpdateIcon(Icon icon);
+    void SetIcon(Icon icon);
 
-    void UpdateTooltip(string newTooltipText);
-
-    void UpdateConnectionCount(int activeConnections);
+    void SetTooltip(string tooltip);
 }

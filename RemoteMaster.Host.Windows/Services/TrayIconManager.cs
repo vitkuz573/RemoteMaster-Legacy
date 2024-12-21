@@ -64,7 +64,7 @@ public class TrayIconManager : ITrayIconManager
         uiThread.Start();
     }
 
-    public void ShowTrayIcon()
+    public void Show()
     {
         if (!_iconAdded)
         {
@@ -72,7 +72,7 @@ public class TrayIconManager : ITrayIconManager
         }
     }
 
-    public void HideTrayIcon()
+    public void Hide()
     {
         if (_iconAdded && Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, _notifyIconData))
         {
@@ -85,13 +85,13 @@ public class TrayIconManager : ITrayIconManager
         }
     }
 
-    public void UpdateIcon(Icon icon)
+    public void SetIcon(Icon icon)
     {
         if (_hwnd.IsNull)
         {
             _logger.LogWarning("Window handle is invalid. Reinitializing window and tray icon.");
             InitializeWindow();
-            ShowTrayIcon();
+            Show();
         }
 
         ArgumentNullException.ThrowIfNull(icon);
@@ -107,7 +107,7 @@ public class TrayIconManager : ITrayIconManager
         {
             _logger.LogError("Failed to update tray icon. Shell_NotifyIcon returned false. Attempting to reinitialize.");
             _iconAdded = false;
-            ShowTrayIcon();
+            Show();
         }
         else
         {
@@ -115,7 +115,7 @@ public class TrayIconManager : ITrayIconManager
         }
     }
 
-    public void UpdateTooltip(string newTooltipText)
+    public void SetTooltip(string tooltip)
     {
         if (!_iconAdded)
         {
@@ -139,16 +139,17 @@ public class TrayIconManager : ITrayIconManager
             baseTooltipText = "Host information unavailable";
         }
 
-        _notifyIconData.szTip = $"{baseTooltipText}\n{newTooltipText}";
+        _notifyIconData.szTip = $"{baseTooltipText}\n{tooltip}";
 
         Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, _notifyIconData);
     }
 
-    public void UpdateConnectionCount(int activeConnections)
+    private void UpdateConnectionCount(int activeConnections)
     {
         if (!_iconAdded)
         {
             _logger.LogWarning("Tray icon is not added yet. Cannot update connection count.");
+
             return;
         }
 
@@ -270,7 +271,7 @@ public class TrayIconManager : ITrayIconManager
         {
             _logger.LogInformation("Taskbar was recreated. Restoring tray icon.");
             _iconAdded = false;
-            ShowTrayIcon();
+            Show();
         }
         else if (msg == WM_RBUTTONUP)
         {
@@ -371,12 +372,12 @@ public class TrayIconManager : ITrayIconManager
             : Icons.without_connections;
 
         UpdateConnectionCount(activeConnections);
-        UpdateIcon(icon);
+        SetIcon(icon);
     }
 
     public void Dispose()
     {
-        HideTrayIcon();
+        Hide();
 
         _iconHandle.Dispose();
 

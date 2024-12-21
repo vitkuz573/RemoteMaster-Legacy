@@ -11,14 +11,14 @@ public class TrayIconHostedService(ITrayIconManager trayIconManager) : IHostedSe
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        trayIconManager.ShowTrayIcon();
+        trayIconManager.Show();
 
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        trayIconManager.HideTrayIcon();
+        trayIconManager.Hide();
 
         return Task.CompletedTask;
     }
