@@ -11,13 +11,11 @@ public partial record SerialNumber
 {
     private const int MaxSerialNumberByteSize = 20;
     private const int MinSerialNumberByteSize = 1;
-    private const string HexadecimalPattern = "^[0-9A-F]+$";
     private const int FirstByteMask = 0x7F;
-    private const string HexSeparator = "-";
 
     public string Value { get; }
 
-    [GeneratedRegex(HexadecimalPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    [GeneratedRegex("^[0-9A-F]+$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex SerialNumberRegex();
 
     private SerialNumber(string value)
@@ -50,7 +48,7 @@ public partial record SerialNumber
         var randomBytes = GenerateSecureRandomBytes(MaxSerialNumberByteSize);
         randomBytes[0] &= FirstByteMask;
 
-        var serialNumberString = BitConverter.ToString(randomBytes).Replace(HexSeparator, string.Empty);
+        var serialNumberString = Convert.ToHexString(randomBytes);
 
         return new SerialNumber(serialNumberString);
     }
