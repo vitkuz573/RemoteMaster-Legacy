@@ -29,7 +29,7 @@ public partial class LogsViewer : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private List<string> _logFiles = [];
+    private IEnumerable<string> _logFiles = [];
     private string? _selectedLogFile;
     private string _logContent = string.Empty;
     private string _selectedLogLevel = string.Empty;
@@ -92,7 +92,7 @@ public partial class LogsViewer : IAsyncDisposable
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
-        _connection.On<List<string>>("ReceiveLogFiles", logs =>
+        _connection.On<IEnumerable<string>>("ReceiveLogFiles", logs =>
         {
             _logFiles = logs;
 

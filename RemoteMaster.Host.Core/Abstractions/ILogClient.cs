@@ -12,5 +12,5 @@ public interface ILogClient
 
     Task ReceiveMessage(Message message);
 
-    Task ReceiveLogFiles(List<string> logFiles);
+    Task ReceiveLogFiles(IEnumerable<string> logFiles);
 }
