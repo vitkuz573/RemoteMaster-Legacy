@@ -10,9 +10,8 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class RenewCertificateDialog
 {
-    private readonly List<X509RevocationReason> _revocationReasons = Enum.GetValues<X509RevocationReason>()
-        .Where(reason => reason != X509RevocationReason.AACompromise && reason != X509RevocationReason.RemoveFromCrl)
-        .ToList();
+    private readonly IEnumerable<X509RevocationReason> _revocationReasons = Enum.GetValues<X509RevocationReason>()
+        .Except([X509RevocationReason.AACompromise, X509RevocationReason.RemoveFromCrl]);
 
     private X509RevocationReason _selectedRevocationReason = X509RevocationReason.Superseded;
 

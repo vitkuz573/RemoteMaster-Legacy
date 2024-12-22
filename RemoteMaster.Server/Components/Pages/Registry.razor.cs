@@ -212,19 +212,17 @@ public partial class Registry : IAsyncDisposable
 
         _connection.On<IEnumerable<string>, string>("ReceiveSubKeyNames", async (subKeyNames, parentKey) =>
         {
-            var subKeyNameList = subKeyNames.ToList();
-
-            Logger.LogInformation("Received {SubKeyNamesCount} subkeys from server for key: {ParentKey}", subKeyNameList.Count, parentKey);
+            Logger.LogInformation("Received {SubKeyNamesCount} subkeys from server for key: {ParentKey}", subKeyNames.Count(), parentKey);
 
             var node = FindNodeByKey(parentKey);
 
             if (node != null)
             {
-                Logger.LogInformation("Setting {SubKeyNamesCount} subkeys for node: {ParentKey}", subKeyNameList.Count, parentKey);
+                Logger.LogInformation("Setting {SubKeyNamesCount} subkeys for node: {ParentKey}", subKeyNames.Count(), parentKey);
 
                 node.SubKeys.Clear();
 
-                foreach (var subKeyName in subKeyNameList)
+                foreach (var subKeyName in subKeyNames)
                 {
                     node.SubKeys.Add(new RegistryNode(subKeyName, parentKey));
                 }
@@ -239,12 +237,10 @@ public partial class Registry : IAsyncDisposable
 
         _connection.On<IEnumerable<RegistryValueDto>>("ReceiveAllRegistryValues", async values =>
         {
-            var valueList = values.ToList();
-
-            Logger.LogInformation("Received {ValuesCount} registry values", valueList.Count);
+            Logger.LogInformation("Received {ValuesCount} registry values", values.Count());
 
             _registryValues.Clear();
-            _registryValues.AddRange(valueList);
+            _registryValues.AddRange(values);
 
             await InvokeAsync(StateHasChanged);
         });

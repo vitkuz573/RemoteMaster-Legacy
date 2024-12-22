@@ -17,9 +17,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     [Authorize(Policy = "GetRootKeysPolicy")]
     public async Task GetRootKeys()
     {
-        var rootKeys = registryService.GetRootKeys()
-                                      .Select(key => key.Name)
-                                      .ToList();
+        var rootKeys = registryService.GetRootKeys().Select(key => key.Name);
 
         await Clients.Caller.ReceiveRootKeys(rootKeys);
     }
@@ -57,9 +55,9 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
             return;
         }
 
-        var subKeyNames = key.GetSubKeyNames().ToList();
+        var subKeyNames = key.GetSubKeyNames();
 
-        logger.LogInformation("Fetched {SubKeyCount} subkeys for keyPath: {KeyPath}", subKeyNames.Count, keyPath ?? "<root>");
+        logger.LogInformation("Fetched {SubKeyCount} subkeys for keyPath: {KeyPath}", subKeyNames.Length, keyPath ?? "<root>");
 
         await Clients.Caller.ReceiveSubKeyNames(subKeyNames, parentKey);
     }
@@ -69,11 +67,11 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     {
         logger.LogInformation("Fetching all registry values for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath);
 
-        var values = registryService.GetAllValues(hive, keyPath).ToList();
+        var values = registryService.GetAllValues(hive, keyPath);
 
-        if (values.Count != 0)
+        if (values.Any())
         {
-            logger.LogInformation("Fetched {ValuesCount} registry values for keyPath: {KeyPath}", values.Count, keyPath);
+            logger.LogInformation("Fetched {ValuesCount} registry values for keyPath: {KeyPath}", values.Count(), keyPath);
         }
         else
         {

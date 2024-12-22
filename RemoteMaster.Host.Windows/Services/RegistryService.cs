@@ -22,9 +22,8 @@ public class RegistryService(IRegistryKeyFactory registryKeyFactory) : IRegistry
             registryKeyFactory.Create(RegistryHive.PerformanceData, string.Empty, false)
         };
 
-        return keys.Where(key => key != null).Cast<IRegistryKey>();
+        return keys.Where(key => key != null)!;
     }
-
     public IRegistryKey? OpenSubKey(RegistryHive hive, string keyPath, bool writable)
     {
         return registryKeyFactory.Create(hive, keyPath, writable);
