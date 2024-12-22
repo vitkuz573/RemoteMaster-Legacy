@@ -17,7 +17,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 {
     private const int DefaultBufferSize = 512;
 
-    public List<DeviceDto> GetDeviceList()
+    public IEnumerable<DeviceDto> GetDevices()
     {
         var devices = new List<DeviceDto>();
 

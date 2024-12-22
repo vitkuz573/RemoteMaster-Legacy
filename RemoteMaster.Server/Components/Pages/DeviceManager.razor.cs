@@ -30,7 +30,7 @@ public partial class DeviceManager : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private List<DeviceDto> _deviceItems = [];
+    private IEnumerable<DeviceDto> _deviceItems = [];
     private bool _firstRenderCompleted;
     private bool _disposed;
 
@@ -145,7 +145,7 @@ public partial class DeviceManager : IAsyncDisposable
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
-        _connection.On<List<DeviceDto>>("ReceiveDeviceList", async deviceItems =>
+        _connection.On<IEnumerable<DeviceDto>>("ReceiveDeviceList", async deviceItems =>
         {
             _deviceItems = deviceItems;
 

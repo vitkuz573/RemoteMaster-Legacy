@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IDeviceManagerClient
 {
-    Task ReceiveDeviceList(List<DeviceDto> devices);
+    Task ReceiveDeviceList(IEnumerable<DeviceDto> devices);
 
     Task NotifyDeviceStatusChanged(string deviceInstanceId, string message, NotificationSeverity severity);
 }

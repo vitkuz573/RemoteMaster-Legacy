@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IDeviceManagerService
 {
-    List<DeviceDto> GetDeviceList();
+    IEnumerable<DeviceDto> GetDevices();
 
     bool DisableDeviceByInstanceId(string deviceInstanceId);
 

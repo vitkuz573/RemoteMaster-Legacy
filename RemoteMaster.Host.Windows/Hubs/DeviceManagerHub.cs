@@ -15,7 +15,7 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
     [Authorize(Policy = "ViewDevicesPolicy")]
     public async Task GetDevices()
     {
-        var devices = deviceManagerService.GetDeviceList();
+        var devices = deviceManagerService.GetDevices();
 
         await Clients.Caller.ReceiveDeviceList(devices);
     }
