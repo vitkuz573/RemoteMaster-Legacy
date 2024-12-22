@@ -8,14 +8,14 @@
         <MudTextField Label="Text" @bind-Value="_text" />
         
         <MudSelect T="MessageBoxButtons" Label="Button Type" @bind-Value="_selectedButtons" Dense="true">
-            @foreach (MessageBoxButtons messageBoxButtons in Enum.GetValues(typeof(MessageBoxButtons)))
+            @foreach (var messageBoxButtons in Enum.GetValues<MessageBoxButtons>())
             {
                 <MudSelectItem Value="@messageBoxButtons" />
             }
         </MudSelect>
 
         <MudSelect T="MessageBoxType" Label="Message Type" @bind-Value="_selectedType" Dense="true">
-            @foreach (MessageBoxType messageBoxType in Enum.GetValues(typeof(MessageBoxType)))
+            @foreach (var messageBoxType in Enum.GetValues<MessageBoxType>())
             {
                 <MudSelectItem Value="@messageBoxType" />
             }

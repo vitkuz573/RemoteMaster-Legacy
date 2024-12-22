@@ -8,7 +8,7 @@
 <CommonDialog>
     <Content>
         <MudRadioGroup T="MonitorState" @bind-Value="@_monitorState">
-            @foreach (MonitorState monitorState in Enum.GetValues(typeof(MonitorState)))
+            @foreach (var monitorState in Enum.GetValues<MonitorState>())
             {
                 <MudItem xs="12">
                     <MudRadio Value="@monitorState" Dense="true">@monitorState</MudRadio>

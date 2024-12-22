@@ -5,7 +5,7 @@
         <MudText>@Viewer.UserName</MudText>
 
         <MudRadioGroup T="DisconnectReason" @bind-Value="@_selectedDisconnectReason">
-            @foreach (DisconnectReason disconnectReason in Enum.GetValues(typeof(DisconnectReason)))
+            @foreach (var disconnectReason in Enum.GetValues<DisconnectReason>())
             {
                 <MudItem xs="12">
                     <MudRadio T="DisconnectReason" Value="@disconnectReason" Dense="true">@disconnectReason.ToString()</MudRadio>

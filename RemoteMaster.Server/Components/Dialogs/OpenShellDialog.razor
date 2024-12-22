@@ -11,7 +11,7 @@
             <MudItem xs="12" md="6">
                 <MudText Typo="Typo.h6">Select Shell:</MudText>
                 <MudRadioGroup T="Shell" @bind-Value="@_selectedShell">
-                    @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
+                    @foreach (var shell in Enum.GetValues<Shell>())
                     {
                         <MudItem xs="12">
                             <MudRadio T="Shell" Value="@shell" Dense="true">@shell.ToString()</MudRadio>

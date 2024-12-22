@@ -364,13 +364,13 @@ public partial class Registry : IAsyncDisposable
         builder.AddAttribute(15, "value", registryValue.ValueType.ToString());
         builder.AddAttribute(16, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
         {
-            if (Enum.TryParse(typeof(RegistryValueKind), e.Value.ToString(), out var result))
+            if (Enum.TryParse<RegistryValueKind>(e.Value.ToString(), out var result))
             {
-                registryValue.ValueType = (RegistryValueKind)result;
+                registryValue.ValueType = result;
             }
         }));
 
-        foreach (RegistryValueKind kind in Enum.GetValues(typeof(RegistryValueKind)))
+        foreach (var kind in Enum.GetValues<RegistryValueKind>())
         {
             builder.OpenElement(17, "option");
             builder.AddAttribute(18, "value", kind.ToString());
