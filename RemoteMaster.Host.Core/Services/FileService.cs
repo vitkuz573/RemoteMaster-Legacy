@@ -97,4 +97,36 @@ public class FileService(IFileSystem fileSystem) : IFileService
             CopyDirectory(subDir, destSubDir, overwrite);
         }
     }
+
+    public async Task WaitForFileReleaseAsync(string directory, List<string>? excludedFolders = null)
+    {
+        var locked = true;
+
+        while (locked)
+        {
+            locked = false;
+
+            foreach (var file in fileSystem.DirectoryInfo.New(directory).GetFiles("*", SearchOption.AllDirectories))
+            {
+                var directoryName = file.DirectoryName;
+
+                if (directoryName == null || (excludedFolders != null && excludedFolders.Any(directoryName.Contains)))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    await using var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                    stream.Close();
+                }
+                catch
+                {
+                    locked = true;
+                    await Task.Delay(2000);
+                    break;
+                }
+            }
+        }
+    }
 }

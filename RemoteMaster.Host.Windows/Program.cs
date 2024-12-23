@@ -67,7 +67,7 @@ internal class Program
             app.MapHub<RegistryHub>("/hubs/registry");
         }
 
-        app.ConfigureSerilog(server);
+        await app.ConfigureSerilog(server);
 
         var oneOffCommands = new HashSet<string> { "install", "update", "uninstall", "reinstall" };
 

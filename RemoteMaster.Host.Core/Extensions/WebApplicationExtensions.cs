@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
@@ -13,25 +14,27 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class WebApplicationExtensions
 {
-    public static void ConfigureSerilog(this WebApplication app, string? server = null)
+    public static async Task ConfigureSerilog(this WebApplication app, string? server = null)
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host-.log");
-        var errorLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host_Error-.log");
+        using var scope = app.Services.CreateScope();
+
+        var fileSystem = scope.ServiceProvider.GetRequiredService<IFileSystem>();
+        var applicationPathProvider = scope.ServiceProvider.GetRequiredService<IApplicationPathProvider>();
+
+        var fileLog = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "Logs", "RemoteMaster_Host-.log");
+        var errorLog = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "Logs", "RemoteMaster_Host_Error-.log");
 
         var loggerConfiguration = new LoggerConfiguration()
             .Enrich.FromLogContext();
 
         if (server == null)
         {
-            using var scope = app.Services.CreateScope();
-
             var hostConfigurationService = scope.ServiceProvider.GetRequiredService<IHostConfigurationService>();
             var hostInfoEnricher = scope.ServiceProvider.GetRequiredService<HostInfoEnricher>();
 
-            var hostConfiguration = hostConfigurationService.LoadConfigurationAsync().GetAwaiter().GetResult();
+            var hostConfiguration = await hostConfigurationService.LoadAsync();
             server = hostConfiguration.Server;
 
             if (string.IsNullOrEmpty(server))

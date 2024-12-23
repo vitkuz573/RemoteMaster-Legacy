@@ -6,6 +6,7 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using Moq;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Services;
 
 namespace RemoteMaster.Host.Core.Tests;
@@ -13,12 +14,18 @@ namespace RemoteMaster.Host.Core.Tests;
 public class RsaKeyProviderTests
 {
     private readonly MockFileSystem _mockFileSystem = new();
+    private readonly Mock<IApplicationPathProvider> _mockApplicationPathProvider = new();
     private readonly Mock<ILogger<RsaKeyProvider>> _mockLogger = new();
     private readonly RsaKeyProvider _provider;
+    private readonly string _programDataPath;
 
     public RsaKeyProviderTests()
     {
-        _provider = new RsaKeyProvider(_mockFileSystem, _mockLogger.Object);
+        _programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var dataDirectory = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host");
+        _mockApplicationPathProvider.Setup(x => x.DataDirectory).Returns(dataDirectory);
+
+        _provider = new RsaKeyProvider(_mockFileSystem, _mockApplicationPathProvider.Object, _mockLogger.Object);
     }
 
     #region Base Functionality
@@ -38,8 +45,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldReturnValidKey_WhenPublicKeyFileExists()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var publicKeyBytes = GenerateValidRsaPublicKey();
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
@@ -55,8 +61,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldCacheResult_AfterFirstCall()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var publicKeyBytes = GenerateValidRsaPublicKey();
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
@@ -77,10 +82,9 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsEmpty()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
 
-        _mockFileSystem.AddFile(publicKeyPath, new MockFileData([]));
+        _mockFileSystem.AddFile(publicKeyPath, new MockFileData(Array.Empty<byte>()));
 
         // Act
         var rsaKey = _provider.GetRsaPublicKey();
@@ -94,8 +98,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsInvalid()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var invalidKeyBytes = new byte[] { 0xFF, 0xFF }; // Invalid key format
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(invalidKeyBytes));
@@ -112,15 +115,12 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsInaccessible()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData("dummy data")
         {
             Attributes = FileAttributes.ReadOnly
         });
-
-        _mockFileSystem.File.SetAttributes(publicKeyPath, FileAttributes.Normal);
 
         // Act
         var rsaKey = _provider.GetRsaPublicKey();
@@ -134,11 +134,10 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileContainsPrivateKey()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var privateKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var privateKeyBytes = GeneratePrivateKey();
 
-        _mockFileSystem.AddFile(privateKeyPath, new MockFileData(privateKeyBytes));
+        _mockFileSystem.AddFile(publicKeyPath, new MockFileData(privateKeyBytes));
 
         // Act
         var rsaKey = _provider.GetRsaPublicKey();
@@ -152,8 +151,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsTooLarge()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var largeData = new byte[10 * 1024 * 1024]; // 10 MB
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(largeData));
@@ -171,13 +169,8 @@ public class RsaKeyProviderTests
     #region Path Handling
 
     [Fact]
-    public void GetRsaPublicKey_ShouldLogWarning_WhenPathIsInvalid()
+    public void GetRsaPublicKey_ShouldLogWarning_WhenPathDoesNotExist()
     {
-        // Arrange
-        var invalidPath = _mockFileSystem.Path.Combine("InvalidPath", "public_key.der");
-
-        _mockFileSystem.AddFile(invalidPath, new MockFileData([0x30, 0x82, 0x01, 0x0A]));
-
         // Act
         var rsaKey = _provider.GetRsaPublicKey();
 
@@ -194,8 +187,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldHandleExtraDataInFile()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var publicKeyBytes = GenerateValidRsaPublicKeyWithExtraData();
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
@@ -215,6 +207,9 @@ public class RsaKeyProviderTests
         var originalProgramData = Environment.GetEnvironmentVariable("ProgramData");
         Environment.SetEnvironmentVariable("ProgramData", null);
 
+        // Reset the data directory to simulate unavailability
+        _mockApplicationPathProvider.Setup(x => x.DataDirectory).Returns((string)null);
+
         try
         {
             // Act
@@ -222,12 +217,14 @@ public class RsaKeyProviderTests
 
             // Assert
             Assert.Null(rsaKey);
-            _mockLogger.VerifyLog(LogLevel.Warning, "Public key file not found at path", Times.Once());
+            _mockLogger.VerifyLog(LogLevel.Error, "Failed to load RSA public key.", Times.Once());
         }
         finally
         {
             // Restore the environment variable
             Environment.SetEnvironmentVariable("ProgramData", originalProgramData);
+            _mockApplicationPathProvider.Setup(x => x.DataDirectory)
+                .Returns(_mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host"));
         }
     }
 
@@ -235,8 +232,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldBeThreadSafe()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
         var publicKeyBytes = GenerateValidRsaPublicKey();
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
@@ -251,6 +247,7 @@ public class RsaKeyProviderTests
 
         // Assert
         var firstResult = results[0];
+        Assert.NotNull(firstResult);
         Assert.All(results, rsa => Assert.Same(firstResult, rsa));
     }
 
@@ -258,8 +255,7 @@ public class RsaKeyProviderTests
     public void GetRsaPublicKey_ShouldNotReloadKey_WhenFileChangesBetweenCalls()
     {
         // Arrange
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = _mockFileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+        var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
 
         var initialPublicKeyBytes = GenerateValidRsaPublicKey();
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(initialPublicKeyBytes));
@@ -293,7 +289,7 @@ public class RsaKeyProviderTests
         var publicKey = GenerateValidRsaPublicKey();
         var extraData = new byte[] { 0x00, 0xFF };
 
-        return [.. publicKey, .. extraData];
+        return publicKey.Concat(extraData).ToArray();
     }
 
     private static byte[] GeneratePrivateKey()

@@ -45,7 +45,7 @@ public class HostRegistrationMonitorService : IHostedService
         try
         {
             var configurationChanged = await _hostInformationMonitorService.UpdateHostConfigurationAsync();
-            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
+            var hostConfiguration = await _hostConfigurationService.LoadAsync();
             var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
             var isSyncRequired = _syncIndicatorService.IsSyncRequired();

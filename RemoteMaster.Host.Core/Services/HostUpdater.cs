@@ -3,73 +3,21 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostUpdater : IHostUpdater
+public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvider applicationPathProvider, IHostUpdaterNotifier notifier, IChecksumValidator checksumValidator, IFileService fileService, IFileSystem fileSystem, IApplicationVersionProvider applicationVersionProvider, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService) : IHostUpdater
 {
-    private readonly string _baseFolderPath;
-    private readonly string _updateFolderPath;
+    private readonly string _rootDirectory = applicationPathProvider.RootDirectory;
+    private readonly string _updateDirectory = applicationPathProvider.UpdateDirectory;
 
     private readonly TaskCompletionSource<bool> _clientConnectedTcs = new();
-    private bool _emergencyRecoveryApplied;
-    private HubConnection? _updaterHubClient;
-
-    private readonly IFileService _fileService;
-    private readonly IFileSystem _fileSystem;
-    private readonly IApplicationVersionProvider _applicationVersionProvider;
-    private readonly INetworkDriveService _networkDriveService;
-    private readonly IUserInstanceService _userInstanceService;
-    private readonly IChatInstanceService _chatInstanceService;
-    private readonly IServiceFactory _serviceFactory;
-    private readonly IHostConfigurationService _hostConfigurationService;
-    private readonly IHubContext<UpdaterHub, IUpdaterClient> _hubContext;
-    private readonly ILogger<HostUpdater> _logger;
-
-    public HostUpdater(IFileService fileService, IFileSystem fileSystem, IApplicationVersionProvider applicationVersionProvider, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService, IHubContext<UpdaterHub, IUpdaterClient> hubContext, ILogger<HostUpdater> logger)
-    {
-        _fileService = fileService;
-        _fileSystem = fileSystem;
-        _applicationVersionProvider = applicationVersionProvider;
-        _networkDriveService = networkDriveService;
-        _userInstanceService = userInstanceService;
-        _chatInstanceService = chatInstanceService;
-        _serviceFactory = serviceFactory;
-        _hostConfigurationService = hostConfigurationService;
-        _hubContext = hubContext;
-        _logger = logger;
-
-        _baseFolderPath = _fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-        _updateFolderPath = _fileSystem.Path.Combine(_baseFolderPath, "Update");
-
-        Task.Run(InitializeHubClient);
-    }
-
-    private async Task InitializeHubClient()
-    {
-        var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
-
-        _updaterHubClient = new HubConnectionBuilder()
-            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/updater", options =>
-            {
-                options.Headers.Add("X-Service-Flag", "true");
-            })
-            .AddMessagePackProtocol(options => options.Configure())
-            .Build();
-
-        await _updaterHubClient.StartAsync();
-
-        await _updaterHubClient.InvokeAsync("NotifyPortReady", 6001);
-    }
 
     public async Task UpdateAsync(string folderPath, string? username, string? password, bool force, bool allowDowngrade, int waitForClientConnectionTimeout)
     {
@@ -77,66 +25,65 @@ public class HostUpdater : IHostUpdater
 
         try
         {
+            await InitializeHubClient();
+
             if (waitForClientConnectionTimeout != 0)
             {
-                _logger.LogInformation("Waiting for client to connect to UpdaterHub with a timeout of {ConnectionTimeout} ms...", waitForClientConnectionTimeout);
-                
                 var completedTask = await Task.WhenAny(_clientConnectedTcs.Task, Task.Delay(waitForClientConnectionTimeout));
 
-                if (completedTask == _clientConnectedTcs.Task)
+                if (completedTask != _clientConnectedTcs.Task)
                 {
-                    _logger.LogInformation("Client connected. Proceeding with update.");
-                }
-                else
-                {
-                    _logger.LogWarning("Timeout of {ConnectionTimeout} ms reached while waiting for client connection.", waitForClientConnectionTimeout);
-                    
-                    await Notify("Timeout reached while waiting for client connection. Update aborted.", MessageSeverity.Warning);
+                    await notifier.NotifyAsync("Timeout reached while waiting for client connection. Update aborted.", MessageSeverity.Warning);
                     
                     return;
                 }
             }
             else
             {
-                _logger.LogInformation("Waiting indefinitely for client to connect to UpdaterHub...");
-
                 await _clientConnectedTcs.Task;
-
-                _logger.LogInformation("Client connected. Proceeding with update.");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error waiting for client connection.");
-
+            await notifier.NotifyAsync($"Error initializing hub client: {ex.Message}", MessageSeverity.Error);
+            
             return;
         }
 
         try
         {
-            await Notify($"Force update flag: {force}", MessageSeverity.Information);
-            await Notify($"Allow downgrade flag: {allowDowngrade}", MessageSeverity.Information);
-            await Notify(Environment.ProcessId.ToString(), MessageSeverity.Information, MessageMeta.ProcessIdInformation);
+            await notifier.NotifyAsync($"Force update flag: {force}", MessageSeverity.Information);
+            await notifier.NotifyAsync($"Allow downgrade flag: {allowDowngrade}", MessageSeverity.Information);
+            await notifier.NotifyAsync(Environment.ProcessId.ToString(), MessageSeverity.Information, MessageMeta.ProcessIdInformation);
 
-            var sourceFolderPath = _fileSystem.Path.Combine(folderPath, "Host");
+            var sourceFolderPath = fileSystem.Path.Combine(folderPath, "Host");
             var isNetworkPath = folderPath.StartsWith(@"\\");
 
             if (isNetworkPath)
             {
                 if (!await MapNetworkDriveAsync(folderPath, username, password))
                 {
-                    await Notify("Update aborted.", MessageSeverity.Error);
+                    await notifier.NotifyAsync("Update aborted.", MessageSeverity.Error);
 
                     return;
                 }
             }
 
-            if (!_fileSystem.Directory.Exists(_updateFolderPath))
+            try
             {
-                _fileSystem.Directory.CreateDirectory(_updateFolderPath);
+                fileService.CreateDirectory(_updateDirectory);
+            }
+            catch (IOException ex) when (ex.Message.Contains("Directory already exists"))
+            {
+                await notifier.NotifyAsync($"Update directory already exists: {_updateDirectory}. Proceeding with existing directory.", MessageSeverity.Warning);
+            }
+            catch (Exception ex)
+            {
+                await notifier.NotifyAsync($"Failed to create update directory: {ex.Message}", MessageSeverity.Error);
+                throw;
             }
 
-            var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
+            var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateDirectory, true);
 
             if (isNetworkPath)
             {
@@ -145,32 +92,32 @@ public class HostUpdater : IHostUpdater
 
             if (!isDownloaded)
             {
-                await Notify("Download or copy failed. Update aborted.", MessageSeverity.Error);
-
+                await notifier.NotifyAsync("Download or copy failed. Update aborted.", MessageSeverity.Error);
+                
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade, force))
             {
-                await Notify("Update aborted due to version check.", MessageSeverity.Error);
-
+                await notifier.NotifyAsync("Update aborted due to version check.", MessageSeverity.Error);
+                
                 return;
             }
 
-            if (!await NeedUpdate() && !force)
+            if (!await IsUpdateNeeded(force))
             {
-                await Notify("No update required. Files are identical.", MessageSeverity.Information);
-                await Notify("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
-
+                await notifier.NotifyAsync("No update required. Files are identical.", MessageSeverity.Information);
+                await notifier.NotifyAsync("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
+                
                 return;
             }
 
-            await PerformUpdate();
+            await PerformUpdateAsync();
         }
         catch (Exception ex)
         {
-            await Notify($"Error while updating host: {ex.Message}", MessageSeverity.Error);
-            await AttemptEmergencyRecovery();
+            await notifier.NotifyAsync($"Error while updating host: {ex.Message}", MessageSeverity.Error);
+            await recoveryService.ExecuteEmergencyRecoveryAsync();
         }
     }
 
@@ -179,55 +126,65 @@ public class HostUpdater : IHostUpdater
         if (!_clientConnectedTcs.Task.IsCompleted)
         {
             _clientConnectedTcs.SetResult(true); 
-
-            _logger.LogInformation("Client successfully connected to UpdaterHub.");
-        }
-        else
-        {
-            _logger.LogWarning("NotifyClientConnected called but TCS is already completed.");
         }
     }
 
-    private async Task PerformUpdate()
+    private async Task InitializeHubClient()
     {
-        var hostService = _serviceFactory.GetService("RCHost");
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
+
+        var updaterHubClient = new HubConnectionBuilder()
+            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/updater", options =>
+            {
+                options.Headers.Add("X-Service-Flag", true.ToString());
+            })
+            .AddMessagePackProtocol(options => options.Configure())
+            .Build();
+
+        await updaterHubClient.StartAsync();
+        await updaterHubClient.InvokeAsync("NotifyPortReady", 6001);
+    }
+
+    private async Task PerformUpdateAsync()
+    {
+        var hostService = serviceFactory.GetService("RCHost");
 
         hostService.Stop();
-        _chatInstanceService.Stop();
-        _userInstanceService.Stop();
 
-        await WaitForFileRelease(_baseFolderPath);
-        await CopyDirectoryAsync(_updateFolderPath, _baseFolderPath, true);
+        chatInstanceService.Stop();
+        userInstanceService.Stop();
+
+        await fileService.WaitForFileReleaseAsync(_rootDirectory, ["Updater", "Update"]);
+
+        var copySuccess = await CopyDirectoryAsync(_updateDirectory, _rootDirectory, true);
+
+        if (!copySuccess)
+        {
+            await notifier.NotifyAsync("Failed to copy updates. Update aborted.", MessageSeverity.Error);
+            throw new InvalidOperationException("Failed to copy updates.");
+        }
 
         hostService.Start();
-        await EnsureServicesRunning([hostService, _userInstanceService], 5, 5);
-
-        if (!_emergencyRecoveryApplied)
-        {
-            await Notify("Update completed successfully.", MessageSeverity.Information);
-        }
-        else
-        {
-            await Notify("Emergency recovery was applied. Please check the system's integrity.", MessageSeverity.Warning);
-        }
+        await EnsureServicesRunning([hostService, userInstanceService], TimeSpan.FromSeconds(5), 5);
 
         await CleanupUpdateFolder();
+
+        await notifier.NotifyAsync("Update completed successfully.", MessageSeverity.Information);
     }
 
     private async Task<bool> MapNetworkDriveAsync(string folderPath, string? username, string? password)
     {
-        await Notify($"Attempting to map network drive with remote path: {folderPath}", MessageSeverity.Information);
+        await notifier.NotifyAsync($"Attempting to map network drive with remote path: {folderPath}", MessageSeverity.Information);
 
-        var isMapped = _networkDriveService.MapNetworkDrive(folderPath, username, password);
+        var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
 
         if (!isMapped)
         {
-            await Notify($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageSeverity.Error);
-            await Notify("Unable to map network drive with the provided credentials.", MessageSeverity.Error);
+            await notifier.NotifyAsync($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageSeverity.Error);
         }
         else
         {
-            await Notify($"Successfully mapped network drive with remote path: {folderPath}", MessageSeverity.Information);
+            await notifier.NotifyAsync($"Successfully mapped network drive with remote path: {folderPath}", MessageSeverity.Information);
         }
 
         return isMapped;
@@ -235,38 +192,36 @@ public class HostUpdater : IHostUpdater
 
     private async Task UnmapNetworkDriveAsync(string folderPath)
     {
-        await Notify($"Attempting to unmap network drive with remote path: {folderPath}", MessageSeverity.Information);
+        await notifier.NotifyAsync($"Attempting to unmap network drive with remote path: {folderPath}", MessageSeverity.Information);
 
-        var isCancelled = _networkDriveService.CancelNetworkDrive(folderPath);
+        var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
 
         if (!isCancelled)
         {
-            await Notify($"Failed to unmap network drive with remote path {folderPath}. Details can be found in the log files.", MessageSeverity.Error);
+            await notifier.NotifyAsync($"Failed to unmap network drive with remote path {folderPath}. Details can be found in the log files.", MessageSeverity.Error);
         }
         else
         {
-            await Notify($"Successfully unmapped network drive with remote path: {folderPath}", MessageSeverity.Information);
+            await notifier.NotifyAsync($"Successfully unmapped network drive with remote path: {folderPath}", MessageSeverity.Information);
         }
     }
 
     private async Task CleanupUpdateFolder()
     {
-        await Notify("Starting cleanup...", MessageSeverity.Information);
-
-        var updateDirectory = _fileSystem.Path.Combine(_baseFolderPath, "Update");
+        await notifier.NotifyAsync("Starting cleanup...", MessageSeverity.Information);
 
         try
         {
-            _fileService.DeleteDirectory(updateDirectory);
+            fileService.DeleteDirectory(_updateDirectory);
 
-            await Notify($"Successfully deleted directory: {updateDirectory}", MessageSeverity.Information);
+            await notifier.NotifyAsync($"Successfully deleted directory: {_updateDirectory}", MessageSeverity.Information);
         }
         catch (Exception ex)
         {
-            await Notify($"Failed to delete directory {updateDirectory}: {ex.Message}", MessageSeverity.Error);
+            await notifier.NotifyAsync($"Failed to delete directory {_updateDirectory}: {ex.Message}", MessageSeverity.Error);
         }
 
-        await Notify("Cleanup completed.", MessageSeverity.Information);
+        await notifier.NotifyAsync("Cleanup completed.", MessageSeverity.Information);
     }
 
     private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false, int maxAttempts = 5)
@@ -275,42 +230,42 @@ public class HostUpdater : IHostUpdater
         {
             try
             {
-                _fileService.CopyDirectory(sourceDir, destDir, overwrite);
+                fileService.CopyDirectory(sourceDir, destDir, overwrite);
 
-                foreach (var sourceFile in _fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
+                foreach (var sourceFile in fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
                 {
-                    var relativePath = sourceFile[(sourceDir.Length + 1)..];
-                    var destFile = _fileSystem.Path.Combine(destDir, relativePath);
+                    var relativePath = fileSystem.Path.GetRelativePath(sourceDir, sourceFile);
+                    var destFile = fileSystem.Path.Combine(destDir, relativePath);
 
-                    if (!_fileSystem.File.Exists(destFile))
+                    if (!fileSystem.File.Exists(destFile))
                     {
-                        await Notify($"File {sourceFile} was not copied to {destFile}.", MessageSeverity.Error);
-                        
+                        await notifier.NotifyAsync($"File {sourceFile} was not copied to {destFile}.", MessageSeverity.Error);
+
                         throw new IOException($"File {sourceFile} was not copied successfully.");
                     }
 
-                    if (await VerifyChecksum(sourceFile, destFile, expectDifference: false))
+                    if (checksumValidator.AreChecksumsEqual(sourceFile, destFile))
                     {
                         continue;
                     }
 
-                    await Notify($"File {sourceFile} copied with errors. Checksum does not match.", MessageSeverity.Error);
-                    
+                    await notifier.NotifyAsync($"File {sourceFile} copied with errors. Checksum does not match.", MessageSeverity.Error);
+
                     throw new IOException($"Checksum mismatch for file {sourceFile}.");
                 }
 
-                await Notify($"Successfully copied directory {sourceDir} to {destDir} on attempt {attempt}.", MessageSeverity.Information);
-                
+                await notifier.NotifyAsync($"Successfully copied directory {sourceDir} to {destDir} on attempt {attempt}.", MessageSeverity.Information);
+
                 return true;
             }
             catch (Exception ex)
             {
-                await Notify($"Attempt {attempt} to copy directory {sourceDir} to {destDir} failed: {ex.Message}", MessageSeverity.Warning);
+                await notifier.NotifyAsync($"Attempt {attempt} to copy directory {sourceDir} to {destDir} failed: {ex.Message}", MessageSeverity.Warning);
 
                 if (attempt == maxAttempts)
                 {
-                    await Notify($"All {maxAttempts} attempts to copy directory {sourceDir} to {destDir} failed.", MessageSeverity.Error);
-                    
+                    await notifier.NotifyAsync($"All {maxAttempts} attempts to copy directory {sourceDir} to {destDir} failed.", MessageSeverity.Error);
+
                     return false;
                 }
 
@@ -321,326 +276,121 @@ public class HostUpdater : IHostUpdater
         return false;
     }
 
-    private async Task<bool> VerifyChecksum(string sourceFilePath, string destFilePath, bool expectDifference)
-    {
-        var sourceChecksum = _fileService.CalculateChecksum(sourceFilePath);
-        var destChecksum = _fileService.CalculateChecksum(destFilePath);
-
-        var checksumsMatch = sourceChecksum == destChecksum;
-
-        await Notify($"Verifying checksum: {sourceFilePath} [Checksum: {sourceChecksum}] vs {destFilePath} [Checksum: {destChecksum}].", MessageSeverity.Information);
-
-        if (expectDifference)
-        {
-            if (!checksumsMatch)
-            {
-                await Notify("Checksums differ as expected. Proceeding.", MessageSeverity.Information);
-
-                return true;
-            }
-
-            await Notify("Checksums match unexpectedly. No update needed.", MessageSeverity.Warning);
-
-            return false;
-        }
-
-        if (checksumsMatch)
-        {
-            await Notify("Checksums match as expected.", MessageSeverity.Information);
-
-            return true;
-        }
-
-        await Notify("Checksums differ unexpectedly. Possible file corruption.", MessageSeverity.Error);
-
-        return false;
-    }
-
-    private async Task WaitForFileRelease(string directory)
-    {
-        var locked = true;
-        var excludedFolders = new HashSet<string> { "Updater", "Update" };
-
-        while (locked)
-        {
-            locked = false;
-
-            foreach (var file in _fileSystem.DirectoryInfo.New(directory).GetFiles("*", SearchOption.AllDirectories))
-            {
-                var directoryName = file.DirectoryName;
-
-                if (directoryName == null || excludedFolders.Any(directoryName.Contains))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    await using var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-                    stream.Close();
-                }
-                catch
-                {
-                    locked = true;
-                    await Task.Delay(2000);
-                    break;
-                }
-            }
-        }
-    }
-
-    private async Task EnsureServicesRunning(List<IRunnable> services, int delayInSeconds, int attempts)
+    private async Task EnsureServicesRunning(List<IRunnable> services, TimeSpan delay, int attempts)
     {
         var allServicesRunning = false;
 
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
-            await Notify($"Attempt {attempt}: Checking if services are running...", MessageSeverity.Information);
-
-            await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
+            await notifier.NotifyAsync($"Attempt {attempt}: Checking if services are running...", MessageSeverity.Information);
+            
+            await Task.Delay(delay);
 
             var nonRunningServices = services.Where(service => !service.IsRunning).ToList();
 
-            allServicesRunning = nonRunningServices.Count == 0;
+            allServicesRunning = !nonRunningServices.Any();
 
             if (allServicesRunning)
             {
-                await Notify("All services have been successfully started.", MessageSeverity.Information);
+                await notifier.NotifyAsync("All services have been successfully started.", MessageSeverity.Information);
                 break;
             }
 
             var nonRunningServicesList = string.Join(", ", nonRunningServices.Select(service => service.ToString()));
-
-            await Notify($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageSeverity.Warning);
+            
+            await notifier.NotifyAsync($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageSeverity.Warning);
         }
 
         if (!allServicesRunning)
         {
-            await Notify($"Failed to start all services after {attempts} attempts. Initiating emergency recovery...", MessageSeverity.Information);
-            await AttemptEmergencyRecovery();
+            await notifier.NotifyAsync($"Failed to start all services after {attempts} attempts.", MessageSeverity.Error);
+            throw new Exception("Failed to start all services after multiple attempts.");
         }
     }
 
-    private async Task AttemptEmergencyRecovery()
+    private async Task<bool> IsUpdateNeeded(bool force)
     {
-        _emergencyRecoveryApplied = true;
-
-        try
+        if (force)
         {
-            var hostService = _serviceFactory.GetService("RCHost");
-
-            StopServiceWithRetry(hostService, "Host");
-
-            if (_userInstanceService.IsRunning)
-            {
-                _userInstanceService.Stop();
-            }
-
-            await WaitForFileRelease(_baseFolderPath);
-
-            var sourceExePath = _fileSystem.Path.Combine(_baseFolderPath, "Updater", _fileSystem.Path.GetFileName(Environment.ProcessPath!));
-            var destinationExePath = _fileSystem.Path.Combine(_baseFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
-
-            if (!_fileSystem.File.Exists(sourceExePath))
-            {
-                await Notify("Source executable for recovery not found. Unable to proceed with recovery.", MessageSeverity.Error);
-                
-                return;
-            }
-
-            await CopyFileWithRetry(sourceExePath, destinationExePath, true);
-            
-            await Notify("Emergency recovery completed successfully. Attempting to restart services...", MessageSeverity.Information);
-
-            StartServiceWithRetry(hostService, "Host");
-        }
-        catch (Exception ex)
-        {
-            await Notify($"Emergency recovery failed: {ex.Message}", MessageSeverity.Error);
-        }
-    }
-
-    private async Task CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 5)
-    {
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
-            {
-                _fileService.CopyFile(sourceFile, destinationFile, overwrite);
-
-                if (await VerifyChecksum(sourceFile, destinationFile, expectDifference: false))
-                {
-                    await Notify($"Successfully copied file {sourceFile} to {destinationFile} on attempt {attempt}.", MessageSeverity.Information);
-                    
-                    return;
-                }
-
-                await Notify($"Checksum verification failed for file {sourceFile}. Retrying...", MessageSeverity.Warning);
-            }
-            catch (IOException ex) when (attempt < maxAttempts)
-            {
-                await Notify($"Attempt {attempt} to copy file {sourceFile} failed: {ex.Message}. Retrying in 1 second...", MessageSeverity.Warning);
-                await Task.Delay(1000);
-            }
-            catch (Exception ex)
-            {
-                await Notify($"Failed to copy file {sourceFile} to {destinationFile}: {ex.Message}.", MessageSeverity.Error);
-                throw;
-            }
+            return true;
         }
 
-        throw new IOException($"Failed to copy file {sourceFile} to {destinationFile} after {maxAttempts} attempts.");
-    }
-
-    private static void StopServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
-    {
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
-            {
-                service.Stop();
-
-                return;
-            }
-            catch (Exception ex)
-            {
-                if (attempt == maxAttempts)
-                {
-                    throw new Exception($"Failed to stop {serviceName} service after {maxAttempts} attempts: {ex.Message}");
-                }
-
-                Thread.Sleep(1000);
-            }
-        }
-    }
-
-    private static void StartServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
-    {
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
-            {
-                service.Start();
-
-                return;
-            }
-            catch (Exception ex)
-            {
-                if (attempt == maxAttempts)
-                {
-                    throw new Exception($"Failed to start {serviceName} service after {maxAttempts} attempts: {ex.Message}");
-                }
-
-                Thread.Sleep(1000);
-            }
-        }
-    }
-
-    private async Task<bool> NeedUpdate()
-    {
-        _logger.LogInformation("Starting the update check...");
-
-        var updateFiles = _fileSystem.Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories)
-            .Select(_fileSystem.Path.GetFullPath);
+        var updateFiles = fileSystem.Directory.GetFiles(_updateDirectory, "*", SearchOption.AllDirectories)
+            .Select(fileSystem.Path.GetFullPath);
 
         foreach (var file in updateFiles)
         {
-            var targetFile = file.Replace(_updateFolderPath, _baseFolderPath);
+            var relativePath = file[(_updateDirectory.Length + 1)..];
+            var targetFile = fileSystem.Path.Combine(_rootDirectory, relativePath);
 
-            if (!_fileSystem.File.Exists(targetFile))
+            if (!fileSystem.File.Exists(targetFile))
             {
-                _logger.LogInformation("File {TargetFile} does not exist in the base folder. Update needed.", targetFile);
-
+                await notifier.NotifyAsync($"File missing in target: {targetFile}. Update needed.", MessageSeverity.Information);
+                
                 return true;
             }
 
-            var checksumsDiffer = await VerifyChecksum(file, targetFile, true);
-
-            if (checksumsDiffer)
+            if (checksumValidator.AreChecksumsEqual(file, targetFile))
             {
-                _logger.LogInformation("File {TargetFile} has a different checksum. Update needed.", targetFile);
-
-                return true;
+                continue;
             }
 
-            _logger.LogInformation("File {TargetFile} is identical. No update needed for this file.", targetFile);
+            await notifier.NotifyAsync($"Checksum mismatch for file: {file}. Update needed.", MessageSeverity.Warning);
+                
+            return true;
         }
 
-        _logger.LogInformation("All files are up to date. No update is needed.");
-
+        await notifier.NotifyAsync("All files are identical. No update required.", MessageSeverity.Information);
+        
         return false;
     }
 
     private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
     {
-        var updateExecutablePath = _fileSystem.Path.Combine(_updateFolderPath, _fileSystem.Path.GetFileName(Environment.ProcessPath!));
+        var updateExecutablePath = fileSystem.Path.Combine(_updateDirectory, fileSystem.Path.GetFileName(Environment.ProcessPath!));
 
-        var currentVersion = _applicationVersionProvider.GetVersionFromAssembly();
-        var updateVersion = _applicationVersionProvider.GetVersionFromExecutable(updateExecutablePath);
+        var currentVersion = applicationVersionProvider.GetVersionFromAssembly();
+        var updateVersion = applicationVersionProvider.GetVersionFromExecutable(updateExecutablePath);
 
-        await Notify($"Current version: {currentVersion}", MessageSeverity.Information);
-        await Notify($"Update version: {updateVersion}", MessageSeverity.Information);
+        await notifier.NotifyAsync($"Current version: {currentVersion}", MessageSeverity.Information);
+        await notifier.NotifyAsync($"Update version: {updateVersion}", MessageSeverity.Information);
 
         if (updateVersion > currentVersion)
         {
-            await Notify("Update version is newer than current version; proceeding with update.", MessageSeverity.Information);
+            await notifier.NotifyAsync("Update version is newer than current version; proceeding with update.", MessageSeverity.Information);
             
             return true;
         }
 
         if (updateVersion == currentVersion)
         {
-            var checksumsDiffer = await VerifyChecksum(updateExecutablePath, Environment.ProcessPath!, expectDifference: true);
-
-            if (checksumsDiffer)
+            if (!checksumValidator.AreChecksumsEqual(updateExecutablePath, Environment.ProcessPath!))
             {
-                await Notify("Checksums differ; proceeding with update.", MessageSeverity.Information);
+                await notifier.NotifyAsync("Checksums differ; proceeding with update.", MessageSeverity.Information);
                 
                 return true;
             }
 
             if (force)
             {
-                await Notify("Force flag is set; proceeding with update even though files are identical.", MessageSeverity.Warning);
+                await notifier.NotifyAsync("Force flag is set; proceeding with update even though files are identical.", MessageSeverity.Warning);
                 
                 return true;
             }
-            await Notify("No update needed; files are identical.", MessageSeverity.Information);
+
+            await notifier.NotifyAsync("No update needed; files are identical.", MessageSeverity.Information);
             
             return false;
         }
         if (allowDowngrade)
         {
-            await Notify("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);
+            await notifier.NotifyAsync("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);
             
             return true;
         }
 
-        await Notify($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
+        await notifier.NotifyAsync($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
         
         return false;
-    }
-
-    private async Task Notify(string message, MessageSeverity messageType, string? meta = null)
-    {
-        var logLevel = messageType switch
-        {
-            MessageSeverity.Information => LogLevel.Information,
-            MessageSeverity.Warning => LogLevel.Warning,
-            MessageSeverity.Error => LogLevel.Error,
-            _ => LogLevel.Information
-        };
-
-        _logger.Log(logLevel, "{Message}", message);
-
-        var streamReader = new StringReader(message);
-
-        while (await streamReader.ReadLineAsync() is { } line)
-        {
-            await _hubContext.Clients.All.ReceiveMessage(new Message(line, messageType)
-            {
-                Meta = meta
-            });
-        }
     }
 }

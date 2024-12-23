@@ -41,14 +41,14 @@ public class ManagementHubTests
 
         var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
 
-        _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync()).ReturnsAsync(hostConfiguration);
+        _mockHostConfigurationService.Setup(h => h.LoadAsync()).ReturnsAsync(hostConfiguration);
         _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<string>())).ReturnsAsync(organizationAddress);
 
         // Act
         await _managementHub.MoveHost(hostMoveRequest);
 
         // Assert
-        _mockHostConfigurationService.Verify(h => h.SaveConfigurationAsync(It.Is<HostConfiguration>(hc =>
+        _mockHostConfigurationService.Verify(h => h.SaveAsync(It.Is<HostConfiguration>(hc =>
             hc.Subject.Organization == hostMoveRequest.Organization &&
             hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.OrganizationalUnit)
         )), Times.Once);

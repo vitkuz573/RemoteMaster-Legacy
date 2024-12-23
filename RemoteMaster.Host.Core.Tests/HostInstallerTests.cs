@@ -27,6 +27,7 @@ public class HostInstallerTests
     private readonly MockFileSystem _mockFileSystem;
     private readonly Mock<IFileService> _mockFileService;
     private readonly Mock<IProcessService> _mockProcessService;
+    private readonly Mock<IApplicationPathProvider> _mockApplicationPathProvider;
     private readonly Mock<ILogger<HostInstaller>> _mockLogger;
     private readonly HostInstaller _installer;
 
@@ -40,6 +41,7 @@ public class HostInstallerTests
         _mockFileSystem = new MockFileSystem();
         _mockFileService = new Mock<IFileService>();
         _mockProcessService = new Mock<IProcessService>();
+        _mockApplicationPathProvider = new Mock<IApplicationPathProvider>();
         _mockLogger = new Mock<ILogger<HostInstaller>>();
 
         _mockProcessService.Setup(ps => ps.GetProcessPath()).Returns("C:\\default\\test.exe");
@@ -53,6 +55,7 @@ public class HostInstallerTests
             _mockFileSystem,
             _mockFileService.Object,
             _mockProcessService.Object,
+            _mockApplicationPathProvider.Object,
             _mockLogger.Object);
     }
 

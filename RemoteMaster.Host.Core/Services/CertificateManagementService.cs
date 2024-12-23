@@ -13,7 +13,7 @@ public class CertificateManagementService(ICertificateService certificateService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         if (!IsCertificateValid())
         {

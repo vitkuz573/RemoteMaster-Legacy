@@ -17,4 +17,6 @@ public interface IFileService
     void CopyDirectory(string sourceDirectory, string destinationDirectory, bool overwrite = false);
 
     void CreateDirectory(string directoryPath);
+
+    Task WaitForFileReleaseAsync(string directory, List<string>? excludedFolders = null);
 }

@@ -95,7 +95,7 @@ public class ChatWindowService : IHostedService
 
     private async Task InitializeSignalRConnectionAsync()
     {
-        var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await _hostConfigurationService.LoadAsync();
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat")

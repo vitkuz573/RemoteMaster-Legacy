@@ -11,7 +11,7 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem, ILogger<HostLifecycleService> logger) : IHostLifecycleService
+public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<HostLifecycleService> logger) : IHostLifecycleService
 {
     public async Task RegisterAsync()
     {
@@ -19,7 +19,7 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
 
         try
         {
-            var jwtDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Security", "JWT");
+            var jwtDirectory = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "JWT");
 
             if (!fileSystem.Directory.Exists(jwtDirectory))
             {

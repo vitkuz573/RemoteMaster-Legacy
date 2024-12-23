@@ -17,15 +17,16 @@ public class UpdaterInstanceService : IUpdaterInstanceService
     private readonly IInstanceManagerService _instanceManagerService;
     private readonly ILogger<UpdaterInstanceService> _logger;
 
-    public UpdaterInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, ILogger<UpdaterInstanceService> logger)
+    public UpdaterInstanceService(IInstanceManagerService instanceManagerService, IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<UpdaterInstanceService> logger)
     {
         ArgumentNullException.ThrowIfNull(fileSystem);
+        ArgumentNullException.ThrowIfNull(applicationPathProvider);
 
         _instanceManagerService = instanceManagerService;
         _logger = logger;
 
         var currentExecutableName = fileSystem.Path.GetFileName(Environment.ProcessPath!);
-        var baseFolderPath = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater");
+        var baseFolderPath = applicationPathProvider.UpdaterDirectory;
         
         _updaterExecutablePath = fileSystem.Path.Combine(baseFolderPath, currentExecutableName);
     }

@@ -10,34 +10,30 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostConfigurationService(IFileSystem fileSystem) : IHostConfigurationService
+public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider) : IHostConfigurationService
 {
-    private readonly string _configurationFileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
+    private readonly string _configPath = fileSystem.Path.Combine(applicationPathProvider.RootDirectory, $"{AppDomain.CurrentDomain.FriendlyName}.json");
 
-    public async Task<HostConfiguration> LoadConfigurationAsync()
+    public async Task<HostConfiguration> LoadAsync()
     {
-        var configFilePath = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
-
-        if (!fileSystem.File.Exists(configFilePath))
+        if (!fileSystem.File.Exists(_configPath))
         {
-            throw new InvalidDataException($"Configuration file '{configFilePath}' does not exist.");
+            throw new InvalidDataException($"Configuration file '{_configPath}' does not exist.");
         }
 
-        var hostConfigurationJson = await fileSystem.File.ReadAllTextAsync(configFilePath);
+        var hostConfigurationJson = await fileSystem.File.ReadAllTextAsync(_configPath);
 
         var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, HostJsonSerializerContext.Default.HostConfiguration);
 
-        return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{configFilePath}'.");
+        return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{_configPath}'.");
     }
 
-    public async Task SaveConfigurationAsync(HostConfiguration hostConfiguration)
+    public async Task SaveAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, HostJsonSerializerContext.Default.HostConfiguration);
 
-        var configFilePath = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
-
-        await fileSystem.File.WriteAllTextAsync(configFilePath, hostConfigurationJson);
+        await fileSystem.File.WriteAllTextAsync(_configPath, hostConfigurationJson);
     }
 }

@@ -17,13 +17,13 @@ public class ManagementHub(IHostLifecycleService hostLifecycleService, IHostConf
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         hostConfiguration.Subject = new SubjectDto(hostMoveRequest.Organization, hostMoveRequest.OrganizationalUnit);
 
         var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
-        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+        await hostConfigurationService.SaveAsync(hostConfiguration);
         await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 }

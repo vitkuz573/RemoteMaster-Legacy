@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class RsaKeyProvider(IFileSystem fileSystem, ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
+public class RsaKeyProvider(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
 {
     private RSA? _rsa;
     private readonly Lock _lock = new();
@@ -30,8 +30,7 @@ public class RsaKeyProvider(IFileSystem fileSystem, ILogger<RsaKeyProvider> logg
 
             try
             {
-                var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                var publicKeyPath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+                var publicKeyPath = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "JWT", "public_key.der");
 
                 if (fileSystem.File.Exists(publicKeyPath))
                 {

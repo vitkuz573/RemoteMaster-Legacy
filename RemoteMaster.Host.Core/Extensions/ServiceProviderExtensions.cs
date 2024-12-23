@@ -190,7 +190,7 @@ public static class ServiceProviderExtensions
             var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
             var hostUninstaller = serviceProvider.GetRequiredService<IHostUninstaller>();
 
-            var currentConfig = await hostConfigurationService.LoadConfigurationAsync();
+            var currentConfig = await hostConfigurationService.LoadAsync();
 
             var server = currentConfig.Server;
 
@@ -412,7 +412,7 @@ public static class ServiceProviderExtensions
             var hostUninstaller = serviceProvider.GetRequiredService<IHostUninstaller>();
             var hostInstaller = serviceProvider.GetRequiredService<IHostInstaller>();
 
-            var currentConfig = await hostConfigurationService.LoadConfigurationAsync();
+            var currentConfig = await hostConfigurationService.LoadAsync();
 
             server ??= currentConfig.Server;
             organization ??= currentConfig.Subject.Organization;

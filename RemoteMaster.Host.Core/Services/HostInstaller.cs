@@ -12,7 +12,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IProcessService processService, ILogger<HostInstaller> logger) : IHostInstaller
+public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IProcessService processService, IApplicationPathProvider applicationPathProvider, ILogger<HostInstaller> logger) : IHostInstaller
 {
     public async Task InstallAsync(HostInstallRequest installRequest)
     {
@@ -20,7 +20,7 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
 
         try
         { 
-            var applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
+            var applicationDirectory = applicationPathProvider.RootDirectory;
             var hostInformation = hostInformationService.GetHostInformation();
 
             logger.LogInformation("Starting installation...");
@@ -45,7 +45,7 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
 
             var hostConfiguration = new HostConfiguration(installRequest.Server, subject, hostInformation);
 
-            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+            await hostConfigurationService.SaveAsync(hostConfiguration);
 
             logger.LogInformation("{ServiceName} installed and started successfully.", hostService.Name);
 

@@ -11,9 +11,9 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class LogHub(IFileSystem fileSystem) : Hub<ILogClient>
+public class LogHub(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider) : Hub<ILogClient>
 {
-    private readonly string _logDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Host");
+    private readonly string _logDirectory = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "Logs");
 
     [Authorize(Policy = "ViewLogFilesPolicy")]
     public async Task GetLogFiles()

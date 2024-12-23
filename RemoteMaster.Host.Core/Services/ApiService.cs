@@ -26,7 +26,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         if (_client.BaseAddress == null)
         {
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+            var hostConfiguration = await hostConfigurationService.LoadAsync();
 
             if (hostConfiguration == null || string.IsNullOrEmpty(hostConfiguration.Server))
             {
@@ -171,7 +171,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration, HostJsonSerializerContext.Default.HostConfiguration);
 
@@ -182,7 +182,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit]);
 
@@ -198,7 +198,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit], hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
@@ -211,7 +211,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         var response = await _client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
 

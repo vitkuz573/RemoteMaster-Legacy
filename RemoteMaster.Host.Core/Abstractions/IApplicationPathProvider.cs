@@ -2,13 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Shared.Models;
-
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IHostConfigurationService
+public interface IApplicationPathProvider
 {
-    Task<HostConfiguration> LoadAsync();
+    string RootDirectory { get; }
 
-    Task SaveAsync(HostConfiguration hostConfiguration);
+    string UpdateDirectory { get; }
+
+    string UpdaterDirectory { get; }
+
+    string DataDirectory { get; }
 }

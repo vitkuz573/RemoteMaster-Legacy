@@ -60,6 +60,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskManagerService, TaskManagerService>();
         services.AddSingleton<IAudioStreamingService, AudioStreamingService>();
         services.AddSingleton<IApplicationVersionProvider, ApplicationVersionProvider>();
+        services.AddSingleton<IApplicationPathProvider, ApplicationPathProvider>();
+        services.AddSingleton<IHostUpdaterNotifier, HostUpdaterNotifier>();
+        services.AddSingleton<IRecoveryService, RecoveryService>();
+        services.AddSingleton<IChecksumValidator, ChecksumValidator>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

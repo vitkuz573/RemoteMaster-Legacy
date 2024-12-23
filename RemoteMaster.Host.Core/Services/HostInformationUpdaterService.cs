@@ -15,7 +15,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
     {
         var hasChanges = false;
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         HostDto hostInformation;
         
@@ -48,7 +48,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
         {
             try
             {
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+                await hostConfigurationService.SaveAsync(hostConfiguration);
             }
             catch (Exception ex)
             {
@@ -71,7 +71,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
                 {
                     hostConfiguration.Subject = new SubjectDto(hostMoveRequest.Organization, hostMoveRequest.OrganizationalUnit);
                     
-                    await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+                    await hostConfigurationService.SaveAsync(hostConfiguration);
 
                     logger.LogInformation("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
 
