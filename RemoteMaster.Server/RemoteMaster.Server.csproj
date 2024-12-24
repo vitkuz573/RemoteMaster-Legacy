@@ -41,7 +41,6 @@
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="System.DirectoryServices" />
-    <PackageReference Include="System.DirectoryServices.Protocols" />
     <PackageReference Include="System.IO.Abstractions" />
     <PackageReference Include="Telegram.Bot" />
   </ItemGroup>
