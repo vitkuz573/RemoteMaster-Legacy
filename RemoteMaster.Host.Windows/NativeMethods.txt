@@ -180,3 +180,16 @@ WM_LBUTTONDBLCLK
 
 TerminateProcess
 STILL_ACTIVE
+
+OpenClipboard
+GetClipboardData
+GlobalLock
+GlobalUnlock
+CloseClipboard
+EmptyClipboard
+SetClipboardData
+
+CLIPBOARD_FORMAT
+AddClipboardFormatListener
+RemoveClipboardFormatListener
+WM_CLIPBOARDUPDATE

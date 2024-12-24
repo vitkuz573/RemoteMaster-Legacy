@@ -382,6 +382,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             
             return false;
         }
+
         if (allowDowngrade)
         {
             await notifier.NotifyAsync("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);

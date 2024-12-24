@@ -296,18 +296,19 @@ public class ChatWindowService : IHostedService
         switch (msg)
         {
             case WM_KEYDOWN:
-                if (wParam.Value == (nuint)VIRTUAL_KEY.VK_RETURN)
+                switch (wParam.Value)
                 {
-                    _ = HandleSendButtonAsync();
-                    return new LRESULT(0);
+                    case (nuint)VIRTUAL_KEY.VK_RETURN:
+                        _ = HandleSendButtonAsync();
+                        return new LRESULT(0);
+                    case (nuint)VIRTUAL_KEY.VK_A when (GetKeyState((int)VIRTUAL_KEY.VK_CONTROL) & 0x8000) != 0:
+                    {
+                        var length = GetWindowTextLength(hwnd);
+                        SendMessage(hwnd, EM_SETSEL, new WPARAM(0), new LPARAM(length));
+                        return new LRESULT(0);
+                    }
                 }
 
-                if (wParam.Value == (nuint)VIRTUAL_KEY.VK_A && (GetKeyState((int)VIRTUAL_KEY.VK_CONTROL) & 0x8000) != 0)
-                {
-                    var length = GetWindowTextLength(hwnd);
-                    SendMessage(hwnd, EM_SETSEL, new WPARAM(0), new LPARAM(length));
-                    return new LRESULT(0);
-                }
                 break;
         }
 

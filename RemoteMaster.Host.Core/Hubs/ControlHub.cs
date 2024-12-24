@@ -18,7 +18,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class ControlHub(IAppState appState, IApplicationVersionProvider applicationVersionProvider, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IApplicationVersionProvider applicationVersionProvider, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, IClipboardService clipboardService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -336,7 +336,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
     [Authorize(Policy = "HandleInputPolicy")]
     public void HandleKeyboardInput(KeyboardInputDto dto)
     {
-        inputService.HandleKeyboardInput(dto);
+        ExecuteActionForViewer(viewer => inputService.HandleKeyboardInput(dto, viewer.ConnectionId));
     }
 
     [Authorize(Policy = "ChangeScreenPolicy")]

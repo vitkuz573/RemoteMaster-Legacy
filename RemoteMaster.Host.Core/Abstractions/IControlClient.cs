@@ -35,4 +35,6 @@ public interface IControlClient
     Task ReceiveOperatingSystemVersion(string version);
 
     Task ReceiveAudioUpdate(string? audioUpdate);
+
+    Task ReceiveClipboard(string text);
 }

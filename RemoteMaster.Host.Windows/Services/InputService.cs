@@ -11,11 +11,13 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.DTOs;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Microsoft.AspNetCore.SignalR;
+using RemoteMaster.Host.Core.Hubs;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService(IDesktopService desktopService, IAppState appState, ILogger<InputService> logger) : IInputService
+public sealed class InputService(IDesktopService desktopService, IAppState appState, IHubContext<ControlHub, IControlClient> hubContext, IClipboardService clipboardService, ILogger<InputService> logger) : IInputService
 {
     private readonly ConcurrentQueue<Action> _operationQueue = new();
     private readonly ManualResetEvent _queueEvent = new(false);
@@ -236,7 +238,7 @@ public sealed class InputService(IDesktopService desktopService, IAppState appSt
         });
     }
 
-    public void HandleKeyboardInput(KeyboardInputDto dto)
+    public void HandleKeyboardInput(KeyboardInputDto dto, string connectionId)
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 
@@ -249,7 +251,7 @@ public sealed class InputService(IDesktopService desktopService, IAppState appSt
             return;
         }
 
-        EnqueueOperation(() =>
+        EnqueueOperation(async () =>
         {
             PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
             {
@@ -264,7 +266,26 @@ public sealed class InputService(IDesktopService desktopService, IAppState appSt
 
                 return input;
             });
+
+            if (dto is not { Code: "KeyC" or "KeyX", IsPressed: true } || !IsCtrlPressed())
+            {
+                return;
+            }
+
+            await Task.Delay(100);
+
+            var text = await clipboardService.GetTextAsync();
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                await hubContext.Clients.Client(connectionId).ReceiveClipboard(text);
+            }
         });
+    }
+
+    private static bool IsCtrlPressed()
+    {
+        return (GetKeyState((int)VIRTUAL_KEY.VK_CONTROL) & 0x8000) != 0;
     }
 
     private static int ConvertKeyToVirtualKeyCode(string code)

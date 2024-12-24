@@ -27,6 +27,7 @@ public class ControlHubTests : IDisposable
     private readonly Mock<IWorkStationSecurityService> _mockWorkStationSecurityService;
     private readonly Mock<IScreenCastingService> _mockScreenCastingService;
     private readonly Mock<IOperatingSystemInformationService> _mockOperatingSystemInformationService;
+    private readonly Mock<IClipboardService> _mockClipboardService;
     private readonly Mock<ILogger<ControlHub>> _mockLogger;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<IGroupManager> _mockGroups;
@@ -49,6 +50,7 @@ public class ControlHubTests : IDisposable
         _mockScreenCastingService = new Mock<IScreenCastingService>();
         _mockAudioStreamingService = new Mock<IAudioStreamingService>();
         _mockOperatingSystemInformationService = new Mock<IOperatingSystemInformationService>();
+        _mockClipboardService = new Mock<IClipboardService>();
         _mockLogger = new Mock<ILogger<ControlHub>>();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         _mockGroups = new Mock<IGroupManager>();
@@ -71,6 +73,7 @@ public class ControlHubTests : IDisposable
             _mockScreenCastingService.Object,
             _mockAudioStreamingService.Object,
             _mockOperatingSystemInformationService.Object,
+            _mockClipboardService.Object,
             _mockLogger.Object)
         {
             Clients = _mockClients.Object,
@@ -211,12 +214,18 @@ public class ControlHubTests : IDisposable
     {
         // Arrange
         var dto = new KeyboardInputDto(It.IsAny<string>(), It.IsAny<bool>());
+        var viewerMock = new Mock<IViewer>();
+        viewerMock.Setup(v => v.ConnectionId).Returns("connectionId");
+
+        const string connectionId = "connectionId";
+        SetHubContext(connectionId);
+        SetupAppState(connectionId, viewerMock.Object);
 
         // Act
         _controlHub.HandleKeyboardInput(dto);
 
         // Assert
-        _mockInputService.Verify(i => i.HandleKeyboardInput(dto), Times.Once);
+        _mockInputService.Verify(i => i.HandleKeyboardInput(dto, connectionId), Times.Once);
     }
 
     [Fact]

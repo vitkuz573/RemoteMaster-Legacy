@@ -66,6 +66,7 @@ public partial class Access : IAsyncDisposable
 
     private IJSObjectReference? _blobUtilsModule;
     private IJSObjectReference? _audioUtilsModule;
+    private IJSObjectReference? _clipboardModule;
     private IJSObjectReference? _eventListenersModule;
 
     private string? _accessToken;
@@ -410,6 +411,7 @@ public partial class Access : IAsyncDisposable
 
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
             _connection.On<string>("ReceiveAudioUpdate", HandleAudioUpdateBase64);
+            _connection.On<string>("ReceiveClipboard", HandleReceiveClipboard);
             _connection.On<string>("ReceiveOperatingSystemVersion", operatingSystem => _operatingSystem = operatingSystem);
             _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion);
             _connection.On<Version>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
@@ -554,6 +556,16 @@ public partial class Access : IAsyncDisposable
             _audioUtilsModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audioUtils.js");
 
             await _audioUtilsModule.InvokeVoidAsync("playAudioChunk", base64Data);
+        }
+    }
+
+    private async Task HandleReceiveClipboard(string text)
+    {
+        if (!_disposed && _firstRenderCompleted)
+        {
+            _clipboardModule ??= await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/clipboardUtils.js");
+
+            await _clipboardModule.InvokeVoidAsync("copyTextToClipboard", text);
         }
     }
 
@@ -703,6 +715,7 @@ public partial class Access : IAsyncDisposable
             { nameof(DisconnectViewerDialog.Viewer), viewer }
         });
     }
+    
 
     [JSInvokable]
     public async Task OnBeforeUnload()
