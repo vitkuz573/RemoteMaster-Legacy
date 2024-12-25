@@ -111,7 +111,7 @@ public class CommandLineProvider : ICommandLineProvider
         }
         finally
         {
-            LocalFree(new HLOCAL((nint)argv));
+            LocalFree_SafeHandle(new HLOCAL((nint)argv));
         }
     }
 }
