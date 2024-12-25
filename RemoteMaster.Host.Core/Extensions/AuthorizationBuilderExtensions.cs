@@ -172,7 +172,7 @@ public static class AuthorizationBuilderExtensions
         builder.AddPolicy("SetCodecPolicy", policy =>
             policy.RequireClaim("Screen", "SetCodec"));
 
-        builder.AddPolicy("ToggleDrawCursorPolicy", policy =>
+        builder.AddPolicy("ToggleIsCursorVisiblePolicy", policy =>
             policy.RequireClaim("Screen", "ToggleCursor"));
 
         builder.AddPolicy("ToggleInputPolicy", policy =>

@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Models;
 
 public class CapturingContext : ICapturingContext
 {
-    public event EventHandler? OnDrawCursorChanged;
+    public event EventHandler? OnIsCursorVisibleChanged;
 
     public IScreen? SelectedScreen { get; set; }
 
@@ -18,21 +18,21 @@ public class CapturingContext : ICapturingContext
 
     public int FrameRate { get; set; } = 60;
 
-    public bool DrawCursor
+    public bool IsCursorVisible
     {
-        get => _drawCursor;
+        get => _isCursorVisible;
         set
         {
-            if (_drawCursor == value)
+            if (_isCursorVisible == value)
             {
                 return;
             }
 
-            _drawCursor = value;
+            _isCursorVisible = value;
 
-            OnDrawCursorChanged?.Invoke(this, EventArgs.Empty);
+            OnIsCursorVisibleChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
-    private bool _drawCursor;
+    private bool _isCursorVisible;
 }

@@ -42,7 +42,7 @@ public partial class Access : IAsyncDisposable
     private HubConnection? _connection;
     private bool _isInputEnabled;
     private bool _isUserInputEnabled = true;
-    private bool _drawCursor;
+    private bool _isCursorVisible;
     private int _frameRate;
     private int _imageQuality;
     private string _operatingSystem = string.Empty;
@@ -472,11 +472,11 @@ public partial class Access : IAsyncDisposable
             switch (action)
             {
                 case "control":
-                    await ToggleDrawCursor(false);
+                    await ToggleIsCursorVisible(false);
                     await ToggleInput(true);
                     break;
                 case "view":
-                    await ToggleDrawCursor(true);
+                    await ToggleIsCursorVisible(true);
                     await ToggleInput(false);
                     break;
             }
@@ -628,16 +628,16 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task ToggleDrawCursor(bool value)
+    private async Task ToggleIsCursorVisible(bool value)
     {
         if (_connection == null)
         {
             return;
         }
 
-        _drawCursor = value;
+        _isCursorVisible = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleIsCursorVisible", value));
     }
 
     private async Task SetFrameRate(int frameRate)

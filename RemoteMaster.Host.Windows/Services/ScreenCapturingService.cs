@@ -23,7 +23,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
 
-    private readonly ConcurrentDictionary<string, EventHandler> _drawCursorHandlers = new();
+    private readonly ConcurrentDictionary<string, EventHandler> _isCursorVisibleHandlers = new();
 
     private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
@@ -248,12 +248,12 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     {
         var context = viewer.CapturingContext;
 
-        EventHandler handler = (_, _) => HandleDrawCursorChanged(viewer);
-        context.OnDrawCursorChanged += handler;
+        EventHandler handler = (_, _) => HandleIsCursorVisibleChanged(viewer);
+        context.OnIsCursorVisibleChanged += handler;
 
-        _drawCursorHandlers.TryAdd(viewer.ConnectionId, handler);
+        _isCursorVisibleHandlers.TryAdd(viewer.ConnectionId, handler);
 
-        if (context.DrawCursor)
+        if (context.IsCursorVisible)
         {
             _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
         }
@@ -263,24 +263,24 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     {
         var context = viewer.CapturingContext;
 
-        if (_drawCursorHandlers.TryRemove(viewer.ConnectionId, out var handler))
+        if (_isCursorVisibleHandlers.TryRemove(viewer.ConnectionId, out var handler))
         {
-            context.OnDrawCursorChanged -= handler;
+            context.OnIsCursorVisibleChanged -= handler;
         }
 
         _overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
     }
 
-    private void HandleDrawCursorChanged(IViewer? viewer)
+    private void HandleIsCursorVisibleChanged(IViewer? viewer)
     {
         if (viewer == null)
         {
-            _logger.LogWarning("Viewer is null when handling DrawCursorChanged event.");
+            _logger.LogWarning("Viewer is null when handling IsCursorVisibleChanged event.");
 
             return;
         }
 
-        if (viewer.CapturingContext.DrawCursor)
+        if (viewer.CapturingContext.IsCursorVisible)
         {
             _overlayManagerService.ActivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
         }

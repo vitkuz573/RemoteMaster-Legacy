@@ -186,13 +186,13 @@ public class ControlHubTests : IDisposable
     }
 
     [Fact]
-    public void ToggleDrawCursor_ShouldSetDrawCursor_WhenViewerExists()
+    public void ToggleIsCursorVisible_ShouldSetIsCursorVisible_WhenViewerExists()
     {
         // Arrange
-        const bool drawCursor = true;
+        const bool isCursorVisible = true;
 
         var capturingContextMock = new Mock<ICapturingContext>();
-        capturingContextMock.SetupProperty(c => c.DrawCursor);
+        capturingContextMock.SetupProperty(c => c.IsCursorVisible);
 
         var viewerMock = new Mock<IViewer>();
         viewerMock.Setup(v => v.CapturingContext).Returns(capturingContextMock.Object);
@@ -203,10 +203,10 @@ public class ControlHubTests : IDisposable
         SetupAppState(connectionId, viewerMock.Object);
 
         // Act
-        _controlHub.ToggleDrawCursor(drawCursor);
+        _controlHub.ToggleIsCursorVisible(isCursorVisible);
 
         // Assert
-        Assert.Equal(drawCursor, capturingContextMock.Object.DrawCursor);
+        Assert.Equal(isCursorVisible, capturingContextMock.Object.IsCursorVisible);
     }
 
     [Fact]

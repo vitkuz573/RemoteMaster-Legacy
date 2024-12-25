@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICapturingContext
 {
-    event EventHandler? OnDrawCursorChanged;
+    event EventHandler? OnIsCursorVisibleChanged;
 
     IScreen? SelectedScreen { get; set; }
     
@@ -16,5 +16,5 @@ public interface ICapturingContext
 
     int FrameRate { get; set; }
 
-    bool DrawCursor { get; set; }
+    bool IsCursorVisible { get; set; }
 }

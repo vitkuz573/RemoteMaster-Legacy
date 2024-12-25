@@ -387,10 +387,10 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         ExecuteActionForViewer(viewer => viewer.CapturingContext.SelectedCodec = codec);
     }
 
-    [Authorize(Policy = "ToggleDrawCursorPolicy")]
-    public void ToggleDrawCursor(bool drawCursor)
+    [Authorize(Policy = "ToggleIsCursorVisiblePolicy")]
+    public void ToggleIsCursorVisible(bool isCursorVisible)
     {
-        ExecuteActionForViewer(viewer => viewer.CapturingContext.DrawCursor = drawCursor);
+        ExecuteActionForViewer(viewer => viewer.CapturingContext.IsCursorVisible = isCursorVisible);
     }
 
     [Authorize(Policy = "TerminateHostPolicy")]
