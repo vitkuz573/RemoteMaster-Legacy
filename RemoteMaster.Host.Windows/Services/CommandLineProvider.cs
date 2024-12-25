@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
@@ -16,7 +15,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class CommandLineProvider : ICommandLineProvider
 {
-    public string GetCommandLine(Process process)
+    public string GetCommandLine(IProcess process)
     {
         ArgumentNullException.ThrowIfNull(process);
 

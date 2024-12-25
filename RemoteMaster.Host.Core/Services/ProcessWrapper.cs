@@ -47,7 +47,7 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
 
     public string GetCommandLine()
     {
-        return commandLineProvider.GetCommandLine(process);
+        return commandLineProvider.GetCommandLine(this);
     }
 
     public bool WaitForExit(uint millisecondsTimeout)

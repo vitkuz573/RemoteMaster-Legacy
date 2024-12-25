@@ -26,9 +26,9 @@ public class NativeProcess : IProcess
 
     private readonly NativeProcessOptions _options;
     private readonly ISessionService _sessionService;
+    private readonly ICommandLineProvider _commandLineProvider;
 
     private SafeProcessHandle? _processHandle;
-    private string? _commandLine;
     private bool _haveProcessId;
 
     public int Id { get; private set; }
@@ -57,7 +57,7 @@ public class NativeProcess : IProcess
         }
     }
 
-    public NativeProcess(INativeProcessOptions options, ISessionService sessionService)
+    public NativeProcess(INativeProcessOptions options, ISessionService sessionService, ICommandLineProvider commandLineProvider)
     {
         if (options is not NativeProcessOptions nativeOptions)
         {
@@ -66,13 +66,12 @@ public class NativeProcess : IProcess
 
         _options = nativeOptions;
         _sessionService = sessionService;
+        _commandLineProvider = commandLineProvider;
     }
 
     public void Start(ProcessStartInfo startInfo)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
-
-        _commandLine = $"{startInfo.FileName} {startInfo.Arguments}";
 
         var sessionId = _options is { SessionId: not null, ForceConsoleSession: false }
             ? _sessionService.FindTargetSessionId(_options.SessionId.Value)
@@ -369,12 +368,7 @@ public class NativeProcess : IProcess
 
     public string GetCommandLine()
     {
-        if (_commandLine == null)
-        {
-            throw new InvalidOperationException("Process has not been started yet, or command line is unavailable.");
-        }
-
-        return _commandLine;
+        return _commandLineProvider.GetCommandLine(this);
     }
 
     public bool WaitForExit(uint millisecondsTimeout = uint.MaxValue)
