@@ -43,13 +43,15 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
 
         var hasServiceFlagHeader = httpContext.Request.Headers.TryGetValue("X-Service-Flag", out var headerValue) && bool.TryParse(headerValue, out var flagValue) && flagValue;
 
-        if ((!isLocal || !hasServiceFlagHeader) && !(context.User.Identity?.IsAuthenticated ?? false))
-        {
-            return Task.CompletedTask;
-        }
+        var isAuthenticated = context.User.Identity?.IsAuthenticated ?? false;
 
-        if (isLocal && !(context.User.Identity?.IsAuthenticated ?? false))
+        if (!isAuthenticated)
         {
+            if (!isLocal || !hasServiceFlagHeader)
+            {
+                return Task.CompletedTask;
+            }
+
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Name, "RCHost"),
