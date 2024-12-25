@@ -394,7 +394,7 @@ public class NativeProcess : IProcess
         return success;
     }
 
-    public string GetCommandLine()
+    public string[] GetCommandLine()
     {
         return _commandLineProvider.GetCommandLine(this);
     }

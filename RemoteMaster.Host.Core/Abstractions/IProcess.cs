@@ -22,7 +22,7 @@ public interface IProcess : IDisposable
     
     void Kill();
     
-    string GetCommandLine();
+    string[] GetCommandLine();
     
     bool WaitForExit(uint millisecondsTimeout = uint.MaxValue);
 }

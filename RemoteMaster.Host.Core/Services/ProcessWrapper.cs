@@ -45,7 +45,7 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
         process.Kill();
     }
 
-    public string GetCommandLine()
+    public string[] GetCommandLine()
     {
         return commandLineProvider.GetCommandLine(this);
     }

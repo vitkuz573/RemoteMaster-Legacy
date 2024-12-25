@@ -193,3 +193,7 @@ CLIPBOARD_FORMAT
 AddClipboardFormatListener
 RemoveClipboardFormatListener
 WM_CLIPBOARDUPDATE
+
+CommandLineToArgv
+LocalFree
+UNICODE_STRING

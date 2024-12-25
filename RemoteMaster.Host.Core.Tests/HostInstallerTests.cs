@@ -44,8 +44,6 @@ public class HostInstallerTests
         _mockApplicationPathProvider = new Mock<IApplicationPathProvider>();
         _mockLogger = new Mock<ILogger<HostInstaller>>();
 
-        _mockProcessService.Setup(ps => ps.GetProcessPath()).Returns("C:\\default\\test.exe");
-
         _installer = new HostInstaller(
             _mockCertificateService.Object,
             _mockHostInformationService.Object,
@@ -130,8 +128,6 @@ public class HostInstallerTests
 
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Returns(hostInformation);
 
-        _mockProcessService.Setup(ps => ps.GetProcessPath()).Returns("C:\\test.exe");
-
         serviceMock.Setup(s => s.IsInstalled).Returns(true);
         _mockServiceFactory.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
 
@@ -194,8 +190,6 @@ public class HostInstallerTests
         const string targetDirectoryPath = "C:\\ProgramFiles\\RemoteMaster\\Host";
         var targetPath = Path.Combine(targetDirectoryPath, sourceFileName);
 
-        _mockProcessService.Setup(ps => ps.GetProcessPath()).Returns(sourcePath);
-
         // Act
         InvokePrivateMethod(_installer, "CopyToTargetPath", [targetDirectoryPath]);
 
@@ -215,23 +209,6 @@ public class HostInstallerTests
 
         // Assert
         _mockLogger.VerifyLog(LogLevel.Warning, "Failed to copy files to", Times.Once());
-    }
-
-    [Fact]
-    public void CopyToTargetPath_ShouldCopyFilesToTargetDirectory()
-    {
-        // Arrange
-        const string targetDirectoryPath = "C:\\ProgramFiles\\RemoteMaster\\Host";
-        const string sourceExecutablePath = "C:\\test.exe";
-        const string targetExecutablePath = "C:\\ProgramFiles\\RemoteMaster\\Host\\test.exe";
-
-        _mockProcessService.Setup(ps => ps.GetProcessPath()).Returns(sourceExecutablePath);
-
-        // Act
-        InvokePrivateMethod(_installer, "CopyToTargetPath", [targetDirectoryPath]);
-
-        // Assert
-        _mockFileService.Verify(f => f.CopyFile(sourceExecutablePath, targetExecutablePath, true), Times.Once);
     }
 
     #endregion

@@ -43,7 +43,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
         if (updateRequest.UserCredentials != null && !string.IsNullOrWhiteSpace(updateRequest.UserCredentials.UserName))
         {
-            arguments.Add("-u");
+            arguments.Add("--username");
             arguments.Add(updateRequest.UserCredentials.UserName);
         }
 

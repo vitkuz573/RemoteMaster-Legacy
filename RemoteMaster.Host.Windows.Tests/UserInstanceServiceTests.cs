@@ -64,7 +64,7 @@ public class UserInstanceServiceTests
         // Arrange
         var processMock = new Mock<IProcess>();
         processMock.Setup(p => p.Id).Returns(1234);
-        processMock.Setup(p => p.GetCommandLine()).Returns("host.exe user");
+        processMock.Setup(p => p.GetCommandLine()).Returns(["user"]);
         var processes = new[] { processMock.Object };
 
         _processServiceMock
@@ -87,7 +87,7 @@ public class UserInstanceServiceTests
     {
         // Arrange
         var processMock = new Mock<IProcess>();
-        processMock.Setup(p => p.GetCommandLine()).Returns("user");
+        processMock.Setup(p => p.GetCommandLine()).Returns(["user"]);
         var processes = new[] { processMock.Object };
 
         _processServiceMock

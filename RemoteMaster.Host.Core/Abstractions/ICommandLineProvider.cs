@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICommandLineProvider
 {
-    string GetCommandLine(IProcess process);
+    string[] GetCommandLine(IProcess process);
 }
