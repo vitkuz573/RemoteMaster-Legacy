@@ -2,6 +2,7 @@
 
 @using RemoteMaster.Shared.Enums
 @using System.IO.Abstractions
+@using RemoteMaster.Server.Extensions
 
 @inject IJSRuntime JsRuntime
 @inject IFileSystem FileSystem
@@ -42,7 +43,7 @@
                         <MudExpansionPanel Text="@($"Results for {host.Name} ({host.IpAddress}) - PID: {results.LastPid}")" Class="select-text">
                             @foreach (var message in results.Messages)
                             {
-                                <MudText Color="@GetColorBySeverity(message.Severity)">@message.Text</MudText>
+                                <MudText Color="@message.Severity.GetColor()">@message.Text</MudText>
                             }
                         </MudExpansionPanel>
                     }

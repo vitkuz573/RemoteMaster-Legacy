@@ -172,15 +172,4 @@ public partial class UpdateDialog
 
         await module.InvokeVoidAsync("downloadDataAsFile", base64Zip, "RemoteMaster_Results.zip", "application/zip;base64");
     }
-
-    private static Color GetColorBySeverity(Message.MessageSeverity severity)
-    {
-        return severity switch
-        {
-            Message.MessageSeverity.Error => Color.Error,
-            Message.MessageSeverity.Warning => Color.Warning,
-            Message.MessageSeverity.Information => Color.Default,
-            _ => Color.Default
-        };
-    }
 }

@@ -6,7 +6,6 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using MudBlazor;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -113,16 +112,5 @@ public partial class ScriptExecutorDialog
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
         await module.InvokeVoidAsync("downloadDataAsFile", base64Zip, "RemoteMaster_Results.zip", "application/zip;base64");
-    }
-
-    private static Color GetColorBySeverity(Message.MessageSeverity severity)
-    {
-        return severity switch
-        {
-            Message.MessageSeverity.Error => Color.Error,
-            Message.MessageSeverity.Warning => Color.Warning,
-            Message.MessageSeverity.Information => Color.Default,
-            _ => Color.Default
-        };
     }
 }
