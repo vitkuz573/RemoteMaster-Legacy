@@ -127,6 +127,23 @@ public class NativeProcess : IProcess
         }
     }
 
+    private static string EscapeArgument(string arg)
+    {
+        if (string.IsNullOrWhiteSpace(arg))
+        {
+            return "\"\"";
+        }
+
+        if (!arg.Contains(' ') && !arg.Contains('"'))
+        {
+            return arg;
+        }
+
+        var escaped = arg.Replace("\"", "\\\"");
+
+        return $"\"{escaped}\"";
+    }
+
     private bool StartWithCreateProcess(ProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         STARTUPINFOW startupInfo = default;
@@ -208,7 +225,18 @@ public class NativeProcess : IProcess
                 dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
                 var environmentBlock = GetEnvironmentVariablesBlock(startInfo.EnvironmentVariables!);
 
-                var fullCommand = $"{startInfo.FileName} {startInfo.Arguments}";
+                string fullCommand;
+
+                if (startInfo is { Arguments: not null, ArgumentList.Count: > 0 })
+                {
+                    var escapedArgs = startInfo.ArgumentList.Select(EscapeArgument);
+                    fullCommand = $"{startInfo.FileName} {string.Join(" ", escapedArgs)}";
+                }
+                else
+                {
+                    fullCommand = $"{startInfo.FileName} {startInfo.Arguments}";
+                }
+
                 fullCommand += char.MinValue;
 
                 var commandSpan = new Span<char>(fullCommand.ToCharArray());

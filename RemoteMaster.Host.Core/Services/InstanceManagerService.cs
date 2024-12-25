@@ -15,12 +15,21 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
 
     public int StartNewInstance(string? destinationPath, string commandName, string[] arguments, ProcessStartInfo startInfo, INativeProcessOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(arguments);
         ArgumentNullException.ThrowIfNull(startInfo);
 
         var executablePath = PrepareExecutable(destinationPath);
 
         startInfo.FileName = executablePath;
-        startInfo.Arguments = string.Join(" ", new[] { commandName }.Concat(arguments));
+
+        startInfo.ArgumentList.Clear();
+
+        startInfo.ArgumentList.Add(commandName);
+
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
 
         var process = options != null
             ? nativeProcessFactory.Create(options)
