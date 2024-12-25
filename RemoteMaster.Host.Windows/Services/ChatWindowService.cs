@@ -523,17 +523,16 @@ public class ChatWindowService : IHostedService
                 break;
 
             case WM_COMMAND:
+            {
                 var wmId = (int)wParam.Value & 0xffff;
-                switch (wmId)
+                _ = wmId switch
                 {
-                    case IDC_SEND_BUTTON:
-                        _ = service.HandleSendButtonAsync();
-                        break;
-                    case IDC_CHAT_INPUT when HIWORD((nint)wParam.Value) == EN_CHANGE:
-                        _ = service.NotifyTypingAsync();
-                        break;
-                }
+                    IDC_SEND_BUTTON => service.HandleSendButtonAsync(),
+                    IDC_CHAT_INPUT when HIWORD((nint)wParam.Value) == EN_CHANGE => service.NotifyTypingAsync(),
+                    _ => Task.CompletedTask
+                };
                 break;
+            }
 
             case WM_CLOSE:
                 DestroyWindow(hwnd);
