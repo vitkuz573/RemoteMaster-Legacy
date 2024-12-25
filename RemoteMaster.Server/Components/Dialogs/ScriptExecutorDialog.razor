@@ -40,9 +40,9 @@
                     @foreach (var (host, results) in _resultsPerHost)
                     {
                         <MudExpansionPanel Text="@($"Results for {host.Name} ({host.IpAddress}) - PID: {results.LastPid}")" Class="select-text">
-                            @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
+                            @foreach (var message in results.Messages)
                             {
-                                <div>@line</div>
+                                <MudText Color="@GetColorBySeverity(message.Severity)">@message.Text</MudText>
                             }
                         </MudExpansionPanel>
                     }

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
+using MudBlazor;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
@@ -51,7 +52,18 @@ public partial class PsExecRulesDialog
         }
         else
         {
-            results.Messages.AppendLine(scriptResult.Text);
+            results.Messages.Add(scriptResult);
         }
+    }
+
+    private static Color GetColorBySeverity(Message.MessageSeverity severity)
+    {
+        return severity switch
+        {
+            Message.MessageSeverity.Error => Color.Error,
+            Message.MessageSeverity.Warning => Color.Warning,
+            Message.MessageSeverity.Information => Color.Default,
+            _ => Color.Default
+        };
     }
 }
