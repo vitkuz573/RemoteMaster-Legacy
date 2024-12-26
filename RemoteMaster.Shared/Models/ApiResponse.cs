@@ -8,61 +8,33 @@ using Microsoft.AspNetCore.Mvc;
 namespace RemoteMaster.Shared.Models;
 
 /// <summary>
-/// Represents a uniform API response with a status code and message.
-/// Enhances client-server communication by ensuring consistency, predictability, and simplicity.
+/// Represents an API response without data.
 /// </summary>
-public class ApiResponse
+public class ApiResponse : ApiResponseBase
 {
     /// <summary>
-    /// Status code of the response.
+    /// Parameterless constructor for deserialization.
     /// </summary>
-    public int StatusCode { get; }
-
-    /// <summary>
-    /// Message describing the outcome of the operation.
-    /// </summary>
-    public string? Message { get; }
-
-    /// <summary>
-    /// Indicates whether the response represents a successful outcome.
-    /// </summary>
-    public bool IsSuccess { get; }
-
-    /// <summary>
-    /// Includes a standardized error format for failure scenarios, facilitating error handling in client applications.
-    /// </summary>
-    public ProblemDetails? Error { get; }
-
-    /// <summary>
-    /// Parameterless constructor for deserialization
-    /// </summary>
-    public ApiResponse()
+    public ApiResponse() : base("Operation successful.", StatusCodes.Status200OK)
     {
     }
 
     /// <summary>
-    /// Constructor for success response.
+    /// Constructor for a successful response.
     /// </summary>
-    public ApiResponse(string? message = "Operation successful.", int statusCode = StatusCodes.Status200OK)
+    public ApiResponse(string? message = "Operation successful.", int statusCode = StatusCodes.Status200OK) : base(message, statusCode)
     {
-        Message = message;
-        StatusCode = statusCode;
-        IsSuccess = true;
     }
 
     /// <summary>
-    /// Constructor for failure response.
+    /// Constructor for a failure response.
     /// </summary>
-    public ApiResponse(ProblemDetails error, int statusCode = StatusCodes.Status400BadRequest)
+    public ApiResponse(ProblemDetails error, int statusCode = StatusCodes.Status400BadRequest) : base(error, statusCode)
     {
-        Error = error;
-        StatusCode = statusCode;
-        IsSuccess = false;
-        Message = null;
     }
 
     /// <summary>
-    /// Creates a success response.
+    /// Creates a successful response.
     /// </summary>
     public static ApiResponse Success(string message = "Operation successful.", int statusCode = StatusCodes.Status200OK) => new(message, statusCode);
 
