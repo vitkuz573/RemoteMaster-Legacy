@@ -13,7 +13,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class GdiCapturing(IAppState appState, IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger) : ScreenCapturingService(appState, desktopService, overlayManagerService, logger)
+public class GdiCapturing(IAppState appState, IDesktopService desktopService, IOverlayManagerService overlayManagerService, IScreenProvider screenProvider, ILogger<ScreenCapturingService> logger) : ScreenCapturingService(appState, desktopService, overlayManagerService, screenProvider, logger)
 {
     private Bitmap? _bitmap;
     private Graphics? _memoryGraphics;

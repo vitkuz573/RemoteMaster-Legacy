@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Host.Windows.ScreenOverlays;
 using RemoteMaster.Shared.Models;
 
@@ -20,18 +19,20 @@ public abstract class ScreenCapturingService : IScreenCapturingService
     private readonly IAppState _appState;
     private readonly IDesktopService _desktopService;
     private readonly IOverlayManagerService _overlayManagerService;
+    private readonly IScreenProvider _screenProvider;
     private readonly ILogger<ScreenCapturingService> _logger;
     private readonly Lock _screenBoundsLock = new();
 
     private readonly ConcurrentDictionary<string, EventHandler> _isCursorVisibleHandlers = new();
 
-    private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
+    private bool HasMultipleScreens => _screenProvider.GetAllScreens().Count() > 1;
 
-    protected ScreenCapturingService(IAppState appState, IDesktopService desktopService, IOverlayManagerService overlayManagerService, ILogger<ScreenCapturingService> logger)
+    protected ScreenCapturingService(IAppState appState, IDesktopService desktopService, IOverlayManagerService overlayManagerService, IScreenProvider screenProvider, ILogger<ScreenCapturingService> logger)
     {
         _appState = appState;
         _desktopService = desktopService;
         _overlayManagerService = overlayManagerService;
+        _screenProvider = screenProvider;
         _logger = logger;
 
         _appState.ViewerAdded += OnViewerAdded;
@@ -56,7 +57,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
             var capturingContext = viewer.CapturingContext;
 
-            return capturingContext.SelectedScreen.DeviceName == Screen.VirtualScreen.DeviceName
+            return capturingContext.SelectedScreen.DeviceName == _screenProvider.GetVirtualScreen().DeviceName
                 ? GetVirtualScreenFrame(connectionId, capturingContext.ImageQuality, capturingContext.SelectedCodec)
                 : GetSingleScreenFrame(connectionId, capturingContext.SelectedScreen.Bounds, capturingContext.ImageQuality, capturingContext.SelectedCodec);
         }
@@ -70,7 +71,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     private byte[] GetVirtualScreenFrame(string connectionId, int imageQuality, string codec)
     {
-        return CaptureScreen(connectionId, Screen.VirtualScreen.Bounds, imageQuality, codec);
+        return CaptureScreen(connectionId, _screenProvider.GetVirtualScreen().Bounds, imageQuality, codec);
     }
 
     private byte[] GetSingleScreenFrame(string connectionId, Rectangle bounds, int imageQuality, string codec)
@@ -80,7 +81,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public IEnumerable<Display> GetDisplays()
     {
-        var screens = Screen.AllScreens
+        var screens = _screenProvider.GetAllScreens()
             .Select(screen => new Display
             {
                 Name = screen.DeviceName,
@@ -89,26 +90,30 @@ public abstract class ScreenCapturingService : IScreenCapturingService
             })
             .ToList();
 
-        if (Screen.AllScreens.Length > 1)
+        if (_screenProvider.GetAllScreens().Count() <= 1)
         {
-            screens.Add(new Display
-            {
-                Name = Screen.VirtualScreen.DeviceName,
-                IsPrimary = false,
-                Resolution = Screen.VirtualScreen.Bounds.Size,
-            });
+            return screens;
         }
+
+        var virtualScreen = _screenProvider.GetVirtualScreen();
+
+        screens.Add(new Display
+        {
+            Name = virtualScreen.DeviceName,
+            IsPrimary = false,
+            Resolution = virtualScreen.Bounds.Size,
+        });
 
         return screens;
     }
 
     public IScreen? FindScreenByName(string displayName)
     {
-        var allScreens = Screen.AllScreens.ToList();
+        var allScreens = _screenProvider.GetAllScreens().ToList();
 
         if (HasMultipleScreens)
         {
-            allScreens.Add(Screen.VirtualScreen);
+            allScreens.Add(_screenProvider.GetVirtualScreen());
         }
 
         return allScreens.FirstOrDefault(screen => screen.DeviceName == displayName);
@@ -176,7 +181,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public byte[]? GetThumbnail(string connectionId)
     {
-        var targetScreen = HasMultipleScreens ? Screen.VirtualScreen : Screen.PrimaryScreen;
+        var targetScreen = HasMultipleScreens ? _screenProvider.GetVirtualScreen() : _screenProvider.GetPrimaryScreen();
 
         if (targetScreen == null)
         {
