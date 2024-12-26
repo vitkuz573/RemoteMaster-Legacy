@@ -20,7 +20,7 @@ public class GdiCapturingTests
     private readonly Mock<IDesktopService> _mockDesktopService;
     private readonly Mock<IOverlayManagerService> _mockOverlayManagerService;
     private readonly Mock<IScreenProvider> _mockScreenProvider;
-    private readonly Mock<GdiCapturing> _mockGdiCapturing;
+    private readonly GdiCapturing _gdiCapturing;
 
     public GdiCapturingTests()
     {
@@ -32,10 +32,7 @@ public class GdiCapturingTests
 
         _mockAppState.Setup(a => a.GetAllViewers()).Returns([]);
 
-        _mockGdiCapturing = new Mock<GdiCapturing>(_mockAppState.Object, _mockDesktopService.Object, _mockOverlayManagerService.Object, _mockScreenProvider.Object, mockLogger.Object)
-        {
-            CallBase = true
-        };
+        _gdiCapturing = new GdiCapturing(_mockAppState.Object, _mockDesktopService.Object, _mockOverlayManagerService.Object, _mockScreenProvider.Object, mockLogger.Object);
     }
 
     [Fact]
@@ -66,7 +63,7 @@ public class GdiCapturingTests
         _mockScreenProvider.Setup(sp => sp.GetVirtualScreen()).Returns(mockVirtualScreen.Object);
 
         // Act
-        var displays = _mockGdiCapturing.Object.GetDisplays();
+        var displays = _gdiCapturing.GetDisplays();
 
         // Assert
         Assert.NotNull(displays);
@@ -98,10 +95,10 @@ public class GdiCapturingTests
         mockVirtualScreen.Setup(s => s.Bounds).Returns(new Rectangle(0, 0, 3200, 1080));
 
         var mockScreens = new List<IScreen>
-            {
-                mockPrimaryScreen.Object,
-                mockSecondaryScreen.Object
-            };
+        {
+            mockPrimaryScreen.Object,
+            mockSecondaryScreen.Object
+        };
 
         _mockScreenProvider.Setup(sp => sp.GetAllScreens()).Returns(mockScreens);
         _mockScreenProvider.Setup(sp => sp.GetVirtualScreen()).Returns(mockVirtualScreen.Object);
@@ -111,12 +108,12 @@ public class GdiCapturingTests
         _mockAppState.Setup(a => a.TryGetViewer("Connection1", out It.Ref<IViewer?>.IsAny))
             .Returns((string _, out IViewer? v) => { v = viewer; return true; });
 
-        var displays = _mockGdiCapturing.Object.GetDisplays().ToList();
+        var displays = _gdiCapturing.GetDisplays().ToList();
         var newDisplay = displays.FirstOrDefault(d => !d.IsPrimary)?.Name ?? displays.First().Name;
         var selectedScreen = Mock.Of<IScreen>(s => s.DeviceName == newDisplay);
 
         // Act
-        _mockGdiCapturing.Object.SetSelectedScreen("Connection1", selectedScreen);
+        _gdiCapturing.SetSelectedScreen("Connection1", selectedScreen);
 
         // Assert
         Assert.Equal(newDisplay, viewer.CapturingContext.SelectedScreen?.DeviceName);
