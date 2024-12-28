@@ -129,7 +129,7 @@ public partial class MoveHostsDialog
             var newParentUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == _selectedOrganizationalUnitId.Value) ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
             var targetOrganizationalUnitsPath = await OrganizationalUnitService.GetFullPathAsync(newParentUnit.Id);
 
-            if (targetOrganizationalUnitsPath.Length == 0)
+            if (targetOrganizationalUnitsPath.Count == 0)
             {
                 throw new InvalidOperationException("Failed to get full path of the new parent.");
             }
@@ -167,7 +167,7 @@ public partial class MoveHostsDialog
         }
     }
 
-    private async Task AppendHostMoveRequests(List<HostDto> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
+    private async Task AppendHostMoveRequests(List<HostDto> unavailableHosts, string targetOrganization, List<string> targetOrganizationalUnits)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var applicationData = FileSystem.Path.Combine(programDataPath, "RemoteMaster", "Server");
@@ -197,8 +197,13 @@ public partial class MoveHostsDialog
 
             if (existingRequest != null)
             {
-                existingRequest.Organization = targetOrganization;
-                existingRequest.OrganizationalUnit = targetOrganizationalUnits;
+                var updatedRequest = existingRequest with
+                {
+                    Organization = targetOrganization,
+                    OrganizationalUnit = targetOrganizationalUnits
+                };
+
+                hostMoveRequests[hostMoveRequests.IndexOf(existingRequest)] = updatedRequest;
             }
             else
             {

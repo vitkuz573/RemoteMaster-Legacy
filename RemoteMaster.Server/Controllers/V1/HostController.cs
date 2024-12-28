@@ -20,9 +20,9 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> RegisterHost([FromBody] HostConfiguration hostConfiguration)
+    public async Task<IActionResult> RegisterHost([FromBody] HostRegisterRequest request)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
+        ArgumentNullException.ThrowIfNull(request);
 
         if (!ModelState.IsValid)
         {
@@ -38,10 +38,35 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             return BadRequest(errorResponse);
         }
 
-        var checkResult = await registrationService.IsHostRegisteredAsync(hostConfiguration.Host.MacAddress);
+        var macAddress = request.HostConfiguration.Host.MacAddress;
+        var checkResult = await registrationService.IsHostRegisteredAsync(macAddress);
 
         if (checkResult.IsSuccess)
         {
+            if (request.Force)
+            {
+                var hostConfig = request.HostConfiguration;
+                var updateRequest = new HostUpdateRequest(hostConfig.Host.MacAddress, hostConfig.Subject.Organization, hostConfig.Subject.OrganizationalUnit, hostConfig.Host.IpAddress, hostConfig.Host.Name);
+
+                var updateResult = await registrationService.ForceUpdateHostAsync(updateRequest);
+
+                if (updateResult.IsSuccess)
+                {
+                    var response = ApiResponse.Success("Host registration updated successfully via force");
+
+                    return Ok(response);
+                }
+
+                var updateFailure = new ProblemDetails
+                {
+                    Title = "Failed to update host via force",
+                    Detail = updateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error while updating the host.",
+                    Status = StatusCodes.Status400BadRequest
+                };
+
+                return BadRequest(ApiResponse.Failure(updateFailure));
+            }
+
             var alreadyRegisteredProblemDetails = new ProblemDetails
             {
                 Title = "Host already registered",
@@ -54,7 +79,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             return BadRequest(alreadyRegisteredResponse);
         }
 
-        var result = await registrationService.RegisterHostAsync(hostConfiguration);
+        var result = await registrationService.RegisterHostAsync(request.HostConfiguration);
 
         if (result.IsSuccess)
         {

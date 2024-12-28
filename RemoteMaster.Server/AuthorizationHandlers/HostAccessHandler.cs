@@ -39,7 +39,7 @@ public class HostAccessHandler(IApplicationUnitOfWork applicationUnitOfWork) : A
 
             if (user.CanAccessUnregisteredHosts)
             {
-                var isHostRegistered = await applicationUnitOfWork.Organizations.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
+                var isHostRegistered = await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.Name == requirement.Host || h.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
 
                 if (!isHostRegistered.Any())
                 {
@@ -49,7 +49,7 @@ public class HostAccessHandler(IApplicationUnitOfWork applicationUnitOfWork) : A
                 }
             }
 
-            var hosts = await applicationUnitOfWork.Organizations.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
+            var hosts = await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.Name == requirement.Host || h.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
             var host = hosts.FirstOrDefault();
 
             if (host == null)

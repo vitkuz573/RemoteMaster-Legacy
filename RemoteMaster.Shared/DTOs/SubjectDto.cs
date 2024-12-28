@@ -4,9 +4,9 @@
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class SubjectDto(string organization, string[] organizationalUnit)
+public class SubjectDto(string organization, List<string> organizationalUnit)
 {
     public string Organization { get; } = organization;
 
-    public string[] OrganizationalUnit { get; } = organizationalUnit;
+    public List<string> OrganizationalUnit { get; } = organizationalUnit;
 }

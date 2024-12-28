@@ -15,13 +15,13 @@ public class CertificateRenewalTaskRepository(CertificateTaskDbContext context) 
     public async Task<CertificateRenewalTask?> GetByIdAsync(Guid id)
     {
         return await context.CertificateRenewalTasks
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(crt => crt.Id == id);
     }
 
     public async Task<IEnumerable<CertificateRenewalTask>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
         return await context.CertificateRenewalTasks
-            .Where(c => ids.Contains(c.Id))
+            .Where(crt => ids.Contains(crt.Id))
             .ToListAsync();
     }
 

@@ -2,8 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.NetworkInformation;
-
 namespace RemoteMaster.Shared.Models;
 
-public record HostMoveRequest(PhysicalAddress MacAddress, string Organization, List<string> OrganizationalUnit);
+public class HostRegisterRequest(HostConfiguration hostConfiguration, bool force)
+{
+    public HostConfiguration HostConfiguration { get; } = hostConfiguration;
+
+    public bool Force { get; } = force;
+}

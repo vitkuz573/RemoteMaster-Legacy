@@ -64,7 +64,7 @@ public class HostRegistrationMonitorService : IHostedService
                     {
                         _logger.LogWarning("Host is not registered. Registering and issuing a new certificate...");
 
-                        await _hostLifecycleService.RegisterAsync();
+                        await _hostLifecycleService.RegisterAsync(true);
                     }
 
                     var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
@@ -86,7 +86,7 @@ public class HostRegistrationMonitorService : IHostedService
             {
                 _logger.LogWarning("Host is not registered and configuration has not changed. Registering and issuing a new certificate...");
 
-                await _hostLifecycleService.RegisterAsync();
+                await _hostLifecycleService.RegisterAsync(true);
 
                 var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 

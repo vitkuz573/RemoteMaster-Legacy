@@ -40,7 +40,7 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
 
         var ipAddress = httpContext.Connection.RemoteIpAddress;
         var isLocal = ipAddress != null && IsLocalIpAddress(ipAddress);
-        var hasServiceFlagHeader = httpContext.Request.Headers.TryGetValue("X-Service-Flag", out var headerValue) && bool.TryParse(headerValue, out var flagValue) && flagValue;
+        var hasServiceFlagHeader = httpContext.Request.Headers.TryGetValue("Service-Flag", out var headerValue) && bool.TryParse(headerValue, out var flagValue) && flagValue;
         var isAuthenticated = context.User.Identity?.IsAuthenticated ?? false;
 
         if (!isAuthenticated)

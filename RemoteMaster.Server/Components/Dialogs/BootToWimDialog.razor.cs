@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Shared.DTOs;
@@ -13,9 +12,6 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class BootToWimDialog
 {
-    [Parameter]
-    public EventCallback<IEnumerable<HostDto>> OnHostsRemoved { get; set; }
-
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
@@ -58,13 +54,6 @@ public partial class BootToWimDialog
             };
 
             await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("ExecuteScript", scriptExecutionRequest));
-
-            foreach (var (host, _) in Hosts)
-            {
-                await OrganizationService.RemoveHostAsync(host.OrganizationId, host.OrganizationalUnitId, host.Id);
-
-                await OnHostsRemoved.InvokeAsync(Hosts.Keys);
-            }
         }
         catch (Exception)
         {

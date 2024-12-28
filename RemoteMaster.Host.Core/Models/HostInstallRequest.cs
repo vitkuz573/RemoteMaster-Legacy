@@ -4,11 +4,13 @@
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class HostInstallRequest(string server, string organization, string organizationalUnit)
+public class HostInstallRequest(string server, string organization, List<string> organizationalUnit, bool force)
 {
     public string Server { get; } = server;
 
     public string Organization { get; } = organization;
 
-    public string OrganizationalUnit { get; } = organizationalUnit;
+    public List<string> OrganizationalUnit { get; } = organizationalUnit;
+
+    public bool Force { get; } = force;
 }

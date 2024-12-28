@@ -11,8 +11,10 @@ public class SubjectOptions
     [JsonPropertyName("organization")]
     public string Organization { get; set; } = string.Empty;
 
+#pragma warning disable CA2227
     [JsonPropertyName("organizationalUnit")]
-    public string[] OrganizationalUnit { get; set; } = [];
+    public List<string> OrganizationalUnit { get; set; } = [];
+#pragma warning restore CA2227
 
     [JsonPropertyName("locality")]
     public string Locality { get; set; } = string.Empty;

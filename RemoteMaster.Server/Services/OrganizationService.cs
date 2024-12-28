@@ -96,7 +96,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
         var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId) ?? throw new InvalidOperationException("Organizational Unit not found");
 
-        if (organizationalUnit.Hosts.All(c => c.Id != hostId))
+        if (organizationalUnit.Hosts.All(h => h.Id != hostId))
         {
             throw new InvalidOperationException("Host not found");
         }

@@ -10,7 +10,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IApiService
 {
-    Task<bool> RegisterHostAsync();
+    Task<bool> RegisterHostAsync(bool force);
 
     Task<bool> UnregisterHostAsync();
 

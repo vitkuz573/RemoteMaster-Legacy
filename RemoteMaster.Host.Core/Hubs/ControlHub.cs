@@ -18,7 +18,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class ControlHub(IAppState appState, IApplicationVersionProvider applicationVersionProvider, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, IClipboardService clipboardService, ILogger<ControlHub> logger) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IApplicationVersionProvider applicationVersionProvider, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IAudioStreamingService audioStreamingService, IOperatingSystemInformationService operatingSystemInformationService, ILogger<ControlHub> logger) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -63,14 +63,14 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         var role = user.FindFirstValue(ClaimTypes.Role) ?? "UnknownRole";
         var authenticationType = GetAuthenticationType(user);
 
-        if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
+        if (query.ContainsKey("thumbnail") && query["thumbnail"] == true.ToString())
         {
             await HandleThumbnailRequest(userName, role, ipAddress, authenticationType);
 
             return;
         }
 
-        var isScreencast = query.ContainsKey("screencast") && query["screencast"] == "true";
+        var isScreencast = query.ContainsKey("screencast") && query["screencast"] == true.ToString();
 
         if (isScreencast)
         {

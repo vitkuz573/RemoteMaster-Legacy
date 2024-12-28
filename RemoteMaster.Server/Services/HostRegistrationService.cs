@@ -7,7 +7,6 @@ using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.Models;
-using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Services;
 
@@ -26,7 +25,10 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
     private async Task<Result<OrganizationalUnit?>> ResolveOrganizationalUnitHierarchyAsync(IEnumerable<string> ouNames, Guid organizationId)
     {
+        var ouNamesList = ouNames.ToList();
+
         OrganizationalUnit? parentOu = null;
+        OrganizationalUnit? currentOu = null;
 
         var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(organizationId);
 
@@ -35,19 +37,34 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             return Result.Fail<OrganizationalUnit?>($"Organization with ID '{organizationId}' not found.");
         }
 
-        foreach (var ouName in ouNames)
+        foreach (var ouName in ouNamesList)
         {
-            var ou = organization.OrganizationalUnits.FirstOrDefault(n => n.Name == ouName && (parentOu == null || n.ParentId == parentOu.Id));
+            currentOu = organization.OrganizationalUnits
+                .FirstOrDefault(n => DoesOrganizationalUnitMatch(n, ouName, parentOu));
 
-            if (ou == null)
+            if (currentOu == null)
             {
-                return Result.Fail<OrganizationalUnit?>($"Organizational Unit '{ouName}' not found in the specified hierarchy.");
+                var existingPath = ouNamesList.TakeWhile(IsMatchingOu);
+                var existingPathString = string.Join(" > ", existingPath);
+                var fullPath = string.Join(" > ", ouNamesList);
+
+                return Result.Fail<OrganizationalUnit?>(
+                    $"Organizational Unit '{ouName}' not found in the hierarchy '{fullPath}'. " +
+                    $"Existing path: '{existingPathString}'."
+                );
             }
 
-            parentOu = ou;
+            parentOu = currentOu;
         }
 
-        return Result.Ok(parentOu);
+        return Result.Ok(currentOu);
+
+        bool IsMatchingOu(string name) => organization.OrganizationalUnits.Any(ou => DoesOrganizationalUnitMatch(ou, name, parentOu));
+    }
+
+    private static bool DoesOrganizationalUnitMatch(OrganizationalUnit ou, string name, OrganizationalUnit? parentOu)
+    {
+        return ou.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && (parentOu == null || ou.ParentId == parentOu.Id);
     }
 
     public async Task<Result> IsHostRegisteredAsync(PhysicalAddress macAddress)
@@ -56,7 +73,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var hosts = await applicationUnitOfWork.Organizations.FindHostsAsync(c => c.MacAddress.Equals(macAddress));
+            var hosts = await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.MacAddress.Equals(macAddress));
 
             if (hosts.Any())
             {
@@ -92,7 +109,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         if (existingHost.Any())
         {
-            var errorMessage = $"Host with MAC address `{hostConfiguration.Host.MacAddress}` is already registered in the system.";
+            var errorMessage = $"Host with MAC address '{hostConfiguration.Host.MacAddress}' is already registered in the system.";
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
@@ -102,56 +119,42 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         if (organizationResult.IsFailed)
         {
-            var errorMessage = $"Host registration failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
+            var errorMessage = $"Host registration failed: {organizationResult.Errors.FirstOrDefault()?.Message} " +
+                               $"for host '{hostConfiguration.Host.Name}' ('{hostConfiguration.Host.MacAddress}') " +
+                               $"in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' " +
+                               $"of organization '{hostConfiguration.Subject.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
         }
 
-        var parentOuResult = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationResult.Value.Id);
+        var ouResult = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationResult.Value.Id);
 
-        if (parentOuResult.IsFailed)
+        if (ouResult.IsFailed)
         {
-            var errorMessage = $"Host registration failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
+            var errorMessage = $"Host registration failed: {ouResult.Errors.FirstOrDefault()?.Message} " +
+                               $"for host '{hostConfiguration.Host.Name}' ('{hostConfiguration.Host.MacAddress}') " +
+                               $"in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' " +
+                               $"of organization '{hostConfiguration.Subject.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
         }
 
-        var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
+        var targetOu = ouResult.Value;
 
         try
         {
-            var host = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.Equals(hostConfiguration.Host.MacAddress));
-
-            if (host != null)
-            {
-                var updateResult = await UpdateHostAsync(host, hostConfiguration);
-
-                if (updateResult.IsFailed)
-                {
-                    var errorMessage = $"Failed to update existing host: {updateResult.Errors.FirstOrDefault()?.Message}";
-
-                    await eventNotificationService.SendNotificationAsync(errorMessage);
-
-                    return Result.Fail(errorMessage);
-                }
-
-                var updateSuccessMessage = $"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
-                await eventNotificationService.SendNotificationAsync(updateSuccessMessage);
-
-                return Result.Ok();
-            }
-
-            parentUnit.AddHost(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
+            targetOu.AddHost(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
 
             applicationUnitOfWork.Organizations.Update(organizationResult.Value);
             await applicationUnitOfWork.CommitAsync();
 
-            var successMessage = $"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
+            var successMessage = $"New host registered: '{hostConfiguration.Host.Name}' ('{hostConfiguration.Host.MacAddress}') " +
+                                 $"in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' " +
+                                 $"of organization '{hostConfiguration.Subject.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(successMessage);
 
@@ -159,30 +162,14 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         }
         catch (Exception ex)
         {
-            var errorMessage = $"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
+            var errorMessage = $"Host registration failed: {ex.Message} for host '{hostConfiguration.Host.Name}' " +
+                               $"('{hostConfiguration.Host.MacAddress}') in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' " +
+                               $"of organization '{hostConfiguration.Subject.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
         }
-    }
-
-    private async Task<Result> UpdateHostAsync(Host host, HostConfiguration hostConfiguration)
-    {
-        if (hostConfiguration.Host == null)
-        {
-            throw new InvalidOperationException("Host information must be provided during the update process.");
-        }
-
-        host.SetName(hostConfiguration.Host.Name);
-        host.SetIpAddress(hostConfiguration.Host.IpAddress);
-
-        var organization = host.Parent.Organization;
-
-        applicationUnitOfWork.Organizations.Update(organization);
-        await applicationUnitOfWork.CommitAsync();
-
-        return Result.Ok();
     }
 
     public async Task<Result> UnregisterHostAsync(HostUnregisterRequest request)
@@ -193,18 +180,22 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         if (organizationResult.IsFailed)
         {
-            var errorMessage = $"Host unregister failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host `{request.MacAddress}` in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
+            var errorMessage = $"Host unregister failed: {organizationResult.Errors.FirstOrDefault()?.Message} " +
+                               $"for host '{request.MacAddress}' in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' " +
+                               $"of organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
         }
 
-        var parentOuResult = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationResult.Value.Id);
+        var ouResult = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationResult.Value.Id);
 
-        if (parentOuResult.IsFailed)
+        if (ouResult.IsFailed)
         {
-            var errorMessage = $"Host unregister failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host `{request.MacAddress}` in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
+            var errorMessage = $"Host unregister failed: {ouResult.Errors.FirstOrDefault()?.Message} " +
+                               $"for host '{request.MacAddress}' in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' " +
+                               $"of organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
@@ -213,22 +204,22 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var host = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.Equals(request.MacAddress));
+            var targetOu = ouResult.Value ?? throw new InvalidOperationException("Target Organizational Unit not found.");
+            var host = targetOu.Hosts.FirstOrDefault(h => h.MacAddress.Equals(request.MacAddress));
 
             if (host == null)
             {
-                var errorMessage = $"Failed to find the host: Host with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
+                var errorMessage = $"Failed to find the host: Host with MAC address '{request.MacAddress}' not found in organizational unit '{targetOu.Name}'.";
 
                 await eventNotificationService.SendNotificationAsync(errorMessage);
 
                 return Result.Fail(errorMessage);
             }
 
-            await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationResult.Value.Id, parentUnit.Id, host.Id);
+            await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationResult.Value.Id, targetOu.Id, host.Id);
             await applicationUnitOfWork.CommitAsync();
 
-            var successMessage = $"Host unregistered: `{request.MacAddress}` from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
+            var successMessage = $"Host unregistered: '{request.MacAddress}' from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(successMessage);
 
@@ -236,7 +227,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         }
         catch (Exception ex)
         {
-            var errorMessage = $"Host unregister failed: {ex.Message} for host `{request.MacAddress}` from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
+            var errorMessage = $"Host unregister failed: {ex.Message} for host '{request.MacAddress}' " +
+                               $"from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' " +
+                               $"in organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
@@ -273,7 +266,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var host = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.Equals(request.MacAddress));
+            var host = parentUnit.Hosts.FirstOrDefault(h => h.MacAddress.Equals(request.MacAddress));
 
             if (host == null)
             {
@@ -300,6 +293,94 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         {
             var errorMessage = $"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
 
+            await eventNotificationService.SendNotificationAsync(errorMessage);
+
+            return Result.Fail(errorMessage);
+        }
+    }
+
+    public async Task<Result> ForceUpdateHostAsync(HostUpdateRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var macAddress = request.MacAddress;
+
+        try
+        {
+            var hosts = await applicationUnitOfWork.Organizations.FindHostsAsync(h => h.MacAddress.Equals(macAddress));
+            var host = hosts.FirstOrDefault();
+
+            if (host == null)
+            {
+                var errorMessage = $"Host with MAC address '{macAddress}' not found.";
+                await eventNotificationService.SendNotificationAsync(errorMessage);
+
+                return Result.Fail(errorMessage);
+            }
+
+            var currentOrganization = host.Parent.Organization;
+            var currentOu = host.Parent;
+
+            var organizationResult = await GetOrganizationAsync(request.Organization);
+
+            if (organizationResult.IsFailed)
+            {
+                var errorMessage = $"Organization '{request.Organization}' not found.";
+                await eventNotificationService.SendNotificationAsync(errorMessage);
+
+                return Result.Fail(errorMessage);
+            }
+
+            var targetOrganization = organizationResult.Value;
+            var targetOrganizationId = targetOrganization.Id;
+
+            var newOuResult = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, targetOrganizationId);
+
+            if (newOuResult.IsFailed)
+            {
+                var errorMessage = newOuResult.Errors.FirstOrDefault()?.Message;
+                await eventNotificationService.SendNotificationAsync(errorMessage);
+
+                return Result.Fail(errorMessage);
+            }
+
+            var targetOu = newOuResult.Value;
+
+            if (targetOu == null)
+            {
+                const string errorMessage = "Target Organizational Unit is null.";
+                await eventNotificationService.SendNotificationAsync(errorMessage);
+
+                return Result.Fail(errorMessage);
+            }
+
+            var needsMove = currentOu.Id != targetOu.Id || currentOrganization.Id != targetOrganizationId;
+
+            if (needsMove)
+            {
+                await applicationUnitOfWork.Organizations.MoveHostAsync(currentOrganization.Id, targetOrganizationId, host.Id, currentOu.Id, targetOu.Id);
+            }
+
+            host.SetName(request.Name);
+            host.SetIpAddress(request.IpAddress);
+
+            applicationUnitOfWork.Organizations.Update(targetOrganization);
+
+            if (needsMove)
+            {
+                applicationUnitOfWork.Organizations.Update(currentOrganization);
+            }
+
+            await applicationUnitOfWork.CommitAsync();
+
+            var successMessage = $"Host '{host.Name}' (`{host.MacAddress}`) updated and moved to organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'.";
+            await eventNotificationService.SendNotificationAsync(successMessage);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = $"Force update failed: {ex.Message}";
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);

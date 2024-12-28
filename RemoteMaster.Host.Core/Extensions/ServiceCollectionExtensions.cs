@@ -64,6 +64,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHostUpdaterNotifier, HostUpdaterNotifier>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
         services.AddSingleton<IChecksumValidator, ChecksumValidator>();
+        services.AddSingleton<IHostConfigurationProvider, HostConfigurationProvider>();
+        services.AddSingleton<IAssemblyAttributeProvider, AssemblyAttributeProvider>();
+        services.AddSingleton<IAssemblyProvider, AssemblyProvider>();
+        services.AddSingleton<IFileVersionInfoProvider, FileVersionInfoProvider>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

@@ -36,8 +36,8 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .IsUnique();
 
         builder.HasMany(ou => ou.Children)
-            .WithOne(c => c.Parent)
-            .HasForeignKey(c => c.ParentId)
+            .WithOne(ou => ou.Parent)
+            .HasForeignKey(ou => ou.ParentId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -47,8 +47,8 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(ou => ou.Hosts)
-            .WithOne(c => c.Parent)
-            .HasForeignKey(c => c.ParentId)
+            .WithOne(h => h.Parent)
+            .HasForeignKey(h => h.ParentId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 

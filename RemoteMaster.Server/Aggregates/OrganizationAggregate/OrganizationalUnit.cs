@@ -64,7 +64,7 @@ public class OrganizationalUnit
 
     internal void AddExistingHost(Host host)
     {
-        if (_hosts.Any(c => c.Id == host.Id))
+        if (_hosts.Any(h => h.Id == host.Id))
         {
             throw new InvalidOperationException("Host already exists in this unit.");
         }
@@ -74,7 +74,7 @@ public class OrganizationalUnit
 
     public void RemoveHost(Guid hostId)
     {
-        var host = _hosts.SingleOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found in this unit.");
+        var host = _hosts.SingleOrDefault(h => h.Id == hostId) ?? throw new InvalidOperationException("Host not found in this unit.");
         
         _hosts.Remove(host);
     }

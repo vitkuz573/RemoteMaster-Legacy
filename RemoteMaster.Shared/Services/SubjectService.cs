@@ -9,9 +9,9 @@ namespace RemoteMaster.Shared.Services;
 
 public class SubjectService : ISubjectService
 {
-    public X500DistinguishedName GetDistinguishedName(string commonName, string organization, string[] organizationalUnits, string locality, string state, string country)
+    public X500DistinguishedName GetDistinguishedName(string commonName, string organization, List<string> organizationalUnits, string locality, string state, string country)
     {
-        if (organizationalUnits == null || organizationalUnits.Length == 0)
+        if (organizationalUnits == null || organizationalUnits.Count == 0)
         {
             throw new ArgumentException("Organizational units cannot be null or empty", nameof(organizationalUnits));
         }

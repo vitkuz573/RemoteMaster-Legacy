@@ -10,7 +10,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider) : IHostConfigurationService
+public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, IHostConfigurationProvider hostConfigurationProvider) : IHostConfigurationService
 {
     private readonly string _configPath = fileSystem.Path.Combine(applicationPathProvider.RootDirectory, $"{AppDomain.CurrentDomain.FriendlyName}.json");
 
@@ -25,7 +25,14 @@ public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathPr
 
         var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, HostJsonSerializerContext.Default.HostConfiguration);
 
-        return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{_configPath}'.");
+        if (hostConfiguration == null)
+        {
+            throw new InvalidDataException($"Invalid configuration in file '{_configPath}'.");
+        }
+
+        hostConfigurationProvider.SetConfiguration(hostConfiguration);
+
+        return hostConfiguration;
     }
 
     public async Task SaveAsync(HostConfiguration hostConfiguration)
@@ -35,5 +42,7 @@ public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathPr
         var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, HostJsonSerializerContext.Default.HostConfiguration);
 
         await fileSystem.File.WriteAllTextAsync(_configPath, hostConfigurationJson);
+
+        hostConfigurationProvider.SetConfiguration(hostConfiguration);
     }
 }

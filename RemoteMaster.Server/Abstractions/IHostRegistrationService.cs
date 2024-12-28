@@ -40,4 +40,6 @@ public interface IHostRegistrationService
     /// <param name="request">The request containing the updated details of the host.</param>
     /// <returns>A <see cref="Result{T}"/> indicating the success or failure of the operation.</returns>
     Task<Result> UpdateHostInformationAsync(HostUpdateRequest request);
+
+    Task<Result> ForceUpdateHostAsync(HostUpdateRequest request);
 }

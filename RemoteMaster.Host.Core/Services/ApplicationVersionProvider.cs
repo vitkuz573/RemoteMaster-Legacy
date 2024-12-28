@@ -2,13 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.Reflection;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ApplicationVersionProvider : IApplicationVersionProvider
+public class ApplicationVersionProvider(IAssemblyProvider assemblyProvider, IFileVersionInfoProvider fileVersionInfoProvider, IAssemblyAttributeProvider assemblyAttributeProvider) : IApplicationVersionProvider
 {
     /// <summary>
     /// Retrieves the version of the specified assembly.
@@ -20,11 +19,11 @@ public class ApplicationVersionProvider : IApplicationVersionProvider
     /// <exception cref="InvalidOperationException">Thrown if the entry assembly cannot be determined.</exception>
     public Version GetVersionFromAssembly(string? assemblyName = null)
     {
-        Assembly? assembly = null;
+        Assembly? assembly;
 
         if (string.IsNullOrWhiteSpace(assemblyName))
         {
-            assembly = Assembly.GetEntryAssembly();
+            assembly = assemblyProvider.GetEntryAssembly();
 
             if (assembly == null)
             {
@@ -33,8 +32,7 @@ public class ApplicationVersionProvider : IApplicationVersionProvider
         }
         else
         {
-            assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => string.Equals(a.GetName()?.Name, assemblyName, StringComparison.OrdinalIgnoreCase));
+            assembly = assemblyProvider.GetAssemblyByName(assemblyName);
 
             if (assembly == null)
             {
@@ -42,14 +40,7 @@ public class ApplicationVersionProvider : IApplicationVersionProvider
             }
         }
 
-        if (assembly is null)
-        {
-            throw new InvalidOperationException("Assembly reference is null.");
-        }
-
-        var fileVersion = assembly
-            .GetCustomAttribute<AssemblyFileVersionAttribute>()?
-            .Version;
+        var fileVersion = assemblyAttributeProvider.GetCustomAttribute<AssemblyFileVersionAttribute>(assembly)?.Version;
 
         return Version.TryParse(fileVersion, out var version) ? version : new Version(0, 0, 0, 0);
     }
@@ -59,6 +50,7 @@ public class ApplicationVersionProvider : IApplicationVersionProvider
     /// </summary>
     /// <param name="executablePath">The full path to the executable file.</param>
     /// <returns>A <see cref="Version"/> object representing the version, or <c>0.0.0.0</c> if not found.</returns>
+    /// <exception cref="ArgumentException">Thrown if the executable path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown if the executable file does not exist.</exception>
     public Version GetVersionFromExecutable(string executablePath)
     {
@@ -67,13 +59,12 @@ public class ApplicationVersionProvider : IApplicationVersionProvider
             throw new ArgumentException("Executable path cannot be null or empty.", nameof(executablePath));
         }
 
-        if (!File.Exists(executablePath))
+        if (!fileVersionInfoProvider.FileExists(executablePath))
         {
             throw new FileNotFoundException($"Executable file not found at path: {executablePath}", executablePath);
         }
 
-        var versionInfo = FileVersionInfo.GetVersionInfo(executablePath);
-        var fileVersion = versionInfo.FileVersion;
+        var fileVersion = fileVersionInfoProvider.GetFileVersion(executablePath);
 
         return Version.TryParse(fileVersion, out var version) ? version : new Version(0, 0, 0, 0);
     }

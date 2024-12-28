@@ -11,7 +11,7 @@ namespace RemoteMaster.Server.Services;
 
 public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfWork) : IOrganizationalUnitService
 {
-    public async Task<string[]> GetFullPathAsync(Guid organizationalUnitId)
+    public async Task<List<string>> GetFullPathAsync(Guid organizationalUnitId)
     {
         var path = new List<string>();
 
@@ -36,7 +36,7 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
             unit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == unit.ParentId);
         }
 
-        return [.. path];
+        return path;
     }
 
     public async Task<string> AddOrUpdateOrganizationalUnitAsync(OrganizationalUnitDto dto)
@@ -63,15 +63,37 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
 
             if (dto.ParentId.HasValue)
             {
+                var parentUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == dto.ParentId.Value);
+
+                if (parentUnit == null)
+                {
+                    return "Error: Parent organizational unit not found.";
+                }
+
                 organizationalUnit.SetParent(dto.ParentId);
+            }
+            else
+            {
+                organizationalUnit.SetParent(null);
             }
         }
         else
         {
-            organization.AddOrganizationalUnit(dto.Name);
+            if (dto.ParentId.HasValue)
+            {
+                var parentUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == dto.ParentId.Value);
+
+                if (parentUnit == null)
+                {
+                    return "Error: Parent organizational unit not found.";
+                }
+            }
+
+            organization.AddOrganizationalUnit(dto.Name, dto.ParentId);
         }
 
         applicationUnitOfWork.Organizations.Update(organization);
+
         await applicationUnitOfWork.CommitAsync();
 
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";

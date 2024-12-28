@@ -12,21 +12,30 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IProcessService processService, IApplicationPathProvider applicationPathProvider, ILogger<HostInstaller> logger) : IHostInstaller
+public class HostInstaller(ICertificateService certificateService, IHostInformationService hostInformationService, IHostConfigurationProvider hostConfigurationProvider, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IApplicationPathProvider applicationPathProvider, ILogger<HostInstaller> logger) : IHostInstaller
 {
     public async Task InstallAsync(HostInstallRequest installRequest)
     {
         ArgumentNullException.ThrowIfNull(installRequest);
 
         try
-        { 
+        {
             var applicationDirectory = applicationPathProvider.RootDirectory;
             var hostInformation = hostInformationService.GetHostInformation();
 
             logger.LogInformation("Starting installation...");
             logger.LogInformation("Server: {Server}", installRequest.Server);
             logger.LogInformation("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
-            logger.LogInformation("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}", hostInformation.Name, installRequest.Organization, installRequest.OrganizationalUnit);
+
+            var subject = new SubjectDto(installRequest.Organization, installRequest.OrganizationalUnit);
+            var hostConfiguration = new HostConfiguration(installRequest.Server, subject, hostInformation);
+
+            hostConfigurationProvider.SetConfiguration(hostConfiguration);
+
+            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(installRequest.Organization);
+            var ous = string.Join(", ", installRequest.OrganizationalUnit.Select(ou => $"OU={ou}"));
+
+            logger.LogInformation("Distinguished Name: CN={CommonName}, O={Organization}, {OrganizationalUnit}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, installRequest.Organization, ous, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
 
             var hostService = serviceFactory.GetService("RCHost");
 
@@ -41,22 +50,24 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
                 hostService.Create();
             }
 
-            var subject = new SubjectDto(installRequest.Organization, [installRequest.OrganizationalUnit]);
+            var registrationSucceeded = await hostLifecycleService.RegisterAsync(installRequest.Force);
 
-            var hostConfiguration = new HostConfiguration(installRequest.Server, subject, hostInformation);
+            if (!registrationSucceeded)
+            {
+                logger.LogError("Registration failed. Aborting installation workflow.");
 
-            await hostConfigurationService.SaveAsync(hostConfiguration);
+                return;
+            }
 
-            logger.LogInformation("{ServiceName} installed and started successfully.", hostService.Name);
-
-            await hostLifecycleService.RegisterAsync();
             await certificateService.GetCaCertificateAsync();
-
-            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(installRequest.Organization);
 
             await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
+            await hostConfigurationService.SaveAsync(hostConfiguration);
+
             hostService.Start();
+
+            logger.LogInformation("{ServiceName} installed and started successfully.", hostService.Name);
         }
         catch (Exception ex)
         {

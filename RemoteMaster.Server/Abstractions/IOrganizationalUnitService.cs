@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IOrganizationalUnitService
 {
-    Task<string[]> GetFullPathAsync(Guid organizationalUnitId);
+    Task<List<string>> GetFullPathAsync(Guid organizationalUnitId);
 
     Task<string> AddOrUpdateOrganizationalUnitAsync(OrganizationalUnitDto dto);
 

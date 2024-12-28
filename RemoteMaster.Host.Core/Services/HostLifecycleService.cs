@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<HostLifecycleService> logger) : IHostLifecycleService
 {
-    public async Task RegisterAsync()
+    public async Task<bool> RegisterAsync(bool force)
     {
         RSA? rsaKeyPair = null;
 
@@ -28,7 +28,7 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
 
             logger.LogInformation("Attempting to register host...");
 
-            var isRegistered = await apiService.RegisterHostAsync();
+            var isRegistered = await apiService.RegisterHostAsync(force);
 
             if (isRegistered)
             {
@@ -54,15 +54,21 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
                 }
 
                 logger.LogInformation("Host registration successful with certificate received.");
+
+                return true;
             }
             else
             {
                 logger.LogWarning("Host registration was not successful.");
+
+                return false;
             }
         }
         catch (Exception ex)
         {
             logger.LogError("Registering host failed: {Message}.", ex.Message);
+
+            return false;
         }
         finally
         {
@@ -70,7 +76,7 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
         }
     }
 
-    public async Task UnregisterAsync()
+    public async Task<bool> UnregisterAsync()
     {
         try
         {
@@ -81,19 +87,23 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
             if (isUnregistered)
             {
                 logger.LogInformation("Host unregister successful.");
+
+                return true;
             }
-            else
-            {
-                logger.LogWarning("Host unregister was not successful.");
-            }
+
+            logger.LogWarning("Host unregister was not successful.");
+
+            return false;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unregistering host failed: {Message}.", ex.Message);
+
+            return false;
         }
     }
 
-    public async Task UpdateHostInformationAsync()
+    public async Task<bool> UpdateHostInformationAsync()
     {
         try
         {
@@ -102,15 +112,19 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
             if (isUpdated)
             {
                 logger.LogInformation("Host information updated successfully.");
+
+                return true;
             }
-            else
-            {
-                logger.LogWarning("Host information update was not successful.");
-            }
+
+            logger.LogWarning("Host information update was not successful.");
+
+            return false;
         }
         catch (Exception ex)
         {
             logger.LogError("Update host information failed: {Message}.", ex.Message);
+
+            return false;
         }
     }
 

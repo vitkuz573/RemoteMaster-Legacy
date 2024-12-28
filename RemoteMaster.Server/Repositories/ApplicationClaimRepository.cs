@@ -15,13 +15,13 @@ public class ApplicationClaimRepository(ApplicationDbContext context) : IApplica
     public async Task<ApplicationClaim?> GetByIdAsync(int id)
     {
         return await context.ApplicationClaims
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(ac => ac.Id == id);
     }
 
     public async Task<IEnumerable<ApplicationClaim>> GetByIdsAsync(IEnumerable<int> ids)
     {
         return await context.ApplicationClaims
-            .Where(c => ids.Contains(c.Id))
+            .Where(ac => ids.Contains(ac.Id))
             .ToListAsync();
     }
 

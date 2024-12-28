@@ -225,10 +225,17 @@ public static class ServiceProviderExtensions
             Required = true
         };
 
-        var organizationalUnitOption = new CliOption<string>("--organizational-unit", "--ou")
+        var organizationalUnitOption = new CliOption<List<string>>("--organizational-unit", "--ou")
         {
             Description = "Specifies the organizational unit where the host is registered.",
+            AllowMultipleArgumentsPerToken = true,
             Required = true
+        };
+
+        var forceOption = new CliOption<bool>("--force", "-f")
+        {
+            Description = "Forcibly register the host in the specified organizational unit, overriding any existing registrations.",
+            Required = false
         };
 
         var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
@@ -285,6 +292,7 @@ public static class ServiceProviderExtensions
         command.Options.Add(serverOption);
         command.Options.Add(organizationOption);
         command.Options.Add(organizationalUnitOption);
+        command.Options.Add(forceOption);
         command.Options.Add(maxAttemptsOption);
         command.Options.Add(initialRetryDelayOption);
         command.Options.Add(maxRetryDelayOption);
@@ -298,6 +306,7 @@ public static class ServiceProviderExtensions
             var server = parseResult.GetValue(serverOption);
             var organization = parseResult.GetValue(organizationOption);
             var organizationalUnit = parseResult.GetValue(organizationalUnitOption);
+            var force = parseResult.GetValue(forceOption);
 
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Install");
             var serverAvailabilityService = serviceProvider.GetRequiredService<IServerAvailabilityService>();
@@ -310,7 +319,7 @@ public static class ServiceProviderExtensions
                 return 1;
             }
 
-            var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
+            var installRequest = new HostInstallRequest(server, organization, organizationalUnit, force);
 
             await hostInstaller.InstallAsync(installRequest);
 
@@ -334,9 +343,10 @@ public static class ServiceProviderExtensions
             Description = "Overrides the current configuration organization."
         };
 
-        var organizationalUnitOption = new CliOption<string>("--organizational-unit", "--ou")
+        var organizationalUnitOption = new CliOption<List<string>>("--organizational-unit", "--ou")
         {
-            Description = "Overrides the current configuration organizational unit."
+            Description = "Overrides the current configuration organizational unit.",
+            AllowMultipleArgumentsPerToken = true
         };
 
         var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
@@ -416,9 +426,13 @@ public static class ServiceProviderExtensions
 
             server ??= currentConfig.Server;
             organization ??= currentConfig.Subject.Organization;
-            organizationalUnit ??= currentConfig.Subject.OrganizationalUnit.FirstOrDefault();
 
-            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(organization) || string.IsNullOrWhiteSpace(organizationalUnit))
+            if (organizationalUnit.Count == 0)
+            {
+                organizationalUnit = currentConfig.Subject.OrganizationalUnit;
+            }
+
+            if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(organization) || organizationalUnit.Count == 0)
             {
                 logger.LogError("The configuration is incomplete or invalid.");
 
@@ -434,7 +448,7 @@ public static class ServiceProviderExtensions
 
             await hostUninstaller.UninstallAsync();
 
-            var installRequest = new HostInstallRequest(server, organization, organizationalUnit);
+            var installRequest = new HostInstallRequest(server, organization, organizationalUnit, false);
 
             await hostInstaller.InstallAsync(installRequest);
 

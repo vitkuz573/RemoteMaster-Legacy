@@ -18,6 +18,8 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Hosts)
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Children)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
@@ -35,6 +37,8 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Hosts)
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Children)
             .ToListAsync();
     }
 
@@ -64,9 +68,9 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
 
     public async Task<IEnumerable<Host>> FindHostsAsync(Expression<Func<Host, bool>> predicate)
     {
-        return await context.Organizations
-            .SelectMany(o => o.OrganizationalUnits)
-            .SelectMany(ou => ou.Hosts)
+        return await context.Hosts
+            .Include(h => h.Parent)
+            .ThenInclude(ou => ou.Organization)
             .Where(predicate)
             .ToListAsync();
     }
@@ -79,7 +83,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == organizationId) ?? throw new InvalidOperationException("Organization not found.");
 
         var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found.");
-        var host = unit.Hosts.FirstOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found.");
+        var host = unit.Hosts.FirstOrDefault(h => h.Id == hostId) ?? throw new InvalidOperationException("Host not found.");
 
         unit.RemoveHost(host.Id);
         context.Hosts.Remove(host);
@@ -115,7 +119,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == targetOrganizationId) ?? throw new InvalidOperationException("Target organization not found.");
 
         var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId) ?? throw new InvalidOperationException("Source unit not found.");
-        var host = sourceUnit.Hosts.FirstOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found in the source unit.");
+        var host = sourceUnit.Hosts.FirstOrDefault(h => h.Id == hostId) ?? throw new InvalidOperationException("Host not found in the source unit.");
         var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId) ?? throw new InvalidOperationException("Target unit not found.");
 
         sourceUnit.RemoveHost(host.Id);

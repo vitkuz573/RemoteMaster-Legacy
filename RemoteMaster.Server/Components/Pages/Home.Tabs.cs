@@ -67,7 +67,7 @@ public partial class Home
                     Label = "Power",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Power()),
                     IsVisible = () => UserHasClaim("Power", "Reboot") || UserHasClaim("Power", "Shutdown"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -75,7 +75,7 @@ public partial class Home
                     Label = "Wake Up",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await WakeUp()),
                     IsVisible = () => UserHasClaim("Power", "WakeUp"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || _selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || _selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -83,7 +83,7 @@ public partial class Home
                     Label = "Connect",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Connect()),
                     IsVisible = () => UserHasAnyClaim("Connect"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -91,7 +91,7 @@ public partial class Home
                     Label = "Lock",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Lock()),
                     IsVisible = () => UserHasClaim("Security", "LockWorkStation"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -107,7 +107,7 @@ public partial class Home
                     Label = "Execute Script",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ExecuteScript()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -115,7 +115,7 @@ public partial class Home
                     Label = "Logon",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LogonHosts()),
                     IsVisible = () => true,
-                    IsDisabled = () => _selectedHosts.Count == 0 || _selectedHosts.Any(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || _selectedHosts.Any(hd => _availableHosts.ContainsKey(hd.IpAddress) || _unavailableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -123,7 +123,7 @@ public partial class Home
                     Label = "Logoff",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LogoffHosts()),
                     IsVisible = () => true,
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.Any(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.Any(hd => _availableHosts.ContainsKey(hd.IpAddress) || _unavailableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -147,7 +147,7 @@ public partial class Home
                     Label = "App Launcher",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await AppLauncher()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -155,7 +155,7 @@ public partial class Home
                     Label = "Set Monitor State",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await SetMonitorState()),
                     IsVisible = () => UserHasClaim("Hardware", "SetMonitorState"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -163,7 +163,7 @@ public partial class Home
                     Label = "PSExec Rules",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ManagePsExecRules()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -171,7 +171,7 @@ public partial class Home
                     Label = "Screen Recorder",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ScreenRecorder()),
                     IsVisible = () => UserHasAnyClaim("ScreenRecording"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -179,7 +179,7 @@ public partial class Home
                     Label = "Domain Membership",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DomainMembership()),
                     IsVisible = () => UserHasAnyClaim("DomainManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -187,7 +187,7 @@ public partial class Home
                     Label = "Update",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Update()),
                     IsVisible = () => UserHasClaim("UpdaterManagement", "Start"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 }
             }
@@ -203,7 +203,7 @@ public partial class Home
                     Label = "WIM Boot",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await WimBoot()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -211,7 +211,7 @@ public partial class Home
                     Label = "Task Manager",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenTaskManager()),
                     IsVisible = () => UserHasAnyClaim("TaskManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -219,7 +219,7 @@ public partial class Home
                     Label = "Device Manager",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenDeviceManager()),
                     IsVisible = () => UserHasAnyClaim("DeviceManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -227,7 +227,7 @@ public partial class Home
                     Label = "File Manager",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenFileManager()),
                     IsVisible = () => UserHasAnyClaim("FileManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -235,7 +235,7 @@ public partial class Home
                     Label = "Upload File",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await FileUpload()),
                     IsVisible = () => UserHasClaim("FileManagement", "Upload"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -243,7 +243,7 @@ public partial class Home
                     Label = "Registry Editor",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenRegistryEditor()),
                     IsVisible = () => UserHasAnyClaim("RegistryManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -251,7 +251,7 @@ public partial class Home
                     Label = "Message Box",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await MessageBox()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -259,7 +259,7 @@ public partial class Home
                     Label = "Send Message",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await SendMessage()),
                     IsVisible = () => UserHasAnyClaim("ChatManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -267,7 +267,7 @@ public partial class Home
                     Label = "Chat",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenChat()),
                     IsVisible = () => UserHasAnyClaim("ChatManagement"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 },
                 new ActionDefinition
@@ -315,7 +315,7 @@ public partial class Home
                     Label = "Renew Certificate",
                     OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await RenewCertificate()),
                     IsVisible = () => UserHasClaim("CertificateManagement", "Renew"),
-                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
+                    IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
                 }
             }
@@ -384,7 +384,7 @@ public partial class Home
     {
         var hosts = includeHosts
             ? onlyAvailable
-                ? _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList()
+                ? _selectedHosts.Where(hd => _availableHosts.ContainsKey(hd.IpAddress)).ToList()
                 : _selectedHosts.ToList()
             : [];
 
@@ -403,7 +403,7 @@ public partial class Home
 
         if (includeHosts)
         {
-            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<HostDto, HubConnection?>(hosts.ToDictionary(c => c, _ => (HubConnection?)null)));
+            dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<HostDto, HubConnection?>(hosts.ToDictionary(hd => hd, _ => (HubConnection?)null)));
             dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.HubPath), hubPath);
             dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.StartConnection), startConnection);
             dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections);
@@ -417,30 +417,7 @@ public partial class Home
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
-    private async Task WimBoot()
-    {
-        var additionalParameters = new Dictionary<string, object>
-        {
-            { nameof(BootToWimDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemoved) }
-        };
-
-        await ExecuteAction<BootToWimDialog>("WIM Boot", hubPath: "hubs/control", additionalParameters: additionalParameters);
-
-        return;
-
-        async Task OnHostsRemoved(IEnumerable<HostDto> removedHosts)
-        {
-            foreach (var removedHost in removedHosts)
-            {
-                _selectedHosts.RemoveAll(c => c.Id == removedHost.Id);
-                _availableHosts.TryRemove(removedHost.IpAddress, out _);
-                _unavailableHosts.TryRemove(removedHost.IpAddress, out _);
-                _pendingHosts.TryRemove(removedHost.IpAddress, out _);
-            }
-
-            await InvokeAsync(StateHasChanged);
-        }
-    }
+    private async Task WimBoot() => await ExecuteAction<BootToWimDialog>("WIM Boot", hubPath: "hubs/control");
 
     private async Task OpenHostRemoveDialog()
     {
@@ -457,7 +434,7 @@ public partial class Home
         {
             foreach (var removedHost in removedHosts)
             {
-                _selectedHosts.RemoveAll(c => c.Id == removedHost.Id);
+                _selectedHosts.RemoveAll(hd => hd.Id == removedHost.Id);
                 _availableHosts.TryRemove(removedHost.IpAddress, out _);
                 _unavailableHosts.TryRemove(removedHost.IpAddress, out _);
                 _pendingHosts.TryRemove(removedHost.IpAddress, out _);
@@ -482,7 +459,7 @@ public partial class Home
         {
             foreach (var movedHost in movedHosts)
             {
-                _selectedHosts.RemoveAll(c => c.Id == movedHost.Id);
+                _selectedHosts.RemoveAll(hd => hd.Id == movedHost.Id);
                 _availableHosts.TryRemove(movedHost.IpAddress, out _);
                 _unavailableHosts.TryRemove(movedHost.IpAddress, out _);
                 _pendingHosts.TryRemove(movedHost.IpAddress, out _);
@@ -641,7 +618,7 @@ public partial class Home
         var cancellationToken = _logonCts.Token;
 
         var tasks = _selectedHosts
-            .Where(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress))
+            .Where(hd => _availableHosts.ContainsKey(hd.IpAddress) || _unavailableHosts.ContainsKey(hd.IpAddress))
             .Select(host => LogoffHost(host, cancellationToken));
 
         await Task.WhenAll(tasks);

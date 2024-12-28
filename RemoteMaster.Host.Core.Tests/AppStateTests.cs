@@ -13,294 +13,493 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Tests;
 
-public class AppStateTests : IDisposable
+public class AppStateTests
 {
+    private readonly Mock<IHubContext<ControlHub, IControlClient>> _hubContextMock;
     private readonly Mock<IControlClient> _controlClientMock;
+    private readonly Mock<ILogger<AppState>> _loggerMock;
     private readonly AppState _appState;
-    private readonly Mock<IViewer> _viewerMock;
-    private bool _viewerAddedEventTriggered;
-    private bool _viewerRemovedEventTriggered;
 
     public AppStateTests()
     {
-        Mock<IHubContext<ControlHub, IControlClient>> hubContextMock = new();
+        _hubContextMock = new Mock<IHubContext<ControlHub, IControlClient>>();
         _controlClientMock = new Mock<IControlClient>();
+        _loggerMock = new Mock<ILogger<AppState>>();
+
+        // Setup Clients.All to return the mock IControlClient
         var clientsMock = new Mock<IHubClients<IControlClient>>();
         clientsMock.Setup(clients => clients.All).Returns(_controlClientMock.Object);
+        _hubContextMock.Setup(hc => hc.Clients).Returns(clientsMock.Object);
 
-        hubContextMock.Setup(hub => hub.Clients).Returns(clientsMock.Object);
-
-        Mock<ILogger<AppState>> loggerMock = new();
-
-        _appState = new AppState(hubContextMock.Object, loggerMock.Object);
-
-        Mock<HubCallerContext> contextMock = new();
-
-        _viewerMock = new Mock<IViewer>();
-        _viewerMock.Setup(v => v.ConnectionId).Returns("testConnectionId");
-        _viewerMock.Setup(v => v.Context).Returns(contextMock.Object);
-
-        _appState.ViewerAdded += (_, _) => _viewerAddedEventTriggered = true;
-        _appState.ViewerRemoved += (_, _) => _viewerRemovedEventTriggered = true;
+        _appState = new AppState(_hubContextMock.Object, _loggerMock.Object);
     }
 
+    #region TryGetViewer Tests
+
     [Fact]
-    public void TryAddViewer_ValidViewer_AddsViewer()
+    public void TryGetViewer_ViewerExists_ReturnsTrueAndViewer()
     {
+        // Arrange
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn1";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+
+        _appState.TryAddViewer(viewerMock.Object);
+
         // Act
-        var result = _appState.TryAddViewer(_viewerMock.Object);
+        var result = _appState.TryGetViewer(connectionId, out var retrievedViewer);
 
         // Assert
         Assert.True(result);
-        Assert.True(_viewerAddedEventTriggered);
-        Assert.Contains(_viewerMock.Object, _appState.GetAllViewers());
+        Assert.Equal(viewerMock.Object, retrievedViewer);
+    }
+
+    [Fact]
+    public void TryGetViewer_ViewerDoesNotExist_ReturnsFalseAndNull()
+    {
+        // Arrange
+        const string connectionId = "nonexistent";
+
+        // Act
+        var result = _appState.TryGetViewer(connectionId, out var retrievedViewer);
+
+        // Assert
+        Assert.False(result);
+        Assert.Null(retrievedViewer);
+    }
+
+    #endregion
+
+    #region TryAddViewer Tests
+
+    [Fact]
+    public void TryAddViewer_ValidViewer_AddsSuccessfully()
+    {
+        // Arrange
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn2";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+
+        var eventInvoked = false;
+        IViewer? addedViewer = null;
+
+        _appState.ViewerAdded += (sender, viewer) =>
+        {
+            eventInvoked = true;
+            addedViewer = viewer;
+        };
+
+        // Act
+        var result = _appState.TryAddViewer(viewerMock.Object);
+
+        // Assert
+        Assert.True(result);
+        Assert.True(eventInvoked);
+        Assert.Equal(viewerMock.Object, addedViewer);
+
+        // Verify that ReceiveAllViewers was called once with the correct DTO
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.Is<List<ViewerDto>>(list =>
+            list.Count == 1 &&
+            list[0].ConnectionId == connectionId
+        )), Times.Once);
+
+        // Verify that no error was logged
+        _loggerMock.Verify(
+            x => x.Log(
+                It.IsAny<LogLevel>(),
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public void TryAddViewer_DuplicateViewer_AddsFails()
+    {
+        // Arrange
+        var viewerMock1 = new Mock<IViewer>();
+        var viewerMock2 = new Mock<IViewer>();
+        const string connectionId = "conn3";
+        viewerMock1.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock2.Setup(v => v.ConnectionId).Returns(connectionId);
+
+        var eventInvoked = false;
+
+        _appState.ViewerAdded += (sender, viewer) =>
+        {
+            eventInvoked = true;
+        };
+
+        // Act
+        var firstAddResult = _appState.TryAddViewer(viewerMock1.Object);
+        var secondAddResult = _appState.TryAddViewer(viewerMock2.Object);
+
+        // Assert
+        Assert.True(firstAddResult);
+        Assert.False(secondAddResult);
+        Assert.True(eventInvoked); // Event should only be invoked once
+
+        // Verify that ReceiveAllViewers was called only once
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Once);
+
+        // Verify that an error was logged for the failed add
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Failed to add viewer with connection ID {connectionId}.")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Once);
     }
 
     [Fact]
     public void TryAddViewer_NullViewer_ThrowsArgumentNullException()
     {
+        // Arrange
+        IViewer? nullViewer = null;
+
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _appState.TryAddViewer(null!));
+        Assert.Throws<ArgumentNullException>(() => _appState.TryAddViewer(nullViewer!));
+
+        // Verify that nothing was added or logged
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Never);
+        _loggerMock.Verify(
+            x => x.Log(
+                It.IsAny<LogLevel>(),
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Never);
     }
 
+    #endregion
+
+    #region TryRemoveViewer Tests
+
     [Fact]
-    public void TryGetViewer_ExistingViewer_ReturnsTrue()
+    public void TryRemoveViewer_ExistingViewer_RemovesSuccessfully()
     {
         // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn4";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
+        viewerMock.Setup(v => v.Dispose());
+
+        _appState.TryAddViewer(viewerMock.Object);
+
+        var eventInvoked = false;
+        IViewer? removedViewer = null;
+
+        _appState.ViewerRemoved += (_, viewer) =>
+        {
+            eventInvoked = true;
+            removedViewer = viewer;
+        };
 
         // Act
-        var result = _appState.TryGetViewer("testConnectionId", out var viewer);
+        var result = _appState.TryRemoveViewer(connectionId);
 
         // Assert
         Assert.True(result);
-        Assert.Equal(_viewerMock.Object, viewer);
+        Assert.True(eventInvoked);
+        Assert.Equal(viewerMock.Object, removedViewer);
+
+        // Verify that Abort and Dispose were called
+        viewerMock.Verify(v => v.Context.Abort(), Times.Once);
+        viewerMock.Verify(v => v.Dispose(), Times.Once);
+
+        // Verify that ReceiveAllViewers was called twice (once for add, once for remove)
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Exactly(2));
+
+        // Verify that an information log was written
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Viewer with connection ID {connectionId} removed successfully.")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Once);
     }
 
     [Fact]
-    public void TryGetViewer_NonExistingViewer_ReturnsFalse()
+    public void TryRemoveViewer_NonExistingViewer_FailsToRemove()
     {
+        // Arrange
+        const string connectionId = "nonexistent";
+
         // Act
-        var result = _appState.TryGetViewer("nonExistingConnectionId", out var viewer);
+        var result = _appState.TryRemoveViewer(connectionId);
 
         // Assert
         Assert.False(result);
-        Assert.Null(viewer);
+
+        // Verify that an error was logged
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Failed to remove viewer with connection ID {connectionId}.")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Once);
+
+        // Verify that ReceiveAllViewers was never called
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Never);
     }
 
-    [Fact]
-    public void TryRemoveViewer_ExistingViewer_RemovesViewer()
-    {
-        // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
+    #endregion
 
+    #region GetAllViewers Tests
+
+    [Fact]
+    public void GetAllViewers_NoViewers_ReturnsEmptyList()
+    {
         // Act
-        var result = _appState.TryRemoveViewer("testConnectionId");
+        var viewers = _appState.GetAllViewers();
 
         // Assert
-        Assert.True(result);
-        Assert.True(_viewerRemovedEventTriggered);
-        Assert.DoesNotContain(_viewerMock.Object, _appState.GetAllViewers());
+        Assert.Empty(viewers);
     }
 
     [Fact]
-    public void TryRemoveViewer_NonExistingViewer_ReturnsFalse()
-    {
-        // Act
-        var result = _appState.TryRemoveViewer("nonExistingConnectionId");
-
-        // Assert
-        Assert.False(result);
-        Assert.False(_viewerRemovedEventTriggered);
-    }
-
-    [Fact]
-    public void GetAllViewers_ReturnsAllViewers()
+    public void GetAllViewers_WithViewers_ReturnsCorrectList()
     {
         // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
+        var viewerMock1 = new Mock<IViewer>();
+        var viewerMock2 = new Mock<IViewer>();
+        const string connectionId1 = "conn5";
+        const string connectionId2 = "conn6";
+        viewerMock1.Setup(v => v.ConnectionId).Returns(connectionId1);
+        viewerMock2.Setup(v => v.ConnectionId).Returns(connectionId2);
+
+        _appState.TryAddViewer(viewerMock1.Object);
+        _appState.TryAddViewer(viewerMock2.Object);
 
         // Act
         var viewers = _appState.GetAllViewers();
 
         // Assert
-        Assert.Single(viewers);
-        Assert.Contains(_viewerMock.Object, viewers);
+        Assert.Equal(2, viewers.Count);
+        Assert.Contains(viewers, v => v == viewerMock1.Object);
+        Assert.Contains(viewers, v => v == viewerMock2.Object);
     }
 
+    #endregion
+
+    #region Events Tests
+
     [Fact]
-    public void NotifyViewersChanged_IsCalledOnAddAndRemoveViewer()
+    public void ViewerAdded_EventIsTriggeredWhenViewerIsAdded()
     {
         // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn7";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
 
-        // Act
-        _appState.TryRemoveViewer(_viewerMock.Object.ConnectionId);
+        var eventInvoked = false;
+        IViewer? addedViewer = null;
 
-        // Assert
-        _controlClientMock.Verify(client => client.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Exactly(2));
-    }
-
-    [Fact]
-    public void NotifyViewersChanged_CorrectlyFormsViewerList()
-    {
-        // Arrange
-        _viewerMock.Setup(v => v.Group).Returns("testGroup");
-        _viewerMock.Setup(v => v.UserName).Returns("testUser");
-        _viewerMock.Setup(v => v.Role).Returns("testRole");
-        _viewerMock.Setup(v => v.ConnectedTime).Returns(DateTime.UtcNow);
-        _viewerMock.Setup(v => v.IpAddress).Returns(IPAddress.Loopback);
-        _viewerMock.Setup(v => v.AuthenticationType).Returns("testAuth");
-
-        _appState.TryAddViewer(_viewerMock.Object);
-
-        // Act
-        _appState.TryRemoveViewer(_viewerMock.Object.ConnectionId);
-
-        // Assert
-        _controlClientMock.Verify(client => client.ReceiveAllViewers(It.Is<List<ViewerDto>>(v => v.Count == 1 && v[0].UserName == "testUser")), Times.Once);
-        _controlClientMock.Verify(client => client.ReceiveAllViewers(It.Is<List<ViewerDto>>(v => v.Count == 0)), Times.Once);
-    }
-
-    [Fact]
-    public void ViewerEvents_MultipleSubscribers_AllReceiveNotifications()
-    {
-        // Arrange
-        var secondViewerAddedEventTriggered = false;
-        var secondViewerRemovedEventTriggered = false;
-
-        _appState.ViewerAdded += (_, _) => secondViewerAddedEventTriggered = true;
-        _appState.ViewerRemoved += (_, _) => secondViewerRemovedEventTriggered = true;
-
-        // Act
-        _appState.TryAddViewer(_viewerMock.Object);
-        _appState.TryRemoveViewer(_viewerMock.Object.ConnectionId);
-
-        // Assert
-        Assert.True(_viewerAddedEventTriggered);
-        Assert.True(secondViewerAddedEventTriggered);
-        Assert.True(_viewerRemovedEventTriggered);
-        Assert.True(secondViewerRemovedEventTriggered);
-    }
-
-    [Fact]
-    public void TryRemoveViewer_NonExistingViewer_DoesNotThrow()
-    {
-        // Act & Assert
-        var exception = Record.Exception(() => _appState.TryRemoveViewer("nonExistingConnectionId"));
-        Assert.Null(exception);
-    }
-
-    [Fact]
-    public void TryAddViewer_LogsInformationAndErrorMessages()
-    {
-        // Arrange
-        var viewerWithSameId = new Mock<IViewer>();
-        viewerWithSameId.Setup(v => v.ConnectionId).Returns("testConnectionId");
-
-        _appState.TryAddViewer(_viewerMock.Object);
-
-        // Act
-        var result = _appState.TryAddViewer(viewerWithSameId.Object);
-
-        // Assert
-        Assert.False(result);
-        _viewerMock.Verify(v => v.ConnectionId, Times.AtLeast(2));
-    }
-
-    [Fact]
-    public void TryAddViewer_ConcurrentAccess_WorksCorrectly()
-    {
-        // Arrange
-        var viewers = Enumerable.Range(0, 100).Select(i =>
+        _appState.ViewerAdded += (_, viewer) =>
         {
-            var mockViewer = new Mock<IViewer>();
-            mockViewer.Setup(v => v.ConnectionId).Returns($"ConnectionId_{i}");
-
-            return mockViewer;
-        }).ToArray();
+            eventInvoked = true;
+            addedViewer = viewer;
+        };
 
         // Act
-        Parallel.ForEach(viewers, viewer => _appState.TryAddViewer(viewer.Object));
-
-        // Assert
-        Assert.Equal(100, _appState.GetAllViewers().Count);
-    }
-
-    [Fact]
-    public void TryAddViewer_DuplicateConnectionId_ReturnsFalse()
-    {
-        // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
-
-        var duplicateViewer = new Mock<IViewer>();
-        duplicateViewer.Setup(v => v.ConnectionId).Returns("testConnectionId");
-
-        // Act
-        var result = _appState.TryAddViewer(duplicateViewer.Object);
-
-        // Assert
-        Assert.False(result);
-        Assert.Single(_appState.GetAllViewers());
-    }
-
-    [Fact]
-    public void TryRemoveViewer_DisposeCalled_CorrectlyHandlesDisposal()
-    {
-        // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
-        _viewerMock.Setup(v => v.Dispose()).Verifiable();
-
-        // Act
-        var result = _appState.TryRemoveViewer("testConnectionId");
+        var result = _appState.TryAddViewer(viewerMock.Object);
 
         // Assert
         Assert.True(result);
-        _viewerMock.Verify(v => v.Dispose(), Times.Once);
+        Assert.True(eventInvoked);
+        Assert.Equal(viewerMock.Object, addedViewer);
     }
 
     [Fact]
-    public void GetAllViewers_LargeNumberOfViewers_ReturnsCorrectCount()
+    public void ViewerRemoved_EventIsTriggeredWhenViewerIsRemoved()
     {
         // Arrange
-        var viewers = Enumerable.Range(0, 1000).Select(i =>
-        {
-            var mockViewer = new Mock<IViewer>();
-            mockViewer.Setup(v => v.ConnectionId).Returns($"ConnectionId_{i}");
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn8";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
+        viewerMock.Setup(v => v.Dispose());
 
-            return mockViewer.Object;
-        }).ToList();
+        var eventInvoked = false;
+        IViewer? removedViewer = null;
 
-        foreach (var viewer in viewers)
+        _appState.ViewerRemoved += (_, viewer) =>
         {
-            _appState.TryAddViewer(viewer);
-        }
+            eventInvoked = true;
+            removedViewer = viewer;
+        };
+
+        _appState.TryAddViewer(viewerMock.Object);
 
         // Act
-        var result = _appState.GetAllViewers();
+        var result = _appState.TryRemoveViewer(connectionId);
 
         // Assert
-        Assert.Equal(1000, result.Count);
+        Assert.True(result);
+        Assert.True(eventInvoked);
+        Assert.Equal(viewerMock.Object, removedViewer);
+    }
+
+    #endregion
+
+    #region NotifyViewersChanged Tests
+
+    // These tests should not attempt to call NotifyViewersChanged directly since it's private.
+    // Instead, they verify that adding/removing viewers triggers the appropriate SignalR calls.
+
+    [Fact]
+    public void AddingViewer_NotifiesClients()
+    {
+        // Arrange
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn13";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock.Setup(v => v.Group).Returns("Group1");
+        viewerMock.Setup(v => v.UserName).Returns("User1");
+        viewerMock.Setup(v => v.Role).Returns("Role1");
+        viewerMock.Setup(v => v.ConnectedTime).Returns(DateTime.UtcNow);
+        viewerMock.Setup(v => v.IpAddress).Returns(IPAddress.Parse("127.0.0.1"));
+        viewerMock.Setup(v => v.AuthenticationType).Returns("Type1");
+
+        // Act
+        var result = _appState.TryAddViewer(viewerMock.Object);
+
+        // Assert
+        Assert.True(result);
+
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.Is<List<ViewerDto>>(list =>
+            list.Count == 1 &&
+            list[0].ConnectionId == connectionId &&
+            list[0].Group == "Group1" &&
+            list[0].UserName == "User1" &&
+            list[0].Role == "Role1" &&
+            list[0].IpAddress.ToString() == "127.0.0.1" &&
+            list[0].AuthenticationType == "Type1"
+        )), Times.Once);
     }
 
     [Fact]
-    public void TryRemoveViewer_DisposeCalledMultipleTimes_NoExceptionThrown()
+    public void RemovingViewer_NotifiesClients()
     {
         // Arrange
-        _appState.TryAddViewer(_viewerMock.Object);
-        _viewerMock.Setup(v => v.Dispose()).Verifiable();
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn14";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock.Setup(v => v.Group).Returns("Group2");
+        viewerMock.Setup(v => v.UserName).Returns("User2");
+        viewerMock.Setup(v => v.Role).Returns("Role2");
+        viewerMock.Setup(v => v.ConnectedTime).Returns(DateTime.UtcNow.AddMinutes(-5));
+        viewerMock.Setup(v => v.IpAddress).Returns(IPAddress.Parse("192.168.1.1"));
+        viewerMock.Setup(v => v.AuthenticationType).Returns("Type2");
+        viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
+        viewerMock.Setup(v => v.Dispose());
+
+        _appState.TryAddViewer(viewerMock.Object);
 
         // Act
-        _appState.TryRemoveViewer("testConnectionId");
-        var exception = Record.Exception(_viewerMock.Object.Dispose);
+        var result = _appState.TryRemoveViewer(connectionId);
 
         // Assert
-        Assert.Null(exception);
-        _viewerMock.Verify(v => v.Dispose(), Times.Exactly(2));
+        Assert.True(result);
+
+        _controlClientMock.Verify(c => c.ReceiveAllViewers(It.Is<List<ViewerDto>>(list =>
+            list.Count == 0
+        )), Times.Once);
     }
 
-    public void Dispose()
+    #endregion
+
+    #region Logging Tests
+
+    [Fact]
+    public void TryAddViewer_FailedToAdd_LogsError()
     {
-        _viewerMock.Object.Dispose();
+        // Arrange
+        var viewerMock1 = new Mock<IViewer>();
+        var viewerMock2 = new Mock<IViewer>();
+        const string connectionId = "conn15";
+        viewerMock1.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock2.Setup(v => v.ConnectionId).Returns(connectionId);
+
+        _appState.TryAddViewer(viewerMock1.Object); // First add succeeds
+
+        // Act
+        var secondAddResult = _appState.TryAddViewer(viewerMock2.Object); // Should fail
+
+        // Assert
+        Assert.False(secondAddResult);
+
+        // Verify that an error was logged for the failed add
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Failed to add viewer with connection ID {connectionId}.")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Once);
     }
+
+    [Fact]
+    public void TryRemoveViewer_SuccessfulRemoval_LogsInformation()
+    {
+        // Arrange
+        var viewerMock = new Mock<IViewer>();
+        const string connectionId = "conn16";
+        viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
+        viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
+        viewerMock.Setup(v => v.Dispose());
+
+        _appState.TryAddViewer(viewerMock.Object);
+
+        // Act
+        var result = _appState.TryRemoveViewer(connectionId);
+
+        // Assert
+        Assert.True(result);
+
+        // Verify that an information log was written
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Viewer with connection ID {connectionId} removed successfully.")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void TryRemoveViewer_FailedRemoval_LogsError()
+    {
+        // Arrange
+        const string connectionId = "nonexistent3";
+
+        // Act
+        var result = _appState.TryRemoveViewer(connectionId);
+
+        // Assert
+        Assert.False(result);
+
+        // Verify that an error was logged
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Failed to remove viewer with connection ID {connectionId}.")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
+            Times.Once);
+    }
+
+    #endregion
 }

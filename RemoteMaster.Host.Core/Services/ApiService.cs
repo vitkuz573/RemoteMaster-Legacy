@@ -16,30 +16,19 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, ILogger<ApiService> logger) : IApiService
+public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationProvider hostConfigurationProvider, IHostInformationService hostInformationService, ILogger<ApiService> logger) : IApiService
 {
-    private readonly HttpClient _client = httpClientFactory.CreateClient(nameof(ApiService));
-
     private const string CurrentApiVersion = "1.0";
 
-    private async Task EnsureClientInitializedAsync()
+    private HttpClient CreateClient(string server)
     {
-        if (_client.BaseAddress == null)
-        {
-            var hostConfiguration = await hostConfigurationService.LoadAsync();
+        var client = httpClientFactory.CreateClient(nameof(ApiService));
+        client.BaseAddress = new Uri($"http://{server}:5254");
 
-            if (hostConfiguration == null || string.IsNullOrEmpty(hostConfiguration.Server))
-            {
-                logger.LogError("Server configuration is required");
-
-                throw new ArgumentNullException(nameof(hostConfiguration.Server), "Server configuration is required");
-            }
-
-            _client.BaseAddress = new Uri($"http://{hostConfiguration.Server}:5254");
-        }
+        return client;
     }
 
-    private async Task NotifyDeprecatedVersionAsync()
+    private async Task NotifyDeprecatedVersionAsync(HostConfiguration hostConfiguration)
     {
         try
         {
@@ -54,7 +43,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
                 Author: hostInformation.IpAddress.ToString()
             );
 
-            await AddNotificationAsync(message);
+            await AddNotificationAsync(hostConfiguration, message);
         }
         catch (InvalidOperationException ex)
         {
@@ -66,7 +55,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
-    private async Task CheckDeprecatedVersionAsync(HttpResponseMessage response)
+    private async Task CheckDeprecatedVersionAsync(HostConfiguration hostConfiguration, HttpResponseMessage response)
     {
         if (response.Headers.Contains("api-deprecated-versions"))
         {
@@ -74,7 +63,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
             if (deprecatedVersions.Contains(CurrentApiVersion))
             {
-                await NotifyDeprecatedVersionAsync();
+                await NotifyDeprecatedVersionAsync(hostConfiguration);
             }
         }
     }
@@ -99,9 +88,9 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         throw new NotSupportedException($"Type {typeof(T)} is not supported for deserialization.");
     }
 
-    private async Task<T?> ProcessResponse<T>(HttpResponseMessage response) where T : class
+    private async Task<T?> ProcessResponse<T>(HostConfiguration hostConfiguration, HttpResponseMessage response) where T : class
     {
-        await CheckDeprecatedVersionAsync(response);
+        await CheckDeprecatedVersionAsync(hostConfiguration, response);
 
         var responseBody = await response.Content.ReadAsStringAsync();
 
@@ -139,9 +128,9 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
-    private async Task<bool> ProcessSimpleResponse(HttpResponseMessage response)
+    private async Task<bool> ProcessSimpleResponse(HostConfiguration hostConfiguration, HttpResponseMessage response)
     {
-        await CheckDeprecatedVersionAsync(response);
+        await CheckDeprecatedVersionAsync(hostConfiguration, response);
 
 #if DEBUG
         var responseBody = await response.Content.ReadAsStringAsync();
@@ -164,125 +153,138 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
 
         return false;
-
     }
 
-    public async Task<bool> RegisterHostAsync()
+    public async Task<bool> RegisterHostAsync(bool force)
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var hostConfiguration = await hostConfigurationService.LoadAsync();
+        var client = CreateClient(hostConfiguration.Server);
 
-        var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration, HostJsonSerializerContext.Default.HostConfiguration);
+        var request = new HostRegisterRequest(hostConfiguration, force);
 
-        return await ProcessSimpleResponse(response);
+        var response = await client.PostAsJsonAsync("/api/Host/register", request, HostJsonSerializerContext.Default.HostRegisterRequest);
+
+        return await ProcessSimpleResponse(hostConfiguration, response);
     }
 
     public async Task<bool> UnregisterHostAsync()
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var hostConfiguration = await hostConfigurationService.LoadAsync();
+        var client = CreateClient(hostConfiguration.Server);
 
-        var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit]);
+        var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit);
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/Host/unregister");
         httpRequest.Content = JsonContent.Create(request, HostJsonSerializerContext.Default.HostUnregisterRequest);
 
-        var response = await _client.SendAsync(httpRequest);
+        var response = await client.SendAsync(httpRequest);
 
-        return await ProcessSimpleResponse(response);
+        return await ProcessSimpleResponse(hostConfiguration, response);
     }
 
     public async Task<bool> UpdateHostInformationAsync()
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var hostConfiguration = await hostConfigurationService.LoadAsync();
+        var client = CreateClient(hostConfiguration.Server);
 
-        var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, [.. hostConfiguration.Subject.OrganizationalUnit], hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+        var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
-        var response = await _client.PutAsJsonAsync("/api/Host/update", request, HostJsonSerializerContext.Default.HostUpdateRequest);
+        var response = await client.PutAsJsonAsync("/api/Host/update", request, HostJsonSerializerContext.Default.HostUpdateRequest);
 
-        return await ProcessSimpleResponse(response);
+        return await ProcessSimpleResponse(hostConfiguration, response);
     }
 
     public async Task<bool> IsHostRegisteredAsync()
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var hostConfiguration = await hostConfigurationService.LoadAsync();
+        var client = CreateClient(hostConfiguration.Server);
 
-        var response = await _client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
+        var response = await client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
 
-        return await ProcessSimpleResponse(response);
+        return await ProcessSimpleResponse(hostConfiguration, response);
     }
 
     public async Task<byte[]?> GetJwtPublicKeyAsync()
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var response = await _client.GetAsync("/api/Jwt/publicKey");
+        var client = CreateClient(hostConfiguration.Server);
 
-        return await ProcessResponse<byte[]>(response);
+        var response = await client.GetAsync("/api/Jwt/publicKey");
+
+        return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
 
     public async Task<byte[]?> GetCaCertificateAsync()
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var response = await _client.GetAsync("/api/Certificate/ca");
+        var client = CreateClient(hostConfiguration.Server);
 
-        return await ProcessResponse<byte[]>(response);
+        var response = await client.GetAsync("/api/Certificate/ca");
+
+        return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
 
     public async Task<byte[]?> IssueCertificateAsync(byte[] csrBytes)
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var response = await _client.PostAsJsonAsync("/api/Certificate/issue", csrBytes, ApiJsonSerializerContext.Default.ByteArray);
+        var client = CreateClient(hostConfiguration.Server);
 
-        return await ProcessResponse<byte[]>(response);
+        var response = await client.PostAsJsonAsync("/api/Certificate/issue", csrBytes, ApiJsonSerializerContext.Default.ByteArray);
+
+        return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
 
     public async Task<HostMoveRequest?> GetHostMoveRequestAsync(PhysicalAddress macAddress)
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var response = await _client.GetAsync($"/api/HostMove?macAddress={macAddress}");
+        var client = CreateClient(hostConfiguration.Server);
+
+        var response = await client.GetAsync($"/api/HostMove?macAddress={macAddress}");
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;
         }
 
-        return await ProcessResponse<HostMoveRequest>(response);
+        return await ProcessResponse<HostMoveRequest>(hostConfiguration, response);
     }
 
     public async Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress)
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress, ApiJsonSerializerContext.Default.PhysicalAddress);
+        var client = CreateClient(hostConfiguration.Server);
 
-        return await ProcessSimpleResponse(response);
+        var response = await client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress, ApiJsonSerializerContext.Default.PhysicalAddress);
+
+        return await ProcessSimpleResponse(hostConfiguration, response);
     }
 
-    private async Task AddNotificationAsync(NotificationMessage message)
+    private async Task AddNotificationAsync(HostConfiguration hostConfiguration, NotificationMessage message)
     {
-        await EnsureClientInitializedAsync();
+        var client = CreateClient(hostConfiguration.Server);
 
-        var response = await _client.PostAsJsonAsync("/api/Notification", message, NotificationJsonSerializerContext.Default.NotificationMessage);
+        var response = await client.PostAsJsonAsync("/api/Notification", message, NotificationJsonSerializerContext.Default.NotificationMessage);
 
-        await ProcessSimpleResponse(response);
+        await ProcessSimpleResponse(hostConfiguration, response);
     }
 
     public async Task<AddressDto?> GetOrganizationAddressAsync(string organizationName)
     {
-        await EnsureClientInitializedAsync();
+        var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
-        var response = await _client.GetAsync($"/api/Organization/address?organizationName={organizationName}");
+        var client = CreateClient(hostConfiguration.Server);
 
-        return await ProcessResponse<AddressDto>(response);
+        var response = await client.GetAsync($"/api/Organization/address?organizationName={organizationName}");
+
+        return await ProcessResponse<AddressDto>(hostConfiguration, response);
     }
 }

@@ -9,8 +9,8 @@ using RemoteMaster.Shared.Models;
 namespace RemoteMaster.Shared.JsonContexts;
 
 [JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(IPAddressConverter), typeof(PhysicalAddressConverter)])]
-[JsonSerializable(typeof(HostConfiguration))]
 [JsonSerializable(typeof(List<HostMoveRequest>))]
+[JsonSerializable(typeof(HostRegisterRequest))]
 [JsonSerializable(typeof(HostUnregisterRequest))]
 [JsonSerializable(typeof(HostUpdateRequest))]
 public partial class HostJsonSerializerContext : JsonSerializerContext;

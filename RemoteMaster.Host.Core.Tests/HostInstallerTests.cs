@@ -21,12 +21,12 @@ public class HostInstallerTests
 {
     private readonly Mock<ICertificateService> _mockCertificateService;
     private readonly Mock<IHostInformationService> _mockHostInformationService;
+    private readonly Mock<IHostConfigurationProvider> _mockHostConfigurationProvider;
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
     private readonly Mock<IServiceFactory> _mockServiceFactory;
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly MockFileSystem _mockFileSystem;
     private readonly Mock<IFileService> _mockFileService;
-    private readonly Mock<IProcessService> _mockProcessService;
     private readonly Mock<IApplicationPathProvider> _mockApplicationPathProvider;
     private readonly Mock<ILogger<HostInstaller>> _mockLogger;
     private readonly HostInstaller _installer;
@@ -35,24 +35,24 @@ public class HostInstallerTests
     {
         _mockCertificateService = new Mock<ICertificateService>();
         _mockHostInformationService = new Mock<IHostInformationService>();
+        _mockHostConfigurationProvider = new Mock<IHostConfigurationProvider>();
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
         _mockServiceFactory = new Mock<IServiceFactory>();
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         _mockFileSystem = new MockFileSystem();
         _mockFileService = new Mock<IFileService>();
-        _mockProcessService = new Mock<IProcessService>();
         _mockApplicationPathProvider = new Mock<IApplicationPathProvider>();
         _mockLogger = new Mock<ILogger<HostInstaller>>();
 
         _installer = new HostInstaller(
             _mockCertificateService.Object,
             _mockHostInformationService.Object,
+            _mockHostConfigurationProvider.Object,
             _mockHostConfigurationService.Object,
             _mockServiceFactory.Object,
             _mockHostLifecycleService.Object,
             _mockFileSystem,
             _mockFileService.Object,
-            _mockProcessService.Object,
             _mockApplicationPathProvider.Object,
             _mockLogger.Object);
     }
@@ -63,7 +63,7 @@ public class HostInstallerTests
     public async Task InstallAsync_ShouldInstallAndStartHostServiceSuccessfully()
     {
         // Arrange
-        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", ["TestOU"], false);
         var hostInformation = new HostDto("TestHost", IPAddress.Parse("127.0.0.1"), PhysicalAddress.Parse("001122334455"));
         var organizationAddress = new AddressDto("Locality", "State", "Country");
         var serviceMock = new Mock<IService>();
@@ -75,6 +75,15 @@ public class HostInstallerTests
 
         _mockHostLifecycleService.Setup(l => l.GetOrganizationAddressAsync(installRequest.Organization))
             .ReturnsAsync(organizationAddress);
+
+        _mockHostLifecycleService.Setup(l => l.RegisterAsync(installRequest.Force))
+            .ReturnsAsync(true);
+
+        _mockCertificateService.Setup(c => c.IssueCertificateAsync(It.IsAny<HostConfiguration>(), organizationAddress))
+            .Returns(Task.CompletedTask);
+
+        _mockHostConfigurationService.Setup(c => c.SaveAsync(It.IsAny<HostConfiguration>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         await _installer.InstallAsync(installRequest);
@@ -96,7 +105,7 @@ public class HostInstallerTests
     public async Task InstallAsync_ShouldInstallHostService_WhenNotInstalled()
     {
         // Arrange
-        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", ["TestOU"], false);
         var hostInformation = new HostDto("TestHost", IPAddress.Parse("127.0.0.1"), PhysicalAddress.Parse("001122334455"));
         var organizationAddress = new AddressDto("Locality", "State", "Country");
         var serviceMock = new Mock<IService>();
@@ -107,6 +116,9 @@ public class HostInstallerTests
 
         _mockHostLifecycleService.Setup(l => l.GetOrganizationAddressAsync(installRequest.Organization))
             .ReturnsAsync(organizationAddress);
+
+        _mockHostLifecycleService.Setup(l => l.RegisterAsync(installRequest.Force))
+            .ReturnsAsync(true);
 
         // Act
         await _installer.InstallAsync(installRequest);
@@ -122,14 +134,23 @@ public class HostInstallerTests
     public async Task InstallAsync_ShouldUpdateHostService_WhenAlreadyInstalled()
     {
         // Arrange
-        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", ["TestOU"], false);
         var hostInformation = new HostDto("TestHost", IPAddress.Parse("127.0.0.1"), PhysicalAddress.Parse("001122334455"));
+        var organizationAddress = new AddressDto("Locality", "State", "Country");
+        var hostConfiguration = new HostConfiguration("test-server", new SubjectDto("TestOrg", ["TestOU"]), hostInformation);
         var serviceMock = new Mock<IService>();
 
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Returns(hostInformation);
 
         serviceMock.Setup(s => s.IsInstalled).Returns(true);
         _mockServiceFactory.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
+
+        _mockHostConfigurationProvider.Setup(p => p.Current).Returns(hostConfiguration);
+        _mockHostLifecycleService.Setup(l => l.GetOrganizationAddressAsync(installRequest.Organization))
+            .ReturnsAsync(organizationAddress);
+
+        _mockHostLifecycleService.Setup(l => l.RegisterAsync(installRequest.Force))
+            .ReturnsAsync(true);
 
         // Act
         await _installer.InstallAsync(installRequest);
@@ -148,7 +169,7 @@ public class HostInstallerTests
     public async Task InstallAsync_ShouldLogError_WhenHostInformationFails()
     {
         // Arrange
-        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", ["TestOU"], false);
 
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Throws(new InvalidOperationException("Test error"));
 
@@ -167,7 +188,7 @@ public class HostInstallerTests
     public async Task InstallAsync_ShouldLogError_WhenExceptionOccurs()
     {
         // Arrange
-        var installRequest = new HostInstallRequest("test-server", "TestOrg", "TestOU");
+        var installRequest = new HostInstallRequest("test-server", "TestOrg", ["TestOU"], false);
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Throws(new InvalidOperationException("Test error"));
 
         // Act

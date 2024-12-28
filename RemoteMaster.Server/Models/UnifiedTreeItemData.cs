@@ -13,7 +13,7 @@ public class UnifiedTreeItemData : TreeItemData<object>
     public UnifiedTreeItemData(object node)
     {
         ArgumentNullException.ThrowIfNull(node);
-
+        
         Value = node;
 
         Initialize(node);
@@ -27,17 +27,22 @@ public class UnifiedTreeItemData : TreeItemData<object>
         {
             case Organization organization:
                 Text = organization.Name;
-                Children.AddRange(organization.OrganizationalUnits.Select(unit => new UnifiedTreeItemData(unit) as TreeItemData<object>));
+                Icon = Icons.Material.Filled.Business;
+                Children.AddRange(organization.OrganizationalUnits
+                    .Where(ou => !ou.ParentId.HasValue)
+                    .Select(unit => new UnifiedTreeItemData(unit)));
                 break;
 
             case OrganizationalUnit unit:
                 Text = unit.Name;
-                Children.AddRange(unit.Hosts.Select(host => new UnifiedTreeItemData(host) as TreeItemData<object>));
-                Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<object>));
+                Icon = Icons.Material.Filled.AccountTree;
+                Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child)));
+                Children.AddRange(unit.Hosts.Select(host => new UnifiedTreeItemData(host)));
                 break;
 
             case Host host:
                 Text = host.Name;
+                Icon = Icons.Material.Filled.Computer;
                 break;
 
             default:

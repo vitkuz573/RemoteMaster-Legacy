@@ -14,34 +14,34 @@ public class HostConfiguration : IEntityTypeConfiguration<Host>
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "EntityTypeBuilder will not be null.")]
     public void Configure(EntityTypeBuilder<Host> builder)
     {
-        builder.HasKey(c => c.Id);
+        builder.HasKey(h => h.Id);
 
-        builder.Property(c => c.Id)
+        builder.Property(h => h.Id)
             .ValueGeneratedOnAdd()
             .HasColumnOrder(0);
 
-        builder.Property(c => c.Name)
+        builder.Property(h => h.Name)
             .IsRequired()
             .HasMaxLength(50)
             .HasColumnOrder(1);
 
-        builder.Property(c => c.IpAddress)
+        builder.Property(h => h.IpAddress)
             .IsRequired()
             .HasMaxLength(45)
             .HasColumnOrder(2);
 
-        builder.Property(c => c.MacAddress)
+        builder.Property(h => h.MacAddress)
             .IsRequired()
             .HasMaxLength(17)
             .HasColumnOrder(3);
 
-        builder.HasOne(c => c.Parent)
+        builder.HasOne(h => h.Parent)
             .WithMany(ou => ou.Hosts)
-            .HasForeignKey(c => c.ParentId)
+            .HasForeignKey(h => h.ParentId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(c => c.MacAddress)
+        builder.HasIndex(h => h.MacAddress)
             .IsUnique();
     }
 }
