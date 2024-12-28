@@ -44,7 +44,7 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
-        _httpContext.Request.Headers["Service-Flag"] = true.ToString();
+        _httpContext.Request.Headers["Service-Flag"] = true.ToString().ToLower();
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
@@ -61,7 +61,7 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("::ffff:192.168.1.1");
-        _httpContext.Request.Headers["Service-Flag"] = true.ToString();
+        _httpContext.Request.Headers["Service-Flag"] = true.ToString().ToLower();
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
@@ -94,7 +94,7 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
-        _httpContext.Request.Headers["Service-Flag"] = true.ToString();
+        _httpContext.Request.Headers["Service-Flag"] = true.ToString().ToLower();
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
@@ -138,7 +138,7 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.10.10");
-        _httpContext.Request.Headers["Service-Flag"] = true.ToString();
+        _httpContext.Request.Headers["Service-Flag"] = true.ToString().ToLower();
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
