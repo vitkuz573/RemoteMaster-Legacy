@@ -154,7 +154,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         chatInstanceService.Stop();
         userInstanceService.Stop();
 
-        await fileService.WaitForFileReleaseAsync(_rootDirectory, ["Updater", "Update"]);
+        await fileService.WaitForFileReleaseAsync(_rootDirectory);
 
         var copySuccess = await CopyDirectoryAsync(_updateDirectory, _rootDirectory, true);
 

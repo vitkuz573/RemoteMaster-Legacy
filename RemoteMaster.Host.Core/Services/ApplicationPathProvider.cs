@@ -14,9 +14,9 @@ public class ApplicationPathProvider(IFileSystem fileSystem) : IApplicationPathP
 
     public string RootDirectory => fileSystem.Path.Combine(_programFilesPath, "RemoteMaster", "Host");
 
-    public string UpdateDirectory => fileSystem.Path.Combine(RootDirectory, "Update");
-
-    public string UpdaterDirectory => fileSystem.Path.Combine(RootDirectory, "Updater");
-
     public string DataDirectory => fileSystem.Path.Combine(_commonAppDataPath, "RemoteMaster", "Host");
+
+    public string UpdaterDirectory => fileSystem.Path.Combine(DataDirectory, "Updater");
+
+    public string UpdateDirectory => fileSystem.Path.Combine(DataDirectory, "Update");
 }

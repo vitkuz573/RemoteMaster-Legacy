@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, IHostConfigurationProvider hostConfigurationProvider) : IHostConfigurationService
 {
-    private readonly string _configPath = fileSystem.Path.Combine(applicationPathProvider.RootDirectory, $"{AppDomain.CurrentDomain.FriendlyName}.json");
+    private readonly string _configPath = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, $"{AppDomain.CurrentDomain.FriendlyName}.json");
 
     public async Task<HostConfiguration> LoadAsync()
     {

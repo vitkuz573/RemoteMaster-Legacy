@@ -8,9 +8,9 @@ public interface IApplicationPathProvider
 {
     string RootDirectory { get; }
 
-    string UpdateDirectory { get; }
+    string DataDirectory { get; }
 
     string UpdaterDirectory { get; }
 
-    string DataDirectory { get; }
+    string UpdateDirectory { get; }
 }

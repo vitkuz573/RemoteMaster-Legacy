@@ -28,7 +28,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
                 userInstanceService.Stop();
             }
 
-            await fileService.WaitForFileReleaseAsync(_rootDirectory, ["Updater", "Update"]);
+            await fileService.WaitForFileReleaseAsync(_rootDirectory);
 
             var fileName = fileSystem.Path.GetFileName(Environment.ProcessPath!);
 
