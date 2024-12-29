@@ -23,13 +23,8 @@ public class HostConfigurationService(IFileSystem fileSystem, IApplicationPathPr
 
         var hostConfigurationJson = await fileSystem.File.ReadAllTextAsync(_configPath);
 
-        var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, HostJsonSerializerContext.Default.HostConfiguration);
-
-        if (hostConfiguration == null)
-        {
-            throw new InvalidDataException($"Invalid configuration in file '{_configPath}'.");
-        }
-
+        var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, HostJsonSerializerContext.Default.HostConfiguration) ?? throw new InvalidDataException($"Invalid configuration in file '{_configPath}'.");
+        
         hostConfigurationProvider.SetConfiguration(hostConfiguration);
 
         return hostConfiguration;

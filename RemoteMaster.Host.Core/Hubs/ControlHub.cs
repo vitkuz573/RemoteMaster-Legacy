@@ -63,16 +63,14 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         var role = user.FindFirstValue(ClaimTypes.Role) ?? "UnknownRole";
         var authenticationType = GetAuthenticationType(user);
 
-        if (query.ContainsKey("thumbnail") && query["thumbnail"] == true.ToString().ToLower())
+        if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
         {
             await HandleThumbnailRequest(userName, role, ipAddress, authenticationType);
 
             return;
         }
 
-        var isScreencast = query.ContainsKey("screencast") && query["screencast"] == true.ToString().ToLower();
-
-        if (isScreencast)
+        if (query.ContainsKey("screencast") && query["screencast"] == "true")
         {
             if (!query.TryGetValue("action", out var action) || string.IsNullOrEmpty(action))
             {

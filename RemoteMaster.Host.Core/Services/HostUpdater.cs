@@ -136,7 +136,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         var updaterHubClient = new HubConnectionBuilder()
             .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/updater", options =>
             {
-                options.Headers.Add("Service-Flag", true.ToString().ToLower());
+                options.Headers.Add("Service-Flag", "true");
             })
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
