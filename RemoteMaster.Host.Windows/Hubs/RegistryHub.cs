@@ -17,7 +17,7 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     [Authorize(Policy = "GetRootKeysPolicy")]
     public async Task GetRootKeys()
     {
-        var rootKeys = registryService.GetRootKeys().Select(key => key.Name);
+        var rootKeys = registryService.GetRootKeys().Select(key => key.Name).ToList();
 
         await Clients.Caller.ReceiveRootKeys(rootKeys);
     }
