@@ -288,7 +288,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
 
             var nonRunningServices = services.Where(service => !service.IsRunning).ToList();
 
-            allServicesRunning = !nonRunningServices.Any();
+            allServicesRunning = nonRunningServices.Count == 0;
 
             if (allServicesRunning)
             {
