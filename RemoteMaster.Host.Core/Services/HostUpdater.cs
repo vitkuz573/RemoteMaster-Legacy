@@ -276,7 +276,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         return false;
     }
 
-    private async Task EnsureServicesRunning(List<IRunnable> services, TimeSpan delay, int attempts)
+    private async Task EnsureServicesRunning(IEnumerable<IRunnable> services, TimeSpan delay, int attempts)
     {
         var allServicesRunning = false;
 
