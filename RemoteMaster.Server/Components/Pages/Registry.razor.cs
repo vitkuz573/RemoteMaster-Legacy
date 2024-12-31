@@ -245,6 +245,15 @@ public partial class Registry : IAsyncDisposable
             await InvokeAsync(StateHasChanged);
         });
 
+        _connection.On<byte[]>("ReceiveExportedRegistryBranch", async exportedData =>
+        {
+            var exportResultBase64 = Convert.ToBase64String(exportedData);
+            var fileName = $"{_currentPath.Replace("\\", "_")}.reg";
+
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+            await module.InvokeVoidAsync("downloadDataAsFile", exportResultBase64, fileName, "application/octet-stream;base64");
+        });
+
         _connection.Closed += async _ =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
@@ -574,12 +583,7 @@ public partial class Registry : IAsyncDisposable
             _ => throw new InvalidOperationException("Unknown registry hive")
         };
 
-        var exportResult = await _connection!.InvokeAsync<byte[]>("ExportRegistryBranch", hive, keyPathWithoutHive);
-        var exportResultBase64 = Convert.ToBase64String(exportResult);
-        var fileName = $"{_currentPath.Replace("\\", "_")}.reg";
-
-        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
-        await module.InvokeVoidAsync("downloadDataAsFile", exportResultBase64, fileName, "application/octet-stream;base64");
+        await _connection!.InvokeAsync<byte[]>("ExportRegistryBranch", hive, keyPathWithoutHive);
     }
 
     [JSInvokable]

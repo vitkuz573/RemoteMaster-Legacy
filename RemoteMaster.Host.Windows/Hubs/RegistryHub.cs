@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -26,47 +24,38 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     public async Task GetRegistryValue(RegistryHive hive, string keyPath, string valueName, object defaultValue)
     {
         var value = registryService.GetValue(hive, keyPath, valueName, defaultValue);
-        
+
         await Clients.Caller.ReceiveRegistryValue(value);
     }
 
     [Authorize(Policy = "SetRegistryValuePolicy")]
     public async Task SetRegistryValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)
     {
-        registryService.SetValue(hive, keyPath, valueName, value, valueKind);
+        try
+        {
+            registryService.SetValue(hive, keyPath, valueName, value, valueKind);
 
-        await Clients.Caller.ReceiveOperationResult("Value set successfully.");
+            await Clients.Caller.ReceiveOperationResult("Value set successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error setting registry value: {Message}", ex.Message);
+
+            await Clients.Caller.ReceiveOperationResult($"Error setting value: {ex.Message}");
+        }
     }
 
     [Authorize(Policy = "GetSubKeyNamesPolicy")]
     public async Task GetSubKeyNames(RegistryHive hive, string? keyPath, string parentKey)
     {
-        logger.LogInformation("Fetching subkeys for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
+        var subKeyNames = await registryService.GetSubKeyNamesAsync(hive, keyPath);
 
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
-
-        using var key = string.IsNullOrEmpty(keyPath) ? baseKey : baseKey.OpenSubKey(keyPath);
-        
-        if (key == null)
-        {
-            logger.LogError("Failed to open key: {KeyPath}", keyPath ?? "<root>");
-            await Clients.Caller.ReceiveSubKeyNames([], parentKey);
-
-            return;
-        }
-
-        var subKeyNames = key.GetSubKeyNames();
-
-        logger.LogInformation("Fetched {SubKeyCount} subkeys for keyPath: {KeyPath}", subKeyNames.Length, keyPath ?? "<root>");
-
-        await Clients.Caller.ReceiveSubKeyNames(subKeyNames, parentKey);
+        await Clients.Caller.ReceiveSubKeyNames(subKeyNames.ToArray(), parentKey);
     }
 
     [Authorize(Policy = "GetAllRegistryValuesPolicy")]
     public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
     {
-        logger.LogInformation("Fetching all registry values for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath);
-
         var values = registryService.GetAllValues(hive, keyPath);
 
         if (values.Any())
@@ -78,135 +67,23 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
             logger.LogWarning("No registry values found for keyPath: {KeyPath}", keyPath);
         }
 
-        await Clients.Caller.ReceiveAllRegistryValues(values);
+        await Clients.Caller.ReceiveAllRegistryValues(values.ToList());
     }
 
     [Authorize(Policy = "ExportRegistryBranchPolicy")]
-    public async Task<byte[]> ExportRegistryBranch(RegistryHive hive, string? keyPath)
-    {
-        logger.LogInformation("Exporting registry branch for hive: {Hive}, keyPath: {KeyPath}", hive, keyPath ?? "<root>");
-
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
-
-        using var key = string.IsNullOrEmpty(keyPath) ? baseKey : baseKey.OpenSubKey(keyPath);
-
-        if (key == null)
-        {
-            logger.LogError("Failed to open key for export: {KeyPath}", keyPath ?? "<root>");
-
-            return [];
-        }
-
-        using var memoryStream = new MemoryStream();
-        await using var writer = new StreamWriter(memoryStream);
-
-        await writer.WriteLineAsync("Windows Registry Editor Version 5.00");
-        await writer.WriteLineAsync();
-
-        ExportKey(writer, key, key.Name);
-
-        await writer.FlushAsync();
-
-        return memoryStream.ToArray();
-    }
-
-    private void ExportKey(StreamWriter writer, RegistryKey key, string path)
+    public async Task ExportRegistryBranch(RegistryHive hive, string? keyPath)
     {
         try
         {
-            writer.WriteLine($"[{path}]");
+            var exportedData = await registryService.ExportRegistryBranchAsync(hive, keyPath);
 
-            foreach (var valueName in key.GetValueNames())
-            {
-                var value = key.GetValue(valueName);
-                var valueKind = key.GetValueKind(valueName);
-
-                switch (valueKind)
-                {
-                    case RegistryValueKind.String:
-                        if (value is string stringValue)
-                        {
-                            writer.WriteLine($"\"{valueName}\"=\"{stringValue}\"");
-                        }
-                        break;
-                    case RegistryValueKind.ExpandString:
-                        if (value is string expandStringValue)
-                        {
-                            writer.WriteLine($"\"{valueName}\"=hex(2):{ToHexString(expandStringValue)}");
-                        }
-                        break;
-                    case RegistryValueKind.DWord:
-                        if (value is int dwordValue)
-                        {
-                            writer.WriteLine($"\"{valueName}\"=dword:{dwordValue:x8}");
-                        }
-                        break;
-                    case RegistryValueKind.QWord:
-                        if (value is long qwordValue)
-                        {
-                            writer.WriteLine($"\"{valueName}\"=qword:{qwordValue:x16}");
-                        }
-                        break;
-                    case RegistryValueKind.Binary:
-                        if (value is byte[] byteArrayValue)
-                        {
-                            var hex = BitConverter.ToString(byteArrayValue).Replace("-", ",");
-                            writer.WriteLine($"\"{valueName}\"=hex:{hex}");
-                        }
-                        break;
-                    case RegistryValueKind.MultiString:
-                        if (value is string[] multiStringValue)
-                        {
-                            var multiStringHex = ToMultiStringHex(multiStringValue);
-                            writer.WriteLine($"\"{valueName}\"=hex(7):{multiStringHex}");
-                        }
-                        break;
-                    case RegistryValueKind.None:
-                        logger.LogDebug("Registry value kind 'None' for valueName: {ValueName}", valueName);
-                        break;
-                    case RegistryValueKind.Unknown:
-                        logger.LogDebug("Registry value kind 'Unknown' for valueName: {ValueName}", valueName);
-                        break;
-                    default:
-                        logger.LogDebug("Unsupported registry value type: {ValueKind} for valueName: {ValueName}", valueKind, valueName);
-                        break;
-                }
-            }
-
-            writer.WriteLine();
-
-            foreach (var subKeyName in key.GetSubKeyNames())
-            {
-                using var subKey = key.OpenSubKey(subKeyName);
-
-                if (subKey != null)
-                {
-                    ExportKey(writer, subKey, $"{path}\\{subKeyName}");
-                }
-            }
+            await Clients.Caller.ReceiveExportedRegistryBranch(exportedData);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex)
         {
-            logger.LogWarning("Access denied to registry key: {Path}. Exception: {Message}", path, ex.Message);
+            logger.LogError("Error exporting registry branch: {Message}", ex.Message);
+
+            await Clients.Caller.ReceiveOperationResult($"Error exporting registry branch: {ex.Message}");
         }
-        catch (SecurityException ex)
-        {
-            logger.LogWarning("Security exception for registry key: {Path}. Exception: {Message}", path, ex.Message);
-        }
-    }
-
-    private static string ToHexString(string value)
-    {
-        var bytes = Encoding.Unicode.GetBytes(value);
-
-        return BitConverter.ToString(bytes).Replace("-", ",");
-    }
-
-    private static string ToMultiStringHex(string[] values)
-    {
-        var joinedStrings = string.Join("\0", values) + "\0\0";
-        var bytes = Encoding.Unicode.GetBytes(joinedStrings);
-
-        return BitConverter.ToString(bytes).Replace("-", ",");
     }
 }

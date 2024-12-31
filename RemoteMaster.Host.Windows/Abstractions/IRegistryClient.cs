@@ -17,4 +17,6 @@ public interface IRegistryClient
     Task ReceiveOperationResult(string message);
 
     Task ReceiveAllRegistryValues(IEnumerable<RegistryValueDto> values);
+
+    Task ReceiveExportedRegistryBranch(byte[] exportedData);
 }
