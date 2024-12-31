@@ -98,7 +98,7 @@ public class CommandListenerService : IHostedService
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/service", options =>
                 {
-                    options.Headers.Add("Service-Flag", true.ToString());
+                    options.Headers.Add("Service-Flag", "true");
                 })
                 .AddMessagePackProtocol(options => options.Configure())
                 .Build();

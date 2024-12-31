@@ -98,7 +98,10 @@ public class ChatWindowService : IHostedService
         var hostConfiguration = await _hostConfigurationService.LoadAsync();
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat")
+            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat", options =>
+            {
+                options.Headers.Add("Service-Flag", "true");
+            })
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
