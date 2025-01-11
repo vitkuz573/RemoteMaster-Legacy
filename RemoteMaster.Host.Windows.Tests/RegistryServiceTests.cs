@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -12,14 +13,16 @@ namespace RemoteMaster.Host.Windows.Tests;
 public class RegistryServiceTests
 {
     private readonly Mock<IRegistryKeyFactory> _mockRegistryKeyFactory;
+    private readonly Mock<ILogger<RegistryService>> _mockLogger;
     private readonly Mock<IRegistryKey> _mockRegistryKey;
     private readonly RegistryService _registryService;
 
     public RegistryServiceTests()
     {
         _mockRegistryKeyFactory = new Mock<IRegistryKeyFactory>();
+        _mockLogger = new Mock<ILogger<RegistryService>>();
         _mockRegistryKey = new Mock<IRegistryKey>();
-        _registryService = new RegistryService(_mockRegistryKeyFactory.Object);
+        _registryService = new RegistryService(_mockRegistryKeyFactory.Object, _mockLogger.Object);
     }
 
     [Fact]
