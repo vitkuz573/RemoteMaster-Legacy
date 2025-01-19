@@ -38,7 +38,7 @@ public class RegistryServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsAssignableFrom<IRegistryKey>(result);
+        Assert.IsType<IRegistryKey>(result, false);
     }
 
     [Fact]
