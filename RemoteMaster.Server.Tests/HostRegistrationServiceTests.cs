@@ -66,7 +66,7 @@ public class HostRegistrationServiceTests
         // Assert
         Assert.True(result.IsSuccess);
         _eventNotificationServiceMock.Verify(x => x.SendNotificationAsync(It.IsAny<string>()), Times.Once);
-        _applicationUnitOfWorkMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);  // Проверяем SaveChanges через UnitOfWork
+        _applicationUnitOfWorkMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
