@@ -7,14 +7,13 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class DisconnectViewerDialog
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
     public HubConnection HubConnection { get; set; } = default!;

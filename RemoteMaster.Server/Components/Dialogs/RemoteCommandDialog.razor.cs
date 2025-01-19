@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class RemoteCommandDialog
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private string _host = string.Empty;
     private string _localFilePath = string.Empty;

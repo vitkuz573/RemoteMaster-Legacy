@@ -14,7 +14,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class SslWarningDialog
 {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
     public IPAddress IpAddress { get; set; } = default!;

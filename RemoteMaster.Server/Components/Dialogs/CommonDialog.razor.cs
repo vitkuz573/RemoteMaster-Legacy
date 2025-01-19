@@ -22,7 +22,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public class CommonDialogBase : ComponentBase, IAsyncDisposable
 {
     [CascadingParameter]
-    protected MudDialogInstance MudDialog { get; set; } = default!;
+    protected IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
