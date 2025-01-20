@@ -64,7 +64,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
         }
 
         arguments.Add("--wait-for-client-connection-timeout");
-        arguments.Add("0");
+        arguments.Add(updateRequest.WaitForClientConnectionTimeout.ToString());
 
         var startInfo = new ProcessStartInfo
         {

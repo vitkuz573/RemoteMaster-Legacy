@@ -15,4 +15,6 @@ public class UpdateRequest(string folderPath)
     public bool ForceUpdate { get; init; }
 
     public bool AllowDowngrade { get; init; }
+
+    public uint WaitForClientConnectionTimeout { get; init; }
 }

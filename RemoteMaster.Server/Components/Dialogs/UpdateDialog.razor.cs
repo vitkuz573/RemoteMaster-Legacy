@@ -23,6 +23,7 @@ public partial class UpdateDialog
     private string _folderPath = string.Empty;
     private string _username = string.Empty;
     private string _password = string.Empty;
+    private uint _waitForClientConnectionTimeout = 0;
     private bool _forceUpdate;
     private bool _allowDowngrade;
 
@@ -77,6 +78,7 @@ public partial class UpdateDialog
                 var updateRequest = new UpdateRequest(_folderPath)
                 {
                     UserCredentials = new Credentials(_username, _password),
+                    WaitForClientConnectionTimeout = _waitForClientConnectionTimeout,
                     ForceUpdate = _forceUpdate,
                     AllowDowngrade = _allowDowngrade
                 };
