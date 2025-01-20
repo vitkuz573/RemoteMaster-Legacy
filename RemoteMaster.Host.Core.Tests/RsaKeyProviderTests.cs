@@ -208,7 +208,7 @@ public class RsaKeyProviderTests
         Environment.SetEnvironmentVariable("ProgramData", null);
 
         // Reset the data directory to simulate unavailability
-        _mockApplicationPathProvider.Setup(x => x.DataDirectory).Returns((string)null);
+        _mockApplicationPathProvider.Setup(x => x.DataDirectory).Returns((string)null!);
 
         try
         {
