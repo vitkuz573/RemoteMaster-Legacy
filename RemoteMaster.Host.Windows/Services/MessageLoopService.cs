@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,21 +13,13 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class MessageLoopService : IHostedService
+public class MessageLoopService(ISessionChangeEventService sessionChangeEventService, ILogger<MessageLoopService> logger) : IHostedService
 {
     private const string ClassName = "HiddenWindowClass";
 
     private HWND _hwnd;
-    private readonly WNDPROC _wndProcDelegate;
-    private readonly ISessionChangeEventService _sessionChangeEventService;
-    private readonly ILogger<MessageLoopService> _logger;
-
-    public MessageLoopService(ISessionChangeEventService sessionChangeEventService, ILogger<MessageLoopService> logger)
-    {
-        _sessionChangeEventService = sessionChangeEventService;
-        _logger = logger;
-        _wndProcDelegate = WndProc;
-    }
+    private GCHandle _selfHandle;
+    private static readonly unsafe delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT> WndProc = &StaticWndProc;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -50,7 +43,7 @@ public class MessageLoopService : IHostedService
     {
         if (!TryRegisterClass())
         {
-            _logger.LogError("Failed to register the window class.");
+            logger.LogError("Failed to register the window class.");
 
             return;
         }
@@ -59,26 +52,29 @@ public class MessageLoopService : IHostedService
 
         if (_hwnd.IsNull)
         {
-            _logger.LogError("Failed to create hidden window.");
+            logger.LogError("Failed to create hidden window.");
 
             return;
         }
 
+        _selfHandle = GCHandle.Alloc(this);
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, (nint)GCHandle.ToIntPtr(_selfHandle));
+
         RegisterForSessionNotifications();
     }
 
-    private bool TryRegisterClass()
+    private static bool TryRegisterClass()
     {
         var wc = new WNDCLASSEXW
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-            lpfnWndProc = _wndProcDelegate
         };
 
         unsafe
         {
             fixed (char* pClassName = ClassName)
             {
+                wc.lpfnWndProc = WndProc;
                 wc.lpszClassName = pClassName;
             }
         }
@@ -97,11 +93,11 @@ public class MessageLoopService : IHostedService
     {
         if (!WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS))
         {
-            _logger.LogError("Failed to register session notifications.");
+            logger.LogError("Failed to register session notifications.");
         }
         else
         {
-            _logger.LogInformation("Successfully registered for session notifications.");
+            logger.LogInformation("Successfully registered for session notifications.");
         }
     }
 
@@ -114,11 +110,26 @@ public class MessageLoopService : IHostedService
         }
     }
 
-    private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static LRESULT StaticWndProc(HWND hWnd, uint msg, WPARAM wParam, LPARAM lParam)
+    {
+        var ptr = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
+
+        if (ptr == 0)
+        {
+            return DefWindowProc(hWnd, msg, wParam, lParam);
+        }
+
+        var @this = (MessageLoopService)GCHandle.FromIntPtr(ptr).Target!;
+
+        return @this.InstanceWndProc(hWnd, msg, wParam, lParam);
+    }
+
+    private LRESULT InstanceWndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         if (msg == WM_WTSSESSION_CHANGE)
         {
-            _sessionChangeEventService.OnSessionChanged(wParam.Value);
+            sessionChangeEventService.OnSessionChanged(wParam.Value);
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);

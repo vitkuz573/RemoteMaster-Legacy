@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,13 +16,12 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
-using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ChatWindowService : IHostedService
+public class ChatWindowService(IHostConfigurationService hostConfigurationService, IHostApplicationLifetime applicationLifetime, ILogger<ChatWindowService> logger) : IHostedService
 {
     private const string ClassName = "ChatWindowClass";
 
@@ -43,22 +43,8 @@ public class ChatWindowService : IHostedService
     private bool _isTyping;
     private const string UserName = "User";
 
-    private readonly IHostConfigurationService _hostConfigurationService;
-    private readonly IHostApplicationLifetime _applicationLifetime;
-    private readonly ILogger<ChatWindowService> _logger;
-
-    private readonly SUBCLASSPROC _inputWndProc;
-    private readonly WNDPROC _wndProcDelegate;
-
-    public ChatWindowService(IHostConfigurationService hostConfigurationService, IHostApplicationLifetime applicationLifetime, ILogger<ChatWindowService> logger)
-    {
-        _hostConfigurationService = hostConfigurationService;
-        _applicationLifetime = applicationLifetime;
-        _logger = logger;
-
-        _inputWndProc = InputProc;
-        _wndProcDelegate = WndProc;
-    }
+    private static readonly unsafe delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, nuint, nuint, LRESULT> InputWndProc = &StaticInputProc;
+    private static readonly unsafe delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT> WndProc = &StaticWndProc;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -67,7 +53,7 @@ public class ChatWindowService : IHostedService
             InitializeWindow();
             StartMessageLoop();
 
-            _applicationLifetime.StopApplication();
+            applicationLifetime.StopApplication();
         });
 
         uiThread.SetApartmentState(ApartmentState.STA);
@@ -95,7 +81,7 @@ public class ChatWindowService : IHostedService
 
     private async Task InitializeSignalRConnectionAsync()
     {
-        var hostConfiguration = await _hostConfigurationService.LoadAsync();
+        var hostConfiguration = await hostConfigurationService.LoadAsync();
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/chat", options =>
@@ -163,7 +149,7 @@ public class ChatWindowService : IHostedService
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error sending typing notification. Exception: {ExceptionMessage}", ex.Message);
+                logger.LogError("Error sending typing notification. Exception: {ExceptionMessage}", ex.Message);
             }
         }
 
@@ -185,7 +171,7 @@ public class ChatWindowService : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error sending stop typing notification. Exception: {ExceptionMessage}", ex.Message);
+            logger.LogError("Error sending stop typing notification. Exception: {ExceptionMessage}", ex.Message);
         }
     }
 
@@ -209,7 +195,7 @@ public class ChatWindowService : IHostedService
         }
         else
         {
-            _logger.LogError("Failed to access chat display window.");
+            logger.LogError("Failed to access chat display window.");
         }
     }
 
@@ -244,7 +230,7 @@ public class ChatWindowService : IHostedService
         }
         else
         {
-            _logger.LogError("Failed to access chat display window.");
+            logger.LogError("Failed to access chat display window.");
         }
     }
 
@@ -262,13 +248,13 @@ public class ChatWindowService : IHostedService
     {
         if (!_hwnd.IsNull)
         {
-            _logger.LogInformation("Window already exists, skipping initialization.");
+            logger.LogInformation("Window already exists, skipping initialization.");
             return;
         }
 
         if (!TryRegisterClass())
         {
-            _logger.LogError("Failed to register the window class.");
+            logger.LogError("Failed to register the window class.");
             throw new InvalidOperationException("Window class registration failed.");
         }
 
@@ -276,7 +262,7 @@ public class ChatWindowService : IHostedService
 
         if (_hwnd.IsNull)
         {
-            _logger.LogError("Failed to create the window.");
+            logger.LogError("Failed to create the window.");
             throw new InvalidOperationException("Window creation failed.");
         }
 
@@ -292,30 +278,6 @@ public class ChatWindowService : IHostedService
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
 
         InitializeControls();
-    }
-
-    private LRESULT InputProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
-    {
-        switch (msg)
-        {
-            case WM_KEYDOWN:
-                switch (wParam.Value)
-                {
-                    case (nuint)VIRTUAL_KEY.VK_RETURN:
-                        _ = HandleSendButtonAsync();
-                        return new LRESULT(0);
-                    case (nuint)VIRTUAL_KEY.VK_A when (GetKeyState((int)VIRTUAL_KEY.VK_CONTROL) & 0x8000) != 0:
-                    {
-                        var length = GetWindowTextLength(hwnd);
-                        SendMessage(hwnd, EM_SETSEL, new WPARAM(0), new LPARAM(length));
-                        return new LRESULT(0);
-                    }
-                }
-
-                break;
-        }
-
-        return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
     private void InitializeControls()
@@ -337,8 +299,8 @@ public class ChatWindowService : IHostedService
         {
             var chatInput = CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_AUTOHSCROLL | WINDOW_STYLE.WS_BORDER, 10, 220, 200, 20, _hwnd, safeChatInputHandle, null, null);
 
-            SetWindowSubclass(chatInput, _inputWndProc, 0, 0);
-            _logger.LogInformation("Subclass applied to chat input.");
+            SetWindowSubclass(chatInput, InputWndProc, 0, 0);
+            logger.LogInformation("Subclass applied to chat input.");
         }
 
         using var safeSendButtonHandle = new SafeFileHandle(IDC_SEND_BUTTON, false);
@@ -394,7 +356,7 @@ public class ChatWindowService : IHostedService
         ShowWindow(typingStatus, SHOW_WINDOW_CMD.SW_HIDE);
     }
 
-    private bool TryRegisterClass()
+    private static bool TryRegisterClass()
     {
         WNDCLASSEXW wc;
 
@@ -403,7 +365,6 @@ public class ChatWindowService : IHostedService
             wc = new WNDCLASSEXW
             {
                 cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-                lpfnWndProc = _wndProcDelegate,
                 hInstance = (HINSTANCE)moduleHandle.DangerousGetHandle(),
             };
         }
@@ -412,6 +373,7 @@ public class ChatWindowService : IHostedService
         {
             fixed (char* pClassName = ClassName)
             {
+                wc.lpfnWndProc = WndProc;
                 wc.lpszClassName = pClassName;
             }
         }
@@ -419,6 +381,105 @@ public class ChatWindowService : IHostedService
         var classAtom = RegisterClassEx(in wc);
 
         return classAtom != 0;
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static LRESULT StaticWndProc(HWND hWnd, uint msg, WPARAM wParam, LPARAM lParam)
+    {
+        var ptr = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
+
+        if (ptr == 0)
+        {
+            return DefWindowProc(hWnd, msg, wParam, lParam);
+        }
+
+        var svc = (ChatWindowService)GCHandle.FromIntPtr(ptr).Target!;
+
+        return svc.InstanceWndProc(hWnd, msg, wParam, lParam);
+    }
+
+    private LRESULT InstanceWndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
+    {
+        switch (msg)
+        {
+            case WM_SETFOCUS:
+                var inputField = GetDlgItem(hwnd, IDC_CHAT_INPUT);
+                if (!inputField.IsNull)
+                {
+                    SetFocus(inputField);
+                }
+                break;
+
+            case WM_COMMAND:
+            {
+                var wmId = (int)wParam.Value & 0xffff;
+
+                switch (wmId)
+                {
+                    case IDC_SEND_BUTTON:
+                        _ = HandleSendButtonAsync();
+                        break;
+                    default:
+                    {
+                        if (wmId == IDC_CHAT_INPUT && HIWORD((nint)wParam.Value) == EN_CHANGE)
+                        {
+                            _ = NotifyTypingAsync();
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+
+            case WM_CLOSE:
+                DestroyWindow(hwnd);
+                _hwnd = HWND.Null;
+                return new LRESULT(0);
+
+            case WM_DESTROY:
+                PostQuitMessage(0);
+                return new LRESULT(0);
+        }
+
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static LRESULT StaticInputProc(HWND hWnd, uint msg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
+    {
+        var handle = (nint)dwRefData;
+        
+        if (handle == 0)
+        {
+            return DefSubclassProc(hWnd, msg, wParam, lParam);
+        }
+
+        var svc = (ChatWindowService)GCHandle.FromIntPtr(handle).Target!;
+
+        return svc.InstanceInputProc(hWnd, msg, wParam, lParam, uIdSubclass, dwRefData);
+    }
+
+    private LRESULT InstanceInputProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam, nuint uIdSubclass, nuint dwRefData)
+    {
+        switch (msg)
+        {
+            case WM_KEYDOWN:
+                switch (wParam.Value)
+                {
+                    case (nuint)VIRTUAL_KEY.VK_RETURN:
+                        _ = HandleSendButtonAsync();
+                        return new LRESULT(0);
+                    case (nuint)VIRTUAL_KEY.VK_A when (GetKeyState((int)VIRTUAL_KEY.VK_CONTROL) < 0):
+                    {
+                        var length = GetWindowTextLength(hwnd);
+                        SendMessage(hwnd, EM_SETSEL, 0, length);
+                        return new LRESULT(0);
+                    }
+                }
+                break;
+        }
+
+        return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
 
     private static HWND CreateChatWindow()
@@ -456,7 +517,7 @@ public class ChatWindowService : IHostedService
 
         if (chatInput.IsNull)
         {
-            _logger.LogError("Failed to access chat input window.");
+            logger.LogError("Failed to access chat input window.");
             return;
         }
 
@@ -476,7 +537,7 @@ public class ChatWindowService : IHostedService
                 }
                 else
                 {
-                    _logger.LogError("Failed to retrieve text from the input field.");
+                    logger.LogError("Failed to retrieve text from the input field.");
                     return;
                 }
             }
@@ -489,7 +550,7 @@ public class ChatWindowService : IHostedService
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
+                logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
                 return;
             }
 
@@ -498,55 +559,4 @@ public class ChatWindowService : IHostedService
     }
 
     private static int HIWORD(nint n) => (int)((n >> 16) & 0xFFFF);
-
-    private static LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
-    {
-        if (hwnd.IsNull)
-        {
-            throw new InvalidOperationException("Handle is not initialized.");
-        }
-
-        var serviceHandle = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
-
-        if (serviceHandle == nint.Zero)
-        {
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-        }
-
-        var service = (ChatWindowService)GCHandle.FromIntPtr(serviceHandle).Target!;
-
-        switch (msg)
-        {
-            case WM_SETFOCUS:
-                var inputField = GetDlgItem(hwnd, IDC_CHAT_INPUT);
-                if (!inputField.IsNull)
-                {
-                    SetFocus(inputField);
-                }
-                break;
-
-            case WM_COMMAND:
-            {
-                var wmId = (int)wParam.Value & 0xffff;
-                _ = wmId switch
-                {
-                    IDC_SEND_BUTTON => service.HandleSendButtonAsync(),
-                    IDC_CHAT_INPUT when HIWORD((nint)wParam.Value) == EN_CHANGE => service.NotifyTypingAsync(),
-                    _ => Task.CompletedTask
-                };
-                break;
-            }
-
-            case WM_CLOSE:
-                DestroyWindow(hwnd);
-                service._hwnd = HWND.Null;
-                return new LRESULT(0);
-
-            case WM_DESTROY:
-                PostQuitMessage(0);
-                return new LRESULT(0);
-        }
-
-        return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
 }

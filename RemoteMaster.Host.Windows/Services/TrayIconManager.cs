@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -26,7 +27,8 @@ public class TrayIconManager : ITrayIconManager
     private readonly IApplicationVersionProvider _applicationVersionProvider;
     private readonly ILogger<TrayIconManager> _logger;
 
-    private readonly WNDPROC _wndProcDelegate;
+    private static readonly unsafe delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT> WndProc = &StaticWndProc;
+    private GCHandle _selfHandle;
     private readonly SafeHandle _moduleHandle;
     private DestroyIconSafeHandle _iconHandle;
     private DestroyMenuSafeHandle? _trayMenu;
@@ -48,8 +50,6 @@ public class TrayIconManager : ITrayIconManager
         _appState.ViewerRemoved += OnViewerChanged;
 
         _moduleHandle = GetModuleHandle((string)null!) ?? throw new InvalidOperationException("Failed to retrieve module handle.");
-
-        _wndProcDelegate = WndProc;
 
         var defaultIcon = Icons.without_connections;
         _iconHandle = new DestroyIconSafeHandle(defaultIcon.Handle);
@@ -176,6 +176,9 @@ public class TrayIconManager : ITrayIconManager
             return;
         }
 
+        _selfHandle = GCHandle.Alloc(this);
+        SetWindowLongPtr(_hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, GCHandle.ToIntPtr(_selfHandle));
+
         unsafe
         {
             _logger.LogInformation("Hidden window created successfully with handle: {Handle}", (nint)_hwnd.Value);
@@ -187,7 +190,6 @@ public class TrayIconManager : ITrayIconManager
         var wc = new WNDCLASSEXW
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-            lpfnWndProc = _wndProcDelegate,
             hInstance = (HINSTANCE)_moduleHandle.DangerousGetHandle(),
         };
 
@@ -195,6 +197,7 @@ public class TrayIconManager : ITrayIconManager
         {
             fixed (char* pClassName = ClassName)
             {
+                wc.lpfnWndProc = WndProc;
                 wc.lpszClassName = pClassName;
             }
         }
@@ -266,25 +269,39 @@ public class TrayIconManager : ITrayIconManager
         return $"{GetBaseTooltipText()}\nActive Connections: {activeConnections}";
     }
 
-    private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+    private static LRESULT StaticWndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
+    {
+        var ptr = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
+
+        if (ptr == 0)
+        {
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+        }
+
+        var manager = (TrayIconManager)GCHandle.FromIntPtr(ptr).Target!;
+
+        return manager.InstanceWndProc(hwnd, msg, wParam, lParam);
+    }
+
+    private LRESULT InstanceWndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         if (msg == WM_TASKBARCREATED)
         {
             _logger.LogInformation("Taskbar was recreated. Restoring tray icon.");
             _iconAdded = false;
+
             Show();
         }
         else if (msg == WM_RBUTTONUP)
         {
-            var eventCode = (uint)LOWORD(lParam);
+            var eventCode = (uint)LOWORD(lParam.Value);
 
             switch (eventCode)
             {
                 case WM_CONTEXTMENU:
                     _logger.LogInformation("Right-click event received, showing context menu.");
                     ShowContextMenu();
-                    break;
-                default:
                     break;
             }
         }
@@ -294,7 +311,7 @@ public class TrayIconManager : ITrayIconManager
 
     private static int LOWORD(nint value)
     {
-        return unchecked((short)(long)value);
+        return unchecked((short)value);
     }
 
     private void CreateContextMenu()
