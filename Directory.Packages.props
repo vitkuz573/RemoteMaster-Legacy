@@ -28,16 +28,16 @@
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.1" />
-    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.162" />
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.168" />
     <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="63.0.31-preview" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.24528.1" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.25072.1" />
     <PackageVersion Include="System.DirectoryServices" Version="9.0.1" />
     <PackageVersion Include="System.IO.Abstractions" Version="21.2.1" />
     <PackageVersion Include="System.IO.Abstractions.TestingHelpers" Version="21.2.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.1" />
     <PackageVersion Include="System.Resources.Extensions" Version="9.0.1" />
     <PackageVersion Include="Telegram.Bot" Version="22.3.0" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.3" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.1" />

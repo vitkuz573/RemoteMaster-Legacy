@@ -12,9 +12,9 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceProviderExtensions
 {
-    public static CliRootCommand ConfigureCommands(this IServiceProvider serviceProvider)
+    public static RootCommand ConfigureCommands(this IServiceProvider serviceProvider)
     {
-        var rootCommand = new CliRootCommand("RemoteMaster Host");
+        var rootCommand = new RootCommand("RemoteMaster Host");
 
         rootCommand.Subcommands.Add(CreateUserCommand());
         rootCommand.Subcommands.Add(CreateChatCommand());
@@ -27,58 +27,58 @@ public static class ServiceProviderExtensions
         return rootCommand;
     }
 
-    private static CliCommand CreateUserCommand()
+    private static Command CreateUserCommand()
     {
-        var command = new CliCommand("user", "Runs the program in user mode.");
+        var command = new Command("user", "Runs the program in user mode.");
 
         return command;
     }
 
-    private static CliCommand CreateChatCommand()
+    private static Command CreateChatCommand()
     {
-        var command = new CliCommand("chat", "Runs the program in chat mode, enabling communication features.");
+        var command = new Command("chat", "Runs the program in chat mode, enabling communication features.");
 
         return command;
     }
 
-    private static CliCommand CreateServiceCommand()
+    private static Command CreateServiceCommand()
     {
-        var command = new CliCommand("service", "Runs the program as a service.");
+        var command = new Command("service", "Runs the program as a service.");
 
         return command;
     }
 
-    private static CliCommand CreateUpdateCommand(this IServiceProvider serviceProvider)
+    private static Command CreateUpdateCommand(this IServiceProvider serviceProvider)
     {
-        var command = new CliCommand("update", "Updates the program to the latest version.");
+        var command = new Command("update", "Updates the program to the latest version.");
 
-        var folderPathOption = new CliOption<string>("--folder-path", "--fp")
+        var folderPathOption = new Option<string>("--folder-path", "--fp")
         {
             Description = "Specifies the folder path for the update operation.",
             Required = true
         };
 
-        var usernameOption = new CliOption<string>("--username", "--user", "-u")
+        var usernameOption = new Option<string>("--username", "--user", "-u")
         {
             Description = "Specifies the username for authentication."
         };
 
-        var passwordOption = new CliOption<string>("--password", "-pass", "-p")
+        var passwordOption = new Option<string>("--password", "-pass", "-p")
         {
             Description = "Specifies the password for authentication."
         };
 
-        var forceOption = new CliOption<bool>("--force", "-f")
+        var forceOption = new Option<bool>("--force", "-f")
         {
             Description = "Forces the update operation to proceed, even if no update is needed."
         };
 
-        var allowDowngradeOption = new CliOption<bool>("--allow-downgrade", "--ad")
+        var allowDowngradeOption = new Option<bool>("--allow-downgrade", "--ad")
         {
             Description = "Allows the update operation to proceed with a lower version than the current one."
         };
 
-        var waitForClientConnectionTimeoutOption = new CliOption<int>("--wait-for-client-connection-timeout", "--wait-connection-timeout", "-w")
+        var waitForClientConnectionTimeoutOption = new Option<int>("--wait-for-client-connection-timeout", "--wait-connection-timeout", "-w")
         {
             Description = "Specifies the maximum time to wait for a client to connect before proceeding with the update, in milliseconds.",
             DefaultValueFactory = _ => 0
@@ -120,11 +120,11 @@ public static class ServiceProviderExtensions
         return command;
     }
 
-    private static CliCommand CreateUninstallCommand(this IServiceProvider serviceProvider)
+    private static Command CreateUninstallCommand(this IServiceProvider serviceProvider)
     {
-        var command = new CliCommand("uninstall", "Removes the program and its components.");
+        var command = new Command("uninstall", "Removes the program and its components.");
 
-        var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
+        var maxAttemptsOption = new Option<int>("--max-attempts", "--ma")
         {
             Description = "Specifies the maximum number of connection attempts to check server availability.",
             Required = false,
@@ -141,7 +141,7 @@ public static class ServiceProviderExtensions
             }
         });
 
-        var initialRetryDelayOption = new CliOption<int>("--initial-retry-delay", "--ir")
+        var initialRetryDelayOption = new Option<int>("--initial-retry-delay", "--ir")
         {
             Description = "Specifies the initial delay before retrying a connection attempt (in milliseconds).",
             Required = false,
@@ -158,7 +158,7 @@ public static class ServiceProviderExtensions
             }
         });
 
-        var maxRetryDelayOption = new CliOption<int>("--max-retry-delay", "--mr")
+        var maxRetryDelayOption = new Option<int>("--max-retry-delay", "--mr")
         {
             Description = "Specifies the maximum delay between connection attempts (in milliseconds).",
             Required = false,
@@ -209,36 +209,36 @@ public static class ServiceProviderExtensions
         return command;
     }
 
-    private static CliCommand CreateInstallCommand(this IServiceProvider serviceProvider)
+    private static Command CreateInstallCommand(this IServiceProvider serviceProvider)
     {
-        var command = new CliCommand("install", "Installs the necessary components for the program.");
+        var command = new Command("install", "Installs the necessary components for the program.");
 
-        var serverOption = new CliOption<string>("--server", "--srv")
+        var serverOption = new Option<string>("--server", "--srv")
         {
             Description = "Specifies the server where the host will be registered.",
             Required = true
         };
 
-        var organizationOption = new CliOption<string>("--organization", "--org")
+        var organizationOption = new Option<string>("--organization", "--org")
         {
             Description = "Specifies the name of the organization where the host is registered.",
             Required = true
         };
 
-        var organizationalUnitOption = new CliOption<List<string>>("--organizational-unit", "--ou")
+        var organizationalUnitOption = new Option<List<string>>("--organizational-unit", "--ou")
         {
             Description = "Specifies the organizational unit where the host is registered.",
             AllowMultipleArgumentsPerToken = true,
             Required = true
         };
 
-        var forceOption = new CliOption<bool>("--force", "-f")
+        var forceOption = new Option<bool>("--force", "-f")
         {
             Description = "Forcibly register the host in the specified organizational unit, overriding any existing registrations.",
             Required = false
         };
 
-        var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
+        var maxAttemptsOption = new Option<int>("--max-attempts", "--ma")
         {
             Description = "Specifies the maximum number of connection attempts to check server availability.",
             Required = false,
@@ -255,7 +255,7 @@ public static class ServiceProviderExtensions
             }
         });
 
-        var initialRetryDelayOption = new CliOption<int>("--initial-retry-delay", "--ir")
+        var initialRetryDelayOption = new Option<int>("--initial-retry-delay", "--ir")
         {
             Description = "Specifies the initial delay before retrying a connection attempt (in milliseconds).",
             Required = false,
@@ -272,7 +272,7 @@ public static class ServiceProviderExtensions
             }
         });
 
-        var maxRetryDelayOption = new CliOption<int>("--max-retry-delay", "--mr")
+        var maxRetryDelayOption = new Option<int>("--max-retry-delay", "--mr")
         {
             Description = "Specifies the maximum delay between connection attempts (in milliseconds).",
             Required = false,
@@ -329,27 +329,27 @@ public static class ServiceProviderExtensions
         return command;
     }
 
-    private static CliCommand CreateReinstallCommand(this IServiceProvider serviceProvider)
+    private static Command CreateReinstallCommand(this IServiceProvider serviceProvider)
     {
-        var command = new CliCommand("reinstall", "Reinstalls the program using the current configuration or specified parameters.");
+        var command = new Command("reinstall", "Reinstalls the program using the current configuration or specified parameters.");
 
-        var serverOption = new CliOption<string>("--server", "--srv")
+        var serverOption = new Option<string>("--server", "--srv")
         {
             Description = "Overrides the current configuration server."
         };
 
-        var organizationOption = new CliOption<string>("--organization", "--org")
+        var organizationOption = new Option<string>("--organization", "--org")
         {
             Description = "Overrides the current configuration organization."
         };
 
-        var organizationalUnitOption = new CliOption<List<string>>("--organizational-unit", "--ou")
+        var organizationalUnitOption = new Option<List<string>>("--organizational-unit", "--ou")
         {
             Description = "Overrides the current configuration organizational unit.",
             AllowMultipleArgumentsPerToken = true
         };
 
-        var maxAttemptsOption = new CliOption<int>("--max-attempts", "--ma")
+        var maxAttemptsOption = new Option<int>("--max-attempts", "--ma")
         {
             Description = "Specifies the maximum number of connection attempts to check server availability.",
             Required = false,
@@ -366,7 +366,7 @@ public static class ServiceProviderExtensions
             }
         });
 
-        var initialRetryDelayOption = new CliOption<int>("--initial-retry-delay", "--ir")
+        var initialRetryDelayOption = new Option<int>("--initial-retry-delay", "--ir")
         {
             Description = "Specifies the initial delay before retrying a connection attempt (in milliseconds).",
             Required = false,
@@ -383,7 +383,7 @@ public static class ServiceProviderExtensions
             }
         });
 
-        var maxRetryDelayOption = new CliOption<int>("--max-retry-delay", "--mr")
+        var maxRetryDelayOption = new Option<int>("--max-retry-delay", "--mr")
         {
             Description = "Specifies the maximum delay between connection attempts (in milliseconds).",
             Required = false,
