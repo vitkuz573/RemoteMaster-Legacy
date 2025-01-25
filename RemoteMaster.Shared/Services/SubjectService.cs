@@ -33,16 +33,37 @@ public class SubjectService(ILogger<SubjectService> logger) : ISubjectService
         {
             ValidateParameters(commonName, organization, organizationalUnits, locality, state, country);
 
-            var dnComponents = new List<string>
-            {
-                $"CN={EscapeDnValue(commonName)}",
-                $"O={EscapeDnValue(organization)}"
-            };
+            var dnComponents = new List<string>();
 
-            dnComponents.AddRange(organizationalUnits.Select(ou => $"OU={EscapeDnValue(ou)}"));
-            dnComponents.Add($"L={EscapeDnValue(locality)}");
-            dnComponents.Add($"ST={EscapeDnValue(state)}");
-            dnComponents.Add($"C={EscapeDnValue(country)}");
+            // Order as per RFC 2253: C, ST, L, O, OU, CN (reverse order)
+            if (!string.IsNullOrEmpty(country))
+            {
+                dnComponents.Add($"C={EscapeDnValue(country)}");
+            }
+
+            if (!string.IsNullOrEmpty(state))
+            {
+                dnComponents.Add($"ST={EscapeDnValue(state)}");
+            }
+
+            if (!string.IsNullOrEmpty(locality))
+            {
+                dnComponents.Add($"L={EscapeDnValue(locality)}");
+            }
+
+            if (!string.IsNullOrEmpty(organization))
+            {
+                dnComponents.Add($"O={EscapeDnValue(organization)}");
+            }
+
+            foreach (var ou in organizationalUnits)
+            {
+                dnComponents.Add($"OU={EscapeDnValue(ou)}");
+            }
+            if (!string.IsNullOrEmpty(commonName))
+            {
+                dnComponents.Add($"CN={EscapeDnValue(commonName)}");
+            }
 
             var dnString = string.Join(", ", dnComponents);
 
@@ -53,7 +74,7 @@ public class SubjectService(ILogger<SubjectService> logger) : ISubjectService
         catch (Exception ex)
         {
             logger.LogError(ex, "Error constructing Distinguished Name.");
-
+           
             throw;
         }
     }
@@ -122,34 +143,57 @@ public class SubjectService(ILogger<SubjectService> logger) : ISubjectService
             return value;
         }
 
+        // Convert the string to UTF-8 bytes
+        var utf8Bytes = Encoding.UTF8.GetBytes(value);
         var escaped = new StringBuilder();
-        
-        for (var i = 0; i < value.Length; i++)
+
+        for (var i = 0; i < utf8Bytes.Length; i++)
         {
-            var c = value[i];
-            // Characters that need to be escaped according to RFC 2253
-            if (c == ',' || c == '+' || c == '"' || c == '\\' || c == '<' ||
-                c == '>' || c == ';' || c == '=' || c == '#')
+            var b = utf8Bytes[i];
+
+            var needsEscaping = false;
+
+            // Check for special characters that must be escaped
+            if (b == 0x2C || // ,
+                b == 0x2B || // +
+                b == 0x22 || // "
+                b == 0x5C || // \
+                b == 0x3C || // <
+                b == 0x3E || // >
+                b == 0x3B || // ;
+                b == 0x3D)   // =
+            {
+                needsEscaping = true;
+            }
+
+            // '#' must be escaped if it's the first character
+            if (b == 0x23 && i == 0) // #
+            {
+                needsEscaping = true;
+            }
+
+            // Space or tab must be escaped if it's the first or last character
+            if ((b == 0x20 || b == 0x09) && (i == 0 || i == utf8Bytes.Length - 1))
+            {
+                needsEscaping = true;
+            }
+
+            // Non-printable or non-ASCII characters
+            if (b < 0x20 || b > 0x7E)
+            {
+                escaped.Append('\\');
+                escaped.Append(b.ToString("X2"));
+                continue;
+            }
+
+            if (needsEscaping)
             {
                 escaped.Append('\\');
             }
 
-            // If the first character is a space or '#', it needs to be escaped
-            if (i == 0 && (c == ' ' || c == '#'))
-            {
-                escaped.Append('\\');
-            }
-
-            // If the last character is a space, it needs to be escaped
-            if (i == value.Length - 1 && c == ' ')
-            {
-                escaped.Append('\\');
-            }
-
-            escaped.Append(c);
+            escaped.Append((char)b);
         }
 
-        // Convert to UTF-8 encoding to ensure proper representation
         return escaped.ToString();
     }
 }
