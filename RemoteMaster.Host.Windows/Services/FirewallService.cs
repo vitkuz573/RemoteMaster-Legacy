@@ -59,7 +59,7 @@ public class FirewallService : IFirewallService
 
         // if (interfaces != null)
         // {
-        //     newRule.Interfaces = new VARIANT(interfaces);
+        //     newRuleObj.Interfaces = interfaces;
         // }
 
         if (grouping != null)
