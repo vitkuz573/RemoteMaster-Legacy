@@ -13,21 +13,24 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class FirewallService : IFirewallService
 {
-    public unsafe void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false, string? icmpTypesAndCodes = null, object? interfaces = null, string? grouping = null)
+    public void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false, string? icmpTypesAndCodes = null, object? interfaces = null, string? grouping = null)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2.Interface>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
 
-        var existingRule = GetRule(name);
-
-        if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, direction, applicationPath, localAddress, localPort, remoteAddress, remotePort, service, description, interfaceTypes, edgeTraversal, icmpTypesAndCodes, interfaces, grouping))
+        unsafe
         {
-            fwPolicy2.Rules->Remove((BSTR)Marshal.StringToBSTR(name));
-            existingRule = null;
-        }
+            var existingRule = GetRule(name);
 
-        if (existingRule != null)
-        {
-            return;
+            if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, direction, applicationPath, localAddress, localPort, remoteAddress, remotePort, service, description, interfaceTypes, edgeTraversal, icmpTypesAndCodes, interfaces, grouping))
+            {
+                fwPolicy2.Rules->Remove((BSTR)Marshal.StringToBSTR(name));
+                existingRule = null;
+            }
+
+            if (existingRule != null)
+            {
+                return;
+            }
         }
 
         var newRuleObj = CreateInstance<INetFwRule.Interface>("2C5BC43E-3369-4C33-AB0C-BE9469677AF4") ?? throw new InvalidOperationException("Failed to create new firewall rule.");
@@ -96,10 +99,13 @@ public class FirewallService : IFirewallService
 
         try
         {
-            var iunk = (IUnknown*)unkPtr;
-            iunk->QueryInterface(out INetFwRule* newRulePtr).ThrowOnFailure();
+            unsafe
+            {
+                var iunk = (IUnknown*)unkPtr;
+                iunk->QueryInterface(out INetFwRule* newRulePtr).ThrowOnFailure();
 
-            fwPolicy2.Rules->Add(newRulePtr);
+                fwPolicy2.Rules->Add(newRulePtr);
+            }
         }
         finally
         {
@@ -107,13 +113,17 @@ public class FirewallService : IFirewallService
         }
     }
 
-    public unsafe void RemoveRule(string name)
+    public void RemoveRule(string name)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2.Interface>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
-        fwPolicy2.Rules->Remove((BSTR)Marshal.StringToBSTR(name));
+
+        unsafe
+        {
+            fwPolicy2.Rules->Remove((BSTR)Marshal.StringToBSTR(name));
+        }
     }
 
-    public unsafe void EnableRuleGroup(string groupName)
+    public void EnableRuleGroup(string groupName)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2.Interface>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var profileTypesBitmask = fwPolicy2.CurrentProfileTypes;
@@ -122,7 +132,13 @@ public class FirewallService : IFirewallService
         try
         {
             VARIANT_BOOL enabled;
-            var hr = fwPolicy2.IsRuleGroupEnabled(profileTypesBitmask, bstrGroupName, &enabled);
+            HRESULT hr;
+
+            unsafe
+            {
+                hr = fwPolicy2.IsRuleGroupEnabled(profileTypesBitmask, bstrGroupName, &enabled);
+            }
+
             hr.ThrowOnFailure();
 
             if (!enabled)
@@ -136,7 +152,7 @@ public class FirewallService : IFirewallService
         }
     }
 
-    public unsafe void DisableRuleGroup(string groupName)
+    public void DisableRuleGroup(string groupName)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2.Interface>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var profileTypesBitmask = fwPolicy2.CurrentProfileTypes;
@@ -145,7 +161,13 @@ public class FirewallService : IFirewallService
         try
         {
             VARIANT_BOOL enabled;
-            var hr = fwPolicy2.IsRuleGroupEnabled(profileTypesBitmask, bstrGroupName, &enabled);
+            HRESULT hr;
+
+            unsafe
+            {
+                hr = fwPolicy2.IsRuleGroupEnabled(profileTypesBitmask, bstrGroupName, &enabled);
+            }
+
             hr.ThrowOnFailure();
 
             if (enabled)
