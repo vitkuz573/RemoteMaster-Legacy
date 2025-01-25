@@ -1,16 +1,14 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Shared.Services;
 
 /// <summary>
-/// Service for constructing X500DistinguishedName objects with proper escaping as per RFC 2253.
+/// Service for constructing X500DistinguishedName.
 /// </summary>
 public class SubjectService(ILogger<SubjectService> logger) : ISubjectService
 {
@@ -33,48 +31,55 @@ public class SubjectService(ILogger<SubjectService> logger) : ISubjectService
         {
             ValidateParameters(commonName, organization, organizationalUnits, locality, state, country);
 
-            var dnComponents = new List<string>();
+            var builder = new X500DistinguishedNameBuilder();
 
-            // Order as per RFC 2253: C, ST, L, O, OU, CN (reverse order)
             if (!string.IsNullOrEmpty(country))
             {
-                dnComponents.Add($"C={EscapeDnValue(country)}");
+                builder.AddCountryOrRegion(country);
             }
 
             if (!string.IsNullOrEmpty(state))
             {
-                dnComponents.Add($"ST={EscapeDnValue(state)}");
+                builder.AddStateOrProvinceName(state);
             }
 
             if (!string.IsNullOrEmpty(locality))
             {
-                dnComponents.Add($"L={EscapeDnValue(locality)}");
+                builder.AddLocalityName(locality);
             }
 
             if (!string.IsNullOrEmpty(organization))
             {
-                dnComponents.Add($"O={EscapeDnValue(organization)}");
+                builder.AddOrganizationName(organization);
             }
 
             foreach (var ou in organizationalUnits)
             {
-                dnComponents.Add($"OU={EscapeDnValue(ou)}");
+                if (!string.IsNullOrEmpty(ou))
+                {
+                    builder.AddOrganizationalUnitName(ou);
+                }
+                else
+                {
+                    throw new ArgumentException("Organizational units cannot contain null or empty strings.", nameof(organizationalUnits));
+                }
             }
+
             if (!string.IsNullOrEmpty(commonName))
             {
-                dnComponents.Add($"CN={EscapeDnValue(commonName)}");
+                builder.AddCommonName(commonName);
             }
 
-            var dnString = string.Join(", ", dnComponents);
+            var dn = builder.Build();
 
-            logger.LogInformation("Constructed DN string: {DnString}", dnString);
+            logger.LogInformation("Constructed DN string: {DnString}", dn.Name);
 
-            return new X500DistinguishedName(dnString);
+            return dn;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error constructing Distinguished Name.");
-           
+            
             throw;
         }
     }
@@ -129,71 +134,5 @@ public class SubjectService(ILogger<SubjectService> logger) : ISubjectService
                 throw new ArgumentException("Organizational units cannot contain null or empty strings.", nameof(organizationalUnits));
             }
         }
-    }
-
-    /// <summary>
-    /// Escapes special characters in DN values according to RFC 2253.
-    /// </summary>
-    /// <param name="value">The value to escape.</param>
-    /// <returns>The escaped value.</returns>
-    private static string EscapeDnValue(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        // Convert the string to UTF-8 bytes
-        var utf8Bytes = Encoding.UTF8.GetBytes(value);
-        var escaped = new StringBuilder();
-
-        for (var i = 0; i < utf8Bytes.Length; i++)
-        {
-            var b = utf8Bytes[i];
-
-            var needsEscaping = false;
-
-            // Check for special characters that must be escaped
-            if (b == 0x2C || // ,
-                b == 0x2B || // +
-                b == 0x22 || // "
-                b == 0x5C || // \
-                b == 0x3C || // <
-                b == 0x3E || // >
-                b == 0x3B || // ;
-                b == 0x3D)   // =
-            {
-                needsEscaping = true;
-            }
-
-            // '#' must be escaped if it's the first character
-            if (b == 0x23 && i == 0) // #
-            {
-                needsEscaping = true;
-            }
-
-            // Space or tab must be escaped if it's the first or last character
-            if ((b == 0x20 || b == 0x09) && (i == 0 || i == utf8Bytes.Length - 1))
-            {
-                needsEscaping = true;
-            }
-
-            // Non-printable or non-ASCII characters
-            if (b < 0x20 || b > 0x7E)
-            {
-                escaped.Append('\\');
-                escaped.Append(b.ToString("X2"));
-                continue;
-            }
-
-            if (needsEscaping)
-            {
-                escaped.Append('\\');
-            }
-
-            escaped.Append((char)b);
-        }
-
-        return escaped.ToString();
     }
 }
