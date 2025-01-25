@@ -8,5 +8,5 @@ namespace RemoteMaster.Shared.Abstractions;
 
 public interface ISubjectService
 {
-    X500DistinguishedName GetDistinguishedName(string commonName, string organization, List<string> organizationalUnits, string locality, string state, string country);
+    X500DistinguishedName GetDistinguishedName(string commonName, string organization, IReadOnlyList<string> organizationalUnits, string locality, string state, string country);
 }
