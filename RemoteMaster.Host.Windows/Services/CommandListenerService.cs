@@ -5,6 +5,7 @@
 using System.IO.Pipes;
 using System.Text;
 using Microsoft.Extensions.Hosting;
+using RemoteMaster.Host.Core.Models;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -30,7 +31,7 @@ public class CommandListenerService : IHostedService, IAsyncDisposable
     {
         while (!_disposed)
         {
-            using var server = new NamedPipeServerStream("CommandPipe", PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            using var server = new NamedPipeServerStream(PipeNames.CommandPipe, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
             await server.WaitForConnectionAsync();
             
             using var reader = new StreamReader(server, Encoding.UTF8);

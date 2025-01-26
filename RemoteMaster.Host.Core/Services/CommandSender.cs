@@ -5,6 +5,7 @@
 using System.IO.Pipes;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -12,7 +13,7 @@ public class CommandSender : ICommandSender
 {
     public async Task SendCommandAsync(string command)
     {
-        using var client = new NamedPipeClientStream(".", "CommandPipe", PipeDirection.Out, PipeOptions.Asynchronous);
+        using var client = new NamedPipeClientStream(".", PipeNames.CommandPipe, PipeDirection.Out, PipeOptions.Asynchronous);
         await client.ConnectAsync(5000);
 
         using var writer = new StreamWriter(client, Encoding.UTF8)
