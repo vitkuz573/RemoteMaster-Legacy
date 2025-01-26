@@ -13,7 +13,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class CommandListenerService : IHostedService
+public class CommandListenerService : IHostedService, IDisposable
 {
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IInstanceManagerService _instanceManagerService;
@@ -21,7 +21,7 @@ public class CommandListenerService : IHostedService
 
     private HubConnection? _connection;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
-    private readonly Timer _connectionCheckTimer;
+    private bool _disposed;
 
     public CommandListenerService(IHostConfigurationService hostConfigurationService, IInstanceManagerService instanceManagerService, ILogger<CommandListenerService> logger)
     {
@@ -30,24 +30,27 @@ public class CommandListenerService : IHostedService
         _logger = logger;
 
         _instanceManagerService.InstanceStarted += OnInstanceStarted;
-
-        _connectionCheckTimer = new Timer(CheckConnectionAsync, null, Timeout.Infinite, 0);
     }
 
+    /// <summary>
+    /// Starts the CommandListenerService.
+    /// </summary>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("CommandListenerService started.");
 
-        _connectionCheckTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Stops the CommandListenerService and closes the SignalR connection.
+    /// </summary>
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Stopping CommandListenerService.");
 
-        await _connectionCheckTimer.DisposeAsync();
+        _instanceManagerService.InstanceStarted -= OnInstanceStarted;
+
         await _connectionLock.WaitAsync(cancellationToken);
 
         try
@@ -56,9 +59,13 @@ public class CommandListenerService : IHostedService
             {
                 await _connection.StopAsync(cancellationToken);
                 await _connection.DisposeAsync();
-
                 _connection = null;
+                _logger.LogInformation("HubConnection stopped and disposed.");
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while stopping the HubConnection.");
         }
         finally
         {
@@ -66,18 +73,31 @@ public class CommandListenerService : IHostedService
         }
     }
 
-    private async void CheckConnectionAsync(object? state)
+    /// <summary>
+    /// Initiates the SignalR connection to the hub when InstanceStarted event is triggered.
+    /// </summary>
+    private async void OnInstanceStarted(object? sender, InstanceStartedEventArgs e)
     {
-        if (_connection?.State == HubConnectionState.Connected)
+        try
         {
-            return;
+            if (!string.Equals(e.CommandName, "user", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _logger.LogInformation("User instance started with Process ID: {ProcessId}.", e.ProcessId);
+
+            await StartConnectionAsync();
         }
-
-        _logger.LogWarning("Connection is not active. Attempting to reconnect...");
-
-        await StartConnectionAsync();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in OnInstanceStarted.");
+        }
     }
 
+    /// <summary>
+    /// Initiates the SignalR connection to the hub.
+    /// </summary>
     private async Task StartConnectionAsync()
     {
         await _connectionLock.WaitAsync();
@@ -86,10 +106,11 @@ public class CommandListenerService : IHostedService
         {
             if (_connection is { State: HubConnectionState.Connected })
             {
+                _logger.LogInformation("Already connected to the hub.");
                 return;
             }
 
-            await Task.Delay(5000);
+            await Task.Delay(TimeSpan.FromSeconds(5));
 
             _logger.LogDebug("Creating HubConnection.");
 
@@ -114,15 +135,22 @@ public class CommandListenerService : IHostedService
                     return;
                 }
 
-                SendSAS(true);
-                SendSAS(false);
+                try
+                {
+                    SendSAS(true);
+                    SendSAS(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error executing SendSAS.");
+                }
             });
 
             _connection.Closed += async error =>
             {
                 _logger.LogWarning("Connection closed: {Error}.", error?.Message);
 
-                await Task.Delay(5000);
+                await Task.Delay(TimeSpan.FromSeconds(5));
                 await StartConnectionAsync();
             };
 
@@ -153,21 +181,28 @@ public class CommandListenerService : IHostedService
                 _logger.LogWarning("Connection did not start successfully. Current state: {State}.", _connection.State);
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in StartConnectionAsync.");
+        }
         finally
         {
             _connectionLock.Release();
         }
     }
 
-    private async void OnInstanceStarted(object? sender, InstanceStartedEventArgs e)
+    /// <summary>
+    /// Disposes the SemaphoreSlim and HubConnection.
+    /// </summary>
+    public void Dispose()
     {
-        if (!string.Equals(e.CommandName, "user", StringComparison.OrdinalIgnoreCase))
+        if (_disposed)
         {
             return;
         }
 
-        _logger.LogInformation("User instance started with Process ID: {ProcessId}.", e.ProcessId);
-
-        await StartConnectionAsync();
+        _connection?.DisposeAsync().AsTask().Wait();
+        _connectionLock.Dispose();
+        _disposed = true;
     }
 }
