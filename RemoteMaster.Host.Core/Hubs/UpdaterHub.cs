@@ -29,10 +29,6 @@ public class UpdaterHub(IUpdaterInstanceService updaterInstanceService, IHostUpd
 
             hostUpdater.NotifyClientConnected();
         }
-        else
-        {
-            logger.LogWarning("Unexpected connection on port {Port}.", localPort);
-        }
 
         await base.OnConnectedAsync();
     }
