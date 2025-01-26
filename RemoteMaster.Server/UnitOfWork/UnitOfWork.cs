@@ -27,7 +27,9 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(UnitOfWork<TContext>));
 
-        var entries = context.ChangeTracker.Entries();
+        var entries = context.ChangeTracker
+            .Entries()
+            .Where(e => !e.Metadata.IsOwned());
 
         foreach (var entry in entries)
         {
