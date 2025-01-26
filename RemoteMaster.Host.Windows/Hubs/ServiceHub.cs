@@ -11,7 +11,6 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-[Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
 public class ServiceHub(IPsExecService psExecService, ICommandSender commandSender, ILogger<ServiceHub> logger) : Hub<IServiceClient>
 {
     public async override Task OnConnectedAsync()
