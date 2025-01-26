@@ -22,13 +22,14 @@ public class ServiceHubTests
         _mockClients = new Mock<IHubCallerClients<IServiceClient>>();
         _mockHubCallerContext = new Mock<HubCallerContext>();
         Mock<IPsExecService> mockPsExecService = new();
+        Mock<ICommandSender> mockCommandSender = new();
         Mock<ILogger<ServiceHub>> mockLogger = new();
         Mock<IServiceClient> mockClientProxy = new();
         Mock<IGroupManager> mockGroups = new();
 
         _mockClients.Setup(clients => clients.Caller).Returns(mockClientProxy.Object);
 
-        _serviceHub = new ServiceHub(mockPsExecService.Object, mockLogger.Object)
+        _serviceHub = new ServiceHub(mockPsExecService.Object, mockCommandSender.Object, mockLogger.Object)
         {
             Clients = _mockClients.Object,
             Groups = mockGroups.Object,
