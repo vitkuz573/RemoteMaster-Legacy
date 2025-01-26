@@ -2,207 +2,179 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
+using System.IO.Pipes;
+using System.Text;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.EventArguments;
-using RemoteMaster.Shared.Extensions;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class CommandListenerService : IHostedService, IDisposable
+public class CommandListenerService(ILogger<CommandListenerService> logger) : IHostedService, IAsyncDisposable
 {
-    private readonly IHostConfigurationService _hostConfigurationService;
-    private readonly IInstanceManagerService _instanceManagerService;
-    private readonly ILogger<CommandListenerService> _logger;
-
-    private HubConnection? _connection;
-    private readonly SemaphoreSlim _connectionLock = new(1, 1);
+    private NamedPipeServerStream? _pipeServer;
+    private Task? _listeningTask;
     private bool _disposed;
 
-    public CommandListenerService(IHostConfigurationService hostConfigurationService, IInstanceManagerService instanceManagerService, ILogger<CommandListenerService> logger)
-    {
-        _hostConfigurationService = hostConfigurationService;
-        _instanceManagerService = instanceManagerService;
-        _logger = logger;
-
-        _instanceManagerService.InstanceStarted += OnInstanceStarted;
-    }
-
     /// <summary>
-    /// Starts the CommandListenerService.
+    /// Starts the CommandListenerService and begins listening for IPC commands.
     /// </summary>
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("CommandListenerService started.");
+        logger.LogInformation("CommandListenerService started.");
 
-        return Task.CompletedTask;
+        await StartListeningAsync();
     }
 
     /// <summary>
-    /// Stops the CommandListenerService and closes the SignalR connection.
+    /// Stops the CommandListenerService and closes the IPC connection.
     /// </summary>
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Stopping CommandListenerService.");
+        logger.LogInformation("Stopping CommandListenerService.");
 
-        _instanceManagerService.InstanceStarted -= OnInstanceStarted;
-
-        await _connectionLock.WaitAsync(cancellationToken);
-
-        try
-        {
-            if (_connection != null)
-            {
-                await _connection.StopAsync(cancellationToken);
-                await _connection.DisposeAsync();
-                _connection = null;
-                _logger.LogInformation("HubConnection stopped and disposed.");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while stopping the HubConnection.");
-        }
-        finally
-        {
-            _connectionLock.Release();
-        }
+        await DisposeAsyncCore();
     }
 
     /// <summary>
-    /// Initiates the SignalR connection to the hub when InstanceStarted event is triggered.
+    /// Starts listening for IPC commands via Named Pipes.
     /// </summary>
-    private async void OnInstanceStarted(object? sender, InstanceStartedEventArgs e)
+    private async Task StartListeningAsync()
     {
-        try
+        if (_pipeServer != null)
         {
-            if (!string.Equals(e.CommandName, "user", StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
+            logger.LogWarning("Pipe server is already running.");
 
-            _logger.LogInformation("User instance started with Process ID: {ProcessId}.", e.ProcessId);
-
-            await StartConnectionAsync();
+            return;
         }
-        catch (Exception ex)
+
+        var pipeName = "CommandPipe";
+
+        _pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.In, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+
+        _listeningTask = Task.Run(async () =>
         {
-            _logger.LogError(ex, "Error in OnInstanceStarted.");
-        }
-    }
-
-    /// <summary>
-    /// Initiates the SignalR connection to the hub.
-    /// </summary>
-    private async Task StartConnectionAsync()
-    {
-        await _connectionLock.WaitAsync();
-
-        try
-        {
-            if (_connection is { State: HubConnectionState.Connected })
+            while (_pipeServer != null && !_disposed)
             {
-                _logger.LogInformation("Already connected to the hub.");
-                return;
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(5));
-
-            _logger.LogDebug("Creating HubConnection.");
-
-            var hostConfiguration = await _hostConfigurationService.LoadAsync();
-
-            _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/service", options =>
-                {
-                    options.Headers.Add("Service-Flag", "true");
-                })
-                .AddMessagePackProtocol(options => options.Configure())
-                .Build();
-
-            _logger.LogDebug("HubConnection created, setting up ReceiveCommand handler.");
-
-            _connection.On<string>("ReceiveCommand", command =>
-            {
-                _logger.LogDebug("Received command: {Command}.", command);
-
-                if (command != "CtrlAltDel")
-                {
-                    return;
-                }
-
                 try
                 {
-                    SendSAS(true);
-                    SendSAS(false);
+                    logger.LogInformation("Waiting for client connection...");
+
+                    await _pipeServer.WaitForConnectionAsync();
+
+                    logger.LogInformation("Client connected.");
+
+                    using var reader = new StreamReader(_pipeServer, Encoding.UTF8);
+
+                    string? command;
+
+                    while ((command = await reader.ReadLineAsync()) != null)
+                    {
+                        logger.LogInformation("Received command: {Command}", command);
+
+                        HandleCommand(command);
+                    }
+
+                    logger.LogInformation("Client disconnected.");
+
+                    _pipeServer.Disconnect();
+                }
+                catch (IOException ex)
+                {
+                    logger.LogError(ex, "Pipe connection error.");
+
+                    _pipeServer.Dispose();
+                    _pipeServer = null;
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error executing SendSAS.");
+                    logger.LogError(ex, "Unexpected error in pipe listening.");
+
+                    _pipeServer.Dispose();
+                    _pipeServer = null;
                 }
-            });
 
-            _connection.Closed += async error =>
-            {
-                _logger.LogWarning("Connection closed: {Error}.", error?.Message);
-
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                await StartConnectionAsync();
-            };
-
-            _connection.Reconnecting += error =>
-            {
-                _logger.LogWarning("Connection reconnecting: {Error}.", error?.Message);
-
-                return Task.CompletedTask;
-            };
-
-            _connection.Reconnected += connectionId =>
-            {
-                _logger.LogInformation("Connection reconnected: {ConnectionId}.", connectionId);
-
-                return Task.CompletedTask;
-            };
-
-            _logger.LogInformation("Starting connection to the hub.");
-
-            await _connection.StartAsync();
-
-            if (_connection.State == HubConnectionState.Connected)
-            {
-                _logger.LogInformation("Connection started successfully.");
+                if (!_disposed && _pipeServer == null)
+                {
+                    _pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.In, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+                }
             }
-            else
+        });
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Handles received commands.
+    /// </summary>
+    /// <param name="command">The command received.</param>
+    private void HandleCommand(string command)
+    {
+        if (command == "CtrlAltDel")
+        {
+            try
             {
-                _logger.LogWarning("Connection did not start successfully. Current state: {State}.", _connection.State);
+                SendSAS(true);
+                SendSAS(false);
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in StartConnectionAsync.");
-        }
-        finally
-        {
-            _connectionLock.Release();
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error executing SendSAS.");
+            }
         }
     }
 
     /// <summary>
-    /// Disposes the SemaphoreSlim and HubConnection.
+    /// Disposes the service resources asynchronously.
     /// </summary>
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         if (_disposed)
         {
             return;
         }
 
-        _connection?.DisposeAsync().AsTask().Wait();
-        _connectionLock.Dispose();
+        await DisposeAsyncCore();
+
         _disposed = true;
+    }
+
+    /// <summary>
+    /// Asynchronously disposes the service resources.
+    /// </summary>
+    private async Task DisposeAsyncCore()
+    {
+        if (_pipeServer != null)
+        {
+            try
+            {
+                _pipeServer.Close();
+                _pipeServer.Dispose();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error disposing pipe server.");
+            }
+            finally
+            {
+                _pipeServer = null;
+            }
+        }
+
+        if (_listeningTask != null)
+        {
+            try
+            {
+                await _listeningTask;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in listening task during disposal.");
+            }
+        }
     }
 }

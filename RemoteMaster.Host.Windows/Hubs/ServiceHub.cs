@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,7 @@ using RemoteMaster.Shared.Models;
 namespace RemoteMaster.Host.Windows.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ServiceHub(IPsExecService psExecService, ILogger<ServiceHub> logger) : Hub<IServiceClient>
+public class ServiceHub(IPsExecService psExecService, ICommandSender commandSender, ILogger<ServiceHub> logger) : Hub<IServiceClient>
 {
     public async override Task OnConnectedAsync()
     {
@@ -32,14 +31,6 @@ public class ServiceHub(IPsExecService psExecService, ILogger<ServiceHub> logger
 
             return;
         }
-
-        var userName = user.FindFirstValue(ClaimTypes.Name);
-        var role = user.FindFirstValue(ClaimTypes.Role);
-
-        if (role == "System Service" && userName == "RCHost")
-        {
-            await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
-        }
     }
 
     [Authorize(Policy = "ExecuteScriptPolicy")]
@@ -57,6 +48,6 @@ public class ServiceHub(IPsExecService psExecService, ILogger<ServiceHub> logger
     {
         logger.LogInformation("Received command: {Command}", command);
 
-        await Clients.Group("Services").ReceiveCommand(command);
+        await commandSender.SendCommandAsync(command);
     }
 }
