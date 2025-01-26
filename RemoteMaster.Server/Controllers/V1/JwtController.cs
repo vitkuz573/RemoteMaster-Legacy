@@ -16,7 +16,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [Produces("application/vnd.remotemaster.v1+json")]
 public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerBase
 {
-    [HttpGet("publicKey")]
+    [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public async Task<IActionResult> GetPublicKey()

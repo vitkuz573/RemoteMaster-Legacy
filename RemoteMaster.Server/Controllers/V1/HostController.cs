@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [Produces("application/vnd.remotemaster.v1+json")]
 public class HostController(IHostRegistrationService registrationService) : ControllerBase
 {
-    [HttpPost("register")]
+    [HttpPost]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> RegisterHost([FromBody] HostRegisterRequest request)
@@ -126,7 +126,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         return BadRequest(failureResponse);
     }
 
-    [HttpDelete("unregister")]
+    [HttpDelete]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
@@ -166,7 +166,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         return BadRequest(failureResponse);
     }
 
-    [HttpPut("update")]
+    [HttpPut]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> UpdateHost([FromBody] HostUpdateRequest request)

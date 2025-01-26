@@ -15,26 +15,27 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class CertificateController(ICertificateService certificateService) : ControllerBase
+public class CaController(ICertificateAuthorityService certificateAuthorityService) : ControllerBase
 {
-    [HttpPost]
+    [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
-    public async Task<IActionResult> IssueCertificate([FromBody] byte[] csrBytes)
+    public IActionResult GetCaCertificate()
     {
-        var certificateResult = await certificateService.IssueCertificate(csrBytes);
+        var caCertificateResult = certificateAuthorityService.GetCaCertificate(X509ContentType.Cert);
 
-        if (certificateResult.IsSuccess)
+        if (caCertificateResult.IsSuccess)
         {
-            var response = ApiResponse<byte[]>.Success(certificateResult.Value.Export(X509ContentType.Pfx), "Certificate issued successfully.");
-            
+            var caCertificate = caCertificateResult.Value;
+            var response = ApiResponse<byte[]>.Success(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully.");
+
             return Ok(response);
         }
 
         var problemDetails = new ProblemDetails
         {
-            Title = "Error issuing certificate",
-            Detail = certificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
+            Title = "Error retrieving CA certificate",
+            Detail = caCertificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
             Status = StatusCodes.Status400BadRequest
         };
 

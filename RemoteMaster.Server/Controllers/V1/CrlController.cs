@@ -18,7 +18,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [EnableRateLimiting("CrlPolicy")]
 public class CrlController(ICrlService crlService) : ControllerBase
 {
-    [HttpGet(Name = "GetCrl")]
+    [HttpGet]
     [ProducesResponseType(typeof(FileResult), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public async Task<IActionResult> GetCrlAsync()

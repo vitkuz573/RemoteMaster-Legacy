@@ -17,12 +17,12 @@ namespace RemoteMaster.Server.Controllers.V1;
 [Produces("application/vnd.remotemaster.v1+json")]
 public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork) : ControllerBase
 {
-    [HttpGet("address")]
+    [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<AddressDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 404)]
-    public async Task<IActionResult> GetOrganizationAddress([FromQuery] string organizationName)
+    public async Task<IActionResult> GetOrganizationAddress([FromQuery] string name)
     {
-        if (string.IsNullOrWhiteSpace(organizationName))
+        if (string.IsNullOrWhiteSpace(name))
         {
             var problemDetails = new ProblemDetails
             {
@@ -36,7 +36,7 @@ public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork
             return BadRequest(errorResponse);
         }
 
-        var organization = await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == organizationName);
+        var organization = await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == name);
 
         var organizationEntity = organization.FirstOrDefault();
 
@@ -45,7 +45,7 @@ public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork
             var problemDetails = new ProblemDetails
             {
                 Title = "Organization not found",
-                Detail = $"Organization with name {organizationName} was not found.",
+                Detail = $"Organization with name {name} was not found.",
                 Status = StatusCodes.Status404NotFound
             };
 

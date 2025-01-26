@@ -163,7 +163,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var request = new HostRegisterRequest(hostConfiguration, force);
 
-        var response = await client.PostAsJsonAsync("/api/Host/register", request, HostJsonSerializerContext.Default.HostRegisterRequest);
+        var response = await client.PostAsJsonAsync("/api/host", request, HostJsonSerializerContext.Default.HostRegisterRequest);
 
         return await ProcessSimpleResponse(hostConfiguration, response);
     }
@@ -176,7 +176,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var request = new HostUnregisterRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit);
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/Host/unregister");
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/host");
         httpRequest.Content = JsonContent.Create(request, HostJsonSerializerContext.Default.HostUnregisterRequest);
 
         var response = await client.SendAsync(httpRequest);
@@ -192,7 +192,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var request = new HostUpdateRequest(hostConfiguration.Host.MacAddress, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
-        var response = await client.PutAsJsonAsync("/api/Host/update", request, HostJsonSerializerContext.Default.HostUpdateRequest);
+        var response = await client.PutAsJsonAsync("/api/host", request, HostJsonSerializerContext.Default.HostUpdateRequest);
 
         return await ProcessSimpleResponse(hostConfiguration, response);
     }
@@ -214,7 +214,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync("/api/Jwt/publicKey");
+        var response = await client.GetAsync("/api/jwt");
 
         return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
@@ -225,7 +225,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync("/api/Certificate/ca");
+        var response = await client.GetAsync("/api/ca");
 
         return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
@@ -236,7 +236,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.PostAsJsonAsync("/api/Certificate/issue", csrBytes, ApiJsonSerializerContext.Default.ByteArray);
+        var response = await client.PostAsJsonAsync("/api/certificate", csrBytes, ApiJsonSerializerContext.Default.ByteArray);
 
         return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
@@ -247,7 +247,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/HostMove?macAddress={macAddress}");
+        var response = await client.GetAsync($"/api/hostMoveRequest?macAddress={macAddress}");
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -259,11 +259,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
     public async Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress)
     {
+        ArgumentNullException.ThrowIfNull(macAddress);
+
         var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress, ApiJsonSerializerContext.Default.PhysicalAddress);
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/hostMoveRequest?macAddress={WebUtility.UrlEncode(macAddress.ToString())}");
+        var response = await client.SendAsync(request);
 
         return await ProcessSimpleResponse(hostConfiguration, response);
     }
@@ -272,7 +275,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.PostAsJsonAsync("/api/Notification", message, NotificationJsonSerializerContext.Default.NotificationMessage);
+        var response = await client.PostAsJsonAsync("/api/notification", message, NotificationJsonSerializerContext.Default.NotificationMessage);
 
         await ProcessSimpleResponse(hostConfiguration, response);
     }
@@ -283,7 +286,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/Organization/address?organizationName={organizationName}");
+        var response = await client.GetAsync($"/api/organization?name={organizationName}");
 
         return await ProcessResponse<AddressDto>(hostConfiguration, response);
     }

@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class HostMoveController(IHostMoveRequestService hostMoveRequestService) : ControllerBase
+public class HostMoveRequestController(IHostMoveRequestService hostMoveRequestService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
@@ -54,7 +54,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
         return BadRequest(ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure));
     }
 
-    [HttpPost("acknowledge")]
+    [HttpDelete]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> AcknowledgeMoveRequest([FromBody] PhysicalAddress macAddress)
