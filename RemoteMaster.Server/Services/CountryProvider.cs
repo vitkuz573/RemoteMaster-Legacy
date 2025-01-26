@@ -9,34 +9,58 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
+/// <summary>
+/// Provides country information based on specific cultures.
+/// </summary>
 public class CountryProvider : ICountryProvider
 {
-    private readonly Lazy<List<Country>> _countries = new(LoadCountries);
+    /// <summary>
+    /// Holds a statically loaded list of countries.
+    /// </summary>
+    private static readonly List<Country> Countries = LoadCountries();
 
+    /// <summary>
+    /// Returns a list of all available countries.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="Result{TValue}"/> containing a list of <see cref="Country"/>.
+    /// </returns>
     public Result<List<Country>> GetCountries()
     {
-        return Result.Ok(_countries.Value);
+        return Result.Ok(Countries);
     }
 
+    /// <summary>
+    /// Loads and returns a list of distinct countries derived from specific cultures.
+    /// </summary>
+    /// <remarks>
+    /// This method retrieves all specific cultures using <see cref="CultureInfo.GetCultures(CultureTypes)"/>,
+    /// converts them to <see cref="RegionInfo"/> objects, filters out duplicates, and then sorts the result by name.
+    /// </remarks>
+    /// <returns>
+    /// A list of unique <see cref="Country"/> instances.
+    /// </returns>
     private static List<Country> LoadCountries()
     {
-        return [.. CultureInfo.GetCultures(CultureTypes.SpecificCultures)
-            .Select(culture => new RegionInfo(culture.Name))
-            .DistinctBy(ri => ri.TwoLetterISORegionName)
-            .Where(ri => IsValidCountryCode(ri.TwoLetterISORegionName))
-            .Select(ri => new Country(ri.EnglishName, ri.TwoLetterISORegionName))
-            .OrderBy(c => c.Name)];
-    }
-
-    private static bool IsValidCountryCode(string countryCode)
-    {
-        if (string.IsNullOrEmpty(countryCode) || countryCode.Length != 2)
-        {
-            return false;
-        }
-
-        return CultureInfo.GetCultures(CultureTypes.SpecificCultures)
-            .Select(culture => new RegionInfo(culture.Name))
-            .Any(ri => ri.TwoLetterISORegionName.Equals(countryCode, StringComparison.OrdinalIgnoreCase));
+        return [.. CultureInfo
+            .GetCultures(CultureTypes.SpecificCultures)
+            .Select(culture =>
+            {
+                try
+                {
+                    return new RegionInfo(culture.Name);
+                }
+                catch
+                {
+                    // Some culture names might fail to initialize RegionInfo
+                    return null;
+                }
+            })
+            .Where(regionInfo => regionInfo != null)
+            .DistinctBy(regionInfo => regionInfo!.TwoLetterISORegionName)
+            .Select(regionInfo => new Country(
+                regionInfo!.EnglishName,
+                regionInfo.TwoLetterISORegionName))
+            .OrderBy(country => country.Name)];
     }
 }
