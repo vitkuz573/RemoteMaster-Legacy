@@ -21,7 +21,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
 
             var hostService = serviceFactory.GetService("RCHost");
 
-            StopServiceWithRetry(hostService, "Host");
+            StopServiceWithRetry(hostService);
 
             if (userInstanceService.IsRunning)
             {
@@ -88,8 +88,13 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         throw new IOException($"Failed to copy file {sourceFile} to {destinationFile} after {maxAttempts} attempts.");
     }
 
-    private static void StopServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
+    private static void StopServiceWithRetry(IRunnable runnableService, int maxAttempts = 3)
     {
+        if (runnableService is not IService service)
+        {
+            throw new ArgumentException("The provided service does not implement IService.", nameof(service));
+        }
+
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
@@ -102,7 +107,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
             {
                 if (attempt == maxAttempts)
                 {
-                    throw new Exception($"Failed to stop {serviceName} service after {maxAttempts} attempts: {ex.Message}");
+                    throw new Exception($"Failed to stop {service.Name} service after {maxAttempts} attempts: {ex.Message}");
                 }
 
                 Thread.Sleep(1000);
