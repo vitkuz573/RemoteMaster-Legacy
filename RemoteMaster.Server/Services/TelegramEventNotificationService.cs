@@ -55,7 +55,7 @@ public class TelegramEventNotificationService(IOptions<TelegramBotOptions> teleg
             .Replace("(", "\\(")
             .Replace(")", "\\)")
             .Replace("~", "\\~")
-            .Replace("`", "\\`")
+            // .Replace("`", "\\`")
             .Replace(">", "\\>")
             .Replace("#", "\\#")
             .Replace("+", "\\+")
