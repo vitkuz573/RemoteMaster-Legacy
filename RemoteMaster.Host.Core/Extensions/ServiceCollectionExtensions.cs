@@ -89,6 +89,7 @@ public static class ServiceCollectionExtensions
             case "user":
                 services.AddHostedService<InputBackgroundService>();
                 services.AddHostedService<TrayIconHostedService>();
+                services.AddHostedService<UpdaterReadyService>();
                 break;
             case "service":
                 services.AddHostedService<CertificateManagementService>();

@@ -3,10 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
+using System.IO.Pipes;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Extensions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Shared.Models;
 using static RemoteMaster.Shared.Models.Message;
 
@@ -25,7 +24,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
 
         try
         {
-            await InitializeHubClient();
+            await NotifyReadiness();
 
             if (waitForClientConnectionTimeout != 0)
             {
@@ -34,7 +33,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
                 if (completedTask != _clientConnectedTcs.Task)
                 {
                     await notifier.NotifyAsync("Timeout reached while waiting for client connection. Update aborted.", MessageSeverity.Warning);
-                    
+
                     return;
                 }
             }
@@ -46,7 +45,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         catch (Exception ex)
         {
             await notifier.NotifyAsync($"Error initializing hub client: {ex.Message}", MessageSeverity.Error);
-            
+
             return;
         }
 
@@ -93,14 +92,14 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             if (!isDownloaded)
             {
                 await notifier.NotifyAsync("Download or copy failed. Update aborted.", MessageSeverity.Error);
-                
+
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade, force))
             {
                 await notifier.NotifyAsync("Update aborted due to version check.", MessageSeverity.Error);
-                
+
                 return;
             }
 
@@ -108,7 +107,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             {
                 await notifier.NotifyAsync("No update required. Files are identical.", MessageSeverity.Information);
                 await notifier.NotifyAsync("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
-                
+
                 return;
             }
 
@@ -125,24 +124,19 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
     {
         if (!_clientConnectedTcs.Task.IsCompleted)
         {
-            _clientConnectedTcs.SetResult(true); 
+            _clientConnectedTcs.SetResult(true);
         }
     }
 
-    private async Task InitializeHubClient()
+    private static async Task NotifyReadiness()
     {
-        var hostConfiguration = await hostConfigurationService.LoadAsync();
+        await using var client = new NamedPipeClientStream(".", PipeNames.UpdaterReadyPipe, PipeDirection.Out, PipeOptions.Asynchronous);
+        await client.ConnectAsync(5000);
 
-        var updaterHubClient = new HubConnectionBuilder()
-            .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/updater", options =>
-            {
-                options.Headers.Add("Service-Flag", "true");
-            })
-            .AddMessagePackProtocol(options => options.Configure())
-            .Build();
+        await using var writer = new StreamWriter(client);
+        writer.AutoFlush = true;
 
-        await updaterHubClient.StartAsync();
-        await updaterHubClient.InvokeAsync("NotifyPortReady", 6001);
+        await writer.WriteLineAsync("Updater is ready at port 6001");
     }
 
     private async Task PerformUpdateAsync()
@@ -283,7 +277,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
             await notifier.NotifyAsync($"Attempt {attempt}: Checking if services are running...", MessageSeverity.Information);
-            
+
             await Task.Delay(delay);
 
             var nonRunningServices = services.Where(service => !service.IsRunning).ToList();
@@ -297,7 +291,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             }
 
             var nonRunningServicesList = string.Join(", ", nonRunningServices.Select(service => service.ToString()));
-            
+
             await notifier.NotifyAsync($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageSeverity.Warning);
         }
 
@@ -326,7 +320,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             if (!fileSystem.File.Exists(targetFile))
             {
                 await notifier.NotifyAsync($"File missing in target: {targetFile}. Update needed.", MessageSeverity.Information);
-                
+
                 return true;
             }
 
@@ -336,12 +330,12 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             }
 
             await notifier.NotifyAsync($"Checksum mismatch for file: {file}. Update needed.", MessageSeverity.Warning);
-                
+
             return true;
         }
 
         await notifier.NotifyAsync("All files are identical. No update required.", MessageSeverity.Information);
-        
+
         return false;
     }
 
@@ -358,7 +352,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         if (updateVersion > currentVersion)
         {
             await notifier.NotifyAsync("Update version is newer than current version; proceeding with update.", MessageSeverity.Information);
-            
+
             return true;
         }
 
@@ -367,31 +361,31 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             if (!checksumValidator.AreChecksumsEqual(updateExecutablePath, Environment.ProcessPath!))
             {
                 await notifier.NotifyAsync("Checksums differ; proceeding with update.", MessageSeverity.Information);
-                
+
                 return true;
             }
 
             if (force)
             {
                 await notifier.NotifyAsync("Force flag is set; proceeding with update even though files are identical.", MessageSeverity.Warning);
-                
+
                 return true;
             }
 
             await notifier.NotifyAsync("No update needed; files are identical.", MessageSeverity.Information);
-            
+
             return false;
         }
 
         if (allowDowngrade)
         {
             await notifier.NotifyAsync("Allowing downgrade as per --allow-downgrade flag; proceeding with update.", MessageSeverity.Warning);
-            
+
             return true;
         }
 
         await notifier.NotifyAsync($"Update version {updateVersion} is older than current version {currentVersion}. Use --allow-downgrade to proceed.", MessageSeverity.Warning);
-        
+
         return false;
     }
 }

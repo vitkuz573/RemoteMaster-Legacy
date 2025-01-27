@@ -7,4 +7,5 @@ namespace RemoteMaster.Host.Core.Models;
 public static class PipeNames
 {
     public const string CommandPipe = "CommandPipe";
+    public const string UpdaterReadyPipe = "UpdaterReadyPipe";
 }
