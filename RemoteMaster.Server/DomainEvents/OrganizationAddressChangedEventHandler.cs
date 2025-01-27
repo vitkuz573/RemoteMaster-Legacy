@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.DomainEvents;
 
 public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork applicationUnitOfWork, ICertificateTaskUnitOfWork certificateTaskUnitOfWork, ILogger<OrganizationAddressChangedEventHandler> logger) : IDomainEventHandler<OrganizationAddressChangedEvent>
 {
-    public async Task Handle(OrganizationAddressChangedEvent domainEvent)
+    public async Task HandleAsync(OrganizationAddressChangedEvent domainEvent, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
 
@@ -28,7 +28,7 @@ public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork appli
                 }
             }
 
-            await certificateTaskUnitOfWork.CommitAsync();
+            await certificateTaskUnitOfWork.CommitAsync(ct);
         }
     }
 }

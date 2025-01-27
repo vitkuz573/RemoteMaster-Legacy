@@ -51,7 +51,7 @@ public class UnitOfWork<TContext>(TContext context, IDomainEventDispatcher domai
                 logger.LogInformation("Domain event {DomainEventType} occurred at {OccurredOn}", domainEvent.GetType().Name, domainEvent.OccurredOn);
             }
 
-            await domainEventDispatcher.DispatchAsync(domainEvents);
+            await domainEventDispatcher.DispatchAsync(domainEvents, cancellationToken);
 
             return result;
         }
