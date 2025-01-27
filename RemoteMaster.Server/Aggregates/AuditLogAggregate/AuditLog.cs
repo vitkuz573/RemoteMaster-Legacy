@@ -47,4 +47,3 @@ public class AuditLog : IAggregateRoot
         return new AuditLog(actionType, userName, DateTime.UtcNow, details);
     }
 }
-
