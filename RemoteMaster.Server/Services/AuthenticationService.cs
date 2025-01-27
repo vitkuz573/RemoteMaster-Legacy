@@ -23,6 +23,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
             if (user == null)
             {
+                await eventNotificationService.SendNotificationAsync($"Failed login attempt for username `{username}` from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
+
                 return new AuthenticationResult
                 {
                     Status = AuthenticationStatus.InvalidCredentials,
