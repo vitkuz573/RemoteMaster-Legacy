@@ -157,6 +157,7 @@ public static class Program
         services.AddScoped<IAuditLogUnitOfWork, AuditLogUnitOfWork>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IHostAccessService, HostAccessService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<ITokenStorageService, CookieTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();

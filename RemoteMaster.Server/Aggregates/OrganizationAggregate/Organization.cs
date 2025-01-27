@@ -51,12 +51,7 @@ public class Organization : IAggregateRoot
     {
         if (parentId.HasValue)
         {
-            var parentUnit = _organizationalUnits.SingleOrDefault(u => u.Id == parentId.Value);
-
-            if (parentUnit == null)
-            {
-                throw new InvalidOperationException("Parent unit not found.");
-            }
+            var parentUnit = _organizationalUnits.SingleOrDefault(u => u.Id == parentId.Value) ?? throw new InvalidOperationException("Parent unit not found.");
         }
 
         var unit = new OrganizationalUnit(unitName, parentId);

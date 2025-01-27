@@ -3,10 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.AuditLogAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 namespace RemoteMaster.Server.DomainEvents;
 
-public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork applicationUnitOfWork, ICertificateTaskUnitOfWork certificateTaskUnitOfWork, ILogger<OrganizationAddressChangedEventHandler> logger) : IDomainEventHandler<OrganizationAddressChangedEvent>
+public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork applicationUnitOfWork, IAuditLogUnitOfWork auditLogUnitOfWork, ICertificateTaskUnitOfWork certificateTaskUnitOfWork, ICurrentUserService currentUserService, ILogger<OrganizationAddressChangedEventHandler> logger) : IDomainEventHandler<OrganizationAddressChangedEvent>
 {
     public async Task HandleAsync(OrganizationAddressChangedEvent domainEvent, CancellationToken ct)
     {
@@ -30,5 +32,28 @@ public class OrganizationAddressChangedEventHandler(IApplicationUnitOfWork appli
 
             await certificateTaskUnitOfWork.CommitAsync(ct);
         }
+
+        await AddAuditLogAsync(domainEvent, organization, ct);
+    }
+
+    private async Task AddAuditLogAsync(OrganizationAddressChangedEvent domainEvent, Organization? organization, CancellationToken ct)
+    {
+        var userName = currentUserService.UserName;
+
+        if (organization == null)
+        {
+            logger.LogWarning("Organization with ID {OrganizationId} not found. Audit log not created.", domainEvent.OrganizationId);
+            
+            return;
+        }
+
+        var details = $"Organization '{organization.Name}' (ID: {organization.Id}) changed address to '{domainEvent.NewAddress}'.";
+
+        var auditLog = AuditLog.Create("OrganizationAddressChanged", userName, details);
+
+        await auditLogUnitOfWork.AuditLogs.AddAsync(auditLog);
+        await auditLogUnitOfWork.CommitAsync(ct);
+
+        logger.LogInformation("Audit log created for Organization {OrganizationId} address change.", domainEvent.OrganizationId);
     }
 }
