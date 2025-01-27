@@ -46,7 +46,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
 
             await notifier.NotifyAsync("Emergency recovery completed successfully. Attempting to restart services...", MessageSeverity.Information);
 
-            StartServiceWithRetry(hostService);
+            await StartServiceWithRetry(hostService);
 
             await notifier.NotifyAsync("Services have been successfully restarted after emergency recovery.", MessageSeverity.Information);
         }
