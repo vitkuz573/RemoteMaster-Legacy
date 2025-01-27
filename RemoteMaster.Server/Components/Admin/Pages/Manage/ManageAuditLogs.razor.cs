@@ -21,7 +21,7 @@ public partial class ManageAuditLogs : ComponentBase
     // Pagination
     private int PageSize { get; set; } = 10;
     
-    private int _currentPage { get; set; } = 1;
+    private int CurrentPage { get; set; } = 1;
     
     private int TotalPages => (int)Math.Ceiling((double)_auditLogs.Count / PageSize);
 
@@ -41,7 +41,7 @@ public partial class ManageAuditLogs : ComponentBase
             var logs = await AuditLogUnitOfWork.AuditLogs.GetAllAsync();
 
             _auditLogs = [.. logs.OrderByDescending(al => al.ActionTime)];
-            _currentPage = 1;
+            CurrentPage = 1;
         }
         catch (Exception ex)
         {
@@ -55,7 +55,7 @@ public partial class ManageAuditLogs : ComponentBase
 
     private async Task ApplyFilters()
     {
-        _currentPage = 1;
+        CurrentPage = 1;
 
         await FilterAuditLogs();
     }
@@ -81,7 +81,7 @@ public partial class ManageAuditLogs : ComponentBase
     {
         if (HasNextPage)
         {
-            _currentPage++;
+            CurrentPage++;
         }
     }
 
@@ -89,12 +89,12 @@ public partial class ManageAuditLogs : ComponentBase
     {
         if (HasPreviousPage)
         {
-            _currentPage--;
+            CurrentPage--;
         }
     }
 
-    private bool HasNextPage => _currentPage < TotalPages;
-    private bool HasPreviousPage => _currentPage > 1;
+    private bool HasNextPage => CurrentPage < TotalPages;
+    private bool HasPreviousPage => CurrentPage > 1;
 
-    private List<AuditLog> PagedAuditLogs => _auditLogs.Skip((_currentPage - 1) * PageSize).Take(PageSize).ToList();
+    private List<AuditLog> PagedAuditLogs => _auditLogs.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
 }
