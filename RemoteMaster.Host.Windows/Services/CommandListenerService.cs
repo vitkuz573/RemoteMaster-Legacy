@@ -14,35 +14,52 @@ public class CommandListenerService : IHostedService, IAsyncDisposable
 {
     private Task? _loopTask;
     private bool _disposed;
+    private readonly CancellationTokenSource _cts = new();
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _loopTask = Task.Run(ListenLoop, cancellationToken);
+        _loopTask = Task.Run(() => ListenLoop(_cts.Token), cancellationToken);
 
         return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
+        await _cts.CancelAsync();
+
+        if (_loopTask is not null)
+        {
+            await _loopTask;
+        }
+
         await DisposeAsync();
     }
 
-    private async Task ListenLoop()
+    private static async Task ListenLoop(CancellationToken token)
     {
-        while (!_disposed)
+        while (!token.IsCancellationRequested)
         {
-            using var server = new NamedPipeServerStream(PipeNames.CommandPipe, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-            await server.WaitForConnectionAsync();
-            
-            using var reader = new StreamReader(server, Encoding.UTF8);
-            
-            var cmd = await reader.ReadLineAsync();
-            
-            if (cmd == "CtrlAltDel")
+            await using var server = new NamedPipeServerStream(PipeNames.CommandPipe, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+
+            try
             {
-                SendSAS(true);
-                SendSAS(false);
+                await server.WaitForConnectionAsync(token);
             }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
+            using var reader = new StreamReader(server, Encoding.UTF8);
+            var cmd = await reader.ReadLineAsync(token);
+
+            if (cmd != "CtrlAltDel")
+            {
+                continue;
+            }
+
+            SendSAS(true);
+            SendSAS(false);
         }
     }
 
@@ -54,6 +71,8 @@ public class CommandListenerService : IHostedService, IAsyncDisposable
         }
 
         _disposed = true;
+
+        _cts.Dispose();
 
         if (_loopTask != null)
         {
