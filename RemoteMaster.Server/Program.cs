@@ -136,6 +136,7 @@ public static class Program
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<ICertificateRenewalTaskRepository, CertificateRenewalTaskRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IHostCommandService, HostCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
@@ -153,6 +154,7 @@ public static class Program
         services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
         services.AddScoped<ICrlUnitOfWork, CrlUnitOfWork>();
         services.AddScoped<ICertificateTaskUnitOfWork, CertificateTaskUnitOfWork>();
+        services.AddScoped<IAuditLogUnitOfWork, AuditLogUnitOfWork>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IHostAccessService, HostAccessService>();
         services.AddSingleton<ITokenStorageService, CookieTokenStorageService>();
