@@ -13,13 +13,11 @@ public class CommandSender : ICommandSender
 {
     public async Task SendCommandAsync(string command)
     {
-        using var client = new NamedPipeClientStream(".", PipeNames.CommandPipe, PipeDirection.Out, PipeOptions.Asynchronous);
+        await using var client = new NamedPipeClientStream(".", PipeNames.CommandPipe, PipeDirection.Out, PipeOptions.Asynchronous);
         await client.ConnectAsync(5000);
 
-        using var writer = new StreamWriter(client, Encoding.UTF8)
-        {
-            AutoFlush = true
-        };
+        await using var writer = new StreamWriter(client, Encoding.UTF8);
+        writer.AutoFlush = true;
 
         await writer.WriteLineAsync(command);
     }
