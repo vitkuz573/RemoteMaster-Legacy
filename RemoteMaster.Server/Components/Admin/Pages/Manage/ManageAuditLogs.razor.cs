@@ -39,7 +39,8 @@ public partial class ManageAuditLogs : ComponentBase
 
             // Fetch all audit logs (consider implementing server-side paging for large datasets)
             var logs = await AuditLogUnitOfWork.AuditLogs.GetAllAsync();
-            _auditLogs = logs.OrderByDescending(al => al.ActionTime).ToList();
+
+            _auditLogs = [.. logs.OrderByDescending(al => al.ActionTime)];
             _currentPage = 1;
         }
         catch (Exception ex)
@@ -52,15 +53,16 @@ public partial class ManageAuditLogs : ComponentBase
         }
     }
 
-    private void ApplyFilters()
+    private async Task ApplyFilters()
     {
         _currentPage = 1;
-        FilterAuditLogs();
+
+        await FilterAuditLogs();
     }
 
-    private void FilterAuditLogs()
+    private async Task FilterAuditLogs()
     {
-        var query = AuditLogUnitOfWork.AuditLogs.GetAllAsync().Result.AsQueryable();
+        var query = await AuditLogUnitOfWork.AuditLogs.GetAllAsync();
 
         if (!string.IsNullOrWhiteSpace(FilterActionType))
         {
@@ -72,7 +74,7 @@ public partial class ManageAuditLogs : ComponentBase
             query = query.Where(al => al.UserName.Contains(FilterUserName, StringComparison.OrdinalIgnoreCase));
         }
 
-        _auditLogs = query.OrderByDescending(al => al.ActionTime).ToList();
+        _auditLogs = [.. query.OrderByDescending(al => al.ActionTime)];
     }
 
     private void NextPage()
