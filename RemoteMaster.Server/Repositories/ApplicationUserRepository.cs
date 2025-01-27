@@ -36,6 +36,7 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
     public async Task<IEnumerable<ApplicationUser>> FindAsync(Expression<Func<ApplicationUser, bool>> predicate)
     {
         return await context.Users
+            .Include(u => u.RefreshTokens)
             .Where(predicate)
             .ToListAsync();
     }
