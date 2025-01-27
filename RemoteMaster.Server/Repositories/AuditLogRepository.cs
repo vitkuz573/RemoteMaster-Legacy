@@ -15,13 +15,13 @@ public class AuditLogRepository(AuditLogDbContext context) : IAuditLogRepository
     public async Task<AuditLog?> GetByIdAsync(Guid id)
     {
         return await context.AuditLogs
-            .FirstOrDefaultAsync(ac => ac.Id == id);
+            .FirstOrDefaultAsync(al => al.Id == id);
     }
 
     public async Task<IEnumerable<AuditLog>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
         return await context.AuditLogs
-            .Where(ac => ids.Contains(ac.Id))
+            .Where(al => ids.Contains(al.Id))
             .ToListAsync();
     }
 
