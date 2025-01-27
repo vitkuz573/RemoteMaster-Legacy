@@ -11,7 +11,7 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class AuthenticationService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenService tokenService, ITokenStorageService tokenStorageService, IApplicationUserService applicationUserService, IApplicationUnitOfWork applicationUnitOfWork, ILogger<AuthenticationService> logger) : IAuthenticationService
+public class AuthenticationService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenService tokenService, ITokenStorageService tokenStorageService, IApplicationUserService applicationUserService, IApplicationUnitOfWork applicationUnitOfWork, IEventNotificationService eventNotificationService, ILogger<AuthenticationService> logger) : IAuthenticationService
 {
     public async Task<AuthenticationResult> LoginAsync(string username, string password, IPAddress ipAddress, string? returnUrl)
     {
@@ -97,6 +97,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
                 }
 
                 logger.LogInformation("User {Username} logged in from IP {IPAddress} at {LoginTime}.", username, ipAddress, DateTime.UtcNow.ToLocalTime());
+
+                await eventNotificationService.SendNotificationAsync($"User `{username}` logged in from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
                 await applicationUserService.AddSignInEntry(user, true);
 
