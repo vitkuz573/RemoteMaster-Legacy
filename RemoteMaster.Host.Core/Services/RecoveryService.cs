@@ -46,7 +46,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
 
             await notifier.NotifyAsync("Emergency recovery completed successfully. Attempting to restart services...", MessageSeverity.Information);
 
-            StartServiceWithRetry(hostService, "Host");
+            StartServiceWithRetry(hostService);
 
             await notifier.NotifyAsync("Services have been successfully restarted after emergency recovery.", MessageSeverity.Information);
         }
@@ -110,13 +110,20 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         }
     }
 
-    private static void StartServiceWithRetry(IRunnable service, string serviceName, int maxAttempts = 3)
+    private async Task StartServiceWithRetry(IRunnable runnableService, int maxAttempts = 3)
     {
+        if (runnableService is not IService service)
+        {
+            throw new ArgumentException("The provided service does not implement IService.", nameof(service));
+        }
+
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
                 service.Start();
+
+                await notifier.NotifyAsync($"{service.Name} service started successfully.", MessageSeverity.Information);
 
                 return;
             }
@@ -124,8 +131,12 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
             {
                 if (attempt == maxAttempts)
                 {
-                    throw new Exception($"Failed to start {serviceName} service after {maxAttempts} attempts: {ex.Message}");
+                    await notifier.NotifyAsync($"❌ Failed to start {service.Name} service after {maxAttempts} attempts: {ex.Message}", MessageSeverity.Error);
+
+                    throw new Exception($"Failed to start {service.Name} service after {maxAttempts} attempts: {ex.Message}");
                 }
+
+                await notifier.NotifyAsync($"Attempt {attempt} to start {service.Name} service failed: {ex.Message}. Retrying...", MessageSeverity.Warning);
 
                 Thread.Sleep(1000);
             }
