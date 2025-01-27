@@ -111,6 +111,7 @@ public static class Program
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CrlDbContext>();
         services.AddDbContext<CertificateTaskDbContext>();
+        services.AddDbContext<AuditLogDbContext>();
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
