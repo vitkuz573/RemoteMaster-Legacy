@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.DomainEvents;
 using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Repositories;
@@ -53,7 +54,11 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
 
     public async Task AddAsync(Organization entity)
     {
+        ArgumentNullException.ThrowIfNull(entity);
+
         await context.Organizations.AddAsync(entity);
+
+        entity.AddDomainEvent(new OrganizationCreatedEvent(entity.Id, entity.Name, entity.Address));
     }
 
     public void Update(Organization entity)

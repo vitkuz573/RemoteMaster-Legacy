@@ -129,6 +129,7 @@ public static class Program
 
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
+        services.AddScoped<IDomainEventHandler<OrganizationCreatedEvent>, OrganizationCreatedEventHandler>();
         services.AddScoped<IDomainEventHandler<OrganizationAddressChangedEvent>, OrganizationAddressChangedEventHandler>();
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<IApplicationClaimRepository, ApplicationClaimRepository>();
