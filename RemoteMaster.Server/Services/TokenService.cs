@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, ITokenSigningService tokenSigningService, IApplicationUnitOfWork applicationUnitOfWork, ILogger<TokenService> logger) : ITokenService
+public class TokenService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, ITokenSigningService tokenSigningService, IApplicationUnitOfWork applicationUnitOfWork, ILogger<TokenService> logger) : ITokenService
 {
     private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
@@ -139,15 +140,17 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
 
     public async Task<Result> IsRefreshTokenValid(string userId, string refreshToken)
     {
-        if (string.IsNullOrEmpty(refreshToken))
-        {
-            return Result.Fail("Refresh token cannot be null or empty");
-        }
+        await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        var user = await userManager.Users
+        var user = await context.Users
             .Include(u => u.RefreshTokens)
-            .SingleOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
-        return user != null && user.IsRefreshTokenValid(refreshToken) ? Result.Ok() : Result.Fail("Invalid or inactive refresh token");
+        return user?.RefreshTokens.Any(rt =>
+            rt.TokenValue.Value == refreshToken &&
+            rt.TokenValue.Expires > DateTime.UtcNow &&
+            rt.RevocationInfo == null) == true 
+            ? Result.Ok()
+            : Result.Fail("Invalid refresh token");
     }
 }

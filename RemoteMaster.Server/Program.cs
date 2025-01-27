@@ -107,6 +107,7 @@ public static class Program
         services.AddAuthentication(IdentityConstants.ApplicationScheme)
             .AddIdentityCookies();
 
+        services.AddDbContextFactory<ApplicationDbContext>();
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CrlDbContext>();
         services.AddDbContext<CertificateTaskDbContext>();
