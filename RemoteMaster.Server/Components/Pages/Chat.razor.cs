@@ -81,8 +81,18 @@ public partial class Chat : IAsyncDisposable
 
         _user = authState.User;
 
+        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
+
         _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5001/hubs/chat")
+            .WithUrl($"https://{Host}:5001/hubs/chat", options =>
+            {
+                options.AccessTokenProvider = async () =>
+                {
+                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                };
+            })
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
