@@ -38,6 +38,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
             {
                 await applicationUserService.AddSignInEntry(user, false);
 
+                await eventNotificationService.SendNotificationAsync($"Login attempt for username `{username}` failed due to no roles assigned from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
+
                 return new AuthenticationResult
                 {
                     Status = AuthenticationStatus.NoRolesAssigned,
@@ -53,6 +55,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
                 logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
 
                 await applicationUserService.AddSignInEntry(user, false);
+
+                await eventNotificationService.SendNotificationAsync($"Unauthorized RootAdministrator login attempt by `{username}` from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
                 return new AuthenticationResult
                 {
@@ -71,6 +75,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
                     await applicationUserService.AddSignInEntry(user, true);
 
+                    await eventNotificationService.SendNotificationAsync($"RootAdministrator `{username}` successfully logged in from localhost at `{DateTime.UtcNow.ToLocalTime()}`.");
+
                     await applicationUnitOfWork.CommitTransactionAsync();
 
                     return new AuthenticationResult
@@ -83,6 +89,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
                 await tokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveRevocation);
 
                 logger.LogInformation("User logged in. All previous refresh tokens revoked.");
+
+                await eventNotificationService.SendNotificationAsync($"All previous refresh tokens revoked for user `{username}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
                 var tokenDataResult = await tokenService.GenerateTokensAsync(user.Id);
 
@@ -100,7 +108,7 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
                 logger.LogInformation("User {Username} logged in from IP {IPAddress} at {LoginTime}.", username, ipAddress, DateTime.UtcNow.ToLocalTime());
 
-                await eventNotificationService.SendNotificationAsync($"User `{username}` logged in from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
+                await eventNotificationService.SendNotificationAsync($"User `{username}` logged in successfully from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
                 await applicationUserService.AddSignInEntry(user, true);
 
@@ -115,6 +123,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
             if (result.RequiresTwoFactor)
             {
+                await eventNotificationService.SendNotificationAsync($"User `{username}` requires two-factor authentication to log in from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
+
                 await applicationUnitOfWork.CommitTransactionAsync();
 
                 return new AuthenticationResult
@@ -126,6 +136,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
             if (!result.IsLockedOut)
             {
+                await eventNotificationService.SendNotificationAsync($"Invalid login attempt for username `{username}` from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
+
                 return new AuthenticationResult
                 {
                     Status = AuthenticationStatus.InvalidCredentials,
@@ -134,6 +146,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
             }
 
             logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
+
+            await eventNotificationService.SendNotificationAsync($"User `{username}` account locked out after login attempt from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
             await applicationUnitOfWork.CommitTransactionAsync();
 
@@ -147,6 +161,9 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
         catch (Exception ex)
         {
             logger.LogError("Error during authentication: {Message}", ex.Message);
+
+            await eventNotificationService.SendNotificationAsync($"Authentication error for username `{username}` from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`. Error: {ex.Message}");
+
             await applicationUnitOfWork.RollbackTransactionAsync();
 
             throw new Exception("Error during authentication.", ex);
