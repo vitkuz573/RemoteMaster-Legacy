@@ -22,7 +22,7 @@ public class OrganizationCreatedEventHandler(ICurrentUserService currentUserServ
     {
         var userName = currentUserService.UserName;
 
-        var details = $"Organization '{domainEvent.Name}' (ID: {domainEvent.OrganizationId}) was created.";
+        var details = $"Organization '{domainEvent.Name}' (ID: {domainEvent.OrganizationId}) with address '{domainEvent.Address}' was created.";
 
         var auditLog = AuditLog.Create("OrganizationCreated", userName, details);
 
