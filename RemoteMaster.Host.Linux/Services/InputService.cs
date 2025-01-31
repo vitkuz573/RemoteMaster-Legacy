@@ -9,15 +9,49 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class InputService : IInputService
 {
+    private readonly CancellationTokenSource _cts = new();
+    private bool _disposed;
+
     public bool InputEnabled { get; set; }
 
     public bool BlockUserInput { get; set; }
 
-    public void Start() => throw new NotImplementedException();
+    public void Start()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
+    }
 
     public void HandleMouseInput(MouseInputDto dto, string connectionId) => throw new NotImplementedException();
 
     public void HandleKeyboardInput(KeyboardInputDto dto, string connectionId) => throw new NotImplementedException();
 
-    public void Dispose() => throw new NotImplementedException();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (!disposing)
+        {
+            return;
+        }
+
+        _cts.Cancel();
+
+        _cts.Dispose();
+
+        _disposed = true;
+    }
+
+    ~InputService()
+    {
+        Dispose(false);
+    }
 }

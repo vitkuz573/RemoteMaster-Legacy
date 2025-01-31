@@ -9,13 +9,26 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class TrayIconManager : ITrayIconManager
 {
-    public void Show() => throw new NotImplementedException();
+    private bool _iconAdded;
+
+    public void Show()
+    {
+        if (!_iconAdded)
+        {
+            AddTrayIcon();
+        }
+    }
 
     public void Hide() => throw new NotImplementedException();
 
     public void SetIcon(Icon icon) => throw new NotImplementedException();
 
     public void SetTooltip(string tooltip) => throw new NotImplementedException();
+
+    private static void AddTrayIcon()
+    {
+
+    }
 
     public void Dispose() => throw new NotImplementedException();
 }
