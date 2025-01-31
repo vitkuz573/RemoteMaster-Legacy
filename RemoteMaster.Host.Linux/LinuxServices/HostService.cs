@@ -12,7 +12,7 @@ public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : 
 {
     public override string Name => "RCHost";
 
-    public override string ExecutablePath => "/usr/local/bin/RemoteMaster.Host";
+    public override string ExecutablePath => "/opt/RemoteMaster/Host/RemoteMaster.Host";
 
     public override string[] Arguments => ["service"];
 
