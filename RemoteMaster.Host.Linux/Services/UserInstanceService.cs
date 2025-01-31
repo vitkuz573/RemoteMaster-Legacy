@@ -29,7 +29,7 @@ public class UserInstanceService : IUserInstanceService
     }
 
     public bool IsRunning => _processService
-        .FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
+        .FindProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath))
         .Any(p => _processService.HasProcessArgument(p, Command));
 
     public void Start()
