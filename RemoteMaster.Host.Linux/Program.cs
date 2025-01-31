@@ -114,6 +114,7 @@ internal class Program
         services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
         services.AddSingleton<IInputService, InputService>();
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
+        services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IService, HostService>();
 
         services.AddCoreServices(commandName);
