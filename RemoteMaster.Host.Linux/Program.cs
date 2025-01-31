@@ -117,7 +117,7 @@ internal class Program
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IHardwareService, HardwareService>();
-        services.AddSingleton<IScreenCapturingService, X11CapturingService>();
+        services.AddSingleton<IScreenCapturingService, WaylandCapturingService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();

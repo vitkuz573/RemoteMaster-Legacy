@@ -19,7 +19,7 @@ public class ScreenCapturingService : IScreenCapturingService
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = "sh",
-                Arguments = "-c \"xwd -root -silent | ffmpeg -f xwd -i - -vf format=rgb24 -vframes 1 -f image2pipe -vcodec png -\"",
+                Arguments = "-c \"grim - | convert - png:-\"",
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true

@@ -34,18 +34,18 @@ public class Screen : IScreen
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = "sh",
-                Arguments = "-c \"xrandr --listactivemonitors | tail -n +2 | awk '{print $NF}'\"",
+                Arguments = "-c \"swaymsg -t get_outputs | jq -r '.[].name'\"",
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
             process.Start();
-            
+
             while (!process.StandardOutput.EndOfStream)
             {
                 var displayName = process.StandardOutput.ReadLine()?.Trim();
-                
+
                 if (!string.IsNullOrEmpty(displayName))
                 {
                     screens.Add(new Screen(displayName, GetScreenResolution(displayName), screens.Count == 0));
@@ -66,7 +66,7 @@ public class Screen : IScreen
         process.StartInfo = new ProcessStartInfo
         {
             FileName = "sh",
-            Arguments = $"-c \"xrandr | grep '^{displayName} ' | awk '{{print $3}}' | cut -d '+' -f1\"",
+            Arguments = $"-c \"swaymsg -t get_outputs | jq -r '.[] | select(.name == \"{displayName}\").current_mode'\"",
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true

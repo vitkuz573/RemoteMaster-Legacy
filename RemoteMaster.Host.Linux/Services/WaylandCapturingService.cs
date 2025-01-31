@@ -4,6 +4,6 @@
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class X11CapturingService : ScreenCapturingService
+public class WaylandCapturingService : ScreenCapturingService
 {
 }
