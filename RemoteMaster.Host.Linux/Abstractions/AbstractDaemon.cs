@@ -13,8 +13,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 {
     private readonly CancellationTokenSource _cts = new();
 
-    private Task? _daemonTask;
-
     public abstract string Name { get; }
 
     protected abstract string BinPath { get; }
@@ -165,8 +163,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         }
 
         logger.LogInformation($"Starting {Name} daemon...");
-
-        _daemonTask = Task.Run(() => RunDaemonAsync(_cts.Token));
     }
 
     public virtual void Stop()
@@ -181,15 +177,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         logger.LogInformation($"Stopping {Name} daemon...");
 
         _cts.Cancel();
-
-        try
-        {
-            _daemonTask?.Wait();
-        }
-        catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is TaskCanceledException))
-        {
-            // Expected when the task is canceled
-        }
     }
 
     public virtual void Restart()
@@ -198,30 +185,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
         Stop();
         Start();
-    }
-
-    protected abstract Task ExecuteDaemonAsync(CancellationToken cancellationToken);
-
-    private async Task RunDaemonAsync(CancellationToken cancellationToken)
-    {
-        logger.LogInformation($"{Name} daemon is running.");
-
-        try
-        {
-            await ExecuteDaemonAsync(cancellationToken);
-        }
-        catch (TaskCanceledException)
-        {
-            // Expected when the daemon is stopping
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, $"{Name} daemon encountered an unexpected error.");
-        }
-        finally
-        {
-            logger.LogInformation($"{Name} daemon execution loop has ended.");
-        }
     }
 
     private string GenerateSystemdUnitFile()
