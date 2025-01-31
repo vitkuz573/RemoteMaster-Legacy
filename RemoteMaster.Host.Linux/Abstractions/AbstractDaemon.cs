@@ -21,6 +21,8 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
     protected abstract IDictionary<string, string?> Arguments { get; }
 
+    protected abstract string? Description { get; }
+
     public virtual bool IsInstalled
     {
         get
@@ -227,7 +229,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         return $"""
 
                 [Unit]
-                Description={Name} daemon
+                Description={Description}
                 After=network.target
 
                 [Service]

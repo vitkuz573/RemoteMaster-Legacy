@@ -12,6 +12,8 @@ public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : 
 {
     public override string Name => "RCHost";
 
+    protected override string Description => "RemoteMaster Control Service enables advanced remote management and control functionalities for authorized clients. It provides seamless access to system controls, resource management, and real-time support capabilities, ensuring efficient and secure remote operations.";
+
     public override string ExecutablePath => "/opt/RemoteMaster/Host/RemoteMaster.Host";
 
     protected override IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
