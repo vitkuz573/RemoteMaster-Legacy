@@ -14,11 +14,14 @@ public class ServiceFactory : IServiceFactory
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        _serviceInstances = [];
+        _serviceInstances = new Dictionary<string, IService>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var service in services)
         {
-            _serviceInstances[service.Name] = service;
+            if (!_serviceInstances.TryAdd(service.Name, service))
+            {
+                throw new ArgumentException($"Duplicate service name detected: {service.Name}");
+            }
         }
     }
 

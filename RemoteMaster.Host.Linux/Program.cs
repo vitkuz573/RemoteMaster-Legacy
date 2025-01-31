@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Linux.LinuxServices;
 using Serilog;
 
 namespace RemoteMaster.Host.Linux;
@@ -105,6 +107,8 @@ internal class Program
     private static void ConfigureServices(IServiceCollection services, string commandName)
     {
         services.AddHttpContextAccessor();
+
+        services.AddSingleton<IService, HostService>();
 
         services.AddCoreServices(commandName);
 
