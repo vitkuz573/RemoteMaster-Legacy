@@ -16,8 +16,8 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
     private Task? _daemonTask;
 
     public abstract string Name { get; }
-    
-    public virtual string ExecutablePath { get; }
+
+    protected abstract string BinPath { get; }
 
     protected abstract IDictionary<string, string?> Arguments { get; }
 
@@ -234,7 +234,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
                 [Service]
                 Type=simple
-                ExecStart={ExecutablePath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}
+                ExecStart={BinPath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}
                 Restart=on-failure
                 User=root
                 Group=root
