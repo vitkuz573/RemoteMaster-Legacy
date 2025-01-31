@@ -13,21 +13,13 @@ public class WorkStationSecurityService : IWorkStationSecurityService
     {
         try
         {
-            try
-            {
-                var process = Process.Start("xdg-screensaver", "lock");
+            var process = Process.Start("xdg-screensaver", "lock");
 
-                return process.WaitForExit(5000);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("Failed to lock workstation display.", ex);
-            }
+            return process.WaitForExit(5000);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
-            throw;
+            throw new InvalidOperationException("Failed to lock workstation display.", ex);
         }
     }
 
