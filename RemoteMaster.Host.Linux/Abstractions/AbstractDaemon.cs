@@ -11,8 +11,6 @@ namespace RemoteMaster.Host.Linux.Abstractions;
 
 public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDaemon> logger) : IService
 {
-    private readonly CancellationTokenSource _cts = new();
-
     public abstract string Name { get; }
 
     protected abstract string BinPath { get; }
@@ -175,8 +173,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         }
 
         logger.LogInformation($"Stopping {Name} daemon...");
-
-        _cts.Cancel();
     }
 
     public virtual void Restart()
