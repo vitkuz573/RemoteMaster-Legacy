@@ -14,7 +14,10 @@ public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : 
 
     public override string ExecutablePath => "/opt/RemoteMaster/Host/RemoteMaster.Host";
 
-    public override string[] Arguments => ["service"];
+    protected override IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
+    {
+        ["service"] = null
+    };
 
     public override bool IsInstalled => true;
 

@@ -17,13 +17,77 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
     public abstract string Name { get; }
     
-    public abstract string ExecutablePath { get; }
-    
-    public abstract string[] Arguments { get; }
-    
-    public abstract bool IsInstalled { get; }
+    public virtual string ExecutablePath { get; }
 
-    public bool IsRunning { get; private set; }
+    protected abstract IDictionary<string, string?> Arguments { get; }
+
+    public virtual bool IsInstalled
+    {
+        get
+        {
+            var unitFilePath = $"/etc/systemd/system/{Name}.service";
+
+            if (fileSystem.File.Exists(unitFilePath))
+            {
+                return IsServiceEnabled();
+            }
+
+            logger.LogDebug($"Unit file {unitFilePath} does not exist.");
+
+            return false;
+
+        }
+    }
+
+    public virtual bool IsRunning
+    {
+        get
+        {
+            if (!IsInstalled)
+            {
+                return false;
+            }
+
+            try
+            {
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = "systemctl",
+                    Arguments = $"is-active {Name}.service",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = new Process();
+                process.StartInfo = processInfo;
+                process.Start();
+
+                var output = process.StandardOutput.ReadToEnd().Trim();
+                var error = process.StandardError.ReadToEnd().Trim();
+
+                process.WaitForExit();
+
+                if (process.ExitCode == 0 && output.Equals("active", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogDebug($"{Name} service is active.");
+
+                    return true;
+                }
+
+                logger.LogDebug($"{Name} service is not active: {output} {error}");
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to check if {Name} service is running.");
+
+                return false;
+            }
+        }
+    }
 
     public virtual void Create()
     {
@@ -102,8 +166,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         logger.LogInformation($"Starting {Name} daemon...");
 
         _daemonTask = Task.Run(() => RunDaemonAsync(_cts.Token));
-
-        IsRunning = true;
     }
 
     public virtual void Stop()
@@ -126,12 +188,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is TaskCanceledException))
         {
             // Expected when the task is canceled
-        }
-        finally
-        {
-            IsRunning = false;
-
-            logger.LogInformation($"{Name} daemon has stopped.");
         }
     }
 
@@ -222,6 +278,48 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         if (!string.IsNullOrWhiteSpace(error))
         {
             logger.LogWarning(error);
+        }
+    }
+
+    private bool IsServiceEnabled()
+    {
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "systemctl",
+                Arguments = $"is-enabled {Name}.service",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = new Process();
+            process.StartInfo = processInfo;
+            process.Start();
+
+            var output = process.StandardOutput.ReadToEnd().Trim();
+            var error = process.StandardError.ReadToEnd().Trim();
+
+            process.WaitForExit();
+
+            if (process.ExitCode == 0)
+            {
+                logger.LogDebug($"{Name} service is enabled.");
+
+                return output.Equals("enabled", StringComparison.OrdinalIgnoreCase);
+            }
+
+            logger.LogDebug($"{Name} service is not enabled: {error}");
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"Failed to check if {Name} service is enabled.");
+
+            return false;
         }
     }
 }
