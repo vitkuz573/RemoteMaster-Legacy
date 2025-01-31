@@ -232,7 +232,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
                 [Service]
                 Type=simple
-                ExecStart={ExecutablePath} {string.Join(" ", Arguments)}
+                ExecStart={ExecutablePath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}
                 Restart=on-failure
                 User=root
                 Group=root
