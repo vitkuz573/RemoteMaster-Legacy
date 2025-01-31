@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Linux.LinuxServices;
+using RemoteMaster.Host.Linux.Services;
 using Serilog;
 
 namespace RemoteMaster.Host.Linux;
@@ -108,6 +109,9 @@ internal class Program
     {
         services.AddHttpContextAccessor();
 
+        services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
+        services.AddSingleton<IUserInstanceService, UserInstanceService>();
+        services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
         services.AddSingleton<IService, HostService>();
 
         services.AddCoreServices(commandName);
