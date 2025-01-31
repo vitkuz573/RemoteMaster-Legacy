@@ -2,22 +2,62 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Linux.Services;
 
 public class ScreenCapturingService : IScreenCapturingService
 {
-    public byte[]? GetNextFrame(string connectionId) => throw new NotImplementedException();
+    public byte[]? GetNextFrame(string connectionId)
+    {
+        try
+        {
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = "sh",
+                Arguments = "-c \"xwd -root -silent | ffmpeg -f xwd -i - -vf format=rgb24 -vframes 1 -f image2pipe -vcodec png -\"",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
-    public IEnumerable<Display> GetDisplays() => throw new NotImplementedException();
+            process.Start();
 
-    public IScreen? FindScreenByName(string displayName) => throw new NotImplementedException();
+            using var memoryStream = new MemoryStream();
 
-    public void SetSelectedScreen(string connectionId, IScreen display) => throw new NotImplementedException();
+            process.StandardOutput.BaseStream.CopyTo(memoryStream);
+            process.WaitForExit();
 
-    public byte[]? GetThumbnail(string connectionId) => throw new NotImplementedException();
+            return memoryStream.ToArray();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to capture screen frame", ex);
+        }
+    }
 
-    public void Dispose() => throw new NotImplementedException();
+    public IEnumerable<Display> GetDisplays()
+    {
+        return Screen.AllScreens.Select(s => new Display
+        {
+            Name = s.DeviceName,
+            IsPrimary = s.Primary,
+            Resolution = s.Bounds.Size
+        });
+    }
+
+    public IScreen? FindScreenByName(string displayName)
+    {
+        return Screen.AllScreens.FirstOrDefault(s => s.DeviceName == displayName);
+    }
+
+    public void SetSelectedScreen(string connectionId, IScreen display) { }
+
+    public byte[]? GetThumbnail(string connectionId) => GetNextFrame(connectionId);
+
+    public void Dispose() { }
 }
