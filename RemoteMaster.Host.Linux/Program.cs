@@ -52,9 +52,7 @@ internal class Program
 
         app.MapCoreHubs(commandName);
 
-        await app.ConfigureSerilog(server);
-
-        var oneOffCommands = new HashSet<string> { "install", "update", "uninstall", "reinstall" };
+        var oneOffCommands = new HashSet<string> { "install", "update", "uninstall", "reinstall", "--help", "-h", "/?" };
 
         var shouldInvoke = args.Length == 0 ||
                            args[0].StartsWith('-') ||
@@ -72,6 +70,8 @@ internal class Program
 
             Environment.Exit(exitCode);
         }
+
+        await app.ConfigureSerilog(server);
 
         if (!app.Environment.IsDevelopment())
         {
