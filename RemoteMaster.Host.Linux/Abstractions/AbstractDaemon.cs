@@ -2,12 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
+using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Abstractions;
 
-public abstract class AbstractDaemon(ILogger<AbstractDaemon> logger) : IService
+public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDaemon> logger) : IService
 {
     private readonly CancellationTokenSource _cts = new();
 
@@ -25,15 +27,67 @@ public abstract class AbstractDaemon(ILogger<AbstractDaemon> logger) : IService
 
     public virtual void Create()
     {
-        // In Linux, service creation is typically handled by systemd unit files.
-        // This method can be used to generate necessary configurations if needed.
-        logger.LogInformation($"{Name} daemon creation logic (if any) goes here.");
+        try
+        {
+            var unitFileContent = GenerateSystemdUnitFile();
+            var unitFilePath = $"/etc/systemd/system/{Name}.service";
+
+            fileSystem.File.WriteAllText(unitFilePath, unitFileContent);
+
+            logger.LogInformation($"Systemd unit file created at {unitFilePath}.");
+
+            ExecuteCommand("systemctl", "daemon-reload");
+
+            logger.LogInformation("Systemd daemon reloaded.");
+
+            ExecuteCommand("systemctl", $"enable {Name}.service");
+
+            logger.LogInformation($"{Name} service enabled to start on boot.");
+
+            ExecuteCommand("systemctl", $"start {Name}.service");
+
+            logger.LogInformation($"{Name} service started successfully.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, $"Failed to create {Name} daemon.");
+        }
     }
 
     public virtual void Delete()
     {
-        // Similarly, service deletion would be handled by systemd.
-        logger.LogInformation($"{Name} daemon deletion logic (if any) goes here.");
+        try
+        {
+            ExecuteCommand("systemctl", $"stop {Name}.service");
+
+            logger.LogInformation($"{Name} service stopped.");
+
+            ExecuteCommand("systemctl", $"disable {Name}.service");
+
+            logger.LogInformation($"{Name} service disabled from starting on boot.");
+
+            var unitFilePath = $"/etc/systemd/system/{Name}.service";
+
+            if (fileSystem.File.Exists(unitFilePath))
+            {
+                fileSystem.File.Delete(unitFilePath);
+
+                logger.LogInformation($"Systemd unit file deleted at {unitFilePath}.");
+            }
+            else
+            {
+                logger.LogWarning($"Systemd unit file not found at {unitFilePath}.");
+            }
+
+            ExecuteCommand("systemctl", "daemon-reload");
+
+            logger.LogInformation("Systemd daemon reloaded.");
+
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"Failed to delete {Name} daemon.");
+        }
     }
 
     public virtual void Start()
@@ -110,6 +164,64 @@ public abstract class AbstractDaemon(ILogger<AbstractDaemon> logger) : IService
         finally
         {
             logger.LogInformation($"{Name} daemon execution loop has ended.");
+        }
+    }
+
+    private string GenerateSystemdUnitFile()
+    {
+        return $"""
+
+                [Unit]
+                Description={Name} daemon
+                After=network.target
+
+                [Service]
+                Type=simple
+                ExecStart={ExecutablePath} {string.Join(" ", Arguments)}
+                Restart=on-failure
+                User=root
+                Group=root
+
+                [Install]
+                WantedBy=multi-user.target
+
+                """;
+    }
+
+    private void ExecuteCommand(string command, string arguments)
+    {
+        var processInfo = new ProcessStartInfo
+        {
+            FileName = command,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = new Process();
+        process.StartInfo = processInfo;
+        process.Start();
+
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"Command '{command} {arguments}' exited with code {process.ExitCode}: {error}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(output))
+        {
+            logger.LogInformation(output);
+        }
+
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            logger.LogWarning(error);
         }
     }
 }

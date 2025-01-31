@@ -2,18 +2,19 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.LinuxServices;
 
-public class HostService(ILogger<HostService> logger) : AbstractDaemon(logger)
+public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : AbstractDaemon(fileSystem, logger)
 {
     public override string Name => "RCHost";
 
     public override string ExecutablePath => "/usr/local/bin/RemoteMaster.Host";
 
-    public override string[] Arguments => ["daemon"];
+    public override string[] Arguments => ["service"];
 
     public override bool IsInstalled => true;
 
