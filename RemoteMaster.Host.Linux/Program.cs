@@ -112,6 +112,8 @@ internal class Program
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
         services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
+        services.AddSingleton<IInputService, InputService>();
+        services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<IService, HostService>();
 
         services.AddCoreServices(commandName);
