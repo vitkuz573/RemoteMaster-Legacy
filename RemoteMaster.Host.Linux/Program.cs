@@ -116,6 +116,7 @@ internal class Program
         services.AddSingleton<ITrayIconManager, TrayIconManager>();
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IPowerService, PowerService>();
+        services.AddSingleton<IHardwareService, HardwareService>();
         services.AddSingleton<IService, HostService>();
 
         services.AddCoreServices(commandName);

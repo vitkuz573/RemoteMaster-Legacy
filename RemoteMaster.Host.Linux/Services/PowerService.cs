@@ -7,7 +7,7 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-internal class PowerService : IPowerService
+public class PowerService : IPowerService
 {
     public void Shutdown(PowerActionRequest powerActionRequest) => throw new NotImplementedException();
 
