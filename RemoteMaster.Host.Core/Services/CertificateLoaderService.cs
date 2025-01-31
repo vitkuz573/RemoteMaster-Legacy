@@ -113,7 +113,7 @@ public class CertificateLoaderService : ICertificateLoaderService
                 _logger.LogWarning("Private key file not found at {KeyPath}.", keyPath);
             }
 
-            var keyPem = File.ReadAllText(keyPath);
+            var keyPem = _fileSystem.File.ReadAllText(keyPath);
 
             var certificate = X509CertificateLoader.LoadCertificateFromFile(certPath);
 

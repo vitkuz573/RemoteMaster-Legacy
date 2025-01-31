@@ -2,15 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class CertificateManagementService(ICertificateService certificateService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : IHostedService
+public class CertificateManagementService(ICertificateService certificateService, IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -29,7 +31,7 @@ public class CertificateManagementService(ICertificateService certificateService
         return Task.CompletedTask;
     }
 
-    private static bool IsCertificateValid()
+    private bool IsCertificateValid()
     {
         X509Certificate2? certificate = null;
 
@@ -48,7 +50,34 @@ public class CertificateManagementService(ICertificateService certificateService
         }
         else
         {
-            
+            var certPath = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "device_certificate.pem");
+            var keyPath = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "device_privatekey.pem");
+
+            if (!fileSystem.File.Exists(certPath))
+            {
+                return false;
+            }
+
+            if (!fileSystem.File.Exists(keyPath))
+            {
+                return false;
+            }
+
+            var keyPem = fileSystem.File.ReadAllText(keyPath);
+
+            var loadedCertificate = X509CertificateLoader.LoadCertificateFromFile(certPath);
+
+#pragma warning disable CA2000
+            var rsa = RSA.Create();
+#pragma warning restore CA2000
+            rsa.ImportFromPem(keyPem);
+
+            var loadedCertificateWithPrivateKey = loadedCertificate.CopyWithPrivateKey(rsa);
+
+            if (loadedCertificateWithPrivateKey.HasPrivateKey)
+            {
+                certificate = loadedCertificateWithPrivateKey;
+            }
         }
 
         if (certificate == null)
