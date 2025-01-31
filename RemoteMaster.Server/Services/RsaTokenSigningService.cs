@@ -25,31 +25,33 @@ public class RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions>
 
     private RSA GetSigningRsa()
     {
-        if (_signingRsa == null)
+        if (_signingRsa != null)
         {
-            try
-            {
-                var privateKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "private_key.der");
-                var privateKeyBytes = fileSystem.File.ReadAllBytes(privateKeyPath);
+            return _signingRsa;
+        }
 
-                _signingRsa = RSA.Create();
-                _signingRsa.ImportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes(_options.KeyPassword), privateKeyBytes, out _);
-            }
-            catch (FileNotFoundException ex)
-            {
-                logger.LogError("Private key file not found: {Message}", ex.Message);
-                throw;
-            }
-            catch (CryptographicException ex)
-            {
-                logger.LogError("Failed to decrypt the private key: {Message}", ex.Message);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Unknown error occurred during private key initialization: {Message}", ex.Message);
-                throw;
-            }
+        try
+        {
+            var privateKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "private_key.der");
+            var privateKeyBytes = fileSystem.File.ReadAllBytes(privateKeyPath);
+
+            _signingRsa = RSA.Create();
+            _signingRsa.ImportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes(_options.KeyPassword), privateKeyBytes, out _);
+        }
+        catch (FileNotFoundException ex)
+        {
+            logger.LogError("Private key file not found: {Message}", ex.Message);
+            throw;
+        }
+        catch (CryptographicException ex)
+        {
+            logger.LogError("Failed to decrypt the private key: {Message}", ex.Message);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Unknown error occurred during private key initialization: {Message}", ex.Message);
+            throw;
         }
 
         return _signingRsa;

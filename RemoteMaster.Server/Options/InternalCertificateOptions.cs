@@ -13,4 +13,6 @@ public class InternalCertificateOptions
     public string CommonName { get; set; } = "RemoteMaster Internal CA";
 
     public SubjectOptions Subject { get; set; } = new();
+
+    public string CertificatePassword { get; set; }
 }

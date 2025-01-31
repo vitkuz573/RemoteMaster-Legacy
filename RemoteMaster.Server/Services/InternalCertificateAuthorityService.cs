@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
@@ -13,13 +14,42 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService, IFileSystem fileSystem, ILogger<InternalCertificateAuthorityService> logger) : ICertificateAuthorityService
+public class InternalCertificateAuthorityService : ICertificateAuthorityService
 {
-    private readonly InternalCertificateOptions _options = options.Value;
+    private readonly InternalCertificateOptions _options;
+    private readonly ISubjectService _subjectService;
+    private readonly IHostInformationService _hostInformationService;
+    private readonly IFileSystem _fileSystem;
+    private readonly ILogger<InternalCertificateAuthorityService> _logger;
+
+    private readonly string _certPath;
+    private readonly string _crlPath;
+
+    public InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService, IFileSystem fileSystem, ILogger<InternalCertificateAuthorityService> logger)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        _options = options.Value;
+        _subjectService = subjectService;
+        _hostInformationService = hostInformationService;
+        _fileSystem = fileSystem;
+        _logger = logger;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            _certPath = string.Empty;
+            _crlPath = string.Empty;
+        }
+        else
+        {
+            _certPath = "/etc/remotemaster/ca.pfx";
+            _crlPath = "/etc/remotemaster/list.crl";
+        }
+    }
 
     public Result EnsureCaCertificateExists()
     {
-        logger.LogDebug("Starting CA certificate check.");
+        _logger.LogDebug("Starting CA certificate check.");
 
         try
         {
@@ -31,11 +61,13 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
                 if (existingCert.NotAfter > DateTime.Now)
                 {
-                    logger.LogInformation("Existing CA certificate for '{Name}' is valid.", _options.CommonName);
+                    _logger.LogInformation("Existing CA certificate for '{Name}' is valid.", _options.CommonName);
+
                     return Result.Ok();
                 }
 
-                logger.LogWarning("CA certificate for '{Name}' has expired. Reissuing.", _options.CommonName);
+                _logger.LogWarning("CA certificate for '{Name}' has expired. Reissuing.", _options.CommonName);
+
                 var generateResult = GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
 
                 return generateResult.IsFailed
@@ -43,7 +75,8 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
                     : Result.Ok();
             }
 
-            logger.LogWarning("No valid CA certificate found. Generating new certificate for '{Name}'.", _options.CommonName);
+            _logger.LogWarning("No valid CA certificate found. Generating new certificate for '{Name}'.", _options.CommonName);
+
             var generateNewResult = GenerateCertificate(null, false);
 
             return generateNewResult.IsFailed
@@ -52,86 +85,83 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An unexpected error occurred during CA certificate check.");
-            
+            _logger.LogError(ex, "An unexpected error occurred during CA certificate check.");
+
             return Result.Fail("An unexpected error occurred during CA certificate check.").WithError(ex.Message);
         }
     }
 
     private Result GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
     {
-        logger.LogDebug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
-
-        RSA? rsaProvider = null;
+        _logger.LogDebug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
 
         try
         {
-            if (!reuseKey)
-            {
-                var cspParams = new CspParameters
-                {
-                    KeyContainerName = Guid.NewGuid().ToString(),
-                    Flags = CspProviderFlags.UseMachineKeyStore,
-                    KeyNumber = (int)KeyNumber.Exchange
-                };
-
-#pragma warning disable CA2000
-                rsaProvider = new RSACryptoServiceProvider(_options.KeySize, cspParams);
-#pragma warning restore CA2000
-            }
-            else
-            {
-                rsaProvider = externalRsaProvider;
-            }
+            using var rsaProvider = reuseKey ? externalRsaProvider : RSA.Create(_options.KeySize);
 
             if (rsaProvider == null)
             {
-                logger.LogError("RSA provider is null.");
-                
+                _logger.LogError("RSA provider is null.");
+
                 return Result.Fail("RSA provider is null.");
             }
 
-            var distinguishedName = subjectService.GetDistinguishedName(_options.CommonName, _options.Subject.Organization, _options.Subject.OrganizationalUnit, _options.Subject.Locality, _options.Subject.State, _options.Subject.Country);
+            var distinguishedName = _subjectService.GetDistinguishedName(_options.CommonName, _options.Subject.Organization, _options.Subject.OrganizationalUnit, _options.Subject.Locality, _options.Subject.State, _options.Subject.Country);
+
             var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
             request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
             request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
 
-            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var crlFilePath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+            var crlDistributionPoints = new List<string>();
 
-            var hostInformation = hostInformationService.GetHostInformation();
-
-            var crlDistributionPoints = new List<string>
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                $"file:///{crlFilePath.Replace("\\", "/")}",
-                $"http://{hostInformation.Name}/crl"
-            };
+                crlDistributionPoints.Add($"file:///{_crlPath.Replace("\\", "/")}");
+            }
+
+            crlDistributionPoints.Add($"http://{_hostInformationService.GetHostInformation().Name}/crl");
 
             var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
-
+            
             request.CertificateExtensions.Add(crlDistributionPointExtension);
 
             var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_options.ValidityPeriod));
-            caCert.FriendlyName = _options.CommonName;
 
-            AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                caCert.FriendlyName = _options.CommonName;
+
+                AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
+            }
+            else
+            {
+                var certDirectory = _fileSystem.Path.GetDirectoryName(_certPath);
+
+                if (!string.IsNullOrEmpty(certDirectory) && !_fileSystem.Directory.Exists(certDirectory))
+                {
+                    _logger.LogDebug("Creating directory '{Directory}'.", certDirectory);
+
+                    _fileSystem.Directory.CreateDirectory(certDirectory);
+
+                    _logger.LogInformation("Directory '{Directory}' created.", certDirectory);
+                }
+
+                var exportedCert = caCert.Export(X509ContentType.Pfx, _options.CertificatePassword);
+                
+                _fileSystem.File.WriteAllBytes(_certPath, exportedCert);
+                
+                _logger.LogInformation("CA certificate generated and saved to '{CertPath}'.", _certPath);
+            }
 
             return Result.Ok();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to generate CA certificate.");
+            _logger.LogError(ex, "Failed to generate CA certificate.");
             
             return Result.Fail("Failed to generate CA certificate.").WithError(ex.Message);
-        }
-        finally
-        {
-            if (!reuseKey && rsaProvider != null && rsaProvider != externalRsaProvider)
-            {
-                rsaProvider.Dispose();
-            }
         }
     }
 
@@ -148,8 +178,8 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
 
             if (isCertificateAlreadyAdded)
             {
-                logger.LogInformation("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
-
+                _logger.LogInformation("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
+                
                 return;
             }
 
@@ -157,11 +187,11 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
             store.Open(OpenFlags.ReadWrite);
             store.Add(cert);
 
-            logger.LogInformation("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
+            _logger.LogInformation("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to add certificate to store.");
+            _logger.LogError(ex, "Failed to add certificate to store.");
         }
     }
 
@@ -169,31 +199,43 @@ public class InternalCertificateAuthorityService(IOptions<InternalCertificateOpt
     {
         try
         {
-            using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-            store.Open(OpenFlags.ReadOnly);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _options.CommonName, false);
-
-            foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var exportedCertData = cert.Export(contentType);
+                using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadOnly);
 
-                var loadedCertificate = contentType switch
+                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _options.CommonName, false);
+
+                foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
                 {
-                    X509ContentType.Cert => X509CertificateLoader.LoadCertificate(exportedCertData),
-                    X509ContentType.Pfx => X509CertificateLoader.LoadPkcs12(exportedCertData, null, X509KeyStorageFlags.MachineKeySet, Pkcs12LoaderLimits.Defaults),
-                    _ => throw new NotSupportedException($"Content type {contentType} is not supported.")
-                };
+                    var exportedCertData = cert.Export(contentType);
 
-                return Result.Ok(loadedCertificate);
+                    var loadedCertificate = contentType switch
+                    {
+                        X509ContentType.Cert => X509CertificateLoader.LoadCertificate(exportedCertData),
+                        X509ContentType.Pfx => X509CertificateLoader.LoadPkcs12(exportedCertData, null, X509KeyStorageFlags.MachineKeySet, Pkcs12LoaderLimits.Defaults),
+                        _ => throw new NotSupportedException($"Content type {contentType} is not supported.")
+                    };
+
+                    return Result.Ok(loadedCertificate);
+                }
+
+                return Result.Fail<X509Certificate2>("No valid CA certificate with a private key found.");
             }
 
-            return Result.Fail<X509Certificate2>("No valid CA certificate with a private key found.");
+            if (_fileSystem.File.Exists(_certPath))
+            {
+                var cert = X509CertificateLoader.LoadPkcs12(_fileSystem.File.ReadAllBytes(_certPath), _options.CertificatePassword, X509KeyStorageFlags.MachineKeySet);
+                
+                return Result.Ok(cert);
+            }
+
+            return Result.Fail<X509Certificate2>("No valid CA certificate found.");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to retrieve CA certificate.");
-
+            _logger.LogError(ex, "Failed to retrieve CA certificate.");
+            
             return Result.Fail<X509Certificate2>("Failed to retrieve CA certificate.").WithError(ex.Message);
         }
     }

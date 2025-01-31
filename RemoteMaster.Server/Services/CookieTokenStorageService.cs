@@ -16,14 +16,14 @@ public class CookieTokenStorageService(IHttpContextAccessor httpContextAccessor)
     public Task<Result<string?>> GetAccessTokenAsync(string userId)
     {
         var accessToken = GetCookieValue(AccessTokenCookieName);
-
+            
         return Task.FromResult(Result.Ok(accessToken));
     }
 
     public Task<Result<string?>> GetRefreshTokenAsync(string userId)
     {
         var refreshToken = GetCookieValue(RefreshTokenCookieName);
-
+            
         return Task.FromResult(Result.Ok(refreshToken));
     }
 
@@ -48,7 +48,7 @@ public class CookieTokenStorageService(IHttpContextAccessor httpContextAccessor)
     private string? GetCookieValue(string cookieName)
     {
         var cookies = httpContextAccessor.HttpContext?.Request.Cookies;
-
+        
         return cookies != null && cookies.TryGetValue(cookieName, out var value) ? value : null;
     }
 
@@ -59,10 +59,12 @@ public class CookieTokenStorageService(IHttpContextAccessor httpContextAccessor)
             return;
         }
 
+        var isHttps = httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
+
         var options = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = isHttps,
             Expires = expiresAt,
             SameSite = SameSiteMode.Strict
         };
@@ -72,11 +74,13 @@ public class CookieTokenStorageService(IHttpContextAccessor httpContextAccessor)
 
     private void DeleteCookie(string cookieName)
     {
+        var isHttps = httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
+
         var options = new CookieOptions
         {
             Expires = DateTime.UtcNow.AddDays(-1),
             HttpOnly = true,
-            Secure = true,
+            Secure = isHttps,
             SameSite = SameSiteMode.Strict
         };
 

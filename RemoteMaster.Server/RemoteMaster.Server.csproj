@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <UserSecretsId>aspnet-RemoteMaster.Server-b3fa2c8a-70fc-4b64-9da7-522232d978a6</UserSecretsId>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <WarningAsErrors>RZ2012</WarningAsErrors>
@@ -61,9 +61,5 @@
     <TypeScriptCompile Include="src\ts\fileUtils.ts" />
     <TypeScriptCompile Include="src\ts\windowOperations.ts" />
   </ItemGroup>
-
-  <Target Name="TaskPublish" AfterTargets="Publish">
-    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishDir)\$(AssemblyName).exe" />
-  </Target>
 
 </Project>
