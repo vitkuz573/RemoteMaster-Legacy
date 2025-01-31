@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Drawing;
+using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Helpers.ScreenHelper;
@@ -11,9 +12,9 @@ namespace RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 public class Screen : IScreen
 {
     public string DeviceName { get; }
-
+    
     public Rectangle Bounds { get; }
-
+    
     public bool Primary { get; }
 
     private Screen(string name, Size resolution, bool primary)
@@ -29,30 +30,33 @@ public class Screen : IScreen
         {
             var screens = new List<IScreen>();
 
-            using var process = new Process();
-
-            process.StartInfo = new ProcessStartInfo
+            try
             {
-                FileName = "sh",
-                Arguments = "-c \"swaymsg -t get_outputs | jq -r '.[].name'\"",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            process.Start();
-
-            while (!process.StandardOutput.EndOfStream)
-            {
-                var displayName = process.StandardOutput.ReadLine()?.Trim();
-
-                if (!string.IsNullOrEmpty(displayName))
+                var output = RunCommand("swaymsg -t get_outputs");
+                
+                if (string.IsNullOrEmpty(output))
                 {
-                    screens.Add(new Screen(displayName, GetScreenResolution(displayName), screens.Count == 0));
+                    return screens;
+                }
+
+                using var jsonDoc = JsonDocument.Parse(output);
+                
+                foreach (var element in jsonDoc.RootElement.EnumerateArray())
+                {
+                    var name = element.GetProperty("name").GetString();
+                    var primary = element.GetProperty("focused").GetBoolean();
+                    var resolution = GetScreenResolution(element);
+
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        screens.Add(new Screen(name, resolution, primary));
+                    }
                 }
             }
-
-            process.WaitForExit();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to get screens: {ex.Message}");
+            }
 
             return screens;
         }
@@ -60,36 +64,37 @@ public class Screen : IScreen
 
     public static IScreen? PrimaryScreen => AllScreens.FirstOrDefault(s => s.Primary);
 
-    private static Size GetScreenResolution(string displayName)
+    private static Size GetScreenResolution(JsonElement screenElement)
+    {
+        try
+        {
+            var width = screenElement.GetProperty("rect").GetProperty("width").GetInt32();
+            var height = screenElement.GetProperty("rect").GetProperty("height").GetInt32();
+            
+            return new Size(width, height);
+        }
+        catch
+        {
+            return new Size(1920, 1080);
+        }
+    }
+
+    private static string RunCommand(string command)
     {
         using var process = new Process();
         process.StartInfo = new ProcessStartInfo
         {
             FileName = "sh",
-            Arguments = $"-c \"swaymsg -t get_outputs | jq -r '.[] | select(.name == \"{displayName}\").current_mode'\"",
+            Arguments = $"-c \"{command}\"",
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
 
         process.Start();
-
-        var resolution = process.StandardOutput.ReadLine()?.Trim();
-
+        var result = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
-
-        if (string.IsNullOrEmpty(resolution) || !resolution.Contains("x"))
-        {
-            return new Size(1920, 1080);
-        }
-
-        var parts = resolution.Split('x');
-
-        if (int.TryParse(parts[0], out var width) && int.TryParse(parts[1], out var height))
-        {
-            return new Size(width, height);
-        }
-
-        return new Size(1920, 1080);
+       
+        return result.Trim();
     }
 }

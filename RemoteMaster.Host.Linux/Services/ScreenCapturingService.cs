@@ -11,6 +11,8 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class ScreenCapturingService : IScreenCapturingService
 {
+    private const string GstPipeline = "pipewiresrc ! videoconvert ! video/x-raw,format=RGB ! appsink";
+
     public byte[]? GetNextFrame(string connectionId)
     {
         try
@@ -18,8 +20,8 @@ public class ScreenCapturingService : IScreenCapturingService
             using var process = new Process();
             process.StartInfo = new ProcessStartInfo
             {
-                FileName = "sh",
-                Arguments = "-c \"grim - | convert - png:-\"",
+                FileName = "gst-launch-1.0",
+                Arguments = GstPipeline,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -28,7 +30,7 @@ public class ScreenCapturingService : IScreenCapturingService
             process.Start();
 
             using var memoryStream = new MemoryStream();
-
+            
             process.StandardOutput.BaseStream.CopyTo(memoryStream);
             process.WaitForExit();
 
