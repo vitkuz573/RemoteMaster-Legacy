@@ -186,7 +186,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
     private string GenerateSystemdUnitFile()
     {
         return $"""
-
                 [Unit]
                 Description={Description}
                 After=network.target
@@ -200,7 +199,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
                 [Install]
                 WantedBy=multi-user.target
-
+                
                 """;
     }
 
