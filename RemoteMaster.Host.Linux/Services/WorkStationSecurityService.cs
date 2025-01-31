@@ -6,7 +6,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-internal class WorkStationSecurityService : IWorkStationSecurityService
+public class WorkStationSecurityService : IWorkStationSecurityService
 {
     public bool LockWorkStationDisplay() => throw new NotImplementedException();
 

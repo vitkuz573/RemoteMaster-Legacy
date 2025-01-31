@@ -6,7 +6,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-internal class OperatingSystemInformationService : IOperatingSystemInformationService
+public class OperatingSystemInformationService : IOperatingSystemInformationService
 {
     public string GetName() => throw new NotImplementedException();
 }
