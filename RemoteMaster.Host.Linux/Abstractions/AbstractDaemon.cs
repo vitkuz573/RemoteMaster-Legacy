@@ -35,7 +35,6 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
             logger.LogDebug($"Unit file {unitFilePath} does not exist.");
 
             return false;
-
         }
     }
 

@@ -19,8 +19,6 @@ public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : 
         ["service"] = null
     };
 
-    public override bool IsInstalled => true;
-
     protected async override Task ExecuteDaemonAsync(CancellationToken cancellationToken)
     {
         // Implement the core logic of RCHost daemon here.
