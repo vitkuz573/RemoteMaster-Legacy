@@ -122,16 +122,16 @@ public class CertificateLoaderService : ICertificateLoaderService
 #pragma warning restore CA2000
             rsa.ImportFromPem(keyPem);
 
-            certificate.CopyWithPrivateKey(rsa);
+            var certificateWithPrivateKey = certificate.CopyWithPrivateKey(rsa);
 
-            if (!certificate.HasPrivateKey)
+            if (!certificateWithPrivateKey.HasPrivateKey)
             {
                 _logger.LogWarning("Loaded certificate does not contain a private key.");
             }
 
-            if (_currentCertificate == null || !_currentCertificate.Equals(certificate))
+            if (_currentCertificate == null || !_currentCertificate.Equals(certificateWithPrivateKey))
             {
-                _currentCertificate = certificate;
+                _currentCertificate = certificateWithPrivateKey;
 
                 _logger.LogInformation("Certificate loaded successfully from files. Subject: {Subject}", _currentCertificate.Subject);
             }

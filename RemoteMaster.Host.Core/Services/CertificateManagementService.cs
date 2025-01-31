@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
@@ -32,8 +33,9 @@ public class CertificateManagementService(ICertificateService certificateService
     {
         X509Certificate2? certificate = null;
 
-        using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.ReadOnly);
 
             var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
@@ -43,6 +45,10 @@ public class CertificateManagementService(ICertificateService certificateService
                 certificate = cert;
                 break;
             }
+        }
+        else
+        {
+            
         }
 
         if (certificate == null)
