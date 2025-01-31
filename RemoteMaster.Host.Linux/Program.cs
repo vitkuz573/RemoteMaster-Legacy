@@ -119,6 +119,8 @@ internal class Program
         services.AddSingleton<IHardwareService, HardwareService>();
         services.AddSingleton<IScreenCapturingService, X11CapturingService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
+        services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
+        services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<IService, HostService>();
 
         services.AddCoreServices(commandName);
