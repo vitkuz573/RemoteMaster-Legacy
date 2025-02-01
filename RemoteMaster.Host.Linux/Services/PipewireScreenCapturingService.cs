@@ -225,6 +225,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
         if (_mainLoop != nint.Zero)
         {
             PipewireNative.pw_main_loop_quit(_mainLoop);
+
             _pipewireThread.Join(2000);
         }
 
@@ -247,6 +248,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
         }
 
         PipewireNative.pw_deinit();
+
         _disposed = true;
     }
 }
