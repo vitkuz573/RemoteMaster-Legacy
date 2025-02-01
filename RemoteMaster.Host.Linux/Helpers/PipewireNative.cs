@@ -80,7 +80,7 @@ internal static class PipewireNative
     #region SPA Buffer Structures
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct spa_buffer
+    public struct SpaBuffer
     {
         public uint id;
         public uint n_metas;
@@ -90,7 +90,7 @@ internal static class PipewireNative
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct spa_data
+    public struct SpaData
     {
         public nint data;    // Pointer to raw data
         public uint size;    // Valid data size
@@ -104,11 +104,18 @@ internal static class PipewireNative
 
     #region SPA POD Builder
 
-    // Example constant values (these may differ from the actual values in PipeWire)
-    public const uint SPA_TYPE_OBJECT_Format = 0x80000000; // Example value
-    public const uint SPA_ID_FORMAT = 0;                    // Example value
-    public const uint SPA_FORMAT_VIDEO_size = 1;            // Key for video size property
-    public const uint SPA_FORMAT_VIDEO_framerate = 2;       // Key for video framerate property
+    // Define SPA object types in an enum according to documentation.
+    public enum SpaTypeObject : uint
+    {
+        SPA_TYPE_OBJECT_Format = 0x80000000,      // Example value
+        SPA_TYPE_OBJECT_ParamBuffers = 0x80000001   // Example value
+        // Other SPA_TYPE_OBJECT_* enumerators can be added as needed.
+    }
+
+    // Video format keys (if needed)
+    public const uint SPA_ID_FORMAT = 0;                   // Example value
+    public const uint SPA_FORMAT_VIDEO_size = 1;           // Key for video size property
+    public const uint SPA_FORMAT_VIDEO_framerate = 2;      // Key for video framerate property
 
     public static nint BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
     {
@@ -120,7 +127,7 @@ internal static class PipewireNative
 
         Array.Copy(BitConverter.GetBytes((uint)totalSize), 0, buffer, offset, 4);
         offset += 4;
-        Array.Copy(BitConverter.GetBytes(SPA_TYPE_OBJECT_Format), 0, buffer, offset, 4);
+        Array.Copy(BitConverter.GetBytes((uint)SpaTypeObject.SPA_TYPE_OBJECT_Format), 0, buffer, offset, 4);
         offset += 4;
         Array.Copy(BitConverter.GetBytes(SPA_ID_FORMAT), 0, buffer, offset, 4);
         offset += 4;
@@ -151,6 +158,7 @@ internal static class PipewireNative
 
     #region SPA PARAM BUFFERS
 
+    // Enumerated values for SPA_PARAM_BUFFERS properties.
     public enum SpaParamBuffers : uint
     {
         START = 0,    // Not used directly.
@@ -163,32 +171,44 @@ internal static class PipewireNative
         metaType = 7  // Required metadata types (flag mask)
     }
 
-    // For ParamBuffers, we also define the following example values:
-    public const uint SPA_TYPE_OBJECT_ParamBuffers = 0x80000001; // Example value
-    public const uint SPA_ID_PARAM_BUFFERS = 0;                  // Example value
+    // The SPA object type for ParamBuffers is now retrieved from the SpaTypeObject enum.
+    // public const uint SPA_TYPE_OBJECT_ParamBuffers is no longer needed.
 
-    // Constants for buffer data types.
-    public const int SPA_DATA_DmaBuf = 0;
-    public const int SPA_DATA_MemFd = 1;
+    // Define buffer data types as an enumeration according to documentation.
+    public enum SpaDataType : int
+    {
+        SPA_DATA_Invalid,  // 0
+        SPA_DATA_MemPtr,   // 1
+        SPA_DATA_MemFd,    // 2
+        SPA_DATA_DmaBuf,   // 3
+        SPA_DATA_MemId,    // 4
+        SPA_DATA_SyncObj,  // 5
+        _SPA_DATA_LAST     // 6
+    }
+
+    // SPA_ID for ParamBuffers (if needed).
+    public const uint SPA_ID_PARAM_BUFFERS = 0; // Example value
 
     /// <summary>
     /// Builds a SPA POD object for buffer parameters.
-    /// The layout is as follows:
-    /// Header (4 uint32 fields): total_size, type, id, property_count (7)
-    /// Then 7 properties, each consisting of a key/value pair.
-    /// In this simplified example, the total size is 44 bytes.
+    /// Layout:
+    ///   Header (4 uint32 fields): total_size, type, id, property_count (7)
+    ///   7 properties, each as a key/value pair.
+    /// Total size in this simplified example is 44 bytes.
     /// </summary>
     /// <param name="buffers">Number of buffers.</param>
     /// <param name="blocks">Number of data blocks per buffer.</param>
     /// <param name="size">Size of a data block (in bytes).</param>
     /// <param name="stride">Stride (in bytes) of a data block.</param>
     /// <param name="align">Memory alignment (in bytes).</param>
-    /// <param name="dataType">Data type mask (e.g. 1 << SPA_DATA_MemFd).</param>
+    /// <param name="dataType">
+    /// Data type mask (for example, use 1u << (int)spa_data_type.SPA_DATA_MemFd).
+    /// </param>
     /// <param name="metaType">Metadata type mask (or 0 if none).</param>
     /// <returns>A pointer to the allocated SPA POD buffer parameter blob.</returns>
     public static nint BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, uint dataType, uint metaType)
     {
-        // In this example, we use 11 fields: 4 for the header and 7 key/value pairs.
+        // Use 11 fields: 4 for header and 7 key/value pairs.
         var totalFields = 11;
         var totalSize = totalFields * 4; // 44 bytes
 
@@ -198,7 +218,7 @@ internal static class PipewireNative
         // Header: total_size, type, id, property_count (7)
         Array.Copy(BitConverter.GetBytes((uint)totalSize), 0, blob, offset, 4);
         offset += 4;
-        Array.Copy(BitConverter.GetBytes(SPA_TYPE_OBJECT_ParamBuffers), 0, blob, offset, 4);
+        Array.Copy(BitConverter.GetBytes((uint)SpaTypeObject.SPA_TYPE_OBJECT_ParamBuffers), 0, blob, offset, 4);
         offset += 4;
         Array.Copy(BitConverter.GetBytes(SPA_ID_PARAM_BUFFERS), 0, blob, offset, 4);
         offset += 4;
@@ -245,7 +265,7 @@ internal static class PipewireNative
         Array.Copy(BitConverter.GetBytes((uint)SpaParamBuffers.metaType), 0, blob, offset, 4);
         offset += 4;
         Array.Copy(BitConverter.GetBytes(metaType), 0, blob, offset, 4);
-        offset += 4;
+        offset += 4; // Final increment; 'offset' is not used thereafter.
 
         var podPtr = Marshal.AllocHGlobal(totalSize);
         Marshal.Copy(blob, 0, podPtr, totalSize);

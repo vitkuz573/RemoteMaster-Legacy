@@ -93,7 +93,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
         //   align: 4096,
         //   dataType: 1 << SPA_DATA_MemFd (for shared memory fallback),
         //   metaType: 0 (none)
-        _bufferPod = PipewireNative.BuildBufferParamPod(buffers: 4, blocks: 1, size: (uint)_frameSize, stride: (uint)(_width * _bytesPerPixel), align: 4096, dataType: 1 << PipewireNative.SPA_DATA_MemFd, metaType: 0);
+        _bufferPod = PipewireNative.BuildBufferParamPod(buffers: 4, blocks: 1, size: (uint)_frameSize, stride: (uint)(_width * _bytesPerPixel), align: 4096, dataType: 1 << (int)PipewireNative.SpaDataType.SPA_DATA_MemFd, metaType: 0);
 
         // Allocate an unmanaged array of two pointers.
         var parameters = new nint[2] { _formatPod, _bufferPod };
@@ -146,14 +146,14 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
 
             try
             {
-                var spaBuf = (PipewireNative.spa_buffer*)bufferPtr;
+                var spaBuf = (PipewireNative.SpaBuffer*)bufferPtr;
                 
                 if (spaBuf == null || spaBuf->n_datas < 1)
                 {
                     continue;
                 }
 
-                var spaData = (PipewireNative.spa_data*)spaBuf->datas;
+                var spaData = (PipewireNative.SpaData*)spaBuf->datas;
                 
                 if (spaData == null || spaData->data == nint.Zero)
                 {
