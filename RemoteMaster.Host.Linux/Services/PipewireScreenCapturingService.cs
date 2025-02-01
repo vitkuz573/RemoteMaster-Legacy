@@ -16,9 +16,8 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
     // Thread‑safe queue for captured frames (raw RGB24 data).
     private readonly BlockingCollection<byte[]> _frameQueue = [];
 
-    // Native handles for the PipeWire main loop, context, and stream.
+    // Native handle for the PipeWire main loop and stream.
     private readonly nint _mainLoop = nint.Zero;
-    private readonly nint _context = nint.Zero;
     private readonly nint _stream = nint.Zero;
 
     // Background thread running the PipeWire main loop.
@@ -42,67 +41,66 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
 
     /// <summary>
     /// Initializes a new instance of the PipewireScreenCapturingService class.
-    /// Sets up the PipeWire main loop, context, stream with complete event callbacks, and starts the main loop thread.
+    /// Sets up the PipeWire main loop, creates the stream using pw_stream_new_simple (which registers event callbacks in one call),
+    /// connects and activates the stream, and starts the main loop in a background thread.
     /// </summary>
     public PipewireScreenCapturingService()
     {
-        _frameSize = _width * _height * 3; // RGB24: 3 bytes per pixel.
+        _frameSize = _width * _height * 3; // RGB24: 3 bytes per pixel
 
         // Initialize PipeWire.
         PipewireNative.pw_init();
 
-        // Create the main loop.
+        // Create the PipeWire main loop.
         _mainLoop = PipewireNative.pw_main_loop_new(nint.Zero);
-
+        
         if (_mainLoop == nint.Zero)
         {
             throw new Exception("Failed to create PipeWire main loop.");
         }
 
-        // Create the context using the underlying loop.
+        // Prepare the stream events structure.
+        _processDelegate = OnProcess;
+        _stateChangedDelegate = OnStateChanged;
+        _errorDelegate = OnError;
+        
+        var events = new PipewireNative.PwStreamEvents
+        {
+            version = PipewireNative.PW_VERSION_STREAM_EVENTS, // Use the version macro from the docs.
+            process = Marshal.GetFunctionPointerForDelegate(_processDelegate),
+            state_changed = Marshal.GetFunctionPointerForDelegate(_stateChangedDelegate),
+            error = Marshal.GetFunctionPointerForDelegate(_errorDelegate)
+        };
+
+        // Retrieve the underlying loop pointer.
         var loopPtr = PipewireNative.pw_main_loop_get_loop(_mainLoop);
 
-        _context = PipewireNative.pw_context_new(loopPtr, nint.Zero, 0);
-
-        if (_context == nint.Zero)
-        {
-            throw new Exception("Failed to create PipeWire context.");
-        }
-
-        // Create the stream for screen capture.
-        _stream = PipewireNative.pw_stream_new(_context, "PipeWire Screen Capture", nint.Zero);
+        // Create a new stream using the simple API, which registers the events.
+        
+        _stream = PipewireNative.pw_stream_new_simple(loopPtr, "PipeWire Screen Capture", nint.Zero, ref events, nint.Zero);
         
         if (_stream == nint.Zero)
         {
             throw new Exception("Failed to create PipeWire stream.");
         }
 
-        // Set up callback delegates.
-        _processDelegate = OnProcess;
-        _stateChangedDelegate = OnStateChanged;
-        _errorDelegate = OnError;
-
-        // Prepare the stream events structure with full callbacks.
-        var events = new PipewireNative.PwStreamEvents
-        {
-            version = PipewireNative.PW_VERSION,
-            process = Marshal.GetFunctionPointerForDelegate(_processDelegate),
-            state_changed = Marshal.GetFunctionPointerForDelegate(_stateChangedDelegate),
-            error = Marshal.GetFunctionPointerForDelegate(_errorDelegate)
-        };
-
-        // Add the listener to the stream.
-        PipewireNative.pw_stream_add_listener(_stream, nint.Zero, ref events, nint.Zero);
-
         // Connect the stream.
         var ret = PipewireNative.pw_stream_connect(_stream, PipewireNative.PW_DIRECTION_INPUT, 0, PipewireNative.PW_STREAM_FLAG_AUTOCONNECT, nint.Zero, 0);
-       
+        
         if (ret < 0)
         {
             throw new Exception("Failed to connect PipeWire stream.");
         }
 
-        // Start the PipeWire main loop in a background thread.
+        // Activate the stream explicitly.
+        ret = PipewireNative.pw_stream_set_active(_stream, true);
+        
+        if (ret < 0)
+        {
+            throw new Exception("Failed to activate PipeWire stream.");
+        }
+
+        // Start the main loop in a background thread.
         _pipewireThread = new Thread(() =>
         {
             PipewireNative.pw_main_loop_run(_mainLoop);
@@ -116,13 +114,13 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
 
     /// <summary>
     /// Process callback invoked by PipeWire when new buffers are available.
-    /// Dequeues buffers, extracts raw frame data (with full SPA buffer parsing),
-    /// enqueues the frame, and re‑queues the buffer.
+    /// Dequeues buffers, extracts raw frame data (using SPA buffer parsing), enqueues the frame,
+    /// and re‑queues the buffer for reuse.
     /// </summary>
     /// <param name="userData">User data (unused).</param>
     private void OnProcess(nint userData)
     {
-        // Dequeue available buffers.
+        // Dequeue available buffers in a loop.
         while (true)
         {
             var bufferPtr = PipewireNative.pw_stream_dequeue_buffer(_stream);
@@ -134,7 +132,6 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
 
             try
             {
-                // Interpret the native buffer as a spa_buffer.
                 var spaBuffer = (PipewireNative.spa_buffer*)bufferPtr;
 
                 if (spaBuffer == null || spaBuffer->n_datas < 1)
@@ -150,7 +147,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
                 if (data == null || data->data == nint.Zero)
                 {
                     PipewireNative.pw_stream_queue_buffer(_stream, bufferPtr);
-                    
+
                     continue;
                 }
 
@@ -168,7 +165,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
             }
             finally
             {
-                // Re‑queue the buffer for reuse.
+                // Re‑queue the buffer so it can be reused.
                 PipewireNative.pw_stream_queue_buffer(_stream, bufferPtr);
             }
         }
@@ -178,12 +175,17 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
     /// State changed callback invoked when the stream’s state changes.
     /// Logs the state transition and any error message.
     /// </summary>
-    private void OnStateChanged(nint userData, PipewireNative.PwStreamState oldState, PipewireNative.PwStreamState newState, IntPtr error)
+    private void OnStateChanged(nint userData, PipewireNative.PwStreamState oldState, PipewireNative.PwStreamState newState, nint error)
     {
         _currentState = newState;
+
         var errorMsg = Marshal.PtrToStringAnsi(error);
-       
-        Console.WriteLine($"[PipeWire] Stream state changed: {oldState} -> {newState}. Error: {errorMsg}");
+
+        // Use the native function to convert state to string for easier debugging.
+        var oldStateStr = Marshal.PtrToStringAnsi(PipewireNative.pw_stream_state_as_string(oldState));
+        var newStateStr = Marshal.PtrToStringAnsi(PipewireNative.pw_stream_state_as_string(newState));
+        
+        Console.WriteLine($"[PipeWire] Stream state changed: {oldStateStr} -> {newStateStr}. Error: {errorMsg}");
     }
 
     /// <summary>
@@ -212,7 +214,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
     }
 
     /// <summary>
-    /// Disposes all PipeWire resources, stops the main loop, and cleans up the stream and context.
+    /// Disposes all PipeWire resources, stops the main loop, and cleans up the stream.
     /// </summary>
     public override void Dispose()
     {
@@ -236,12 +238,7 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
             PipewireNative.pw_stream_destroy(_stream);
         }
 
-        // Destroy the context and main loop.
-        if (_context != nint.Zero)
-        {
-            PipewireNative.pw_context_destroy(_context);
-        }
-
+        // Destroy the main loop.
         if (_mainLoop != nint.Zero)
         {
             PipewireNative.pw_main_loop_destroy(_mainLoop);
@@ -254,34 +251,37 @@ public unsafe class PipewireScreenCapturingService : ScreenCapturingService
 }
 
 /// <summary>
-/// Contains full interop definitions for the core PipeWire API functions, structures, and callbacks.
+/// Contains interop definitions for the core PipeWire API functions, structures, and callbacks.
+/// This mapping is based on the latest PipeWire documentation.
 /// </summary>
 internal static class PipewireNative
 {
-    public const int PW_VERSION = 0;
+    // Updated stream event version (as per the docs).
+    public const int PW_VERSION_STREAM_EVENTS = 2;
     public const int PW_DIRECTION_INPUT = 0;
     public const int PW_STREAM_FLAG_AUTOCONNECT = 1;
+    // You can add additional flags as needed (e.g., PW_STREAM_FLAG_MAP_BUFFERS).
 
     private const string PipewireLib = "libpipewire-0.3.so";
 
     // Delegate definitions.
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void PwStreamProcessDelegate(nint userData);
-    
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void PwStreamStateChangedDelegate(nint userData, PwStreamState oldState, PwStreamState newState, nint error);
-    
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void PwStreamErrorDelegate(nint userData, int error, [MarshalAs(UnmanagedType.LPStr)] string errorMessage);
 
+    // Updated stream state enum as per PipeWire documentation.
     public enum PwStreamState
     {
-        Unconnected,
-        Connecting,
-        Connected,
-        Configured,
-        Ready,
-        Error,
+        Error = -1,
+        Unconnected = 0,
+        Connecting = 1,
+        Paused = 2,
+        Streaming = 3,
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -315,18 +315,15 @@ internal static class PipewireNative
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_main_loop_get_loop(nint loop);
 
+    // Simplified stream creation using pw_stream_new_simple.
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
-    public static extern nint pw_context_new(nint loop, nint properties, uint version);
+    public static extern nint pw_stream_new_simple(nint loop, string name, nint props, ref PwStreamEvents events, nint data);
 
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void pw_context_destroy(nint context);
-
-    // Stream management.
-    [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
-    public static extern nint pw_stream_new(IntPtr context, string name, nint properties);
+    public static extern int pw_stream_connect(nint stream, int direction, uint target_id, uint flags, nint parameters, uint n_params);
 
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int pw_stream_connect(nint stream, int direction, uint target, uint flags, IntPtr parameters, uint n_params);
+    public static extern int pw_stream_set_active(nint stream, bool active);
 
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_stream_disconnect(nint stream);
@@ -335,14 +332,14 @@ internal static class PipewireNative
     public static extern void pw_stream_destroy(nint stream);
 
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void pw_stream_add_listener(nint stream, nint listener, ref PwStreamEvents events, IntPtr data);
-
-    // Buffer management.
-    [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_stream_dequeue_buffer(nint stream);
 
     [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_queue_buffer(nint stream, nint buffer);
+
+    // Utility: convert a stream state to a human‑readable string.
+    [DllImport(PipewireLib, CallingConvention = CallingConvention.Cdecl)]
+    public static extern nint pw_stream_state_as_string(PwStreamState state);
 
     // SPA buffer structures.
     [StructLayout(LayoutKind.Sequential)]
@@ -350,9 +347,9 @@ internal static class PipewireNative
     {
         public uint id;
         public uint n_metas;
-        public nint metas; // Ignored.
+        public nint metas;   // Ignored in this example.
         public uint n_datas;
-        public nint datas; // Pointer to an array of spa_data structures.
+        public nint datas;   // Pointer to an array of spa_data structures.
     }
 
     [StructLayout(LayoutKind.Sequential)]
