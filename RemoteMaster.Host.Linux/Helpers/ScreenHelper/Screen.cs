@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
@@ -9,6 +9,10 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 
+/// <summary>
+/// Represents a display in a Wayland environment (using Sway).
+/// Retrieves display details via Sway’s IPC.
+/// </summary>
 public class Screen : IScreen
 {
     public string DeviceName { get; }
@@ -24,12 +28,15 @@ public class Screen : IScreen
         Primary = primary;
     }
 
+    /// <summary>
+    /// Retrieves all connected screens via Sway’s IPC.
+    /// </summary>
     public static IEnumerable<IScreen> AllScreens
     {
         get
         {
             var screens = new List<IScreen>();
-
+            
             try
             {
                 var output = RunCommand("swaymsg -t get_outputs");
@@ -55,13 +62,16 @@ public class Screen : IScreen
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to get screens: {ex.Message}");
+                Console.WriteLine($"[Screen] Failed to retrieve screens: {ex.Message}");
             }
 
             return screens;
         }
     }
 
+    /// <summary>
+    /// Retrieves the primary (focused) screen.
+    /// </summary>
     public static IScreen? PrimaryScreen => AllScreens.FirstOrDefault(s => s.Primary);
 
     private static Size GetScreenResolution(JsonElement screenElement)
@@ -70,7 +80,7 @@ public class Screen : IScreen
         {
             var width = screenElement.GetProperty("rect").GetProperty("width").GetInt32();
             var height = screenElement.GetProperty("rect").GetProperty("height").GetInt32();
-            
+
             return new Size(width, height);
         }
         catch
@@ -94,7 +104,7 @@ public class Screen : IScreen
         process.Start();
         var result = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
-       
+
         return result.Trim();
     }
 }

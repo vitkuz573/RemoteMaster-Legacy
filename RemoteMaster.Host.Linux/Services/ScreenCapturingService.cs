@@ -1,48 +1,32 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class ScreenCapturingService : IScreenCapturingService
+/// <summary>
+/// Abstract base class for screen capturing services.
+/// Provides default implementations for display enumeration and other common methods.
+/// </summary>
+public abstract class ScreenCapturingService : IScreenCapturingService
 {
-    private const string GstPipeline = "pipewiresrc ! videoconvert ! video/x-raw,format=RGB ! appsink";
+    /// <summary>
+    /// Retrieves the next captured frame as a byte array.
+    /// Must be implemented by derived classes.
+    /// </summary>
+    /// <param name="connectionId">A connection identifier.</param>
+    /// <returns>Raw frame data or null if unavailable.</returns>
+    public abstract byte[]? GetNextFrame(string connectionId);
 
-    public byte[]? GetNextFrame(string connectionId)
-    {
-        try
-        {
-            using var process = new Process();
-            process.StartInfo = new ProcessStartInfo
-            {
-                FileName = "gst-launch-1.0",
-                Arguments = GstPipeline,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            process.Start();
-
-            using var memoryStream = new MemoryStream();
-            
-            process.StandardOutput.BaseStream.CopyTo(memoryStream);
-            process.WaitForExit();
-
-            return memoryStream.ToArray();
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Failed to capture screen frame", ex);
-        }
-    }
-
-    public IEnumerable<Display> GetDisplays()
+    /// <summary>
+    /// Retrieves a collection of connected displays.
+    /// Default implementation uses the Screen helper.
+    /// </summary>
+    public virtual IEnumerable<Display> GetDisplays()
     {
         return Screen.AllScreens.Select(s => new Display
         {
@@ -52,14 +36,35 @@ public class ScreenCapturingService : IScreenCapturingService
         });
     }
 
-    public IScreen? FindScreenByName(string displayName)
+    /// <summary>
+    /// Finds a display by its device name.
+    /// </summary>
+    public virtual IScreen? FindScreenByName(string displayName)
     {
         return Screen.AllScreens.FirstOrDefault(s => s.DeviceName == displayName);
     }
 
-    public void SetSelectedScreen(string connectionId, IScreen display) { }
+    /// <summary>
+    /// Sets the selected screen for capture.
+    /// Default implementation is a no‑op.
+    /// </summary>
+    public virtual void SetSelectedScreen(string connectionId, IScreen display)
+    {
+        // No-op by default.
+    }
 
-    public byte[]? GetThumbnail(string connectionId) => GetNextFrame(connectionId);
+    /// <summary>
+    /// Retrieves a thumbnail image.
+    /// Default implementation returns a full‑sized frame.
+    /// </summary>
+    public virtual byte[]? GetThumbnail(string connectionId)
+    {
+        return GetNextFrame(connectionId);
+    }
 
-    public void Dispose() { }
+    /// <summary>
+    /// Disposes resources used by the screen capturing service.
+    /// Must be implemented by derived classes.
+    /// </summary>
+    public abstract void Dispose();
 }

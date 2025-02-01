@@ -8,6 +8,7 @@
     <SelfContained>true</SelfContained>
     <IncludeNativeLibratiesForSelfExtract>true</IncludeNativeLibratiesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
