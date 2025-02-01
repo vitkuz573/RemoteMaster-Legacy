@@ -22,7 +22,7 @@ internal static class PipewireNative
     public static extern void pw_deinit();
 
     [DllImport(LibPipewire, CallingConvention = CallingConvention.Cdecl)]
-    public static extern nint pw_main_loop_new(IntPtr properties);
+    public static extern nint pw_main_loop_new(nint properties);
 
     [DllImport(LibPipewire, CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_main_loop_run(nint loop);
@@ -37,10 +37,10 @@ internal static class PipewireNative
     public static extern nint pw_main_loop_get_loop(nint loop);
 
     [DllImport(LibPipewire, CallingConvention = CallingConvention.Cdecl)]
-    public static extern nint pw_stream_new_simple(nint loop, string name, IntPtr properties, ref PwStreamEvents events, IntPtr userData);
+    public static extern nint pw_stream_new_simple(nint loop, string name, nint properties, ref PwStreamEvents events, nint userData);
 
     [DllImport(LibPipewire, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int pw_stream_connect(nint stream, int direction, uint targetId, uint flags, IntPtr parameters, uint nParams);
+    public static extern int pw_stream_connect(nint stream, int direction, uint targetId, uint flags, nint parameters, uint nParams);
 
     [DllImport(LibPipewire, CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_set_active(nint stream, bool active);
@@ -65,15 +65,15 @@ internal static class PipewireNative
     public struct PwStreamEvents
     {
         public uint version;
-        public IntPtr stateChanged;
-        public IntPtr process;
-        public IntPtr addBuffer;
-        public IntPtr removeBuffer;
-        public IntPtr drained;
+        public nint stateChanged;
+        public nint process;
+        public nint addBuffer;
+        public nint removeBuffer;
+        public nint drained;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void PwStreamProcessDelegate(IntPtr userData);
+    public delegate void PwStreamProcessDelegate(nint userData);
 
     #endregion
 
@@ -102,7 +102,7 @@ internal static class PipewireNative
 
     #endregion
 
-    #region SPA POD Builder (Full Implementation)
+    #region SPA POD Builder
 
     // The SPA POD object is built as a binary blob with the following layout:
     // Header (4 uint32 fields):
@@ -119,7 +119,7 @@ internal static class PipewireNative
     public const uint SPA_FORMAT_VIDEO_size = 1;            // Key for video size property
     public const uint SPA_FORMAT_VIDEO_framerate = 2;       // Key for video framerate property
 
-    public static IntPtr BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
+    public static nint BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
     {
         var totalFields = 10;
         var totalSize = totalFields * 4; // 40 bytes
