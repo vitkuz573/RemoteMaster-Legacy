@@ -79,13 +79,13 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
 
         Marshal.Copy(parameters, 0, paramArray, 1);
 
-        // var ret = pw_stream_connect(_stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_AUTOCONNECT, paramArray, 1);
-        // 
-        // if (ret < 0)
-        // {
-        //     throw new Exception("Failed to connect PipeWire stream.");
-        // }
-        // 
+        var ret = pw_stream_connect(_stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_AUTOCONNECT, paramArray, 1);
+
+        if (ret < 0)
+        {
+            throw new Exception("Failed to connect PipeWire stream.");
+        }
+
         // _pipeWireThread = new Thread(() =>
         // {
         //     pw_main_loop_run(_mainLoop);

@@ -103,10 +103,10 @@ namespace RemoteMaster.Host.Linux.Helpers
         [DllImport(LIB)]
         public static extern int pw_stream_connect(nint stream,
                                                    int direction,
-                                                   uint id,
+                                                   uint target_id,
                                                    uint flags,
                                                    nint parameters,
-                                                   int n_parameters);
+                                                   uint n_params);
 
         [DllImport(LIB)]
         public static extern nint pw_stream_dequeue_buffer(nint stream);
