@@ -16,7 +16,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 {
     /// <summary>
     /// Retrieves the next captured frame as a byte array.
-    /// Must be implemented by derived classes.
     /// </summary>
     /// <param name="connectionId">A connection identifier.</param>
     /// <returns>Raw frame data or null if unavailable.</returns>
@@ -24,7 +23,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     /// <summary>
     /// Retrieves a collection of connected displays.
-    /// Default implementation uses the Screen helper.
     /// </summary>
     public virtual IEnumerable<Display> GetDisplays()
     {
@@ -64,7 +62,6 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     /// <summary>
     /// Disposes resources used by the screen capturing service.
-    /// Must be implemented by derived classes.
     /// </summary>
     public abstract void Dispose();
 }

@@ -20,6 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Tmds.DBus" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj" />
   </ItemGroup>
 

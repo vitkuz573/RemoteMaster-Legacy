@@ -4,14 +4,14 @@
 
 using System.Diagnostics;
 using System.Drawing;
-using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 
 /// <summary>
-/// Represents a display in a Wayland environment (using Sway).
-/// Retrieves display details via Sway’s IPC.
+/// Represents a display.
+/// This implementation uses xrandr to retrieve display information,
+/// making it universal for most X11 environments (e.g. GNOME).
 /// </summary>
 public class Screen : IScreen
 {
@@ -21,7 +21,7 @@ public class Screen : IScreen
     
     public bool Primary { get; }
 
-    private Screen(string name, Size resolution, bool primary)
+    public Screen(string name, Size resolution, bool primary)
     {
         DeviceName = name;
         Bounds = new Rectangle(0, 0, resolution.Width, resolution.Height);
@@ -29,34 +29,59 @@ public class Screen : IScreen
     }
 
     /// <summary>
-    /// Retrieves all connected screens via Sway’s IPC.
+    /// Retrieves all connected screens by parsing the xrandr output.
     /// </summary>
     public static IEnumerable<IScreen> AllScreens
     {
         get
         {
             var screens = new List<IScreen>();
-            
+
             try
             {
-                var output = RunCommand("swaymsg -t get_outputs");
-                
-                if (string.IsNullOrEmpty(output))
+                var output = RunCommand("xrandr --query");
+
+                if (string.IsNullOrWhiteSpace(output))
                 {
                     return screens;
                 }
 
-                using var jsonDoc = JsonDocument.Parse(output);
-                
-                foreach (var element in jsonDoc.RootElement.EnumerateArray())
+                // Example xrandr output line:
+                // "Virtual1 connected primary 1918x920+0+0 (normal left inverted right x axis y axis) 0mm x 0mm"
+                var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
                 {
-                    var name = element.GetProperty("name").GetString();
-                    var primary = element.GetProperty("focused").GetBoolean();
-                    var resolution = GetScreenResolution(element);
-
-                    if (!string.IsNullOrEmpty(name))
+                    if (line.Contains(" connected "))
                     {
-                        screens.Add(new Screen(name, resolution, primary));
+                        var tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                        if (tokens.Length < 3)
+                        {
+                            continue;
+                        }
+
+                        // The first token is the display name.
+                        var name = tokens[0];
+
+                        // Look for a token that contains resolution info (e.g. "1918x920+0+0")
+                        foreach (var token in tokens)
+                        {
+                            // Check for the pattern: "WIDTHxHEIGHT+..."
+                            if (token.Contains("x") && token.Contains("+"))
+                            {
+                                var resPart = token.Split('+')[0]; // "1918x920"
+                                var dims = resPart.Split('x');
+                                if (dims.Length == 2 &&
+                                    int.TryParse(dims[0], out int width) &&
+                                    int.TryParse(dims[1], out int height))
+                                {
+                                    // Determine if this display is primary.
+                                    bool primary = line.Contains(" primary ");
+                                    screens.Add(new Screen(name, new Size(width, height), primary));
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -70,24 +95,9 @@ public class Screen : IScreen
     }
 
     /// <summary>
-    /// Retrieves the primary (focused) screen.
+    /// Retrieves the primary screen.
     /// </summary>
     public static IScreen? PrimaryScreen => AllScreens.FirstOrDefault(s => s.Primary);
-
-    private static Size GetScreenResolution(JsonElement screenElement)
-    {
-        try
-        {
-            var width = screenElement.GetProperty("rect").GetProperty("width").GetInt32();
-            var height = screenElement.GetProperty("rect").GetProperty("height").GetInt32();
-
-            return new Size(width, height);
-        }
-        catch
-        {
-            return new Size(1920, 1080);
-        }
-    }
 
     private static string RunCommand(string command)
     {
