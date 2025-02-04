@@ -7,38 +7,14 @@ using System.Runtime.InteropServices;
 namespace RemoteMaster.Host.Linux.Helpers;
 
 [StructLayout(LayoutKind.Sequential, Pack = 8)]
-public struct SpaPod
+public struct spa_pod
 {
     public uint size;
     public uint type;
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 8)]
-public struct VideoFormatPod
-{
-    public SpaPod pod;        
-    public uint format;       
-    public uint width;        
-    public uint height;       
-    public uint framerate_num;
-    public uint framerate_den;
-}
-
-[StructLayout(LayoutKind.Sequential, Pack = 8)]
-public struct BufferParamPod
-{
-    public SpaPod pod;  
-    public uint buffers;
-    public uint blocks; 
-    public uint size;   
-    public uint stride; 
-    public uint align;  
-    public int dataType;
-    public int metaType;
-}
-
 [StructLayout(LayoutKind.Sequential)]
-public struct SpaBuffer
+public struct spa_buffer
 {
     public uint n_metas;
     public uint n_datas;
@@ -47,7 +23,7 @@ public struct SpaBuffer
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct SpaData
+public struct spa_data
 {
     public uint type;     
     public uint flags;    
@@ -59,7 +35,7 @@ public struct SpaData
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct SpaChunk
+public struct spa_chunk
 {
     public uint offset;
     public uint size;  
@@ -118,90 +94,71 @@ public static class PipewireNative
 
     [DllImport(LibraryName, EntryPoint = "pw_properties_set", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_properties_set(nint properties, [MarshalAs(UnmanagedType.LPStr)] string key, [MarshalAs(UnmanagedType.LPStr)] string value);
-    
+
+    #endregion
+
+    #region SPA POD Builder Functions
+
+    [DllImport(LibraryName, EntryPoint = "spa_pod_builder_init", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void spa_pod_builder_init(nint builder, nint data, uint size);
+
+    [DllImport(LibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
+    public static extern nint spa_pod_builder_add_object(nint builder, uint type, uint id, uint key1, nint value1, uint key2, nint value2, uint key3, nint value3, uint key4, nint value4, uint key5, nint value5);
+
+    [DllImport(LibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
+    public static extern nint spa_pod_builder_add_object(nint builder, uint type, uint id, uint key1, nint value1, uint key2, nint value2, uint key3, nint value3, uint key4, nint value4, uint key5, nint value5, uint key6, nint value6, uint key7, nint value7);
+
     #endregion
 
     #region Building SPA PODs
-    
-    private const uint SPA_TYPE_Format = 0x100;         
-    private const uint SPA_TYPE_BufferParam = 0x101;     
-    private const uint SPA_VIDEO_FORMAT_RGB = 0x34325241;
 
-    private static int RoundUp8(int size)
+    private const uint SPA_TYPE_OBJECT_Format = 0x40003;
+    private const uint SPA_TYPE_OBJECT_ParamBuffers = 0x40004;
+
+    private const uint SPA_VIDEO_FORMAT_RGB = 15;
+
+    public static nint BuildVideoFormatPod(uint width, uint height)
     {
-        return (size + 7) / 8 * 8;
-    }
+        var buffer = Marshal.AllocHGlobal(1024);
+        var builder = Marshal.AllocHGlobal(Marshal.SizeOf<nint>());
 
-    public static nint BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
-    {
-        var structSize = Marshal.SizeOf<VideoFormatPod>();
-        var headerSize = Marshal.SizeOf<SpaPod>();
-        var payloadSize = (uint)(structSize - headerSize);
+        spa_pod_builder_init(builder, buffer, 1024);
 
-        var pod = new VideoFormatPod
-        {
-            pod = new SpaPod
-            {
-                size = payloadSize,
-                type = SPA_TYPE_Format
-            },
-            format = SPA_VIDEO_FORMAT_RGB,
-            width = width,
-            height = height,
-            framerate_num = framerateNum,
-            framerate_den = framerateDen
-        };
+        var pod = spa_pod_builder_add_object(
+            builder, SPA_TYPE_OBJECT_Format, SPA_PARAM_Format,
+            SPA_FORMAT_mediaType, (nint)SPA_MEDIA_TYPE_video,
+            SPA_FORMAT_mediaSubtype, (nint)SPA_MEDIA_SUBTYPE_raw,
+            SPA_FORMAT_VIDEO_format, (nint)SPA_VIDEO_FORMAT_RGB,
+            SPA_FORMAT_VIDEO_width, (nint)width,
+            SPA_FORMAT_VIDEO_height, (nint)height
+        );
 
-        var paddedSize = RoundUp8(structSize);
-        var podPtr = Marshal.AllocHGlobal(paddedSize);
+        Marshal.FreeHGlobal(builder);
 
-        Marshal.StructureToPtr(pod, podPtr, false);
-
-        var padding = paddedSize - structSize;
-
-        for (var i = 0; i < padding; i++)
-        {
-            Marshal.WriteByte(podPtr, structSize + i, 0);
-        }
-
-        return podPtr;
+        return pod;
     }
 
     public static nint BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
     {
-        var structSize = Marshal.SizeOf<BufferParamPod>();
-        var headerSize = Marshal.SizeOf<SpaPod>();
-        var payloadSize = (uint)(structSize - headerSize);
+        var buffer = Marshal.AllocHGlobal(1024);
+        var builder = Marshal.AllocHGlobal(Marshal.SizeOf<nint>());
 
-        var pod = new BufferParamPod
-        {
-            pod = new SpaPod
-            {
-                size = payloadSize,
-                type = SPA_TYPE_BufferParam
-            },
-            buffers = buffers,
-            blocks = blocks,
-            size = size,
-            stride = stride,
-            align = align,
-            dataType = dataType,
-            metaType = metaType
-        };
+        spa_pod_builder_init(builder, buffer, 1024);
 
-        var paddedSize = RoundUp8(structSize);
-        var podPtr = Marshal.AllocHGlobal(paddedSize);
+        var pod = spa_pod_builder_add_object(
+            builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
+            SPA_PARAM_BUFFERS_buffers, (nint)buffers,
+            SPA_PARAM_BUFFERS_blocks, (nint)blocks,
+            SPA_PARAM_BUFFERS_size, (nint)size,
+            SPA_PARAM_BUFFERS_stride, (nint)stride,
+            SPA_PARAM_BUFFERS_align, (nint)align,
+            SPA_PARAM_BUFFERS_dataType, (nint)dataType,
+            SPA_PARAM_BUFFERS_metaType, (nint)metaType
+        );
 
-        Marshal.StructureToPtr(pod, podPtr, false);
+        Marshal.FreeHGlobal(builder);
 
-        var padding = paddedSize - structSize;
-
-        for (var i = 0; i < padding; i++)
-        {
-            Marshal.WriteByte(podPtr, structSize + i, 0);
-        }
-
-        return podPtr;
+        return pod;
     }
 
     #endregion
@@ -215,14 +172,14 @@ public static class PipewireNative
             throw new ArgumentException("bufferPtr is null", nameof(bufferPtr));
         }
 
-        var buffer = Marshal.PtrToStructure<SpaBuffer>(bufferPtr);
+        var buffer = Marshal.PtrToStructure<spa_buffer>(bufferPtr);
 
         if (buffer.n_datas < 1)
         {
             throw new Exception("No spa_data elements found in spa_buffer.");
         }
 
-        var spaDataSize = Marshal.SizeOf<SpaData>();
+        var spaDataSize = Marshal.SizeOf<spa_data>();
 
         var dataArrayPtr = buffer.datas;
 
@@ -231,12 +188,12 @@ public static class PipewireNative
             throw new Exception("Pointer to spa_data array is null.");
         }
 
-        var spaData = Marshal.PtrToStructure<SpaData>(dataArrayPtr);
+        var spaData = Marshal.PtrToStructure<spa_data>(dataArrayPtr);
         var dataSize = spaData.maxsize;
         
         if (spaData.chunk != nint.Zero)
         {
-            var chunk = Marshal.PtrToStructure<SpaChunk>(spaData.chunk);
+            var chunk = Marshal.PtrToStructure<spa_chunk>(spaData.chunk);
             
             if (chunk.size > 0)
             {
@@ -263,16 +220,87 @@ public static class PipewireNative
 
     #endregion
 
+    #region SPA_PARAM_BUFFERS_* Values
+
+    private const uint SPA_PARAM_BUFFERS_buffers = 1;
+    private const uint SPA_PARAM_BUFFERS_blocks = 2;
+    private const uint SPA_PARAM_BUFFERS_size = 3;
+    private const uint SPA_PARAM_BUFFERS_stride = 4;
+    private const uint SPA_PARAM_BUFFERS_align = 5;
+    private const uint SPA_PARAM_BUFFERS_dataType = 6;
+    private const uint SPA_PARAM_BUFFERS_metaType = 7;
+
+    #endregion
+
+    #region SPA_FORMAT_* Values
+
+    private const uint SPA_FORMAT_mediaType = 1;
+    private const uint SPA_FORMAT_mediaSubtype = 2;
+    private const uint SPA_FORMAT_VIDEO_format = 3;
+    private const uint SPA_FORMAT_VIDEO_width = 4;
+    private const uint SPA_FORMAT_VIDEO_height = 5;
+
+    #endregion
+
+    #region SPA_MEDIA_TYPE Values
+
+    private const uint SPA_MEDIA_TYPE_unknown = 0;
+    private const uint SPA_MEDIA_TYPE_audio = 1;
+    private const uint SPA_MEDIA_TYPE_video = 2;
+    private const uint SPA_MEDIA_TYPE_image = 3;
+    private const uint SPA_MEDIA_TYPE_binary = 4;
+    private const uint SPA_MEDIA_TYPE_stream = 5;
+    private const uint SPA_MEDIA_TYPE_application = 6;
+
+    #endregion
+
+    #region SPA_MEDIA_SUBTYPE Values
+
+    private const uint SPA_MEDIA_SUBTYPE_unknown = 0;
+    private const uint SPA_MEDIA_SUBTYPE_raw = 1;
+    private const uint SPA_MEDIA_SUBTYPE_dsp = 2;
+    private const uint SPA_MEDIA_SUBTYPE_iec958 = 3;
+    private const uint SPA_MEDIA_SUBTYPE_dsd = 4;
+
+    #endregion
+
+    #region SPA_PARAM_* Values
+
+    private const uint SPA_PARAM_Invalid = 0;
+    private const uint SPA_PARAM_PropInfo = 1;
+    private const uint SPA_PARAM_Props = 2;
+    private const uint SPA_PARAM_EnumFormat = 3;
+    private const uint SPA_PARAM_Format = 4;
+    private const uint SPA_PARAM_Buffers = 5;
+    private const uint SPA_PARAM_Meta = 6;
+    private const uint SPA_PARAM_IO = 7;
+    private const uint SPA_PARAM_EnumProfile = 8;
+    private const uint SPA_PARAM_Profile = 9;
+    private const uint SPA_PARAM_EnumPortConfig = 10;
+    private const uint SPA_PARAM_PortConfig = 11;
+    private const uint SPA_PARAM_EnumRoute = 12;
+    private const uint SPA_PARAM_Route = 13;
+    private const uint SPA_PARAM_Control = 14;
+    private const uint SPA_PARAM_Latency = 15;
+    private const uint SPA_PARAM_ProcessLatency = 16;
+    private const uint SPA_PARAM_Tag = 17;
+
+    #endregion
+
     #region Constants and Delegates
 
-    public const int PW_DIRECTION_INPUT = 0;
-    public const uint PW_ID_ANY = 0;
     public const uint PW_STREAM_FLAG_AUTOCONNECT = 1;
+
+    public const int PW_DIRECTION_INPUT = 0;
+
+    public const uint PW_ID_ANY = 0;
+
+    public const int PW_VERSION_STREAM_EVENTS = 2;
+
     public const string PW_KEY_MEDIA_TYPE = "media.type";
     public const string PW_KEY_MEDIA_CATEGORY = "media.category";
-    public const string PW_KEY_MEDIA_ROLE = "media.role";
     public const string PW_KEY_MEDIA_CLASS = "media.class";
-    public const int PW_VERSION_STREAM_EVENTS = 2;
+    public const string PW_KEY_MEDIA_ROLE = "media.role";
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void PwStreamDestroyDelegate(nint userData);
