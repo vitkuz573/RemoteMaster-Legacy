@@ -118,7 +118,7 @@ internal class Program
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IHardwareService, HardwareService>();
         services.AddSingleton<IScreenCapturingService, ScreenCapturingService>();
-        services.AddSingleton<IScreenCastingService, LinuxPipeWireScreenCastingService>();
+        services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
