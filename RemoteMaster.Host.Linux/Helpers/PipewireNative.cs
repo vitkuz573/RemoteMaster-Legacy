@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace RemoteMaster.Host.Linux.Helpers;
 
-[StructLayout(LayoutKind.Sequential, Pack = 8)]
+[StructLayout(LayoutKind.Sequential)]
 public struct spa_pod
 {
     public uint size;
