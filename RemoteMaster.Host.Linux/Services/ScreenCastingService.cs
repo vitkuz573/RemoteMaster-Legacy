@@ -28,6 +28,8 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
     private readonly int _bytesPerPixel = 3; // For RGB24.
     private readonly int _frameSize; // Calculated as width * height * bytesPerPixel.
 
+    private PwStreamProcessDelegate _processDelegate;
+
     public ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScreenCastingService> logger)
     {
         _hubContext = hubContext;
@@ -57,10 +59,12 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             throw new Exception("Failed to create PipeWire properties.");
         }
 
+        _processDelegate = ProcessCallback;
+
         var events = new pw_stream_events
         {
             version = PW_VERSION_STREAM_EVENTS,
-            process = Marshal.GetFunctionPointerForDelegate(new PwStreamProcessDelegate(ProcessCallback))
+            process = Marshal.GetFunctionPointerForDelegate(_processDelegate)
         };
 
         _stream = pw_stream_new_simple(pw_main_loop_get_loop(_mainLoop), "screen-capture", props, ref events, nint.Zero);
