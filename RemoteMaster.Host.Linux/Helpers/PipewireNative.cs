@@ -77,8 +77,8 @@ namespace RemoteMaster.Host.Linux.Helpers
     {
         public uint n_metas;   // Number of metadata elements
         public uint n_datas;   // Number of spa_data elements
-        public IntPtr metas;   // Pointer to an array of spa_meta (not used in this example)
-        public IntPtr datas;   // Pointer to an array of spa_data elements
+        public nint metas;   // Pointer to an array of spa_meta (not used in this example)
+        public nint datas;   // Pointer to an array of spa_data elements
     }
 
     // Represents a data block descriptor (spa_data)
@@ -90,8 +90,8 @@ namespace RemoteMaster.Host.Linux.Helpers
         public long fd;         // File descriptor (if applicable, e.g. for DMA-BUF)
         public uint mapoffset;  // Offset for mmap (usually page aligned)
         public uint maxsize;    // Maximum size of the data block
-        public IntPtr data;     // Direct pointer to data (if available)
-        public IntPtr chunk;    // Pointer to a spa_chunk structure with valid data info (optional)
+        public nint data;     // Direct pointer to data (if available)
+        public nint chunk;    // Pointer to a spa_chunk structure with valid data info (optional)
     }
 
     // Represents a valid data chunk descriptor (spa_chunk)
@@ -113,7 +113,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         // These functions initialize PipeWire, create a main loop,
         // and create/connect/destroy streams.
         [DllImport(LIB)]
-        public static extern void pw_init(ref int argc, ref IntPtr argv);
+        public static extern void pw_init(ref int argc, ref nint argv);
 
         [DllImport(LIB)]
         public static extern nint pw_main_loop_new(nint properties);
@@ -125,7 +125,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         public static extern int pw_main_loop_run(nint mainLoop);
 
         [DllImport(LIB)]
-        public static extern void pw_main_loop_quit(nint mainLoop);
+        public static extern int pw_main_loop_quit(nint mainLoop);
 
         [DllImport(LIB)]
         public static extern void pw_main_loop_destroy(nint mainLoop);
@@ -149,10 +149,10 @@ namespace RemoteMaster.Host.Linux.Helpers
         public static extern nint pw_stream_dequeue_buffer(nint stream);
 
         [DllImport(LIB)]
-        public static extern void pw_stream_queue_buffer(nint stream, nint buffer);
+        public static extern int pw_stream_queue_buffer(nint stream, nint buffer);
 
         [DllImport(LIB)]
-        public static extern void pw_stream_disconnect(nint stream);
+        public static extern int pw_stream_disconnect(nint stream);
 
         [DllImport(LIB)]
         public static extern void pw_stream_destroy(nint stream);
@@ -166,7 +166,7 @@ namespace RemoteMaster.Host.Linux.Helpers
             [MarshalAs(UnmanagedType.LPStr)] string value1,
             [MarshalAs(UnmanagedType.LPStr)] string key2,
             [MarshalAs(UnmanagedType.LPStr)] string value2,
-            nint end); // Use IntPtr.Zero as sentinel.
+            nint end); // Use nint.Zero as sentinel.
 
         [DllImport(LIB, EntryPoint = "pw_properties_set")]
         public static extern void pw_properties_set(nint properties,
@@ -187,7 +187,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         /// <summary>
         /// Builds a VideoFormatPod for the given parameters.
         /// </summary>
-        public static IntPtr BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
+        public static nint BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
         {
             var structSize = Marshal.SizeOf<VideoFormatPod>();
             var headerSize = Marshal.SizeOf<SpaPod>();
@@ -224,7 +224,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         /// <summary>
         /// Builds a BufferParamPod with the given parameters.
         /// </summary>
-        public static IntPtr BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
+        public static nint BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
         {
             var structSize = Marshal.SizeOf<BufferParamPod>();
             var headerSize = Marshal.SizeOf<SpaPod>();
@@ -278,7 +278,7 @@ namespace RemoteMaster.Host.Linux.Helpers
             }
 
             // Read the spa_buffer structure
-            SpaBuffer buffer = Marshal.PtrToStructure<SpaBuffer>(bufferPtr);
+            var buffer = Marshal.PtrToStructure<SpaBuffer>(bufferPtr);
 
             if (buffer.n_datas < 1)
             {
@@ -286,23 +286,26 @@ namespace RemoteMaster.Host.Linux.Helpers
             }
 
             // Calculate the size of a SpaData structure
-            int spaDataSize = Marshal.SizeOf<SpaData>();
+            var spaDataSize = Marshal.SizeOf<SpaData>();
 
             // Get pointer to the first spa_data element in the array
-            IntPtr dataArrayPtr = buffer.datas;
-            if (dataArrayPtr == IntPtr.Zero)
+            var dataArrayPtr = buffer.datas;
+
+            if (dataArrayPtr == nint.Zero)
             {
                 throw new Exception("Pointer to spa_data array is null.");
             }
 
-            SpaData spaData = Marshal.PtrToStructure<SpaData>(dataArrayPtr);
+            var spaData = Marshal.PtrToStructure<SpaData>(dataArrayPtr);
 
             // Determine the data size.
             // If a spa_chunk is provided, use its 'size' field; otherwise, fallback to spaData.maxsize.
-            uint dataSize = spaData.maxsize;
-            if (spaData.chunk != IntPtr.Zero)
+            var dataSize = spaData.maxsize;
+            
+            if (spaData.chunk != nint.Zero)
             {
-                SpaChunk chunk = Marshal.PtrToStructure<SpaChunk>(spaData.chunk);
+                var chunk = Marshal.PtrToStructure<SpaChunk>(spaData.chunk);
+                
                 if (chunk.size > 0)
                 {
                     dataSize = chunk.size;
@@ -315,13 +318,15 @@ namespace RemoteMaster.Host.Linux.Helpers
                 dataSize = (uint)expectedSize;
             }
 
-            if (spaData.data == IntPtr.Zero)
+            if (spaData.data == nint.Zero)
             {
                 throw new Exception("spa_data.data is null.");
             }
 
-            byte[] data = new byte[dataSize];
+            var data = new byte[dataSize];
+            
             Marshal.Copy(spaData.data, data, 0, (int)dataSize);
+            
             return data;
         }
         #endregion

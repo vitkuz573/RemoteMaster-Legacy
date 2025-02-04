@@ -35,13 +35,14 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
         _hubContext = hubContext;
         _logger = logger;
         _frameSize = _width * _height * _bytesPerPixel;
+
         InitializePipeWire();
     }
 
     private void InitializePipeWire()
     {
         var argc = 0;
-        var argv = IntPtr.Zero;
+        var argv = nint.Zero;
         
         pw_init(ref argc, ref argv);
 
@@ -111,6 +112,7 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
         try
         {
             var frameData = ExtractFrameData(bufferPtr, _frameSize);
+
             _frameQueue.Enqueue(frameData);
         }
         catch (Exception ex)
@@ -128,10 +130,7 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
     /// </summary>
     public void StartStreaming(IViewer viewer)
     {
-        if (viewer == null)
-        {
-            throw new ArgumentNullException(nameof(viewer));
-        }
+        ArgumentNullException.ThrowIfNull(viewer);
 
         _logger.LogInformation("Starting Linux PipeWire screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
 
@@ -169,7 +168,5 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
         {
             pw_main_loop_destroy(_mainLoop);
         }
-
-        // Free any additional allocated memory (such as the parameter array) as needed.
     }
 }
