@@ -85,7 +85,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         public static extern nint pw_main_loop_get_loop(nint mainLoop);
 
         [DllImport(LIB)]
-        public static extern void pw_main_loop_run(nint mainLoop);
+        public static extern int pw_main_loop_run(nint mainLoop);
 
         [DllImport(LIB)]
         public static extern void pw_main_loop_quit(nint mainLoop);

@@ -86,15 +86,15 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             throw new Exception("Failed to connect PipeWire stream.");
         }
 
-        // _pipeWireThread = new Thread(() =>
-        // {
-        //     pw_main_loop_run(_mainLoop);
-        // })
-        // {
-        //     IsBackground = true
-        // };
-        // 
-        // _pipeWireThread.Start();
+        _pipeWireThread = new Thread(() =>
+        {
+            pw_main_loop_run(_mainLoop);
+        })
+        {
+            IsBackground = true
+        };
+
+        _pipeWireThread.Start();
     }
 
     private void ProcessCallback(nint userData)
