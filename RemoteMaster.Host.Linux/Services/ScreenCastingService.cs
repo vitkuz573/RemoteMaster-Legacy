@@ -50,19 +50,17 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             throw new Exception("Failed to create PipeWire main loop.");
         }
 
-        var props = pw_properties_new(PW_KEY_MEDIA_TYPE, "Video", PW_KEY_MEDIA_CATEGORY, "Source", PW_KEY_MEDIA_ROLE, "Screen", IntPtr.Zero);
+        var props = pw_properties_new(PW_KEY_MEDIA_CLASS, "Video/Source", PW_KEY_MEDIA_ROLE, "Screen", nint.Zero);
 
         if (props == nint.Zero)
         {
             throw new Exception("Failed to create PipeWire properties.");
         }
 
-        pw_properties_set(props, "media.role", "Screen");
-
         var events = new pw_stream_events
         {
             version = PW_VERSION_STREAM_EVENTS,
-            //process = Marshal.GetFunctionPointerForDelegate(new PwStreamProcessDelegate(ProcessCallback))
+            process = Marshal.GetFunctionPointerForDelegate(new PwStreamProcessDelegate(ProcessCallback))
         };
 
         _stream = pw_stream_new_simple(pw_main_loop_get_loop(_mainLoop), "screen-capture", props, ref events, nint.Zero);
@@ -94,7 +92,7 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             IsBackground = true
         };
 
-        _pipeWireThread.Start();
+        // _pipeWireThread.Start();
     }
 
     private void ProcessCallback(nint userData)
@@ -139,7 +137,7 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             {
                 var delay = 1000 / viewer.CapturingContext.FrameRate;
                 
-                if (_frameQueue.TryDequeue(out byte[] frame))
+                if (_frameQueue.TryDequeue(out var frame))
                 {
                     await _hubContext.Clients.Client(viewer.ConnectionId).ReceiveScreenUpdate(frame);
                 }

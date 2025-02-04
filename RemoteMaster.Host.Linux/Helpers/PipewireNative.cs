@@ -129,8 +129,6 @@ namespace RemoteMaster.Host.Linux.Helpers
             [MarshalAs(UnmanagedType.LPStr)] string value1,
             [MarshalAs(UnmanagedType.LPStr)] string key2,
             [MarshalAs(UnmanagedType.LPStr)] string value2,
-            [MarshalAs(UnmanagedType.LPStr)] string key3,
-            [MarshalAs(UnmanagedType.LPStr)] string value3,
             nint end); // Use IntPtr.Zero as sentinel.
 
         [DllImport(LIB, EntryPoint = "pw_properties_set")]
@@ -225,6 +223,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         public const string PW_KEY_MEDIA_TYPE = "media.type";
         public const string PW_KEY_MEDIA_CATEGORY = "media.category";
         public const string PW_KEY_MEDIA_ROLE = "media.role";
+        public const string PW_KEY_MEDIA_CLASS = "media.class";
         public const int PW_VERSION_STREAM_EVENTS = 2;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
