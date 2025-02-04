@@ -2,13 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System;
 using System.Runtime.InteropServices;
 
 namespace RemoteMaster.Host.Linux.Helpers
 {
-    // === From spa/pod/pod.h ===
-    // Original header defines the basic POD as:
+    // === SPA POD Definitions ===
+    // From spa/pod/pod.h:
+    // The original header defines the basic POD as:
     //   struct spa_pod {
     //       uint32_t size;  // size of the body
     //       uint32_t type;  // type code
@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Linux.Helpers
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct SpaPod
     {
-        public uint size; // Size of the body (in bytes)
+        public uint size; // Size of the body in bytes
         public uint type; // Type code (as defined in SPA)
     }
 
@@ -34,12 +34,12 @@ namespace RemoteMaster.Host.Linux.Helpers
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct VideoFormatPod
     {
-        public SpaPod pod;         // From spa/pod/pod.h
+        public SpaPod pod;         // Base spa_pod header
         public uint format;        // Video format code (e.g. RGB)
-        public uint width;
-        public uint height;
-        public uint framerate_num;
-        public uint framerate_den;
+        public uint width;         // Video width
+        public uint height;        // Video height
+        public uint framerate_num; // Frame rate numerator
+        public uint framerate_den; // Frame rate denominator
     }
 
     // === BufferParamPod ===
@@ -57,14 +57,51 @@ namespace RemoteMaster.Host.Linux.Helpers
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct BufferParamPod
     {
-        public SpaPod pod;         // From spa/pod/pod.h
-        public uint buffers;       // Number of buffers (from SPA specs)
-        public uint blocks;        // Number of blocks per buffer
-        public uint size;          // Total size per buffer
-        public uint stride;        // Stride (bytes per row)
-        public uint align;         // Memory alignment required
-        public int dataType;       // Data type flags (per SPA)
-        public int metaType;       // Metadata type (if any)
+        public SpaPod pod;      // Base spa_pod header
+        public uint buffers;    // Number of buffers (from SPA specs)
+        public uint blocks;     // Number of blocks per buffer
+        public uint size;       // Total size per buffer
+        public uint stride;     // Stride (bytes per row)
+        public uint align;      // Required memory alignment
+        public int dataType;    // Data type flags (per SPA)
+        public int metaType;    // Metadata type (if any)
+    }
+
+    // === SPA Buffer Structures for Data Extraction ===
+    // The PipeWire buffer (spa_buffer) contains an array of spa_data elements.
+    // Here we define a simplified version of these structures.
+
+    // Represents a PipeWire buffer (spa_buffer)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SpaBuffer
+    {
+        public uint n_metas;   // Number of metadata elements
+        public uint n_datas;   // Number of spa_data elements
+        public IntPtr metas;   // Pointer to an array of spa_meta (not used in this example)
+        public IntPtr datas;   // Pointer to an array of spa_data elements
+    }
+
+    // Represents a data block descriptor (spa_data)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SpaData
+    {
+        public uint type;       // Memory type (e.g. SPA_DATA_MemPtr, SPA_DATA_DmaBuf, etc.)
+        public uint flags;      // Data flags (e.g. SPA_DATA_FLAG_READABLE, SPA_DATA_FLAG_MAPPABLE, etc.)
+        public long fd;         // File descriptor (if applicable, e.g. for DMA-BUF)
+        public uint mapoffset;  // Offset for mmap (usually page aligned)
+        public uint maxsize;    // Maximum size of the data block
+        public IntPtr data;     // Direct pointer to data (if available)
+        public IntPtr chunk;    // Pointer to a spa_chunk structure with valid data info (optional)
+    }
+
+    // Represents a valid data chunk descriptor (spa_chunk)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SpaChunk
+    {
+        public uint offset; // Offset of the valid data within the memory block
+        public uint size;   // Size of the valid data
+        public int stride;  // Stride (bytes per row, if applicable)
+        public int flags;   // Flags (e.g. SPA_CHUNK_FLAG_EMPTY, etc.)
     }
 
     public static class PipewireNative
@@ -72,7 +109,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         private const string LIB = "libpipewire-0.3";
 
         #region PipeWire Core Functions
-        // --- From pipewire.h and pipewire/stream.h ---
+        // Functions from pipewire.h and pipewire/stream.h
         // These functions initialize PipeWire, create a main loop,
         // and create/connect/destroy streams.
         [DllImport(LIB)]
@@ -122,7 +159,7 @@ namespace RemoteMaster.Host.Linux.Helpers
         #endregion
 
         #region Properties Functions
-        // --- From pipewire/properties.h ---
+        // Functions from pipewire/properties.h
         [DllImport(LIB, EntryPoint = "pw_properties_new")]
         public static extern nint pw_properties_new(
             [MarshalAs(UnmanagedType.LPStr)] string key1,
@@ -138,16 +175,18 @@ namespace RemoteMaster.Host.Linux.Helpers
         #endregion
 
         #region Building SPA PODs
-
-        private const uint SPA_TYPE_Format = 0x100;         // Original header value? (verify)
-        private const uint SPA_TYPE_BufferParam = 0x101;      // Original header value? (verify)
-        private const uint SPA_VIDEO_FORMAT_RGB = 0x34325241; // From header: 'AR24' little-endian
+        private const uint SPA_TYPE_Format = 0x100;         // (verify against your SPA headers)
+        private const uint SPA_TYPE_BufferParam = 0x101;      // (verify against your SPA headers)
+        private const uint SPA_VIDEO_FORMAT_RGB = 0x34325241; // 'AR24' in little-endian
 
         private static int RoundUp8(int size)
         {
             return (size + 7) / 8 * 8;
         }
 
+        /// <summary>
+        /// Builds a VideoFormatPod for the given parameters.
+        /// </summary>
         public static IntPtr BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
         {
             var structSize = Marshal.SizeOf<VideoFormatPod>();
@@ -174,12 +213,6 @@ namespace RemoteMaster.Host.Linux.Helpers
             Marshal.StructureToPtr(pod, podPtr, false);
 
             var padding = paddedSize - structSize;
-
-            if (padding <= 0)
-            {
-                return podPtr;
-            }
-
             for (var i = 0; i < padding; i++)
             {
                 Marshal.WriteByte(podPtr, structSize + i, 0);
@@ -188,6 +221,9 @@ namespace RemoteMaster.Host.Linux.Helpers
             return podPtr;
         }
 
+        /// <summary>
+        /// Builds a BufferParamPod with the given parameters.
+        /// </summary>
         public static IntPtr BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
         {
             var structSize = Marshal.SizeOf<BufferParamPod>();
@@ -212,16 +248,10 @@ namespace RemoteMaster.Host.Linux.Helpers
 
             var paddedSize = RoundUp8(structSize);
             var podPtr = Marshal.AllocHGlobal(paddedSize);
-            
+
             Marshal.StructureToPtr(pod, podPtr, false);
 
             var padding = paddedSize - structSize;
-
-            if (padding <= 0)
-            {
-                return podPtr;
-            }
-
             for (var i = 0; i < padding; i++)
             {
                 Marshal.WriteByte(podPtr, structSize + i, 0);
@@ -231,22 +261,73 @@ namespace RemoteMaster.Host.Linux.Helpers
         }
         #endregion
 
-        #region Buffer Data Extraction
-        // IMPORTANT: From pipewire/stream.h, buffers are represented by struct spa_buffer,
-        // and the actual data is stored in one or more spa_data elements.
-        // Here we simply copy from the provided pointer, but in a correct implementation,
-        // you must define and parse struct spa_buffer and struct spa_data.
+        #region Buffer Data Extraction (Improved)
+        /// <summary>
+        /// Extracts frame data from a PipeWire buffer.
+        /// This function parses a spa_buffer and then extracts the data from the first spa_data element.
+        /// It uses the spa_chunk (if available) to determine the valid data size.
+        /// </summary>
+        /// <param name="bufferPtr">Pointer to a spa_buffer (e.g. obtained from pw_stream_dequeue_buffer)</param>
+        /// <param name="expectedSize">Expected size of the frame data (used to limit the copy size)</param>
+        /// <returns>A byte array containing the frame data</returns>
         public static byte[] ExtractFrameData(nint bufferPtr, int expectedSize)
         {
-            byte[] data = new byte[expectedSize];
-            // This simplified approach may cause segmentation faults if bufferPtr is not a direct data pointer.
-            Marshal.Copy(bufferPtr, data, 0, expectedSize);
+            if (bufferPtr == nint.Zero)
+            {
+                throw new ArgumentException("bufferPtr is null", nameof(bufferPtr));
+            }
+
+            // Read the spa_buffer structure
+            SpaBuffer buffer = Marshal.PtrToStructure<SpaBuffer>(bufferPtr);
+
+            if (buffer.n_datas < 1)
+            {
+                throw new Exception("No spa_data elements found in spa_buffer.");
+            }
+
+            // Calculate the size of a SpaData structure
+            int spaDataSize = Marshal.SizeOf<SpaData>();
+
+            // Get pointer to the first spa_data element in the array
+            IntPtr dataArrayPtr = buffer.datas;
+            if (dataArrayPtr == IntPtr.Zero)
+            {
+                throw new Exception("Pointer to spa_data array is null.");
+            }
+
+            SpaData spaData = Marshal.PtrToStructure<SpaData>(dataArrayPtr);
+
+            // Determine the data size.
+            // If a spa_chunk is provided, use its 'size' field; otherwise, fallback to spaData.maxsize.
+            uint dataSize = spaData.maxsize;
+            if (spaData.chunk != IntPtr.Zero)
+            {
+                SpaChunk chunk = Marshal.PtrToStructure<SpaChunk>(spaData.chunk);
+                if (chunk.size > 0)
+                {
+                    dataSize = chunk.size;
+                }
+            }
+
+            // Limit data size to expectedSize if necessary
+            if (dataSize > expectedSize)
+            {
+                dataSize = (uint)expectedSize;
+            }
+
+            if (spaData.data == IntPtr.Zero)
+            {
+                throw new Exception("spa_data.data is null.");
+            }
+
+            byte[] data = new byte[dataSize];
+            Marshal.Copy(spaData.data, data, 0, (int)dataSize);
             return data;
         }
         #endregion
 
         #region Constants and Delegates
-        // --- From pipewire/stream.h ---
+        // Constants and delegates from pipewire/stream.h
         public const int PW_DIRECTION_INPUT = 0;
         public const uint PW_ID_ANY = 0;
         public const uint PW_STREAM_FLAG_AUTOCONNECT = 1;
@@ -272,11 +353,11 @@ namespace RemoteMaster.Host.Linux.Helpers
         public struct pw_stream_events
         {
             public uint version;
-            public nint stateChanged; // from pw_stream_events.destroy / state_changed
-            public nint process;      // process callback – required
-            public nint addBuffer;    // optional callback
-            public nint removeBuffer; // optional callback
-            public nint drained;      // optional callback
+            public nint stateChanged; // Callback for state change events
+            public nint process;      // Process callback – required
+            public nint addBuffer;    // Optional callback when a buffer is added
+            public nint removeBuffer; // Optional callback when a buffer is removed
+            public nint drained;      // Optional callback when buffers are drained
         }
         #endregion
     }
