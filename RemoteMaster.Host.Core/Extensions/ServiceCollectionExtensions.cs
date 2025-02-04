@@ -43,7 +43,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
-        services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
         services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<ISyncIndicatorService, SyncIndicatorService>();

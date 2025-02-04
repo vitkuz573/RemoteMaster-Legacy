@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 
-namespace RemoteMaster.Host.Core.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturingService screenCapturingService, ILogger<ScreenCastingService> logger) : IScreenCastingService
 {
