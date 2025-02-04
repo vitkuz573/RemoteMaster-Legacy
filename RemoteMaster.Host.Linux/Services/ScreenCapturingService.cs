@@ -1,67 +1,65 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev.
+﻿// DummyScreenCapturingService.cs
+// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Linux.Services;
 
 /// <summary>
-/// Abstract base class for screen capturing services.
-/// Provides default implementations for display enumeration and other common methods.
+/// A dummy implementation of IScreenCapturingService.
+/// Returns default values without throwing exceptions.
 /// </summary>
-public abstract class ScreenCapturingService : IScreenCapturingService
+public class ScreenCapturingService : IScreenCapturingService
 {
     /// <summary>
-    /// Retrieves the next captured frame as a byte array.
+    /// Returns a dummy frame (null in this case).
     /// </summary>
-    /// <param name="connectionId">A connection identifier.</param>
-    /// <returns>Raw frame data or null if unavailable.</returns>
-    public abstract byte[]? GetNextFrame(string connectionId);
-
-    /// <summary>
-    /// Retrieves a collection of connected displays.
-    /// </summary>
-    public virtual IEnumerable<Display> GetDisplays()
+    public byte[]? GetNextFrame(string connectionId)
     {
-        return Screen.AllScreens.Select(s => new Display
-        {
-            Name = s.DeviceName,
-            IsPrimary = s.Primary,
-            Resolution = s.Bounds.Size
-        });
+        // Return null or a default byte array as needed.
+        return null;
     }
 
     /// <summary>
-    /// Finds a display by its device name.
+    /// Returns an empty list of displays.
     /// </summary>
-    public virtual IScreen? FindScreenByName(string displayName)
+    public IEnumerable<Display> GetDisplays()
     {
-        return Screen.AllScreens.FirstOrDefault(s => s.DeviceName == displayName);
+        return new List<Display>();
     }
 
     /// <summary>
-    /// Sets the selected screen for capture.
-    /// Default implementation is a no‑op.
+    /// Always returns null for finding a screen by name.
     /// </summary>
-    public virtual void SetSelectedScreen(string connectionId, IScreen display)
+    public IScreen? FindScreenByName(string displayName)
     {
-        // No-op by default.
+        return null;
     }
 
     /// <summary>
-    /// Retrieves a thumbnail image.
-    /// Default implementation returns a full‑sized frame.
+    /// Does nothing in this dummy implementation.
     /// </summary>
-    public virtual byte[]? GetThumbnail(string connectionId)
+    public void SetSelectedScreen(string connectionId, IScreen display)
+    {
+        // No operation.
+    }
+
+    /// <summary>
+    /// Returns a dummy thumbnail (same as GetNextFrame).
+    /// </summary>
+    public byte[]? GetThumbnail(string connectionId)
     {
         return GetNextFrame(connectionId);
     }
 
     /// <summary>
-    /// Disposes resources used by the screen capturing service.
+    /// Cleans up any resources (none in this dummy implementation).
     /// </summary>
-    public abstract void Dispose();
+    public void Dispose()
+    {
+        // Nothing to dispose.
+    }
 }
