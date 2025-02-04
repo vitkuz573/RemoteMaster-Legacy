@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Linux.Helpers
     //       uint32_t size;  // size of the body
     //       uint32_t type;  // type code
     //   };
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct SpaPod
     {
         public uint size; // Size of the body (in bytes)
@@ -31,7 +31,7 @@ namespace RemoteMaster.Host.Linux.Helpers
     //       uint32_t framerate_num;
     //       uint32_t framerate_den;
     //   };
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct VideoFormatPod
     {
         public SpaPod pod;         // From spa/pod/pod.h
@@ -54,7 +54,7 @@ namespace RemoteMaster.Host.Linux.Helpers
     //       int dataType;
     //       int metaType;
     //   };
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct BufferParamPod
     {
         public SpaPod pod;         // From spa/pod/pod.h
@@ -138,51 +138,67 @@ namespace RemoteMaster.Host.Linux.Helpers
         #endregion
 
         #region Building SPA PODs
-        // --- From spa/pod/pod.h, spa/pod/builder.h ---
-        // Use original names and similar layout.
-        // Verify these constant values against your headers.
+
         private const uint SPA_TYPE_Format = 0x100;         // Original header value? (verify)
         private const uint SPA_TYPE_BufferParam = 0x101;      // Original header value? (verify)
         private const uint SPA_VIDEO_FORMAT_RGB = 0x34325241; // From header: 'AR24' little-endian
 
-        /// <summary>
-        /// Build a VideoFormatPod.
-        /// Based on struct VideoFormatPod from spa/pod/pod.h.
-        /// </summary>
-        public static nint BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
+        private static int RoundUp8(int size)
         {
-            VideoFormatPod pod = new VideoFormatPod
+            return (size + 7) / 8 * 8;
+        }
+
+        public static IntPtr BuildVideoFormatPod(uint width, uint height, uint framerateNum, uint framerateDen)
+        {
+            var structSize = Marshal.SizeOf<VideoFormatPod>();
+            var headerSize = Marshal.SizeOf<SpaPod>();
+            var payloadSize = (uint)(structSize - headerSize);
+
+            var pod = new VideoFormatPod
             {
                 pod = new SpaPod
                 {
-                    // Body size = total structure size minus header size.
-                    size = (uint)(Marshal.SizeOf<VideoFormatPod>() - Marshal.SizeOf<SpaPod>()),
+                    size = payloadSize,
                     type = SPA_TYPE_Format
                 },
-                format = SPA_VIDEO_FORMAT_RGB, // Using RGB as an example.
+                format = SPA_VIDEO_FORMAT_RGB,
                 width = width,
                 height = height,
                 framerate_num = framerateNum,
                 framerate_den = framerateDen
             };
 
-            int sizeOfPod = Marshal.SizeOf<VideoFormatPod>();
-            nint podPtr = Marshal.AllocHGlobal(sizeOfPod);
+            var paddedSize = RoundUp8(structSize);
+            var podPtr = Marshal.AllocHGlobal(paddedSize);
+
             Marshal.StructureToPtr(pod, podPtr, false);
+
+            var padding = paddedSize - structSize;
+
+            if (padding <= 0)
+            {
+                return podPtr;
+            }
+
+            for (var i = 0; i < padding; i++)
+            {
+                Marshal.WriteByte(podPtr, structSize + i, 0);
+            }
+
             return podPtr;
         }
 
-        /// <summary>
-        /// Build a BufferParamPod.
-        /// Based on struct BufferParamPod from SPA negotiation headers.
-        /// </summary>
-        public static nint BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
+        public static IntPtr BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
         {
-            BufferParamPod pod = new BufferParamPod
+            var structSize = Marshal.SizeOf<BufferParamPod>();
+            var headerSize = Marshal.SizeOf<SpaPod>();
+            var payloadSize = (uint)(structSize - headerSize);
+
+            var pod = new BufferParamPod
             {
                 pod = new SpaPod
                 {
-                    size = (uint)(Marshal.SizeOf<BufferParamPod>() - Marshal.SizeOf<SpaPod>()),
+                    size = payloadSize,
                     type = SPA_TYPE_BufferParam
                 },
                 buffers = buffers,
@@ -194,9 +210,23 @@ namespace RemoteMaster.Host.Linux.Helpers
                 metaType = metaType
             };
 
-            int sizeOfPod = Marshal.SizeOf<BufferParamPod>();
-            nint podPtr = Marshal.AllocHGlobal(sizeOfPod);
+            var paddedSize = RoundUp8(structSize);
+            var podPtr = Marshal.AllocHGlobal(paddedSize);
+            
             Marshal.StructureToPtr(pod, podPtr, false);
+
+            var padding = paddedSize - structSize;
+
+            if (padding <= 0)
+            {
+                return podPtr;
+            }
+
+            for (var i = 0; i < padding; i++)
+            {
+                Marshal.WriteByte(podPtr, structSize + i, 0);
+            }
+
             return podPtr;
         }
         #endregion
