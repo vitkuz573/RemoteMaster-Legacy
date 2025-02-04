@@ -79,50 +79,50 @@ public static class PipewireNative
 
     #region PipeWire Core Functions
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_init", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_init(ref int argc, ref nint argv);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_main_loop_new", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_main_loop_new(nint properties);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_main_loop_get_loop", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_main_loop_get_loop(nint mainLoop);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_main_loop_run", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_main_loop_run(nint mainLoop);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_main_loop_quit", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_main_loop_quit(nint mainLoop);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_main_loop_destroy", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_main_loop_destroy(nint mainLoop);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_stream_new_simple", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_stream_new_simple(nint loop, [MarshalAs(UnmanagedType.LPStr)] string name, nint properties, ref pw_stream_events events, nint userData);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_stream_connect", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_connect(nint stream, int direction, uint target_id, uint flags, nint parameters, uint n_params);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_stream_dequeue_buffer", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_stream_dequeue_buffer(nint stream);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_stream_queue_buffer", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_queue_buffer(nint stream, nint buffer);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_stream_disconnect", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_disconnect(nint stream);
 
-    [DllImport(LibraryName)]
+    [DllImport(LibraryName, EntryPoint = "pw_stream_destroy", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_stream_destroy(nint stream);
    
     #endregion
 
     #region Properties Functions
 
-    [DllImport(LibraryName, EntryPoint = "pw_properties_new")]
+    [DllImport(LibraryName, EntryPoint = "pw_properties_new", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_properties_new([MarshalAs(UnmanagedType.LPStr)] string key1, [MarshalAs(UnmanagedType.LPStr)] string value1, [MarshalAs(UnmanagedType.LPStr)] string key2, [MarshalAs(UnmanagedType.LPStr)] string value2, nint end);
 
-    [DllImport(LibraryName, EntryPoint = "pw_properties_set")]
+    [DllImport(LibraryName, EntryPoint = "pw_properties_set", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_properties_set(nint properties, [MarshalAs(UnmanagedType.LPStr)] string key, [MarshalAs(UnmanagedType.LPStr)] string value);
     
     #endregion
