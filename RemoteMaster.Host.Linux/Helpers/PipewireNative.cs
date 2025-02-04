@@ -9,68 +9,62 @@ namespace RemoteMaster.Host.Linux.Helpers;
 [StructLayout(LayoutKind.Sequential, Pack = 8)]
 public struct SpaPod
 {
-    public uint size; // Size of the body in bytes
-    public uint type; // Type code (as defined in SPA)
+    public uint size;
+    public uint type;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 8)]
 public struct VideoFormatPod
 {
-    public SpaPod pod;         // Base spa_pod header
-    public uint format;        // Video format code (e.g. RGB)
-    public uint width;         // Video width
-    public uint height;        // Video height
-    public uint framerate_num; // Frame rate numerator
-    public uint framerate_den; // Frame rate denominator
+    public SpaPod pod;        
+    public uint format;       
+    public uint width;        
+    public uint height;       
+    public uint framerate_num;
+    public uint framerate_den;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 8)]
 public struct BufferParamPod
 {
-    public SpaPod pod;      // Base spa_pod header
-    public uint buffers;    // Number of buffers (from SPA specs)
-    public uint blocks;     // Number of blocks per buffer
-    public uint size;       // Total size per buffer
-    public uint stride;     // Stride (bytes per row)
-    public uint align;      // Required memory alignment
-    public int dataType;    // Data type flags (per SPA)
-    public int metaType;    // Metadata type (if any)
+    public SpaPod pod;  
+    public uint buffers;
+    public uint blocks; 
+    public uint size;   
+    public uint stride; 
+    public uint align;  
+    public int dataType;
+    public int metaType;
 }
 
-// === SPA Buffer Structures for Data Extraction ===
-// The PipeWire buffer (spa_buffer) contains an array of spa_data elements.
-// Here we define a simplified version of these structures.
-
-// Represents a PipeWire buffer (spa_buffer)
 [StructLayout(LayoutKind.Sequential)]
 public struct SpaBuffer
 {
-    public uint n_metas;   // Number of metadata elements
-    public uint n_datas;   // Number of spa_data elements
-    public nint metas;   // Pointer to an array of spa_meta (not used in this example)
-    public nint datas;   // Pointer to an array of spa_data elements
+    public uint n_metas;
+    public uint n_datas;
+    public nint metas;  
+    public nint datas;  
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SpaData
 {
-    public uint type;       // Memory type (e.g. SPA_DATA_MemPtr, SPA_DATA_DmaBuf, etc.)
-    public uint flags;      // Data flags (e.g. SPA_DATA_FLAG_READABLE, SPA_DATA_FLAG_MAPPABLE, etc.)
-    public long fd;         // File descriptor (if applicable, e.g. for DMA-BUF)
-    public uint mapoffset;  // Offset for mmap (usually page aligned)
-    public uint maxsize;    // Maximum size of the data block
-    public nint data;     // Direct pointer to data (if available)
-    public nint chunk;    // Pointer to a spa_chunk structure with valid data info (optional)
+    public uint type;     
+    public uint flags;    
+    public long fd;       
+    public uint mapoffset;
+    public uint maxsize;  
+    public nint data;     
+    public nint chunk;    
 }
 
-// Represents a valid data chunk descriptor (spa_chunk)
 [StructLayout(LayoutKind.Sequential)]
 public struct SpaChunk
 {
-    public uint offset; // Offset of the valid data within the memory block
-    public uint size;   // Size of the valid data
-    public int stride;  // Stride (bytes per row, if applicable)
-    public int flags;   // Flags (e.g. SPA_CHUNK_FLAG_EMPTY, etc.)
+    public uint offset;
+    public uint size;  
+    public int stride; 
+    public int flags;  
 }
 
 public static class PipewireNative
@@ -129,9 +123,9 @@ public static class PipewireNative
 
     #region Building SPA PODs
     
-    private const uint SPA_TYPE_Format = 0x100;         // (verify against your SPA headers)
-    private const uint SPA_TYPE_BufferParam = 0x101;      // (verify against your SPA headers)
-    private const uint SPA_VIDEO_FORMAT_RGB = 0x34325241; // 'AR24' in little-endian
+    private const uint SPA_TYPE_Format = 0x100;         
+    private const uint SPA_TYPE_BufferParam = 0x101;     
+    private const uint SPA_VIDEO_FORMAT_RGB = 0x34325241;
 
     private static int RoundUp8(int size)
     {
@@ -201,6 +195,7 @@ public static class PipewireNative
         Marshal.StructureToPtr(pod, podPtr, false);
 
         var padding = paddedSize - structSize;
+
         for (var i = 0; i < padding; i++)
         {
             Marshal.WriteByte(podPtr, structSize + i, 0);
@@ -265,6 +260,7 @@ public static class PipewireNative
         
         return data;
     }
+
     #endregion
 
     #region Constants and Delegates
@@ -281,24 +277,15 @@ public static class PipewireNative
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void PwStreamProcessDelegate(nint userData);
 
-    // Original structure from pipewire/stream.h:
-    //   struct pw_stream_events {
-    //       uint32_t version;
-    //       void (*stateChanged)(void *data, enum pw_stream_state old, enum pw_stream_state state, const char *error);
-    //       void (*process)(void *data);
-    //       void (*addBuffer)(void *data, struct pw_buffer *buffer);
-    //       void (*removeBuffer)(void *data, struct pw_buffer *buffer);
-    //       void (*drained)(void *data);
-    //   };
     [StructLayout(LayoutKind.Sequential)]
     public struct pw_stream_events
     {
         public uint version;
-        public nint stateChanged; // Callback for state change events
-        public nint process;      // Process callback – required
-        public nint addBuffer;    // Optional callback when a buffer is added
-        public nint removeBuffer; // Optional callback when a buffer is removed
-        public nint drained;      // Optional callback when buffers are drained
+        public nint stateChanged;
+        public nint process;     
+        public nint addBuffer;   
+        public nint removeBuffer;
+        public nint drained;     
     }
 
     #endregion
