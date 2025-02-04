@@ -275,7 +275,31 @@ public static class PipewireNative
     public const int PW_VERSION_STREAM_EVENTS = 2;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamDestroyDelegate(nint userData);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamStateChangedDelegate(nint userData, int oldState, int newState, [MarshalAs(UnmanagedType.LPUTF8Str)] string error);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamControlInfoDelegate(nint userData, uint id, nint control);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamIoChangedDelegate(nint userData, uint id, nint area, uint size);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamParamChangedDelegate(nint userData, uint id, nint param);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamBufferDelegate(nint userData, nint buffer);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void PwStreamProcessDelegate(nint userData);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamCommandDelegate(nint userData, nint command);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PwStreamTriggerDoneDelegate(nint userData);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct pw_stream_events
