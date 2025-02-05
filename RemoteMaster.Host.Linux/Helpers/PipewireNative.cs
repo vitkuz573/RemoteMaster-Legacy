@@ -126,11 +126,11 @@ public static class PipewireNative
             objectType: SPA_TYPE_OBJECT_Format,
             objectId: SPA_PARAM_Format,
             // Property 1: mediaType
-            (SPA_FORMAT_mediaType, 0u, () => builder.WriteInt((int)SPA_MEDIA_TYPE_video)),
+            (SPA_FORMAT_mediaType, 0u, () => builder.WriteId(SPA_MEDIA_TYPE_video)),
             // Property 2: mediaSubtype
-            (SPA_FORMAT_mediaSubtype, 0u, () => builder.WriteInt((int)SPA_MEDIA_SUBTYPE_raw)),
+            (SPA_FORMAT_mediaSubtype, 0u, () => builder.WriteId(SPA_MEDIA_SUBTYPE_raw)),
             // Property 3: video format
-            (SPA_FORMAT_VIDEO_format, 0u, () => builder.WriteInt((int)SPA_VIDEO_FORMAT_RGB)),
+            (SPA_FORMAT_VIDEO_format, 0u, () => builder.WriteId(SPA_VIDEO_FORMAT_RGB)),
             // Property 4: video size as a Rectangle POD
             (SPA_FORMAT_VIDEO_size, 0u, () => builder.WriteRectangle(width, height))
         );
