@@ -20,6 +20,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" />
+    <PackageReference Include="SkiaSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj" />
   </ItemGroup>
 

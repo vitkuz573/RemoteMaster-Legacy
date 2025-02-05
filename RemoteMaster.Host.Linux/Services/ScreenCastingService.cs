@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -44,7 +45,9 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
 
     private void InitializePipeWire()
     {
-        var primaryScreen = Screen.PrimaryScreen;
+        var primaryScreen = new Screen(Rectangle.Empty, "dummy", false);
+
+        // var primaryScreen = Screen.PrimaryScreen;
 
         if (primaryScreen != null)
         {
