@@ -10,8 +10,6 @@ using SkiaSharp;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-#pragma warning disable
-
 /// <summary>
 /// Linux screen capturing service that uses X11 via the X11Native helper.
 /// </summary>
@@ -44,18 +42,13 @@ public class X11CapturingService : ScreenCapturingService
     {
         ArgumentNullException.ThrowIfNull(codec);
 
+#pragma warning disable CA2000
         var currentFrame = new SKBitmap(bounds.Width, bounds.Height);
+#pragma warning restore CA2000
 
         var window = X11Native.XDefaultRootWindow(_display);
 
-        var imagePointer = X11Native.XGetImage(_display,
-            window,
-            bounds.X,
-            bounds.Y,
-            bounds.Width,
-            bounds.Height,
-            ~0,
-            2);
+        var imagePointer = X11Native.XGetImage(_display, window, bounds.X, bounds.Y, bounds.Width, bounds.Height, ~0, 2);
 
         if (imagePointer == nint.Zero)
         {
@@ -72,6 +65,7 @@ public class X11CapturingService : ScreenCapturingService
             var scan2 = (byte*)image.data.ToPointer();
             var bytesPerPixel = currentFrame.BytesPerPixel;
             var totalSize = currentFrame.Height * currentFrame.Width * bytesPerPixel;
+            
             for (var counter = 0; counter < totalSize - bytesPerPixel; counter++)
             {
                 scan1[counter] = scan2[counter];
@@ -79,6 +73,7 @@ public class X11CapturingService : ScreenCapturingService
         }
 
         Marshal.DestroyStructure<X11Native.XImage>(imagePointer);
+
         X11Native.XDestroyImage(imagePointer);
 
         return EncodeImage(currentFrame, imageQuality, codec);
@@ -93,8 +88,8 @@ public class X11CapturingService : ScreenCapturingService
     /// <returns>A byte array containing the encoded image.</returns>
     private static byte[] EncodeImage(SKBitmap image, int quality, string codec)
     {
-        // Определяем формат кодирования по MIME-типу
-        SKEncodedImageFormat format = SKEncodedImageFormat.Png;
+        var format = SKEncodedImageFormat.Png;
+
         if (codec.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase))
         {
             format = SKEncodedImageFormat.Jpeg;
@@ -103,21 +98,18 @@ public class X11CapturingService : ScreenCapturingService
         {
             format = SKEncodedImageFormat.Png;
         }
-        // Для остальных случаев по умолчанию используем PNG
 
-        // Преобразуем SKBitmap в SKImage
         using var skImage = SKImage.FromBitmap(image);
 
-        // Кодируем изображение в указанный формат с заданным качеством
         using var data = skImage.Encode(format, quality);
 
-        // Возвращаем результат в виде массива байтов
         return data.ToArray();
     }
 
     public override void Dispose()
     {
         base.Dispose();
+
         if (_display != nint.Zero)
         {
             X11Native.XCloseDisplay(_display);

@@ -9,28 +9,15 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class UserInstanceService : IUserInstanceService
+public class UserInstanceService(IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger) : IUserInstanceService
 {
     private const string Command = "user";
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
-    private readonly IInstanceManagerService _instanceManagerService;
-    private readonly IProcessService _processService;
-    private readonly IFileSystem _fileSystem;
-    private readonly ILogger<UserInstanceService> _logger;
-
-    public UserInstanceService(IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
-    {
-        _instanceManagerService = instanceManagerService;
-        _processService = processService;
-        _fileSystem = fileSystem;
-        _logger = logger;
-    }
-
-    public bool IsRunning => _processService
-        .FindProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath))
-        .Any(p => _processService.HasProcessArgument(p, Command));
+    public bool IsRunning => processService
+        .FindProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath))
+        .Any(p => processService.HasProcessArgument(p, Command));
 
     public void Start()
     {
@@ -38,34 +25,34 @@ public class UserInstanceService : IUserInstanceService
         {
             var processId = StartNewInstance();
 
-            _logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
+            logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
+            logger.LogError(e, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
         }
     }
 
     public void Stop()
     {
-        var processes = _processService.FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = processService.FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {
-            if (!_processService.HasProcessArgument(process, Command))
+            if (!processService.HasProcessArgument(process, Command))
             {
                 continue;
             }
 
             try
             {
-                _logger.LogInformation("Attempting to kill {Command} instance with ID: {ProcessId}.", Command, process.Id);
+                logger.LogInformation("Attempting to kill {Command} instance with ID: {ProcessId}.", Command, process.Id);
                 process.Kill();
-                _logger.LogInformation("Successfully stopped an {Command} instance of the host. Process ID: {ProcessId}", Command, process.Id);
+                logger.LogInformation("Successfully stopped an {Command} instance of the host. Process ID: {ProcessId}", Command, process.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error stopping {Command} instance of the host. Process ID: {ProcessId}. Message: {Message}", Command, process.Id, ex.Message);
+                logger.LogError(ex, "Error stopping {Command} instance of the host. Process ID: {ProcessId}. Message: {Message}", Command, process.Id, ex.Message);
             }
         }
     }
@@ -89,6 +76,6 @@ public class UserInstanceService : IUserInstanceService
             CreateNoWindow = true
         };
 
-        return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);
+        return instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 }

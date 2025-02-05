@@ -107,6 +107,8 @@ internal class Program
 
     private static void ConfigureServices(IServiceCollection services, string commandName)
     {
+        services.AddCoreServices(commandName);
+
         services.AddHttpContextAccessor();
 
         services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
@@ -117,15 +119,12 @@ internal class Program
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IHardwareService, HardwareService>();
-        services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IScreenCapturingService, X11CapturingService>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<IScreenProvider, ScreenProvider>();
         services.AddSingleton<IService, HostService>();
-
-        services.AddCoreServices(commandName);
 
         if (commandName != "install")
         {

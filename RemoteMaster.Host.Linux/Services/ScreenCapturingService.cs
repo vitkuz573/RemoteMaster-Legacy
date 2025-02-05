@@ -82,26 +82,26 @@ public abstract class ScreenCapturingService(IAppState appState, IOverlayManager
     /// </summary>
     public virtual void SetSelectedScreen(string connectionId, IScreen display)
     {
-        if (display == null)
-        {
-            throw new ArgumentNullException(nameof(display));
-        }
+        ArgumentNullException.ThrowIfNull(display);
 
         if (!appState.TryGetViewer(connectionId, out var viewer) || viewer == null)
         {
             logger.LogError("Viewer not found for connection: {ConnectionId}", connectionId);
+            
             return;
         }
 
         var capturingContext = viewer.CapturingContext;
-        if (capturingContext.SelectedScreen != null &&
-            capturingContext.SelectedScreen.Equals(display))
+        
+        if (capturingContext.SelectedScreen != null && capturingContext.SelectedScreen.Equals(display))
         {
             logger.LogInformation("Selected screen is already set for connection: {ConnectionId}", connectionId);
+            
             return;
         }
 
         capturingContext.SelectedScreen = display;
+
         logger.LogInformation("Selected screen set to {ScreenName} for connection: {ConnectionId}", display.DeviceName, connectionId);
     }
 
@@ -117,6 +117,7 @@ public abstract class ScreenCapturingService(IAppState appState, IOverlayManager
         if (targetScreen == null)
         {
             logger.LogError("No screen available for thumbnail generation.");
+            
             return null;
         }
 

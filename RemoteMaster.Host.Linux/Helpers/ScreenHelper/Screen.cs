@@ -11,35 +11,22 @@ namespace RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 /// <summary>
 /// Represents a screen (monitor) on Linux.
 /// </summary>
-public class Screen : IScreen
+public class Screen(Rectangle bounds, string deviceName, bool primary) : IScreen
 {
     /// <summary>
     /// Gets the bounds of the screen.
     /// </summary>
-    public Rectangle Bounds { get; }
+    public Rectangle Bounds { get; } = bounds;
 
     /// <summary>
     /// Gets the device name of the screen.
     /// </summary>
-    public string DeviceName { get; }
+    public string DeviceName { get; } = deviceName;
 
     /// <summary>
     /// Indicates whether this screen is the primary screen.
     /// </summary>
-    public bool Primary { get; }
-
-    /// <summary>
-    /// Creates a new instance of the <see cref="Screen"/> class.
-    /// </summary>
-    /// <param name="bounds">The bounds of the screen.</param>
-    /// <param name="deviceName">The device name of the screen.</param>
-    /// <param name="primary">True if this is the primary screen; otherwise, false.</param>
-    public Screen(Rectangle bounds, string deviceName, bool primary)
-    {
-        Bounds = bounds;
-        DeviceName = deviceName;
-        Primary = primary;
-    }
+    public bool Primary { get; } = primary;
 
     /// <summary>
     /// Retrieves the monitors (screens) from the given X11 display and window.
@@ -64,7 +51,7 @@ public class Screen : IScreen
         }
         else
         {
-            var structSize = Marshal.SizeOf(typeof(XRandrNative.XRRMonitorInfo));
+            var structSize = Marshal.SizeOf<XRandrNative.XRRMonitorInfo>();
             
             for (var i = 0; i < monitorCount; i++)
             {
@@ -80,7 +67,7 @@ public class Screen : IScreen
             XRandrNative.XRRFreeMonitors(monitorsPtr);
         }
 
-        return screens.ToArray();
+        return [.. screens];
     }
 
     /// <summary>
