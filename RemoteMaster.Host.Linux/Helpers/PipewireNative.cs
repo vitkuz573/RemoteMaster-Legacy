@@ -244,13 +244,13 @@ public static class PipewireNative
 
     #region SPA_PARAM_BUFFERS_* Values
 
-    private const uint SPA_PARAM_BUFFERS_buffers = 1;
-    private const uint SPA_PARAM_BUFFERS_blocks = 2;
-    private const uint SPA_PARAM_BUFFERS_size = 3;
-    private const uint SPA_PARAM_BUFFERS_stride = 4;
-    private const uint SPA_PARAM_BUFFERS_align = 5;
-    private const uint SPA_PARAM_BUFFERS_dataType = 6;
-    private const uint SPA_PARAM_BUFFERS_metaType = 7;
+    private const uint SPA_PARAM_BUFFERS_buffers = 0;
+    private const uint SPA_PARAM_BUFFERS_blocks = 1;
+    private const uint SPA_PARAM_BUFFERS_size = 2;
+    private const uint SPA_PARAM_BUFFERS_stride = 3;
+    private const uint SPA_PARAM_BUFFERS_align = 4;
+    private const uint SPA_PARAM_BUFFERS_dataType = 5;
+    private const uint SPA_PARAM_BUFFERS_metaType = 6;
 
     #endregion
 
