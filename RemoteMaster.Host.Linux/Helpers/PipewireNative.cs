@@ -135,11 +135,13 @@ public static class PipewireNative
             (SPA_FORMAT_mediaSubtype, 0u, () => builder.WriteInt((int)SPA_MEDIA_SUBTYPE_raw)),
             // Property 3: video format
             (SPA_FORMAT_VIDEO_format, 0u, () => builder.WriteInt((int)SPA_VIDEO_FORMAT_RGB)),
-            // Property 4: video width
-            (SPA_FORMAT_VIDEO_width, 0u, () => builder.WriteInt((int)width)),
-            // Property 5: video height
-            (SPA_FORMAT_VIDEO_height, 0u, () => builder.WriteInt((int)height))
-        );
+            // Property 4: video size
+            (SPA_FORMAT_VIDEO_size, 0u, () =>
+                {
+                    builder.WriteInt((int)width);
+                    builder.WriteInt((int)height);
+                }
+            ));
 
         // Retrieve the managed byte array containing the POD.
         var podBytes = builder.GetBuffer();
@@ -260,11 +262,10 @@ public static class PipewireNative
 
     #region SPA_FORMAT_* Values
 
-    private const uint SPA_FORMAT_mediaType = 1;
-    private const uint SPA_FORMAT_mediaSubtype = 2;
-    private const uint SPA_FORMAT_VIDEO_format = 3;
-    private const uint SPA_FORMAT_VIDEO_width = 4;
-    private const uint SPA_FORMAT_VIDEO_height = 5;
+    private const uint SPA_FORMAT_mediaType = 0;
+    private const uint SPA_FORMAT_mediaSubtype = 1;
+    private const uint SPA_FORMAT_VIDEO_format = 2;
+    private const uint SPA_FORMAT_VIDEO_size = 3;
 
     #endregion
 
