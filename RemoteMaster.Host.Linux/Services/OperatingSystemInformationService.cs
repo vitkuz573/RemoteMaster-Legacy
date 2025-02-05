@@ -13,32 +13,40 @@ public class OperatingSystemInformationService(IFileSystem fileSystem) : IOperat
     {
         try
         {
-            if (fileSystem.File.Exists("/etc/os-release"))
-            {
-                foreach (var line in fileSystem.File.ReadAllLines("/etc/os-release"))
-                {
-                    if (line.StartsWith("PRETTY_NAME="))
-                    {
-                        return line.Split('=')[1].Trim('"');
-                    }
-                }
-            }
-            else if (fileSystem.File.Exists("/etc/lsb-release"))
-            {
-                foreach (var line in fileSystem.File.ReadAllLines("/etc/lsb-release"))
-                {
-                    if (line.StartsWith("DISTRIB_DESCRIPTION="))
-                    {
-                        return line.Split('=')[1].Trim('"');
-                    }
-                }
-            }
+            var osName = GetValueFromFile("/etc/os-release", "PRETTY_NAME")
+                      ?? GetValueFromFile("/etc/lsb-release", "DISTRIB_DESCRIPTION");
 
-            return "Unknown Linux Distribution";
+            return osName ?? "Unknown Linux Distribution";
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException("Failed to retrieve Linux OS name", ex);
         }
+    }
+
+    private string? GetValueFromFile(string path, string key)
+    {
+        if (!fileSystem.File.Exists(path))
+        {
+            return null;
+        }
+
+        var lines = fileSystem.File.ReadAllLines(path);
+
+        var line = lines.FirstOrDefault(l => l.StartsWith($"{key}="));
+        
+        if (line is null)
+        {
+            return null;
+        }
+
+        var parts = line.Split('=', 2);
+        
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        return parts[1].Trim().Trim('"');
     }
 }
