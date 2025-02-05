@@ -45,67 +45,68 @@ public struct spa_chunk
 
 public static class PipewireNative
 {
-    private const string LibraryName = "libpipewire-0.3";
+    private const string PipeWireLibraryName = "libpipewire-0.3";
+    private const string SpaLibraryName = "libpipewire-0.3";
 
     #region PipeWire Core Functions
 
-    [DllImport(LibraryName, EntryPoint = "pw_init", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_init", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_init(ref int argc, ref nint argv);
 
-    [DllImport(LibraryName, EntryPoint = "pw_main_loop_new", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_main_loop_new", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_main_loop_new(nint properties);
 
-    [DllImport(LibraryName, EntryPoint = "pw_main_loop_get_loop", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_main_loop_get_loop", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_main_loop_get_loop(nint mainLoop);
 
-    [DllImport(LibraryName, EntryPoint = "pw_main_loop_run", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_main_loop_run", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_main_loop_run(nint mainLoop);
 
-    [DllImport(LibraryName, EntryPoint = "pw_main_loop_quit", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_main_loop_quit", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_main_loop_quit(nint mainLoop);
 
-    [DllImport(LibraryName, EntryPoint = "pw_main_loop_destroy", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_main_loop_destroy", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_main_loop_destroy(nint mainLoop);
 
-    [DllImport(LibraryName, EntryPoint = "pw_stream_new_simple", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_stream_new_simple", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_stream_new_simple(nint loop, [MarshalAs(UnmanagedType.LPStr)] string name, nint properties, ref pw_stream_events events, nint userData);
 
-    [DllImport(LibraryName, EntryPoint = "pw_stream_connect", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_stream_connect", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_connect(nint stream, int direction, uint target_id, uint flags, nint parameters, uint n_params);
 
-    [DllImport(LibraryName, EntryPoint = "pw_stream_dequeue_buffer", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_stream_dequeue_buffer", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_stream_dequeue_buffer(nint stream);
 
-    [DllImport(LibraryName, EntryPoint = "pw_stream_queue_buffer", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_stream_queue_buffer", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_queue_buffer(nint stream, nint buffer);
 
-    [DllImport(LibraryName, EntryPoint = "pw_stream_disconnect", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_stream_disconnect", CallingConvention = CallingConvention.Cdecl)]
     public static extern int pw_stream_disconnect(nint stream);
 
-    [DllImport(LibraryName, EntryPoint = "pw_stream_destroy", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_stream_destroy", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_stream_destroy(nint stream);
    
     #endregion
 
     #region Properties Functions
 
-    [DllImport(LibraryName, EntryPoint = "pw_properties_new", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_properties_new", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint pw_properties_new([MarshalAs(UnmanagedType.LPStr)] string key1, [MarshalAs(UnmanagedType.LPStr)] string value1, [MarshalAs(UnmanagedType.LPStr)] string key2, [MarshalAs(UnmanagedType.LPStr)] string value2, nint end);
 
-    [DllImport(LibraryName, EntryPoint = "pw_properties_set", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(PipeWireLibraryName, EntryPoint = "pw_properties_set", CallingConvention = CallingConvention.Cdecl)]
     public static extern void pw_properties_set(nint properties, [MarshalAs(UnmanagedType.LPStr)] string key, [MarshalAs(UnmanagedType.LPStr)] string value);
 
     #endregion
 
     #region SPA POD Builder Functions
 
-    [DllImport(LibraryName, EntryPoint = "spa_pod_builder_init", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(SpaLibraryName, EntryPoint = "spa_pod_builder_init", CallingConvention = CallingConvention.Cdecl)]
     public static extern void spa_pod_builder_init(nint builder, nint data, uint size);
 
-    [DllImport(LibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(SpaLibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint spa_pod_builder_add_object(nint builder, uint type, uint id, uint key1, nint value1, uint key2, nint value2, uint key3, nint value3, uint key4, nint value4, uint key5, nint value5);
 
-    [DllImport(LibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(SpaLibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
     public static extern nint spa_pod_builder_add_object(nint builder, uint type, uint id, uint key1, nint value1, uint key2, nint value2, uint key3, nint value3, uint key4, nint value4, uint key5, nint value5, uint key6, nint value6, uint key7, nint value7);
 
     #endregion
