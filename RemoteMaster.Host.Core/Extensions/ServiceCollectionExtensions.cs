@@ -68,6 +68,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAssemblyProvider, AssemblyProvider>();
         services.AddSingleton<IFileVersionInfoProvider, FileVersionInfoProvider>();
         services.AddSingleton<ICommandSender, CommandSender>();
+        services.AddSingleton<IScreenCastingService, ScreenCastingService>();
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 

@@ -146,7 +146,6 @@ internal class Program
         services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
         services.AddSingleton<IScreenProvider, ScreenProvider>();
-        services.AddSingleton<IScreenCastingService, ScreenCastingService>();
 
         services.AddSingleton<IScreenOverlay, CursorOverlay>();
 
