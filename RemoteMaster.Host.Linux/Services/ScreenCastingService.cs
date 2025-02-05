@@ -75,12 +75,15 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             throw new Exception("Failed to create PipeWire stream.");
         }
 
+        var formatPod = BuildVideoFormatPod((uint)_width, (uint)_height);
         var bufferPod = BuildBufferParamPod(4, 1, (uint)_frameSize, (uint)(_width * _bytesPerPixel), 4096, 1 << 0, 0);
 
-        var parameters = new[] { bufferPod };
-        var paramArray = Marshal.AllocHGlobal(1 * nint.Size);
+        var pods = new[] { formatPod, bufferPod };
+        var podCount = pods.Length;
 
-        Marshal.Copy(parameters, 0, paramArray, 1);
+        var paramArray = Marshal.AllocHGlobal(podCount * nint.Size);
+
+        Marshal.Copy(pods, 0, paramArray, 1);
 
         var ret = pw_stream_connect(_stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_AUTOCONNECT, paramArray, 1);
 
