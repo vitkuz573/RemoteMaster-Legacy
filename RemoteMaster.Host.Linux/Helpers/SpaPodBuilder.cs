@@ -37,7 +37,7 @@ public class SpaPodBuilder
         }
 
         // Calculate the capacity aligned to 8 bytes.
-        var alignedCapacity = ((capacity + 7) / 8) * 8;
+        var alignedCapacity = (capacity + 7) / 8 * 8;
 
         _buffer = new byte[alignedCapacity];
         _position = 0;

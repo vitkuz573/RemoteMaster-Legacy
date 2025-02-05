@@ -121,7 +121,6 @@ public static class PipewireNative
         builder.InitBuilder(1024);
 
         // Build the Object POD with objectType and objectId as defined by the SPA headers.
-        // According to the header, the "video size" property is expected to be a Rectangle.
         builder.WriteObject(
             objectType: SPA_TYPE_OBJECT_Format,
             objectId: SPA_PARAM_Format,
