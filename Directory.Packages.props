@@ -33,6 +33,7 @@
     <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="63.0.31-preview" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.6" />
     <PackageVersion Include="SkiaSharp" Version="3.116.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.25072.1" />
     <PackageVersion Include="System.DirectoryServices" Version="9.0.1" />
     <PackageVersion Include="System.IO.Abstractions" Version="21.2.8" />
