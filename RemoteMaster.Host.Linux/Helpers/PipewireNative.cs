@@ -46,7 +46,6 @@ public struct spa_chunk
 public static class PipewireNative
 {
     private const string PipeWireLibraryName = "libpipewire-0.3";
-    private const string SpaLibraryName = "libpipewire-0.3";
 
     #region PipeWire Core Functions
 
@@ -98,19 +97,6 @@ public static class PipewireNative
 
     #endregion
 
-    #region SPA POD Builder Functions
-
-    [DllImport(SpaLibraryName, EntryPoint = "spa_pod_builder_init", CallingConvention = CallingConvention.Cdecl)]
-    public static extern void spa_pod_builder_init(nint builder, nint data, uint size);
-
-    [DllImport(SpaLibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
-    public static extern nint spa_pod_builder_add_object(nint builder, uint type, uint id, uint key1, nint value1, uint key2, nint value2, uint key3, nint value3, uint key4, nint value4, uint key5, nint value5);
-
-    [DllImport(SpaLibraryName, EntryPoint = "spa_pod_builder_add_object", CallingConvention = CallingConvention.Cdecl)]
-    public static extern nint spa_pod_builder_add_object(nint builder, uint type, uint id, uint key1, nint value1, uint key2, nint value2, uint key3, nint value3, uint key4, nint value4, uint key5, nint value5, uint key6, nint value6, uint key7, nint value7);
-
-    #endregion
-
     #region Building SPA PODs
 
     private const uint SPA_TYPE_OBJECT_Format = 0x40003;
@@ -120,46 +106,52 @@ public static class PipewireNative
 
     public static nint BuildVideoFormatPod(uint width, uint height)
     {
-        var buffer = Marshal.AllocHGlobal(1024);
-        var builder = Marshal.AllocHGlobal(Marshal.SizeOf<nint>());
+        var builder = new SpaPodBuilder();
 
-        spa_pod_builder_init(builder, buffer, 1024);
+        builder.InitBuilder(1024);
 
-        var pod = spa_pod_builder_add_object(
-            builder, SPA_TYPE_OBJECT_Format, SPA_PARAM_Format,
-            SPA_FORMAT_mediaType, (nint)SPA_MEDIA_TYPE_video,
-            SPA_FORMAT_mediaSubtype, (nint)SPA_MEDIA_SUBTYPE_raw,
-            SPA_FORMAT_VIDEO_format, (nint)SPA_VIDEO_FORMAT_RGB,
-            SPA_FORMAT_VIDEO_width, (nint)width,
-            SPA_FORMAT_VIDEO_height, (nint)height
+        builder.AddObject(
+            SPA_TYPE_OBJECT_Format, SPA_PARAM_Format,
+            (SPA_FORMAT_mediaType, (int)SPA_MEDIA_TYPE_video),
+            (SPA_FORMAT_mediaSubtype, (int)SPA_MEDIA_SUBTYPE_raw),
+            (SPA_FORMAT_VIDEO_format, (int)SPA_VIDEO_FORMAT_RGB),
+            (SPA_FORMAT_VIDEO_width, (int)width),
+            (SPA_FORMAT_VIDEO_height, (int)height)
         );
 
-        Marshal.FreeHGlobal(builder);
+        var blob = builder.GetBuffer();
 
-        return pod;
+        var unmanagedPtr = Marshal.AllocHGlobal(blob.Length);
+        
+        Marshal.Copy(blob, 0, unmanagedPtr, blob.Length);
+        
+        return unmanagedPtr;
     }
 
     public static nint BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
     {
-        var buffer = Marshal.AllocHGlobal(1024);
-        var builder = Marshal.AllocHGlobal(Marshal.SizeOf<nint>());
+        var builder = new SpaPodBuilder();
 
-        spa_pod_builder_init(builder, buffer, 1024);
+        builder.InitBuilder(1024);
 
-        var pod = spa_pod_builder_add_object(
-            builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
-            SPA_PARAM_BUFFERS_buffers, (nint)buffers,
-            SPA_PARAM_BUFFERS_blocks, (nint)blocks,
-            SPA_PARAM_BUFFERS_size, (nint)size,
-            SPA_PARAM_BUFFERS_stride, (nint)stride,
-            SPA_PARAM_BUFFERS_align, (nint)align,
-            SPA_PARAM_BUFFERS_dataType, (nint)dataType,
-            SPA_PARAM_BUFFERS_metaType, (nint)metaType
+        builder.AddObject(
+            SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
+            (SPA_PARAM_BUFFERS_buffers, (int)buffers),
+            (SPA_PARAM_BUFFERS_blocks, (int)blocks),
+            (SPA_PARAM_BUFFERS_size, (int)size),
+            (SPA_PARAM_BUFFERS_stride, (int)stride),
+            (SPA_PARAM_BUFFERS_align, (int)align),
+            (SPA_PARAM_BUFFERS_dataType, dataType),
+            (SPA_PARAM_BUFFERS_metaType, metaType)
         );
 
-        Marshal.FreeHGlobal(builder);
+        var blob = builder.GetBuffer();
 
-        return pod;
+        var unmanagedPtr = Marshal.AllocHGlobal(blob.Length);
+
+        Marshal.Copy(blob, 0, unmanagedPtr, blob.Length);
+
+        return unmanagedPtr;
     }
 
     #endregion
