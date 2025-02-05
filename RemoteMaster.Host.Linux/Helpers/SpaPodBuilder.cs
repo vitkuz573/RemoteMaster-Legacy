@@ -422,18 +422,18 @@ public class SpaPodBuilder
     ///   Payload:
     ///     - pointer type (uint32)
     ///     - 4 bytes of padding (must be 0)
-    ///     - native pointer value (IntPtr.Size bytes)
+    ///     - native pointer value (nint.Size bytes)
     /// </summary>
-    public void WritePointer(uint pointerType, IntPtr pointer)
+    public void WritePointer(uint pointerType, nint pointer)
     {
         // Calculate payload size: 4 bytes for pointer type, 4 bytes for padding, plus native pointer size.
-        var payloadSize = 4 + 4 + IntPtr.Size;
+        var payloadSize = 4 + 4 + nint.Size;
         
         WritePodHeader((uint)payloadSize, 17);
         WriteUInt32(pointerType);
         WriteUInt32(0); // padding must be 0
 
-        if (IntPtr.Size == 8)
+        if (nint.Size == 8)
         {
             WriteInt64(pointer.ToInt64());
         }
