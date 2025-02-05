@@ -106,69 +106,63 @@ public static class PipewireNative
     private const uint SPA_VIDEO_FORMAT_RGB = 15;
 
     /// <summary>
-    /// Builds a Video Format POD using the new fully compliant builder.
-    /// The POD is built as an Object (type 15) with 5 key/value properties.
-    /// Returns a pointer (nint) to an unmanaged memory block containing the POD.
+    /// Builds a Video Format POD using the fully compliant builder.
+    /// The POD is built as an Object (type 15) with several key/value properties:
+    /// - mediaType: set to SPA_MEDIA_TYPE_video
+    /// - mediaSubtype: set to SPA_MEDIA_SUBTYPE_raw
+    /// - video format: set to SPA_VIDEO_FORMAT_RGB
+    /// - video size: written as a Rectangle POD containing width and height
+    /// The resulting POD is allocated in unmanaged memory.
     /// </summary>
     public static nint BuildVideoFormatPod(uint width, uint height)
     {
-        // Create an instance of the fully compliant builder.
+        // Create and initialize the builder.
         var builder = new SpaPodBuilder();
         builder.InitBuilder(1024);
 
-        // Build the object POD.
-        // Here the object is defined with:
-        //   objectType: SPA_TYPE_OBJECT_Format
-        //   objectId: SPA_PARAM_Format
-        // And five properties:
-        //   mediaType      => SPA_MEDIA_TYPE_video
-        //   mediaSubtype   => SPA_MEDIA_SUBTYPE_raw
-        //   video format   => SPA_VIDEO_FORMAT_RGB
-        //   video width    => width
-        //   video height   => height
+        // Build the Object POD with objectType and objectId as defined by the SPA headers.
+        // According to the header, the "video size" property is expected to be a Rectangle.
         builder.WriteObject(
             objectType: SPA_TYPE_OBJECT_Format,
             objectId: SPA_PARAM_Format,
-            // Property 1: mediaType (key, flags, value)
+            // Property 1: mediaType
             (SPA_FORMAT_mediaType, 0u, () => builder.WriteInt((int)SPA_MEDIA_TYPE_video)),
             // Property 2: mediaSubtype
             (SPA_FORMAT_mediaSubtype, 0u, () => builder.WriteInt((int)SPA_MEDIA_SUBTYPE_raw)),
             // Property 3: video format
             (SPA_FORMAT_VIDEO_format, 0u, () => builder.WriteInt((int)SPA_VIDEO_FORMAT_RGB)),
-            // Property 4: video size
-            (SPA_FORMAT_VIDEO_size, 0u, () =>
-                {
-                    builder.WriteInt((int)width);
-                    builder.WriteInt((int)height);
-                }
-            ));
+            // Property 4: video size as a Rectangle POD
+            (SPA_FORMAT_VIDEO_size, 0u, () => builder.WriteRectangle(width, height))
+        );
 
-        // Retrieve the managed byte array containing the POD.
+        // Retrieve the managed buffer containing the POD data.
         var podBytes = builder.GetBuffer();
 
-        // Allocate unmanaged memory and copy the managed buffer.
+        // Allocate unmanaged memory and copy the POD into it.
         var unmanagedPod = Marshal.AllocHGlobal(podBytes.Length);
-        
         Marshal.Copy(podBytes, 0, unmanagedPod, podBytes.Length);
-        
+
         return unmanagedPod;
     }
 
     /// <summary>
-    /// Builds a Buffer Parameters POD using the new fully compliant builder.
-    /// The POD is built as an Object (type 15) with 7 key/value properties.
-    /// Returns a pointer (nint) to an unmanaged memory block containing the POD.
+    /// Builds a Buffer Parameters POD using the fully compliant builder.
+    /// The POD is built as an Object (type 15) with the following properties:
+    /// - buffers      (SPA_PARAM_BUFFERS_buffers, type Int)
+    /// - blocks       (SPA_PARAM_BUFFERS_blocks, type Int)
+    /// - size         (SPA_PARAM_BUFFERS_size, type Int)
+    /// - stride       (SPA_PARAM_BUFFERS_stride, type Int)
+    /// - align        (SPA_PARAM_BUFFERS_align, type Int)
+    /// - dataType     (SPA_PARAM_BUFFERS_dataType, type Int)
+    /// - metaType     (SPA_PARAM_BUFFERS_metaType, type Int)
+    /// The resulting POD is allocated in unmanaged memory.
     /// </summary>
     public static nint BuildBufferParamPod(uint buffers, uint blocks, uint size, uint stride, uint align, int dataType, int metaType)
     {
         var builder = new SpaPodBuilder();
         builder.InitBuilder(1024);
 
-        // Build the object POD.
-        // Here the object is defined with:
-        //   objectType: SPA_TYPE_OBJECT_ParamBuffers
-        //   objectId: SPA_PARAM_Buffers
-        // And seven properties: buffers, blocks, size, stride, align, dataType, metaType.
+        // Build the Object POD for buffer parameters.
         builder.WriteObject(
             objectType: SPA_TYPE_OBJECT_ParamBuffers,
             objectId: SPA_PARAM_Buffers,
@@ -183,9 +177,9 @@ public static class PipewireNative
 
         var podBytes = builder.GetBuffer();
         var unmanagedPod = Marshal.AllocHGlobal(podBytes.Length);
-        
+
         Marshal.Copy(podBytes, 0, unmanagedPod, podBytes.Length);
-        
+
         return unmanagedPod;
     }
 
