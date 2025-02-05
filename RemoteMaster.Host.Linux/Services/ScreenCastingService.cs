@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Host.Linux.Helpers.ScreenHelper;
 using static RemoteMaster.Host.Linux.Helpers.PipewireNative;
 
 namespace RemoteMaster.Host.Linux.Services;
@@ -23,16 +24,14 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
 
     private readonly ConcurrentQueue<byte[]> _frameQueue = new();
 
-    private readonly int _width = 1920;
-    private readonly int _height = 1080;
+    private int _width;
+    private int _height;
     private readonly int _bytesPerPixel = 3; // For RGB24.
-    private readonly int _frameSize; // width * height * bytesPerPixel
+    private int _frameSize; // width * height * bytesPerPixel
 
     // Delegates for stream events.
     private PwStreamProcessDelegate _processDelegate;
     private PwStreamStateChangedDelegate _stateChangedDelegate;
-    // We define _paramChangedDelegate even if it is not used by default.
-    private PwStreamParamChangedDelegate _paramChangedDelegate;
 
     public ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScreenCastingService> logger)
     {
@@ -45,6 +44,22 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
 
     private void InitializePipeWire()
     {
+        var primaryScreen = Screen.PrimaryScreen;
+
+        if (primaryScreen != null)
+        {
+            _width = primaryScreen.Bounds.Width;
+            _height = primaryScreen.Bounds.Height;
+        }
+        else
+        {
+            // Fallback values if no screen was found
+            _width = 1920;
+            _height = 1080;
+        }
+
+        _frameSize = _width * _height * _bytesPerPixel;
+
         var argc = 0;
         var argv = nint.Zero;
 
@@ -66,7 +81,6 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
         // Initialize callbacks.
         _processDelegate = ProcessCallback;
         _stateChangedDelegate = StreamStateChanged;
-        _paramChangedDelegate = StreamParamChanged; // Defined but note below
 
         // Prepare the stream events structure.
         var events = new pw_stream_events
@@ -74,9 +88,6 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             version = PW_VERSION_STREAM_EVENTS,
             stateChanged = Marshal.GetFunctionPointerForDelegate(_stateChangedDelegate),
             process = Marshal.GetFunctionPointerForDelegate(_processDelegate),
-            // Uncomment the following line if your version of PipeWire supports paramChanged.
-            // paramChanged = Marshal.GetFunctionPointerForDelegate(_paramChangedDelegate),
-            // Similarly, add other callbacks (addBuffer, removeBuffer, drained) if needed.
         };
 
         _stream = pw_stream_new_simple(pw_main_loop_get_loop(_mainLoop), "screen-capture", props, ref events, nint.Zero);
@@ -149,17 +160,6 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
             _logger.LogInformation("Negotiation complete. Stream is ready for data exchange.");
             // If necessary, you can update parameters here with pw_stream_update_params().
         }
-    }
-
-    // Parameter changed callback: this gets called if the server sends updated parameters.
-    // Although we defined _paramChangedDelegate, it may not be called if the server does not emit this event.
-    private void StreamParamChanged(nint userData, uint id, nint param)
-    {
-        _logger.LogInformation("Stream parameter changed: id={Id}", id);
-        // Here you can inspect 'param' and call pw_stream_update_params() if required.
-        // For example:
-        // var paramsArray = BuildUpdatedParams();
-        // pw_stream_update_params(_stream, paramsArray, (uint)paramsCount);
     }
 
     /// <summary>
