@@ -83,9 +83,9 @@ public class ScreenCastingService : IScreenCastingService, IDisposable
 
         var paramArray = Marshal.AllocHGlobal(podCount * nint.Size);
 
-        Marshal.Copy(pods, 0, paramArray, 1);
+        Marshal.Copy(pods, 0, paramArray, podCount);
 
-        var ret = pw_stream_connect(_stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_AUTOCONNECT, paramArray, 1);
+        var ret = pw_stream_connect(_stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_AUTOCONNECT, paramArray, (uint)podCount);
 
         if (ret < 0)
         {
