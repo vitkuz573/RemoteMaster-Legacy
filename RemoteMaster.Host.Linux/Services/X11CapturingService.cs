@@ -15,8 +15,23 @@ namespace RemoteMaster.Host.Linux.Services;
 /// <summary>
 /// Linux screen capturing service that uses X11 via the X11Native helper.
 /// </summary>
-public class X11CapturingService(IAppState appState, IOverlayManagerService overlayManagerService, IScreenProvider screenProvider, ILogger<ScreenCapturingService> logger) : ScreenCapturingService(appState, overlayManagerService, screenProvider, logger)
+public class X11CapturingService : ScreenCapturingService
 {
+    private readonly nint _display;
+
+    /// <summary>
+    /// Linux screen capturing service that uses X11 via the X11Native helper.
+    /// </summary>
+    public X11CapturingService(IAppState appState, IOverlayManagerService overlayManagerService, IScreenProvider screenProvider, ILogger<ScreenCapturingService> logger) : base(appState, overlayManagerService, screenProvider, logger)
+    {
+        _display = X11Native.XOpenDisplay(string.Empty);
+
+        if (_display == nint.Zero)
+        {
+            throw new Exception("Unable to open X display");
+        }
+    }
+
     /// <summary>
     /// Captures the specified screen area using X11 and encodes it using ImageSharp.
     /// </summary>
@@ -29,13 +44,11 @@ public class X11CapturingService(IAppState appState, IOverlayManagerService over
     {
         ArgumentNullException.ThrowIfNull(codec);
 
-        var display = X11Native.XOpenDisplay(string.Empty);
-
         var currentFrame = new SKBitmap(bounds.Width, bounds.Height);
 
-        var window = X11Native.XDefaultRootWindow(display);
+        var window = X11Native.XDefaultRootWindow(_display);
 
-        var imagePointer = X11Native.XGetImage(display,
+        var imagePointer = X11Native.XGetImage(_display,
             window,
             bounds.X,
             bounds.Y,
@@ -100,5 +113,14 @@ public class X11CapturingService(IAppState appState, IOverlayManagerService over
 
         // Возвращаем результат в виде массива байтов
         return data.ToArray();
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        if (_display != nint.Zero)
+        {
+            X11Native.XCloseDisplay(_display);
+        }
     }
 }
