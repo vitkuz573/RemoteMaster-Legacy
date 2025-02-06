@@ -2,9 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing.Imaging;
 using System.Net;
-using System.Runtime.Versioning;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
@@ -15,6 +13,7 @@ using RemoteMaster.Shared.Claims;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
+using SixLabors.ImageSharp;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
@@ -139,33 +138,31 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
             }
         }
 
-        if (OperatingSystem.IsWindows())
-        {
-            var codecs = GetAvailableCodecs();
-            
-            await Clients.Caller.ReceiveAvailableCodecs(codecs);
-        }
+        var codecs = GetAvailableCodecs();
+
+        await Clients.Caller.ReceiveAvailableCodecs(codecs);
 
         await base.OnConnectedAsync();
     }
 
-    [SupportedOSPlatform("windows")]
     private static List<string> GetAvailableCodecs()
     {
-        var codecs = ImageCodecInfo.GetImageEncoders();
-        var jpegCodec = codecs.FirstOrDefault(codec => codec.MimeType == "image/jpeg");
+        var imageFormats = Configuration.Default.ImageFormatsManager.ImageFormats.ToArray();
 
-        var availableCodecs = codecs.Where(codec => codec.MimeType != null && !ExcludedCodecs.Contains(codec.MimeType))
-                                     .Select(codec => codec.MimeType!)
-                                     .ToList();
+        var availableCodecs = imageFormats
+            .Select(f => f.DefaultMimeType)
+            .Where(m => !string.IsNullOrEmpty(m) && !ExcludedCodecs.Contains(m))
+            .ToList();
 
-        if (jpegCodec?.MimeType == null)
+        const string jpegMime = "image/jpeg";
+
+        if (!availableCodecs.Contains(jpegMime))
         {
             return availableCodecs;
         }
 
-        availableCodecs.Remove(jpegCodec.MimeType);
-        availableCodecs.Insert(0, jpegCodec.MimeType);
+        availableCodecs.Remove(jpegMime);
+        availableCodecs.Insert(0, jpegMime);
 
         return availableCodecs;
     }

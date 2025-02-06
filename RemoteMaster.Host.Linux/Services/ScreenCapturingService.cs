@@ -3,6 +3,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using System.Drawing;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -12,34 +13,61 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public abstract class ScreenCapturingService(IAppState appState, IOverlayManagerService overlayManagerService, IScreenProvider screenProvider, ILogger<ScreenCapturingService> logger): IScreenCapturingService
 {
+    private readonly Lock _screenBoundsLock = new();
+
+    private readonly ConcurrentDictionary<string, EventHandler> _isCursorVisibleHandlers = new();
+
+    private bool HasMultipleScreens => screenProvider.GetAllScreens().Count() > 1;
+
+    public IScreen? FindScreenByName(string displayName)
+    {
+        var allScreens = screenProvider.GetAllScreens().ToList();
+
+        if (HasMultipleScreens)
+        {
+            allScreens.Add(screenProvider.GetVirtualScreen());
+        }
+
+        return allScreens.FirstOrDefault(screen => screen.DeviceName == displayName);
+    }
+
     protected abstract byte[] CaptureScreen(string connectionId, Rectangle bounds, int imageQuality, string codec);
 
-    public virtual byte[]? GetNextFrame(string connectionId)
+    private byte[]? GetFrame(string connectionId)
     {
         try
         {
-            var screen = screenProvider.GetPrimaryScreen();
-            
-            if (screen != null)
+            if (!appState.TryGetViewer(connectionId, out var viewer) || viewer?.CapturingContext.SelectedScreen == null)
             {
-                return CaptureScreen(connectionId, screen.Bounds, imageQuality: 75, codec: "image/png");
+                logger.LogWarning("Viewer not found or SelectedScreen is null for ConnectionId: {ConnectionId}", connectionId);
+
+                return null;
             }
 
-            logger.LogError("No primary screen available.");
+            var capturingContext = viewer.CapturingContext;
 
-            return null;
+            return capturingContext.SelectedScreen.DeviceName == screenProvider.GetVirtualScreen().DeviceName
+                ? GetVirtualScreenFrame(connectionId, capturingContext.ImageQuality, capturingContext.SelectedCodec)
+                : GetSingleScreenFrame(connectionId, capturingContext.SelectedScreen.Bounds, capturingContext.ImageQuality, capturingContext.SelectedCodec);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in GetNextFrame for connection: {ConnectionId}", connectionId);
+            logger.LogError(ex, "Error occurred in GetFrame for ConnectionId: {ConnectionId}", connectionId);
 
             return null;
         }
     }
 
-    /// <summary>
-    /// Returns a list of available displays.
-    /// </summary>
+    private byte[] GetVirtualScreenFrame(string connectionId, int imageQuality, string codec)
+    {
+        return CaptureScreen(connectionId, screenProvider.GetVirtualScreen().Bounds, imageQuality, codec);
+    }
+
+    private byte[] GetSingleScreenFrame(string connectionId, Rectangle bounds, int imageQuality, string codec)
+    {
+        return CaptureScreen(connectionId, bounds, imageQuality, codec);
+    }
+
     public virtual IEnumerable<Display> GetDisplays()
     {
         var screens = screenProvider.GetAllScreens().Select(screen => new Display { Name = screen.DeviceName, IsPrimary = screen.Primary, Resolution = screen.Bounds.Size }).ToList();
@@ -61,25 +89,6 @@ public abstract class ScreenCapturingService(IAppState appState, IOverlayManager
         return screens;
     }
 
-    /// <summary>
-    /// Finds a screen by its device name.
-    /// </summary>
-    public virtual IScreen? FindScreenByName(string displayName)
-    {
-        var allScreens = new List<IScreen>(screenProvider.GetAllScreens());
-
-        if (screenProvider.GetAllScreens().Count() > 1)
-        {
-            allScreens.Add(screenProvider.GetVirtualScreen());
-        }
-
-        return allScreens.Find(screen => screen.DeviceName.Equals(displayName, StringComparison.Ordinal));
-    }
-
-    /// <summary>
-    /// Sets the selected screen for a given connection.
-    /// Updates the capturing context for the viewer.
-    /// </summary>
     public virtual void SetSelectedScreen(string connectionId, IScreen display)
     {
         ArgumentNullException.ThrowIfNull(display);
@@ -105,28 +114,120 @@ public abstract class ScreenCapturingService(IAppState appState, IOverlayManager
         logger.LogInformation("Selected screen set to {ScreenName} for connection: {ConnectionId}", display.DeviceName, connectionId);
     }
 
-    /// <summary>
-    /// Returns a thumbnail image (as a byte array) for the connection.
-    /// </summary>
+    public virtual byte[]? GetNextFrame(string connectionId)
+    {
+        using (_screenBoundsLock.EnterScope())
+        {
+            try
+            {
+                appState.TryGetViewer(connectionId, out var viewer);
+
+                var capturingContext = viewer?.CapturingContext;
+
+                if (capturingContext?.SelectedScreen != null)
+                {
+                    return GetFrame(connectionId);
+                }
+
+                logger.LogWarning("Selected screen is null for connection ID {ConnectionId}", connectionId);
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error while getting next frame.");
+
+                return null;
+            }
+        }
+    }
+
     public virtual byte[]? GetThumbnail(string connectionId)
     {
-        var targetScreen = screenProvider.GetAllScreens().Count() > 1
-            ? screenProvider.GetVirtualScreen()
-            : screenProvider.GetPrimaryScreen();
+        var targetScreen = HasMultipleScreens ? screenProvider.GetVirtualScreen() : screenProvider.GetPrimaryScreen();
 
         if (targetScreen == null)
         {
-            logger.LogError("No screen available for thumbnail generation.");
-            
+            logger.LogError("No screens available for thumbnail generation.");
+
             return null;
         }
 
-        // Capture with lower quality for thumbnail.
-        return CaptureScreen(connectionId, targetScreen.Bounds, imageQuality: 50, codec: "image/png");
+        SetSelectedScreen(connectionId, targetScreen);
+
+        return GetNextFrame(connectionId);
+    }
+
+    private void OnViewerAdded(object? sender, IViewer? viewer)
+    {
+        if (viewer != null)
+        {
+            SubscribeToViewer(viewer);
+        }
+    }
+
+    private void OnViewerRemoved(object? sender, IViewer? viewer)
+    {
+        if (viewer != null)
+        {
+            UnsubscribeFromViewer(viewer);
+        }
+    }
+
+    private void SubscribeToViewer(IViewer viewer)
+    {
+        var context = viewer.CapturingContext;
+
+        EventHandler handler = (_, _) => HandleIsCursorVisibleChanged(viewer);
+        context.OnIsCursorVisibleChanged += handler;
+
+        _isCursorVisibleHandlers.TryAdd(viewer.ConnectionId, handler);
+
+        if (context.IsCursorVisible)
+        {
+            // overlayManagerService.ActivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
+        }
+    }
+
+    private void UnsubscribeFromViewer(IViewer viewer)
+    {
+        var context = viewer.CapturingContext;
+
+        if (_isCursorVisibleHandlers.TryRemove(viewer.ConnectionId, out var handler))
+        {
+            context.OnIsCursorVisibleChanged -= handler;
+        }
+
+        // overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
+    }
+
+    private void HandleIsCursorVisibleChanged(IViewer? viewer)
+    {
+        if (viewer == null)
+        {
+            logger.LogWarning("Viewer is null when handling IsCursorVisibleChanged event.");
+
+            return;
+        }
+
+        if (viewer.CapturingContext.IsCursorVisible)
+        {
+            // overlayManagerService.ActivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
+        }
+        else
+        {
+            // overlayManagerService.DeactivateOverlay(nameof(CursorOverlay), viewer.ConnectionId);
+        }
     }
 
     public virtual void Dispose()
     {
-        // Dispose managed resources if needed.
+        appState.ViewerAdded -= OnViewerAdded;
+        appState.ViewerRemoved -= OnViewerRemoved;
+
+        foreach (var viewer in appState.GetAllViewers())
+        {
+            UnsubscribeFromViewer(viewer);
+        }
     }
 }
