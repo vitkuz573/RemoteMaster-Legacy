@@ -4,9 +4,6 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Linux.Services;
+namespace RemoteMaster.Host.Linux.Models;
 
-public class NativeProcessFactory : INativeProcessFactory
-{
-    public IProcess Create(INativeProcessOptions options) => throw new NotImplementedException();
-}
+public class DBusProcessOptions : INativeProcessOptions;

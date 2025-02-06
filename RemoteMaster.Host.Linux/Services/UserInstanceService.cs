@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Linux.Models;
 
 namespace RemoteMaster.Host.Linux.Services;
 
@@ -76,6 +77,8 @@ public class UserInstanceService(IInstanceManagerService instanceManagerService,
             CreateNoWindow = true
         };
 
-        return instanceManagerService.StartNewInstance(null, Command, [], startInfo);
+        var options = new DBusProcessOptions();
+
+        return instanceManagerService.StartNewInstance(null, Command, [], startInfo, options);
     }
 }
