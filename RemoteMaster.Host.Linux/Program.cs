@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Linux.Abstractions;
 using RemoteMaster.Host.Linux.LinuxServices;
 using RemoteMaster.Host.Linux.Services;
 using Serilog;
@@ -29,6 +30,7 @@ internal class Program
             ContentRootPath = AppContext.BaseDirectory
         });
 
+        builder.Host.UseSystemd();
         builder.Host.UseSerilog();
 
         builder.Configuration.AddCommandLine(args);
@@ -124,6 +126,7 @@ internal class Program
         services.AddSingleton<IAudioCapturingService, AudioCapturingService>();
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<IScreenProvider, ScreenProvider>();
+        services.AddSingleton<IEnvironmentProvider, EnvironmentProvider>();
         services.AddSingleton<IService, HostService>();
 
         if (commandName != "install")

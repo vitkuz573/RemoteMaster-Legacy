@@ -6,11 +6,11 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Linux.Models;
+using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class UserInstanceService(IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger) : IUserInstanceService
+public class UserInstanceService(IEnvironmentProvider environmentProvider, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger) : IUserInstanceService
 {
     private const string Command = "user";
 
@@ -74,11 +74,12 @@ public class UserInstanceService(IInstanceManagerService instanceManagerService,
     {
         var startInfo = new ProcessStartInfo
         {
-            CreateNoWindow = true
+            CreateNoWindow = false
         };
 
-        var options = new DBusProcessOptions();
+        startInfo.Environment.Add("DISPLAY", environmentProvider.GetDisplay());
+        startInfo.Environment.Add("XAUTHORITY", environmentProvider.GetXAuthority());
 
-        return instanceManagerService.StartNewInstance(null, Command, [], startInfo, options);
+        return instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 }
