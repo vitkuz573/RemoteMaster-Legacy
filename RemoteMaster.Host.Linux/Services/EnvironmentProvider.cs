@@ -33,111 +33,137 @@ public class EnvironmentProvider : IEnvironmentProvider
                 }
 
                 var args = SplitCommandLine(cmdLine);
-                for (int i = 0; i < args.Count; i++)
+
+                for (var i = 0; i < args.Count; i++)
                 {
-                    if (args[i] == "-displayfd" && i + 1 < args.Count)
+                    if (args[i] != "-displayfd" || i + 1 >= args.Count)
                     {
-                        if (int.TryParse(args[i + 1], out int fd))
-                        {
-                            string linkPath = $"/proc/{proc.Id}/fd/{fd}";
-                            var fi = new FileInfo(linkPath);
-                            if (!string.IsNullOrEmpty(fi.LinkTarget) && !fi.LinkTarget.StartsWith("socket:"))
-                            {
-                                return fi.LinkTarget;
-                            }
-                        }
+                        continue;
+                    }
+
+                    if (!int.TryParse(args[i + 1], out int fd))
+                    {
+                        continue;
+                    }
+
+                    var linkPath = $"/proc/{proc.Id}/fd/{fd}";
+                    var fi = new FileInfo(linkPath);
+
+                    if (!string.IsNullOrEmpty(fi.LinkTarget) && !fi.LinkTarget.StartsWith("socket:"))
+                    {
+                        return fi.LinkTarget;
                     }
                 }
             }
             catch
             {
-                continue;
+                // ignored
             }
         }
-        for (int i = 0; i < 10; i++)
+        for (var i = 0; i < 10; i++)
         {
-            string socketPath = $"/tmp/.X11-unix/X{i}";
+            var socketPath = $"/tmp/.X11-unix/X{i}";
+            
             if (File.Exists(socketPath))
             {
                 return $":{i}";
             }
         }
+
         return ":0";
     }
 
     public string GetXAuthority()
     {
         var xorgProcesses = Process.GetProcessesByName("Xorg");
+        
         foreach (var proc in xorgProcesses)
         {
             try
             {
-                string cmdLine = GetCommandLine(proc);
+                var cmdLine = GetCommandLine(proc);
                 var match = Regex.Match(cmdLine, @"-auth\s+(\S+)");
+
                 if (match.Success)
                 {
-                    string xAuth = match.Groups[1].Value;
+                    var xAuth = match.Groups[1].Value;
+
                     if (!string.IsNullOrEmpty(xAuth))
                     {
                         return xAuth;
                     }
                 }
+
                 var args = SplitCommandLine(cmdLine);
-                for (int i = 0; i < args.Count; i++)
+
+                for (var i = 0; i < args.Count; i++)
                 {
-                    if (args[i] == "-auth" && i + 1 < args.Count)
+                    if (args[i] != "-auth" || i + 1 >= args.Count)
                     {
-                        string xAuth = args[i + 1];
-                        if (!string.IsNullOrEmpty(xAuth))
-                        {
-                            return xAuth;
-                        }
+                        continue;
+                    }
+
+                    var xAuth = args[i + 1];
+
+                    if (!string.IsNullOrEmpty(xAuth))
+                    {
+                        return xAuth;
                     }
                 }
             }
             catch
             {
-                continue;
+                // ignored
             }
         }
+
         return string.Empty;
     }
 
     private static string GetCommandLine(Process process)
     {
-        string path = $"/proc/{process.Id}/cmdline";
-        if (File.Exists(path))
+        var path = $"/proc/{process.Id}/cmdline";
+
+        if (!File.Exists(path))
         {
-            byte[] bytes = File.ReadAllBytes(path);
-            return string.Join(" ", Encoding.UTF8.GetString(bytes).Split('\0', StringSplitOptions.RemoveEmptyEntries));
+            return string.Empty;
         }
-        return string.Empty;
+
+        var bytes = File.ReadAllBytes(path);
+            
+        return string.Join(" ", Encoding.UTF8.GetString(bytes).Split('\0', StringSplitOptions.RemoveEmptyEntries));
+
     }
 
     private static List<string> SplitCommandLine(string commandLine)
     {
         var args = new List<string>();
+        
         if (string.IsNullOrWhiteSpace(commandLine))
         {
             return args;
         }
 
-        bool inQuotes = false;
+        var inQuotes = false;
         var currentArg = new StringBuilder();
-        foreach (char c in commandLine)
+        
+        foreach (var c in commandLine)
         {
             if (c == '\"')
             {
                 inQuotes = !inQuotes;
                 continue;
             }
+
             if (!inQuotes && char.IsWhiteSpace(c))
             {
-                if (currentArg.Length > 0)
+                if (currentArg.Length <= 0)
                 {
-                    args.Add(currentArg.ToString());
-                    currentArg.Clear();
+                    continue;
                 }
+
+                args.Add(currentArg.ToString());
+                currentArg.Clear();
             }
             else
             {
@@ -148,6 +174,7 @@ public class EnvironmentProvider : IEnvironmentProvider
         {
             args.Add(currentArg.ToString());
         }
+
         return args;
     }
 }
