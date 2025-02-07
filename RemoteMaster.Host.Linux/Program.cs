@@ -127,6 +127,7 @@ internal class Program
         services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton<IScreenProvider, ScreenProvider>();
         services.AddSingleton<IEnvironmentProvider, EnvironmentProvider>();
+        services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<IService, HostService>();
 
         if (commandName != "install")

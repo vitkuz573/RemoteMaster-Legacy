@@ -75,4 +75,9 @@ public class NetworkDriveService(ILogger<NetworkDriveService> logger) : INetwork
 
         return true;
     }
+
+    public string GetEffectivePath(string remotePath)
+    {
+        return remotePath;
+    }
 }

@@ -55,7 +55,8 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             await notifier.NotifyAsync($"Allow downgrade flag: {allowDowngrade}", MessageSeverity.Information);
             await notifier.NotifyAsync(Environment.ProcessId.ToString(), MessageSeverity.Information, MessageMeta.ProcessIdInformation);
 
-            var sourceFolderPath = fileSystem.Path.Combine(folderPath, "Host");
+            var originalFolderPath = folderPath;
+
             var isNetworkPath = folderPath.StartsWith(@"\\");
 
             if (isNetworkPath)
@@ -66,7 +67,11 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
 
                     return;
                 }
+
+                folderPath = networkDriveService.GetEffectivePath(folderPath);
             }
+
+            var sourceFolderPath = fileSystem.Path.Combine(folderPath, "Host");
 
             try
             {
@@ -86,7 +91,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
 
             if (isNetworkPath)
             {
-                await UnmapNetworkDriveAsync(folderPath);
+                await UnmapNetworkDriveAsync(originalFolderPath);
             }
 
             if (!isDownloaded)
