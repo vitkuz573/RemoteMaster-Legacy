@@ -4,17 +4,20 @@
 
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.LinuxServices;
 
-public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : AbstractDaemon(fileSystem, logger)
+public class HostService(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<HostService> logger) : AbstractDaemon(fileSystem, logger)
 {
+    private readonly IFileSystem _fileSystem = fileSystem;
+
     public override string Name => "RCHost";
 
-    protected override string BinPath => "/opt/RemoteMaster/Host/RemoteMaster.Host";
+    protected override string BinPath => _fileSystem.Path.Combine(applicationPathProvider.RootDirectory, "RemoteMaster.Host");
 
-    protected override string WorkingDirectory => "/opt/RemoteMaster/Host";
+    protected override string WorkingDirectory => applicationPathProvider.RootDirectory;
 
     protected override IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
     {
