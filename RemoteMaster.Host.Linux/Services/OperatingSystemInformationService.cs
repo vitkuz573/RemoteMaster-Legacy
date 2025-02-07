@@ -42,11 +42,6 @@ public class OperatingSystemInformationService(IFileSystem fileSystem) : IOperat
 
         var parts = line.Split('=', 2);
         
-        if (parts.Length < 2)
-        {
-            return null;
-        }
-
-        return parts[1].Trim().Trim('"');
+        return parts.Length < 2 ? null : parts[1].Trim().Trim('"');
     }
 }

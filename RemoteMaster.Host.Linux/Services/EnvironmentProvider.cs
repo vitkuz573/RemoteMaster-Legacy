@@ -41,7 +41,7 @@ public class EnvironmentProvider : IEnvironmentProvider
                         continue;
                     }
 
-                    if (!int.TryParse(args[i + 1], out int fd))
+                    if (!int.TryParse(args[i + 1], out var fd))
                     {
                         continue;
                     }

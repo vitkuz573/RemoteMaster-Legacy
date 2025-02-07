@@ -9,5 +9,8 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class ScriptService : IScriptService
 {
-    public Task Execute(ScriptExecutionRequest scriptExecutionRequest) => throw new NotImplementedException();
+    public Task Execute(ScriptExecutionRequest scriptExecutionRequest)
+    {
+        return Task.CompletedTask;
+    }
 }

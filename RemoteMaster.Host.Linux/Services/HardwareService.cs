@@ -9,5 +9,5 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class HardwareService : IHardwareService
 {
-    public void SetMonitorState(MonitorState state) => throw new NotImplementedException();
+    public void SetMonitorState(MonitorState state) { }
 }

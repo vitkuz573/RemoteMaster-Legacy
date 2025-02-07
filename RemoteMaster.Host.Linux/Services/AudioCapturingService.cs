@@ -8,11 +8,14 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class AudioCapturingService : IAudioCapturingService
 {
-    public void StartRecording() => throw new NotImplementedException();
+    public void StartRecording() { }
 
-    public void StopRecording() => throw new NotImplementedException();
+    public void StopRecording() { }
 
-    public byte[]? GetNextAudioChunk() => throw new NotImplementedException();
+    public byte[]? GetNextAudioChunk()
+    {
+        return [];
+    }
 
-    public void Dispose() => throw new NotImplementedException();
+    public void Dispose() { }
 }
