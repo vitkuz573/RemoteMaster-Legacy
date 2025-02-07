@@ -97,7 +97,7 @@ public class InputService : IInputService
         {
             var pos = dto.Position.Value;
             var screen = X11Native.XDefaultScreen(_display);
-            var absolutePos = (pos.X is >= 0 and <= 1 && pos.Y is >= 0 and <= 1)
+            var absolutePos = pos.X is >= 0 and <= 1 && pos.Y is >= 0 and <= 1
                 ? GetAbsoluteCoordinatesFromRelative(pos)
                 : new Point((int)pos.X, (int)pos.Y);
 
