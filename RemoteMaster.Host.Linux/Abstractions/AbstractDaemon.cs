@@ -15,6 +15,8 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
     protected abstract string BinPath { get; }
 
+    protected abstract string WorkingDirectory { get; }
+
     protected abstract IDictionary<string, string?> Arguments { get; }
 
     protected abstract string? Description { get; }
@@ -188,17 +190,14 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         return $"""
                 [Unit]
                 Description={Description}
-                After=network.target
 
                 [Service]
-                Type=simple
+                WorkingDirectory={WorkingDirectory}
                 ExecStart={BinPath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}
                 Restart=on-failure
-                User=root
-                Group=root
 
                 [Install]
-                WantedBy=multi-user.target
+                WantedBy=graphical.target
                 
                 """;
     }

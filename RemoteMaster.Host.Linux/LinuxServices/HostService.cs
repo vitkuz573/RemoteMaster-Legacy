@@ -14,6 +14,8 @@ public class HostService(IFileSystem fileSystem, ILogger<HostService> logger) : 
 
     protected override string BinPath => "/opt/RemoteMaster/Host/RemoteMaster.Host";
 
+    protected override string WorkingDirectory => "/opt/RemoteMaster/Host";
+
     protected override IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
     {
         ["service"] = null
