@@ -77,7 +77,7 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
             CreateNoWindow = false
         };
 
-        startInfo.Environment.Add("DISPLAY", environmentProvider.GetDisplay());
+        startInfo.Environment.Add("DISPLAY", ":1");
         startInfo.Environment.Add("XAUTHORITY", environmentProvider.GetXAuthority());
 
         return instanceManagerService.StartNewInstance(null, Command, [], startInfo);
