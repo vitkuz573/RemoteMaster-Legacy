@@ -3,15 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.IO.Abstractions;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
 using Tmds.DBus;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvider commandLineProvider, ILogger<DBusProcess> logger) : IProcess
+public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvider commandLineProvider) : IProcess
 {
     private Connection? _connection;
     private ObjectPath _unitJobPath;
