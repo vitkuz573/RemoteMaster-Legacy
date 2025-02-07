@@ -19,16 +19,13 @@ public class TrayIconManager : ITrayIconManager
         }
     }
 
-    public void Hide() => throw new NotImplementedException();
+    public void Hide() { }
 
-    public void SetIcon(Icon icon) => throw new NotImplementedException();
+    public void SetIcon(Icon icon) { }
 
-    public void SetTooltip(string tooltip) => throw new NotImplementedException();
+    public void SetTooltip(string tooltip) { }
 
-    private static void AddTrayIcon()
-    {
+    private static void AddTrayIcon() { }
 
-    }
-
-    public void Dispose() => throw new NotImplementedException();
+    public void Dispose() { }
 }
