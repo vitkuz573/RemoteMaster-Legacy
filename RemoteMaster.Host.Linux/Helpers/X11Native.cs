@@ -88,6 +88,12 @@ public static class X11Native
     [DllImport(LibraryName)]
     public static extern int XGetWindowAttributes(nint display, nint window, out XWindowAttributes windowAttributes);
 
+    [DllImport(LibraryName)]
+    public static extern int XFlush(nint display);
+
+    [DllImport(LibraryName)]
+    public static extern bool XInitThreads();
+
     public struct XImage
     {
         public int width;
