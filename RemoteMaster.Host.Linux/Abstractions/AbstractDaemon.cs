@@ -194,7 +194,9 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
                 [Service]
                 WorkingDirectory={WorkingDirectory}
                 ExecStart={BinPath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}
-                Restart=on-failure
+                Restart=always
+                StartLimitIntervalSec=0
+                RestartSec=10
 
                 [Install]
                 WantedBy=graphical.target
