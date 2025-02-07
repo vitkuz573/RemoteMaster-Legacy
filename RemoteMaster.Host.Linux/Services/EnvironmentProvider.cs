@@ -1,114 +1,153 @@
-﻿using System.Diagnostics;
-using FluentResults;
-using Microsoft.Extensions.Logging;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class EnvironmentProvider(ILogger<EnvironmentProvider> logger) : IEnvironmentProvider
+public class EnvironmentProvider : IEnvironmentProvider
 {
     public string GetDisplay()
     {
-        var result = TryGetXAuth("Xorg");
-        
-        if (result.IsSuccess)
+        var xorgProcesses = Process.GetProcessesByName("Xorg");
+
+        foreach (var proc in xorgProcesses)
         {
-            logger.LogInformation("Found display: {XDisplay}", result.Value.XDisplay);
+            try
+            {
+                var cmdLine = GetCommandLine(proc);
+                var match = Regex.Match(cmdLine, @"\s(?<display>:\d+)\b");
 
-            return result.Value.XDisplay;
+                if (match.Success)
+                {
+                    var display = match.Groups["display"].Value;
+
+                    if (!string.IsNullOrEmpty(display))
+                    {
+                        return display;
+                    }
+                }
+
+                var args = SplitCommandLine(cmdLine);
+                for (int i = 0; i < args.Count; i++)
+                {
+                    if (args[i] == "-displayfd" && i + 1 < args.Count)
+                    {
+                        if (int.TryParse(args[i + 1], out int fd))
+                        {
+                            string linkPath = $"/proc/{proc.Id}/fd/{fd}";
+                            var fi = new FileInfo(linkPath);
+                            if (!string.IsNullOrEmpty(fi.LinkTarget) && !fi.LinkTarget.StartsWith("socket:"))
+                            {
+                                return fi.LinkTarget;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                continue;
+            }
         }
-
-        logger.LogWarning("Failed to get display, using fallback \":0\". Errors: {Errors}", string.Join(", ", result.Errors.Select(e => e.Message)));
-        
+        for (int i = 0; i < 10; i++)
+        {
+            string socketPath = $"/tmp/.X11-unix/X{i}";
+            if (File.Exists(socketPath))
+            {
+                return $":{i}";
+            }
+        }
         return ":0";
     }
 
     public string GetXAuthority()
     {
-        var result = TryGetXAuth("Xorg");
-        
-        if (result.IsSuccess)
+        var xorgProcesses = Process.GetProcessesByName("Xorg");
+        foreach (var proc in xorgProcesses)
         {
-            logger.LogInformation("Found '-auth' parameter with value: {XAuthority} on display: {XDisplay}", result.Value.XAuthority, result.Value.XDisplay);
-            
-            return result.Value.XAuthority;
+            try
+            {
+                string cmdLine = GetCommandLine(proc);
+                var match = Regex.Match(cmdLine, @"-auth\s+(\S+)");
+                if (match.Success)
+                {
+                    string xAuth = match.Groups[1].Value;
+                    if (!string.IsNullOrEmpty(xAuth))
+                    {
+                        return xAuth;
+                    }
+                }
+                var args = SplitCommandLine(cmdLine);
+                for (int i = 0; i < args.Count; i++)
+                {
+                    if (args[i] == "-auth" && i + 1 < args.Count)
+                    {
+                        string xAuth = args[i + 1];
+                        if (!string.IsNullOrEmpty(xAuth))
+                        {
+                            return xAuth;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                continue;
+            }
         }
-
-        logger.LogError("Failed to retrieve XAuthority: {Errors}", string.Join(", ", result.Errors.Select(e => e.Message)));
-        
         return string.Empty;
     }
 
-    private Result<XAuthInfo> TryGetXAuth(string xServerProcess)
+    private static string GetCommandLine(Process process)
     {
-        try
+        string path = $"/proc/{process.Id}/cmdline";
+        if (File.Exists(path))
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "ps",
-                Arguments = $"-C {xServerProcess} -f",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+            byte[] bytes = File.ReadAllBytes(path);
+            return string.Join(" ", Encoding.UTF8.GetString(bytes).Split('\0', StringSplitOptions.RemoveEmptyEntries));
+        }
+        return string.Empty;
+    }
 
-            logger.LogDebug("Starting process: {FileName} {Arguments}", psi.FileName, psi.Arguments);
+    private static List<string> SplitCommandLine(string commandLine)
+    {
+        var args = new List<string>();
+        if (string.IsNullOrWhiteSpace(commandLine))
+        {
+            return args;
+        }
 
-            using var process = Process.Start(psi);
-            
-            if (process is null)
+        bool inQuotes = false;
+        var currentArg = new StringBuilder();
+        foreach (char c in commandLine)
+        {
+            if (c == '\"')
             {
-                return Result.Fail<XAuthInfo>($"Failed to start process for {xServerProcess}.");
+                inQuotes = !inQuotes;
+                continue;
             }
-
-            var output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-
-            var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            var xProcess = lines.FirstOrDefault(line => line.Contains(" -auth "));
-            
-            if (string.IsNullOrWhiteSpace(xProcess))
+            if (!inQuotes && char.IsWhiteSpace(c))
             {
-                logger.LogInformation("{xServerProcess} process not found.", xServerProcess);
-               
-                return Result.Fail<XAuthInfo>($"{xServerProcess} process not found.");
-            }
-
-            logger.LogInformation("Resolved X server process: {xProcess}", xProcess);
-
-            var tokens = xProcess.Split(" ", StringSplitOptions.RemoveEmptyEntries).ToList();
-
-            var xDisplay = ":0";
-
-            var xProcIndex = tokens.FindIndex(t => t.EndsWith(xServerProcess, StringComparison.OrdinalIgnoreCase));
-            
-            if (xProcIndex >= 0 && tokens.Count > xProcIndex + 1 && tokens[xProcIndex + 1].StartsWith(":"))
-            {
-                xDisplay = tokens[xProcIndex + 1];
-            }
-
-            string xAuthority;
-
-            var authIndex = tokens.FindIndex(t => t.Equals("-auth", StringComparison.OrdinalIgnoreCase));
-            
-            if (authIndex >= 0 && tokens.Count > authIndex + 1)
-            {
-                xAuthority = tokens[authIndex + 1];
+                if (currentArg.Length > 0)
+                {
+                    args.Add(currentArg.ToString());
+                    currentArg.Clear();
+                }
             }
             else
             {
-                return Result.Fail<XAuthInfo>($"'-auth' parameter not found in {xServerProcess} process arguments.");
+                currentArg.Append(c);
             }
-
-            return Result.Ok(new XAuthInfo(xDisplay, xAuthority));
         }
-        catch (Exception ex)
+        if (currentArg.Length > 0)
         {
-            logger.LogError(ex, "Error while getting X auth for {xServerProcess}.", xServerProcess);
-            
-            return Result.Fail<XAuthInfo>($"Error while getting X auth for {xServerProcess}: {ex.Message}");
+            args.Add(currentArg.ToString());
         }
+        return args;
     }
-
-    private record XAuthInfo(string XDisplay, string XAuthority);
 }
