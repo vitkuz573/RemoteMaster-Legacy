@@ -42,10 +42,7 @@ public class InputService : IInputService
 
     public void HandleKeyboardInput(KeyboardInputDto dto, string connectionId)
     {
-        if (dto == null)
-        {
-            throw new ArgumentNullException(nameof(dto));
-        }
+        ArgumentNullException.ThrowIfNull(dto);
 
         if (!InputEnabled || _disposed)
         {
@@ -76,10 +73,7 @@ public class InputService : IInputService
     /// </summary>
     public void HandleMouseInput(MouseInputDto dto, string connectionId)
     {
-        if (dto == null)
-        {
-            throw new ArgumentNullException(nameof(dto));
-        }
+        ArgumentNullException.ThrowIfNull(dto);
 
         if (!InputEnabled || _disposed)
         {

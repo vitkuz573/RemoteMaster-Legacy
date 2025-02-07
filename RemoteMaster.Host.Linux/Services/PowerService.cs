@@ -13,10 +13,7 @@ public class PowerService(ILogger<PowerService> logger) : IPowerService
 {
     public void Shutdown(PowerActionRequest powerActionRequest)
     {
-        if (powerActionRequest == null)
-        {
-            throw new ArgumentNullException(nameof(powerActionRequest));
-        }
+        ArgumentNullException.ThrowIfNull(powerActionRequest);
 
         logger.LogInformation("Attempting to shutdown the system with message: {Message}, timeout: {Timeout} seconds, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
         
@@ -25,10 +22,7 @@ public class PowerService(ILogger<PowerService> logger) : IPowerService
 
     public void Reboot(PowerActionRequest powerActionRequest)
     {
-        if (powerActionRequest == null)
-        {
-            throw new ArgumentNullException(nameof(powerActionRequest));
-        }
+        ArgumentNullException.ThrowIfNull(powerActionRequest);
 
         logger.LogInformation("Attempting to reboot the system with message: {Message}, timeout: {Timeout} seconds, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
         
