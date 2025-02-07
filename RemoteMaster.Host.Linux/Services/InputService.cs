@@ -12,10 +12,12 @@ namespace RemoteMaster.Host.Linux.Services;
 public class InputService : IInputService
 {
     private readonly CancellationTokenSource _cts = new();
+
     private bool _disposed;
     private nint _display;
 
     public bool InputEnabled { get; set; } = true;
+
     public bool BlockUserInput { get; set; }
 
     public InputService()
