@@ -130,6 +130,11 @@ internal class Program
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<IService, HostService>();
 
+        if (commandName == "service")
+        {
+            services.AddHostedService<SessionWatcherService>();
+        }
+
         if (commandName != "install")
         {
             services.AddAuthorizationBuilder()
