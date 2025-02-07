@@ -193,6 +193,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
                 [Service]
                 WorkingDirectory={WorkingDirectory}
+                ExecStartPre=/bin/sh -c 'while [ $(ls -1 /tmp/.X11-unix/X* 2>/dev/null | wc -l) -eq 0 ]; do echo "Waiting for X server..."; sleep 1; done'
                 ExecStart={BinPath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}
                 Restart=always
                 StartLimitIntervalSec=0
