@@ -19,6 +19,12 @@ public interface IProcess : IDisposable
     StreamReader? StandardOutput { get; }
     
     StreamReader? StandardError { get; }
+
+    ProcessModule? MainModule { get; }
+
+    string ProcessName { get; }
+
+    long WorkingSet64 { get; }
     
     bool HasExited { get; }
 

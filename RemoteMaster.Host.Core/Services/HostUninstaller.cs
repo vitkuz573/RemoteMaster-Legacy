@@ -9,14 +9,14 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostUninstaller(IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IInstanceManagerService instanceManagerService, IApplicationPathProvider applicationPathProvider, ILogger<HostUninstaller> logger) : IHostUninstaller
+public class HostUninstaller(IProcessService processService, IServiceFactory serviceFactory, ICertificateService certificateService, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem, IFileService fileService, IInstanceManagerService instanceManagerService, IApplicationPathProvider applicationPathProvider, ILogger<HostUninstaller> logger) : IHostUninstaller
 {
     public async Task UninstallAsync()
     {
         try
         {
             var applicationDirectory = applicationPathProvider.RootDirectory; 
-            var currentDirectory = fileSystem.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
+            var currentDirectory = fileSystem.Path.GetDirectoryName(processService.GetCurrentProcess().MainModule?.FileName);
 
             if (string.Equals(currentDirectory, applicationDirectory, StringComparison.OrdinalIgnoreCase))
             {

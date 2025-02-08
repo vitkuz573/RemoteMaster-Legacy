@@ -17,7 +17,7 @@ public class TaskManagerService(IProcessService processService, IProcessWrapperF
 
     public List<ProcessInfo> GetRunningProcesses()
     {
-        var processes = Process.GetProcesses();
+        var processes = processService.GetProcesses();
         var processList = new List<ProcessInfo>();
 
         Parallel.ForEach(processes, (process) =>

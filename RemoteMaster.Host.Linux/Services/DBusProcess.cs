@@ -28,6 +28,12 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
     public StreamReader? StandardError => null;
 
+    public ProcessModule? MainModule { get; private set; }
+
+    public string ProcessName { get; private set; }
+
+    public long WorkingSet64 { get; private set; }
+
     public bool HasExited
     {
         get

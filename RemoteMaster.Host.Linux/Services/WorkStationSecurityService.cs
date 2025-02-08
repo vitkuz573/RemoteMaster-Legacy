@@ -7,13 +7,15 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class WorkStationSecurityService : IWorkStationSecurityService
+public class WorkStationSecurityService(IProcessWrapperFactory processWrapperFactory) : IWorkStationSecurityService
 {
     public bool LockWorkStationDisplay()
     {
         try
         {
-            var process = Process.Start("xdg-screensaver", "lock");
+            var process = processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo("xdg-screensaver", "lock"));
 
             return process.WaitForExit(5000);
         }
@@ -28,7 +30,10 @@ public class WorkStationSecurityService : IWorkStationSecurityService
         try
         {
             var command = force ? "pkill -KILL -u $(whoami)" : "pkill -u $(whoami)";
-            var process = Process.Start("bash", "-c \"" + command + "\"");
+
+            var process = processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo("bash", "-c \"" + command + "\""));
 
             return process.WaitForExit(5000);
         }

@@ -43,6 +43,12 @@ public class NativeProcess : IProcess
 
     public StreamReader? StandardError { get; private set; }
 
+    public ProcessModule? MainModule { get; private set; }
+
+    public string ProcessName { get; private set; }
+
+    public long WorkingSet64 { get; private set; }
+
     public bool HasExited
     {
         get

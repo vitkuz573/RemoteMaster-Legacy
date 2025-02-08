@@ -23,6 +23,12 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
 
     public StreamReader StandardError => process.StandardError;
 
+    public ProcessModule? MainModule => process.MainModule;
+
+    public string ProcessName => process.ProcessName;
+
+    public long WorkingSet64 => process.WorkingSet64;
+
     public bool HasExited
     {
         get
