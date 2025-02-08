@@ -22,11 +22,11 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
     public int SessionId { get; private set; }
 
-    public StreamWriter? StandardInput => null;
+    public StreamWriter StandardInput => throw new NotImplementedException();
 
-    public StreamReader? StandardOutput => null;
+    public StreamReader StandardOutput => throw new NotImplementedException();
 
-    public StreamReader? StandardError => null;
+    public StreamReader StandardError => throw new NotImplementedException();
 
     public ProcessModule? MainModule { get; private set; }
 

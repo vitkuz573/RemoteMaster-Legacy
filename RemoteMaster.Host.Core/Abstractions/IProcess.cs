@@ -14,11 +14,11 @@ public interface IProcess : IDisposable
 
     int SessionId { get; }
     
-    StreamWriter? StandardInput { get; }
+    StreamWriter StandardInput { get; }
     
-    StreamReader? StandardOutput { get; }
+    StreamReader StandardOutput { get; }
     
-    StreamReader? StandardError { get; }
+    StreamReader StandardError { get; }
 
     ProcessModule? MainModule { get; }
 
