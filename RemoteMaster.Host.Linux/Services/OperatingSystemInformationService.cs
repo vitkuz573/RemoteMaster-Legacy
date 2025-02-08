@@ -7,41 +7,70 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class OperatingSystemInformationService(IFileSystem fileSystem) : IOperatingSystemInformationService
+/// <summary>
+/// Service for retrieving information about the Linux operating system.
+/// </summary>
+public sealed class OperatingSystemInformationService(IFileSystem fileSystem) : IOperatingSystemInformationService
 {
+    private const string UnknownLinuxDistribution = "Unknown Linux Distribution";
+
+    /// <inheritdoc />
     public string GetName()
     {
         try
         {
-            var osName = GetValueFromFile("/etc/os-release", "PRETTY_NAME")
-                      ?? GetValueFromFile("/etc/lsb-release", "DISTRIB_DESCRIPTION");
+            var releaseFiles = new[]
+            {
+                (FilePath: "/etc/os-release", Key: "PRETTY_NAME"),
+                (FilePath: "/etc/lsb-release", Key: "DISTRIB_DESCRIPTION")
+            };
 
-            return osName ?? "Unknown Linux Distribution";
+            foreach (var (filePath, key) in releaseFiles)
+            {
+                var osName = GetValueFromFile(filePath, key);
+
+                if (!string.IsNullOrWhiteSpace(osName))
+                {
+                    return osName;
+                }
+            }
+
+            return UnknownLinuxDistribution;
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to retrieve Linux OS name", ex);
+            throw new InvalidOperationException("Failed to retrieve Linux OS name.", ex);
         }
     }
 
-    private string? GetValueFromFile(string path, string key)
+    /// <summary>
+    /// Attempts to extract the value associated with the specified key from a file.
+    /// </summary>
+    /// <param name="filePath">The path to the file to read.</param>
+    /// <param name="key">The key whose value needs to be found.</param>
+    /// <returns>
+    /// The value, trimmed of whitespace and quotes, if the key is found; otherwise, <c>null</c>.
+    /// </returns>
+    private string? GetValueFromFile(string filePath, string key)
     {
-        if (!fileSystem.File.Exists(path))
+        if (!fileSystem.File.Exists(filePath))
         {
             return null;
         }
 
-        var lines = fileSystem.File.ReadAllLines(path);
-
-        var line = lines.FirstOrDefault(l => l.StartsWith($"{key}="));
-        
-        if (line is null)
+        foreach (var line in fileSystem.File.ReadLines(filePath))
         {
-            return null;
+            if (line.StartsWith($"{key}="))
+            {
+                var parts = line.Split('=', 2);
+
+                if (parts.Length == 2)
+                {
+                    return parts[1].Trim().Trim('"');
+                }
+            }
         }
 
-        var parts = line.Split('=', 2);
-        
-        return parts.Length < 2 ? null : parts[1].Trim().Trim('"');
+        return null;
     }
 }
