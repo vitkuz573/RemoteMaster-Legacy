@@ -71,10 +71,6 @@ public class UserInstanceServiceTests
             .Setup(x => x.GetProcessesByName(It.IsAny<string>()))
             .Returns(processes);
 
-        _processServiceMock
-            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "user"))
-            .Returns(true);
-
         // Act
         _userInstanceService.Stop();
 
@@ -93,10 +89,6 @@ public class UserInstanceServiceTests
         _processServiceMock
             .Setup(x => x.GetProcessesByName(It.IsAny<string>()))
             .Returns(processes);
-
-        _processServiceMock
-            .Setup(x => x.HasProcessArgument(It.IsAny<IProcess>(), "user"))
-            .Returns(true);
 
         // Act
         var isRunning = _userInstanceService.IsRunning;
