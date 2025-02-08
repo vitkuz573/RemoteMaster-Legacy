@@ -7,21 +7,22 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ProcessService(ICommandLineProvider commandLineProvider) : IProcessService
+public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IProcessService
 {
     public IProcess? GetProcessById(int processId)
     {
         var process = Process.GetProcessById(processId);
 
-        return new ProcessWrapper(process, commandLineProvider);
+        return processWrapperFactory.Create(process);
     }
 
     public IProcess[] GetProcessesByName(string processName)
     {
         var processes = Process.GetProcessesByName(processName);
 
-        return processes.Where(p => !p.HasExited)
-            .Select(p => new ProcessWrapper(p, commandLineProvider))
+        return processes
+            .Where(p => !p.HasExited)
+            .Select(processWrapperFactory.Create)
             .ToArray();
     }
 }

@@ -17,4 +17,9 @@ public class ProcessWrapperFactory(ICommandLineProvider commandLineProvider) : I
 
         return new ProcessWrapper(process, commandLineProvider);
     }
+
+    public IProcess Create(Process process)
+    {
+        return new ProcessWrapper(process, commandLineProvider);
+    }
 }
