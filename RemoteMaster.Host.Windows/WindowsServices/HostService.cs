@@ -2,11 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.WindowsServices;
 
-public class HostService : AbstractService
+public class HostService(IApplicationPathProvider applicationPathProvider, IFileSystem fileSystem, IProcessWrapperFactory processWrapperFactory) : AbstractService(processWrapperFactory)
 {
     public override string Name => "RCHost";
 
@@ -16,9 +18,9 @@ public class HostService : AbstractService
     {
         get
         {
-            var executableName = Path.GetFileName(Environment.ProcessPath!);
+            var executableName = fileSystem.Path.GetFileName(Environment.ProcessPath!);
 
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", executableName);
+            return fileSystem.Path.Combine(applicationPathProvider.RootDirectory, executableName);
         }
     }
 

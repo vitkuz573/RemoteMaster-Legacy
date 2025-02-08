@@ -8,7 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public abstract class AbstractService : IService
+public abstract class AbstractService(IProcessWrapperFactory processWrapperFactory) : IService
 {
     public abstract string Name { get; }
 
@@ -130,9 +130,9 @@ public abstract class AbstractService : IService
 
     protected virtual void ExecuteServiceCommand(string arguments)
     {
-        using var process = new Process();
+        var process = processWrapperFactory.Create();
 
-        process.StartInfo = new ProcessStartInfo
+        process.Start(new ProcessStartInfo
         {
             FileName = "sc",
             Arguments = arguments,
@@ -141,9 +141,8 @@ public abstract class AbstractService : IService
             UseShellExecute = false,
             CreateNoWindow = true,
             Verb = "runas"
-        };
+        });
 
-        process.Start();
         process.WaitForExit();
     }
 

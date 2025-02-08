@@ -12,20 +12,22 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext, IProcessService processService, ILogger<CommandExecutor> logger) : ICommandExecutor
+public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext, IProcessWrapperFactory processWrapperFactory, ILogger<CommandExecutor> logger) : ICommandExecutor
 {
     public async Task ExecuteCommandAsync(string command)
     {
         try
         {
-            var processStartInfo = new ProcessStartInfo("cmd.exe", $"/c {command}")
+            var process = processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo
             {
+                FileName = "cmd.exe",
+                Arguments = $"/c {command}",
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
-            };
-
-            using var process = processService.Start(processStartInfo);
+            });
 
             await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageSeverity.Information)
             {
@@ -35,7 +37,7 @@ public class CommandExecutor(IHubContext<ServiceHub, IServiceClient> hubContext,
             var readErrorTask = ReadStreamAsync(process.StandardError, MessageSeverity.Error);
             var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageSeverity.Information);
 
-            processService.WaitForExit(process);
+            process.WaitForExit();
 
             await Task.WhenAll(readErrorTask, readOutputTask);
         }

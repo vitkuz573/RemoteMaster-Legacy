@@ -10,7 +10,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class WoLConfiguratorService(IRegistryService registryService, IProcessService processService, ILogger<WoLConfiguratorService> logger) : IWoLConfiguratorService
+public class WoLConfiguratorService(IRegistryService registryService, IProcessService processService, IProcessWrapperFactory processWrapperFactory, ILogger<WoLConfiguratorService> logger) : IWoLConfiguratorService
 {
     private const string PowerSettingsKeyPath = @"SYSTEM\CurrentControlSet\Control\Session Manager\Power";
     private const string HiberbootEnabledValueName = "HiberbootEnabled";
@@ -42,38 +42,39 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
     {
         try
         {
-            var startInfoForDeviceQuery = new ProcessStartInfo
+            string programmableDevices;
+
+            var process = processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo
             {
                 FileName = "powercfg.exe",
                 Arguments = "/devicequery wake_programmable",
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true
-            };
+            });
 
-            string programmableDevices;
+            process.WaitForExit();
 
-            using (var process = processService.Start(startInfoForDeviceQuery))
-            {
-                processService.WaitForExit(process);
-                programmableDevices = await processService.ReadStandardOutputAsync(process);
-            }
+            programmableDevices = await processService.ReadStandardOutputAsync(process);
 
             var deviceNames = programmableDevices.Split(["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var deviceName in deviceNames)
             {
-                var startInfoForEnableWake = new ProcessStartInfo
+                var powerCfgProcess = processWrapperFactory.Create();
+
+                powerCfgProcess.Start(new ProcessStartInfo
                 {
                     FileName = "powercfg.exe",
                     Arguments = $"/deviceenablewake \"{deviceName}\"",
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardOutput = true
-                };
+                });
 
-                using var powerCfgProcess = processService.Start(startInfoForEnableWake);
-                processService.WaitForExit(powerCfgProcess);
+                process.WaitForExit();
             }
         }
         catch (Exception ex)
