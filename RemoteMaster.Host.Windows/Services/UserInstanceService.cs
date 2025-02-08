@@ -7,6 +7,7 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
+using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Windows.Models;
 using static Windows.Win32.PInvoke;
 
@@ -24,7 +25,7 @@ public sealed class UserInstanceService : IUserInstanceService
 
     public bool IsRunning => _processService
         .GetProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
-        .Any(p => _processService.HasProcessArgument(p, Command));
+        .Any(p => p.HasArgument(Command));
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
     {
@@ -58,7 +59,7 @@ public sealed class UserInstanceService : IUserInstanceService
 
         foreach (var process in processes)
         {
-            if (!_processService.HasProcessArgument(process, Command))
+            if (!process.HasArgument(Command))
             {
                 continue;
             }

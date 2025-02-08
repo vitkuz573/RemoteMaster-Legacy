@@ -24,13 +24,4 @@ public class ProcessService(ICommandLineProvider commandLineProvider) : IProcess
             .Select(p => new ProcessWrapper(p, commandLineProvider))
             .ToArray();
     }
-
-    public bool HasProcessArgument(IProcess process, string argument)
-    {
-        ArgumentNullException.ThrowIfNull(process);
-
-        var commandLine = process.GetCommandLine();
-
-        return commandLine.Contains(argument);
-    }
 }

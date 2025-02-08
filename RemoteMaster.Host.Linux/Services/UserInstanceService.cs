@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
@@ -18,7 +19,7 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
 
     public bool IsRunning => processService
         .GetProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath))
-        .Any(p => processService.HasProcessArgument(p, Command));
+        .Any(p => p.HasArgument(Command));
 
     public void Start()
     {
@@ -40,7 +41,7 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
 
         foreach (var process in processes)
         {
-            if (!processService.HasProcessArgument(process, Command))
+            if (!process.HasArgument(Command))
             {
                 continue;
             }
