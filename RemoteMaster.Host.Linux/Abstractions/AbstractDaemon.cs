@@ -74,13 +74,13 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
                 }
 
                 logger.LogDebug("{Name} service is not active: {Output} {Error}", Name, output, error);
-
+               
                 return false;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to check if {Name} service is running.", Name);
-
+                
                 return false;
             }
         }
@@ -94,18 +94,18 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
             var unitFilePath = $"/etc/systemd/system/{Name}.service";
 
             fileSystem.File.WriteAllText(unitFilePath, unitFileContent);
-
+            
             logger.LogInformation("Systemd unit file created at {UnitFilePath}.", unitFilePath);
 
-            ExecuteCommand("systemctl", "daemon-reload");
-
+            ExecuteDaemonCommand("daemon-reload");
+            
             logger.LogInformation("Systemd daemon reloaded.");
 
-            ExecuteCommand("systemctl", $"enable {Name}.service");
+            ExecuteDaemonCommand($"enable {Name}.service");
 
             logger.LogInformation("{Name} service enabled to start on boot.", Name);
 
-            ExecuteCommand("systemctl", $"start {Name}.service");
+            ExecuteDaemonCommand($"start {Name}.service");
 
             logger.LogInformation("{Name} service started successfully.", Name);
         }
@@ -119,20 +119,20 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
     {
         try
         {
-            ExecuteCommand("systemctl", $"stop {Name}.service");
-
+            ExecuteDaemonCommand($"stop {Name}.service");
+            
             logger.LogInformation("{Name} service stopped.", Name);
 
-            ExecuteCommand("systemctl", $"disable {Name}.service");
-
+            ExecuteDaemonCommand($"disable {Name}.service");
+            
             logger.LogInformation("{Name} service disabled from starting on boot.", Name);
 
             var unitFilePath = $"/etc/systemd/system/{Name}.service";
-
+            
             if (fileSystem.File.Exists(unitFilePath))
             {
                 fileSystem.File.Delete(unitFilePath);
-
+                
                 logger.LogInformation("Systemd unit file deleted at {UnitFilePath}.", unitFilePath);
             }
             else
@@ -140,10 +140,9 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
                 logger.LogWarning("Systemd unit file not found at {UnitFilePath}.", unitFilePath);
             }
 
-            ExecuteCommand("systemctl", "daemon-reload");
-
+            ExecuteDaemonCommand("daemon-reload");
+            
             logger.LogInformation("Systemd daemon reloaded.");
-
         }
         catch (Exception ex)
         {
@@ -156,11 +155,15 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
         if (IsRunning)
         {
             logger.LogWarning("{Name} daemon is already running.", Name);
-
+            
             return;
         }
 
         logger.LogInformation("Starting {Name} daemon...", Name);
+        
+        ExecuteDaemonCommand($"start {Name}.service");
+        
+        logger.LogInformation("{Name} daemon started.", Name);
     }
 
     public virtual void Stop()
@@ -168,17 +171,21 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
         if (!IsRunning)
         {
             logger.LogWarning("{Name} daemon is not running.", Name);
-
+            
             return;
         }
 
         logger.LogInformation("Stopping {Name} daemon...", Name);
+        
+        ExecuteDaemonCommand($"stop {Name}.service");
+        
+        logger.LogInformation("{Name} daemon stopped.", Name);
     }
 
     public virtual void Restart()
     {
         logger.LogInformation("Restarting {Name} daemon...", Name);
-
+        
         Stop();
         Start();
     }
@@ -203,13 +210,13 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
                 """;
     }
 
-    private void ExecuteCommand(string command, string arguments)
+    protected virtual void ExecuteDaemonCommand(string arguments)
     {
         var process = processWrapperFactory.Create();
 
         process.Start(new ProcessStartInfo
         {
-            FileName = command,
+            FileName = "systemctl",
             Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -224,7 +231,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
 
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"Command '{command} {arguments}' exited with code {process.ExitCode}: {error}");
+            throw new InvalidOperationException($"Command 'systemctl {arguments}' exited with code {process.ExitCode}: {error}");
         }
 
         if (!string.IsNullOrWhiteSpace(output))
@@ -262,18 +269,18 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
             if (process.ExitCode == 0)
             {
                 logger.LogDebug("{Name} service is enabled.", Name);
-
+                
                 return output.Equals("enabled", StringComparison.OrdinalIgnoreCase);
             }
 
             logger.LogDebug("{Name} service is not enabled: {Error}", Name, error);
-
+            
             return false;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to check if {Name} service is enabled.", Name);
-
+            
             return false;
         }
     }
