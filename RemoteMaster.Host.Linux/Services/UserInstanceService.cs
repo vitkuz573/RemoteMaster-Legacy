@@ -17,7 +17,7 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => processService
-        .FindProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath))
+        .GetProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath))
         .Any(p => processService.HasProcessArgument(p, Command));
 
     public void Start()
@@ -36,7 +36,7 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
 
     public void Stop()
     {
-        var processes = processService.FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = processService.GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {

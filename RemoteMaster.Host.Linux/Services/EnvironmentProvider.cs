@@ -2,18 +2,18 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class EnvironmentProvider : IEnvironmentProvider
+public class EnvironmentProvider(IProcessService processService) : IEnvironmentProvider
 {
     public string GetDisplay()
     {
-        var xorgProcesses = Process.GetProcessesByName("Xorg");
+        var xorgProcesses = processService.GetProcessesByName("Xorg");
 
         foreach (var proc in xorgProcesses)
         {
@@ -75,7 +75,7 @@ public class EnvironmentProvider : IEnvironmentProvider
 
     public string GetXAuthority()
     {
-        var xorgProcesses = Process.GetProcessesByName("Xorg");
+        var xorgProcesses = processService.GetProcessesByName("Xorg");
         
         foreach (var proc in xorgProcesses)
         {
@@ -120,7 +120,7 @@ public class EnvironmentProvider : IEnvironmentProvider
         return string.Empty;
     }
 
-    private static string GetCommandLine(Process process)
+    private static string GetCommandLine(IProcess process)
     {
         var path = $"/proc/{process.Id}/cmdline";
 

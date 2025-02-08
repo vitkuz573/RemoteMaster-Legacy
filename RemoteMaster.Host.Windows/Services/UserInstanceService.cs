@@ -23,7 +23,7 @@ public sealed class UserInstanceService : IUserInstanceService
     private readonly ILogger<UserInstanceService> _logger;
 
     public bool IsRunning => _processService
-        .FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
+        .GetProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
         .Any(p => _processService.HasProcessArgument(p, Command));
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
@@ -54,7 +54,7 @@ public sealed class UserInstanceService : IUserInstanceService
 
     public void Stop()
     {
-        var processes = _processService.FindProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = _processService.GetProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {

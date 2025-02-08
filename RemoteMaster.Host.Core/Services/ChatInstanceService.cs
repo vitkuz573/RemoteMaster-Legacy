@@ -16,7 +16,7 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => processService
-        .FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
+        .GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
         .Any(p => processService.HasProcessArgument(p, Command));
 
     public void Start()
@@ -35,7 +35,7 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     public void Stop()
     {
-        var processes = processService.FindProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = processService.GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {

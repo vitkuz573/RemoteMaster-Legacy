@@ -68,7 +68,7 @@ public class UserInstanceServiceTests
         var processes = new[] { processMock.Object };
 
         _processServiceMock
-            .Setup(x => x.FindProcessesByName(It.IsAny<string>()))
+            .Setup(x => x.GetProcessesByName(It.IsAny<string>()))
             .Returns(processes);
 
         _processServiceMock
@@ -91,7 +91,7 @@ public class UserInstanceServiceTests
         var processes = new[] { processMock.Object };
 
         _processServiceMock
-            .Setup(x => x.FindProcessesByName(It.IsAny<string>()))
+            .Setup(x => x.GetProcessesByName(It.IsAny<string>()))
             .Returns(processes);
 
         _processServiceMock
@@ -110,7 +110,7 @@ public class UserInstanceServiceTests
     {
         // Arrange
         _processServiceMock
-            .Setup(x => x.FindProcessesByName(It.IsAny<string>()))
+            .Setup(x => x.GetProcessesByName(It.IsAny<string>()))
             .Returns([]);
 
         // Act

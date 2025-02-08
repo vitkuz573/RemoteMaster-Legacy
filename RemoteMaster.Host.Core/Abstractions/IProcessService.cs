@@ -14,7 +14,7 @@ public interface IProcessService
 
     Task<string> ReadStandardOutputAsync(IProcess process);
 
-    IProcess[] FindProcessesByName(string processName);
+    IProcess[] GetProcessesByName(string processName);
 
     bool HasProcessArgument(IProcess process, string argument);
 }
