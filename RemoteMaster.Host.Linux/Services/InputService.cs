@@ -68,9 +68,6 @@ public class InputService : IInputService
         X11Native.XFlush(_display);
     }
 
-    /// <summary>
-    /// Simulates a mouse event.
-    /// </summary>
     public void HandleMouseInput(MouseInputDto dto, string connectionId)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -100,9 +97,9 @@ public class InputService : IInputService
 
         if (dto is { Button: not null, IsPressed: not null })
         {
-            var linuxButton = (uint)(dto.Button.Value + 1);
+            var button = (uint)(dto.Button.Value + 1);
 
-            XtstNative.XTestFakeButtonEvent(_display, linuxButton, dto.IsPressed.Value, 0);
+            XtstNative.XTestFakeButtonEvent(_display, button, dto.IsPressed.Value, 0);
         }
 
         X11Native.XFlush(_display);
