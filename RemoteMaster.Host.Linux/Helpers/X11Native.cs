@@ -11,7 +11,7 @@ public static class X11Native
     private const string LibraryName = "libX11";
 
     [DllImport(LibraryName)]
-    public static extern nint XGetImage(nint display, nint drawable, int x, int y, int width, int height, long plane_mask, int format);
+    public static extern nint XGetImage(nint display, nint drawable, int x, int y, uint width, uint height, ulong plane_mask, int format);
 
     [DllImport(LibraryName)]
     public static extern nint XDefaultVisual(nint display, int screen_number);

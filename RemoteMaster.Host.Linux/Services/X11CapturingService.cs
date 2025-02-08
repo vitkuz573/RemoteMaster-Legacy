@@ -36,7 +36,7 @@ public class X11CapturingService : ScreenCapturingService
         using var currentFrame = new Image<Rgba32>(bounds.Width, bounds.Height);
 
         var window = X11Native.XDefaultRootWindow(_display);
-        var imagePointer = X11Native.XGetImage(_display, window, bounds.X, bounds.Y, bounds.Width, bounds.Height, ~0, 2);
+        var imagePointer = X11Native.XGetImage(_display, window, bounds.X, bounds.Y, (uint)bounds.Width, (uint)bounds.Height, ~0UL, 2);
 
         if (imagePointer == nint.Zero)
         {
