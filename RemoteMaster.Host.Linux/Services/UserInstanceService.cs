@@ -37,7 +37,7 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
 
     public void Stop()
     {
-        var processes = processService.GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
+        var processes = processService.GetProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath));
 
         foreach (var process in processes)
         {
