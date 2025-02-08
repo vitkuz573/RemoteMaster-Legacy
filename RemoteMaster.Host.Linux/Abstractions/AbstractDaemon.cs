@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Abstractions;
 
-public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDaemon> logger) : IService
+public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFactory processWrapperFactory, ILogger<AbstractDaemon> logger) : IService
 {
     public abstract string Name { get; }
 
@@ -32,7 +32,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
                 return IsServiceEnabled();
             }
 
-            logger.LogDebug($"Unit file {unitFilePath} does not exist.");
+            logger.LogDebug("Unit file {UnitFilePath} does not exist.", unitFilePath);
 
             return false;
         }
@@ -49,7 +49,9 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
             try
             {
-                var processInfo = new ProcessStartInfo
+                var process = processWrapperFactory.Create();
+
+                process.Start(new ProcessStartInfo
                 {
                     FileName = "systemctl",
                     Arguments = $"is-active {Name}.service",
@@ -57,11 +59,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
-                };
-
-                using var process = new Process();
-                process.StartInfo = processInfo;
-                process.Start();
+                });
 
                 var output = process.StandardOutput.ReadToEnd().Trim();
                 var error = process.StandardError.ReadToEnd().Trim();
@@ -70,18 +68,18 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
                 if (process.ExitCode == 0 && output.Equals("active", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogDebug($"{Name} service is active.");
+                    logger.LogDebug("{Name} service is active.", Name);
 
                     return true;
                 }
 
-                logger.LogDebug($"{Name} service is not active: {output} {error}");
+                logger.LogDebug("{Name} service is not active: {Output} {Error}", Name, output, error);
 
                 return false;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to check if {Name} service is running.");
+                logger.LogError(ex, "Failed to check if {Name} service is running.", Name);
 
                 return false;
             }
@@ -97,7 +95,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
             fileSystem.File.WriteAllText(unitFilePath, unitFileContent);
 
-            logger.LogInformation($"Systemd unit file created at {unitFilePath}.");
+            logger.LogInformation("Systemd unit file created at {UnitFilePath}.", unitFilePath);
 
             ExecuteCommand("systemctl", "daemon-reload");
 
@@ -105,15 +103,15 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
             ExecuteCommand("systemctl", $"enable {Name}.service");
 
-            logger.LogInformation($"{Name} service enabled to start on boot.");
+            logger.LogInformation("{Name} service enabled to start on boot.", Name);
 
             ExecuteCommand("systemctl", $"start {Name}.service");
 
-            logger.LogInformation($"{Name} service started successfully.");
+            logger.LogInformation("{Name} service started successfully.", Name);
         }
         catch (Exception e)
         {
-            logger.LogError(e, $"Failed to create {Name} daemon.");
+            logger.LogError(e, "Failed to create {Name} daemon.", Name);
         }
     }
 
@@ -123,11 +121,11 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         {
             ExecuteCommand("systemctl", $"stop {Name}.service");
 
-            logger.LogInformation($"{Name} service stopped.");
+            logger.LogInformation("{Name} service stopped.", Name);
 
             ExecuteCommand("systemctl", $"disable {Name}.service");
 
-            logger.LogInformation($"{Name} service disabled from starting on boot.");
+            logger.LogInformation("{Name} service disabled from starting on boot.", Name);
 
             var unitFilePath = $"/etc/systemd/system/{Name}.service";
 
@@ -135,11 +133,11 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
             {
                 fileSystem.File.Delete(unitFilePath);
 
-                logger.LogInformation($"Systemd unit file deleted at {unitFilePath}.");
+                logger.LogInformation("Systemd unit file deleted at {UnitFilePath}.", unitFilePath);
             }
             else
             {
-                logger.LogWarning($"Systemd unit file not found at {unitFilePath}.");
+                logger.LogWarning("Systemd unit file not found at {UnitFilePath}.", unitFilePath);
             }
 
             ExecuteCommand("systemctl", "daemon-reload");
@@ -149,7 +147,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Failed to delete {Name} daemon.");
+            logger.LogError(ex, "Failed to delete {Name} daemon.", Name);
         }
     }
 
@@ -157,29 +155,29 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
     {
         if (IsRunning)
         {
-            logger.LogWarning($"{Name} daemon is already running.");
+            logger.LogWarning("{Name} daemon is already running.", Name);
 
             return;
         }
 
-        logger.LogInformation($"Starting {Name} daemon...");
+        logger.LogInformation("Starting {Name} daemon...", Name);
     }
 
     public virtual void Stop()
     {
         if (!IsRunning)
         {
-            logger.LogWarning($"{Name} daemon is not running.");
+            logger.LogWarning("{Name} daemon is not running.", Name);
 
             return;
         }
 
-        logger.LogInformation($"Stopping {Name} daemon...");
+        logger.LogInformation("Stopping {Name} daemon...", Name);
     }
 
     public virtual void Restart()
     {
-        logger.LogInformation($"Restarting {Name} daemon...");
+        logger.LogInformation("Restarting {Name} daemon...", Name);
 
         Stop();
         Start();
@@ -207,7 +205,9 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
     private void ExecuteCommand(string command, string arguments)
     {
-        var processInfo = new ProcessStartInfo
+        var process = processWrapperFactory.Create();
+
+        process.Start(new ProcessStartInfo
         {
             FileName = command,
             Arguments = arguments,
@@ -215,11 +215,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
-        };
-
-        using var process = new Process();
-        process.StartInfo = processInfo;
-        process.Start();
+        });
 
         var output = process.StandardOutput.ReadToEnd();
         var error = process.StandardError.ReadToEnd();
@@ -233,12 +229,12 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
         if (!string.IsNullOrWhiteSpace(output))
         {
-            logger.LogInformation(output);
+            logger.LogInformation("{Output}", output);
         }
 
         if (!string.IsNullOrWhiteSpace(error))
         {
-            logger.LogWarning(error);
+            logger.LogWarning("{Error}", error);
         }
     }
 
@@ -246,7 +242,9 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
     {
         try
         {
-            var processInfo = new ProcessStartInfo
+            var process = processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo
             {
                 FileName = "systemctl",
                 Arguments = $"is-enabled {Name}.service",
@@ -254,11 +252,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
-            };
-
-            using var process = new Process();
-            process.StartInfo = processInfo;
-            process.Start();
+            });
 
             var output = process.StandardOutput.ReadToEnd().Trim();
             var error = process.StandardError.ReadToEnd().Trim();
@@ -267,18 +261,18 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, ILogger<AbstractDae
 
             if (process.ExitCode == 0)
             {
-                logger.LogDebug($"{Name} service is enabled.");
+                logger.LogDebug("{Name} service is enabled.", Name);
 
                 return output.Equals("enabled", StringComparison.OrdinalIgnoreCase);
             }
 
-            logger.LogDebug($"{Name} service is not enabled: {error}");
+            logger.LogDebug("{Name} service is not enabled: {Error}", Name, error);
 
             return false;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Failed to check if {Name} service is enabled.");
+            logger.LogError(ex, "Failed to check if {Name} service is enabled.", Name);
 
             return false;
         }

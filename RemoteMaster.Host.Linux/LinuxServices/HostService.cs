@@ -9,7 +9,7 @@ using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.LinuxServices;
 
-public class HostService(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<HostService> logger) : AbstractDaemon(fileSystem, logger)
+public class HostService(IFileSystem fileSystem, IProcessWrapperFactory processWrapperFactory, IApplicationPathProvider applicationPathProvider, ILogger<HostService> logger) : AbstractDaemon(fileSystem, processWrapperFactory, logger)
 {
     private readonly IFileSystem _fileSystem = fileSystem;
 

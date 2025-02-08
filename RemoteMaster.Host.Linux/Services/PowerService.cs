@@ -9,7 +9,7 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class PowerService(ILogger<PowerService> logger) : IPowerService
+public class PowerService(IProcessWrapperFactory processWrapperFactory, ILogger<PowerService> logger) : IPowerService
 {
     public void Shutdown(PowerActionRequest powerActionRequest)
     {
@@ -40,8 +40,9 @@ public class PowerService(ILogger<PowerService> logger) : IPowerService
 
         try
         {
-            using var process = new Process();
-            process.StartInfo = new ProcessStartInfo
+            var process = processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo
             {
                 FileName = "shutdown",
                 Arguments = arguments,
@@ -49,9 +50,8 @@ public class PowerService(ILogger<PowerService> logger) : IPowerService
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
-            };
+            });
 
-            process.Start();
             process.WaitForExit();
 
             if (process.ExitCode != 0)

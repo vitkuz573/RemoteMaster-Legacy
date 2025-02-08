@@ -7,7 +7,7 @@ using RemoteMaster.Host.Linux.Models;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class DBusProcessFactory(ICommandLineProvider commandLineProvider) : INativeProcessFactory
+public class DBusProcessFactory(IProcessService processService, ICommandLineProvider commandLineProvider) : INativeProcessFactory
 {
     public IProcess Create(INativeProcessOptions options)
     {
@@ -16,6 +16,6 @@ public class DBusProcessFactory(ICommandLineProvider commandLineProvider) : INat
             throw new ArgumentException("Invalid process options for Linux platform.", nameof(options));
         }
 
-        return new DBusProcess(nativeOptions, commandLineProvider);
+        return new DBusProcess(nativeOptions, processService, commandLineProvider);
     }
 }

@@ -32,6 +32,13 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory, IComma
         return await process.StandardOutput.ReadToEndAsync();
     }
 
+    public IProcess? GetProcessById(int processId)
+    {
+        var process = Process.GetProcessById(processId);
+
+        return new ProcessWrapper(process, commandLineProvider);
+    }
+
     public IProcess[] GetProcessesByName(string processName)
     {
         var processes = Process.GetProcessesByName(processName);

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 
@@ -10,17 +11,21 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class NetworkDriveService : INetworkDriveService
 {
+    private readonly IProcessWrapperFactory _processWrapperFactory;
+    private readonly IFileSystem _fileSystem;
     private readonly ILogger<NetworkDriveService> _logger;
 
     private const string BaseMountPoint = "/mnt/RemoteMaster";
 
-    public NetworkDriveService(ILogger<NetworkDriveService> logger)
+    public NetworkDriveService(IProcessWrapperFactory processWrapperFactory, IFileSystem fileSystem, ILogger<NetworkDriveService> logger)
     {
+        _processWrapperFactory = processWrapperFactory;
+        _fileSystem = fileSystem;
         _logger = logger;
 
-        if (!Directory.Exists(BaseMountPoint))
+        if (!_fileSystem.Directory.Exists(BaseMountPoint))
         {
-            Directory.CreateDirectory(BaseMountPoint);
+            _fileSystem.Directory.CreateDirectory(BaseMountPoint);
         }
     }
 
@@ -36,9 +41,9 @@ public class NetworkDriveService : INetworkDriveService
         {
             var mountPoint = GetMountPoint(remotePath);
 
-            if (!Directory.Exists(mountPoint))
+            if (!_fileSystem.Directory.Exists(mountPoint))
             {
-                Directory.CreateDirectory(mountPoint);
+                _fileSystem.Directory.CreateDirectory(mountPoint);
             }
 
             string options;
@@ -57,27 +62,26 @@ public class NetworkDriveService : INetworkDriveService
                 options = "guest";
             }
 
-            var startInfo = new ProcessStartInfo
+            var process = _processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo
             {
                 FileName = "mount",
                 Arguments = $"-t cifs \"{remotePath}\" \"{mountPoint}\" -o {options}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false
-            };
+            });
 
-            using (var process = Process.Start(startInfo))
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
             {
-                process.WaitForExit();
+                var error = process.StandardError.ReadToEnd();
 
-                if (process.ExitCode != 0)
-                {
-                    var error = process.StandardError.ReadToEnd();
+                _logger.LogError("Failed to map network drive with remote path {RemotePath}. Error: {Error}", remotePath, error);
 
-                    _logger.LogError("Failed to map network drive with remote path {RemotePath}. Error: {Error}", remotePath, error);
-
-                    return false;
-                }
+                return false;
             }
 
             _logger.LogInformation("Successfully mapped network drive with remote path: {RemotePath} to mount point: {MountPoint}", remotePath, mountPoint);
@@ -102,32 +106,31 @@ public class NetworkDriveService : INetworkDriveService
         {
             var mountPoint = GetMountPoint(remotePath);
 
-            var startInfo = new ProcessStartInfo
+            var process = _processWrapperFactory.Create();
+
+            process.Start(new ProcessStartInfo
             {
                 FileName = "umount",
                 Arguments = $"\"{mountPoint}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false
-            };
+            });
 
-            using (var process = Process.Start(startInfo))
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
             {
-                process.WaitForExit();
+                var error = process.StandardError.ReadToEnd();
 
-                if (process.ExitCode != 0)
-                {
-                    var error = process.StandardError.ReadToEnd();
-                        
-                    _logger.LogError("Failed to cancel network drive with remote path {RemotePath}. Error: {Error}", remotePath, error);
-                        
-                    return false;
-                }
+                _logger.LogError("Failed to cancel network drive with remote path {RemotePath}. Error: {Error}", remotePath, error);
+
+                return false;
             }
 
-            if (Directory.Exists(mountPoint))
+            if (_fileSystem.Directory.Exists(mountPoint))
             {
-                Directory.Delete(mountPoint);
+                _fileSystem.Directory.Delete(mountPoint);
             }
 
             _logger.LogInformation("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
@@ -149,10 +152,10 @@ public class NetworkDriveService : INetworkDriveService
         return GetMountPoint(remotePath);
     }
 
-    private static string GetMountPoint(string remotePath)
+    private string GetMountPoint(string remotePath)
     {
         var sanitized = remotePath.TrimStart('/').Replace('/', '_');
 
-        return Path.Combine(BaseMountPoint, sanitized);
+        return _fileSystem.Path.Combine(BaseMountPoint, sanitized);
     }
 }

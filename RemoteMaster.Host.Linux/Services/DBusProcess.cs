@@ -9,14 +9,16 @@ using Tmds.DBus;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvider commandLineProvider) : IProcess
+public class DBusProcess(INativeProcessOptions processOptions, IProcessService processService, ICommandLineProvider commandLineProvider) : IProcess
 {
     private Connection? _connection;
     private ObjectPath _unitJobPath;
     private ObjectPath _unitPath;
-    private Process? _attachedProcess;
+    private IProcess? _attachedProcess;
 
     public int Id { get; private set; }
+
+    public int ExitCode { get; private set; }
 
     public StreamWriter? StandardInput => null;
 
@@ -30,7 +32,7 @@ public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvi
         {
             try
             {
-                var proc = Process.GetProcessById(Id);
+                var proc = processService.GetProcessById(Id);
 
                 return proc.HasExited;
             }
@@ -93,7 +95,7 @@ public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvi
 
         try
         {
-            _attachedProcess = Process.GetProcessById(Id);
+            _attachedProcess = processService.GetProcessById(Id);
         }
         catch
         {
@@ -111,7 +113,7 @@ public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvi
             }
             else
             {
-                var proc = Process.GetProcessById(Id);
+                var proc = processService.GetProcessById(Id);
                 proc.Kill();
             }
         }
@@ -130,9 +132,9 @@ public class DBusProcess(INativeProcessOptions processOptions, ICommandLineProvi
     {
         try
         {
-            var proc = Process.GetProcessById(Id);
+            var proc = processService.GetProcessById(Id);
 
-            return proc.WaitForExit((int)millisecondsTimeout);
+            return proc.WaitForExit(millisecondsTimeout);
         }
         catch (Exception ex)
         {

@@ -9,6 +9,8 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IProcess : IDisposable
 {
     int Id { get; }
+
+    int ExitCode { get; }
     
     StreamWriter? StandardInput { get; }
     
