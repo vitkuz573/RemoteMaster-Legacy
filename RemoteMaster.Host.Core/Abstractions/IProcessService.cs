@@ -2,18 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
-
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IProcessService
 {
-    IProcess Start(ProcessStartInfo startInfo);
-
-    void WaitForExit(IProcess process);
-
-    Task<string> ReadStandardOutputAsync(IProcess process);
-
     IProcess? GetProcessById(int processId);
 
     IProcess[] GetProcessesByName(string processName);

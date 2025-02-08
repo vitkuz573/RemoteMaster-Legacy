@@ -10,7 +10,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class WoLConfiguratorService(IRegistryService registryService, IProcessService processService, IProcessWrapperFactory processWrapperFactory, ILogger<WoLConfiguratorService> logger) : IWoLConfiguratorService
+public class WoLConfiguratorService(IRegistryService registryService, IProcessWrapperFactory processWrapperFactory, ILogger<WoLConfiguratorService> logger) : IWoLConfiguratorService
 {
     private const string PowerSettingsKeyPath = @"SYSTEM\CurrentControlSet\Control\Session Manager\Power";
     private const string HiberbootEnabledValueName = "HiberbootEnabled";
@@ -57,7 +57,7 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
 
             process.WaitForExit();
 
-            programmableDevices = await processService.ReadStandardOutputAsync(process);
+            programmableDevices = await process.StandardOutput.ReadToEndAsync();
 
             var deviceNames = programmableDevices.Split(["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries);
 

@@ -7,31 +7,8 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ProcessService(IProcessWrapperFactory processWrapperFactory, ICommandLineProvider commandLineProvider) : IProcessService
+public class ProcessService(ICommandLineProvider commandLineProvider) : IProcessService
 {
-    public IProcess Start(ProcessStartInfo startInfo)
-    {
-        var process = processWrapperFactory.Create();
-
-        process.Start(startInfo);
-
-        return process;
-    }
-
-    public void WaitForExit(IProcess process)
-    {
-        ArgumentNullException.ThrowIfNull(process);
-
-        process.WaitForExit();
-    }
-
-    public async Task<string> ReadStandardOutputAsync(IProcess process)
-    {
-        ArgumentNullException.ThrowIfNull(process);
-
-        return await process.StandardOutput.ReadToEndAsync();
-    }
-
     public IProcess? GetProcessById(int processId)
     {
         var process = Process.GetProcessById(processId);
