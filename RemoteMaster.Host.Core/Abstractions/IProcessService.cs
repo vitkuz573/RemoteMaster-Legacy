@@ -10,7 +10,7 @@ public interface IProcessService
 
     IProcess GetCurrentProcess();
 
-    IProcess? GetProcessById(int processId);
+    IProcess GetProcessById(int processId);
 
     IProcess[] GetProcessesByName(string processName);
 }

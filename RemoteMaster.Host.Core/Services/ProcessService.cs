@@ -25,7 +25,7 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
         return processWrapperFactory.Create(process);
     }
 
-    public IProcess? GetProcessById(int processId)
+    public IProcess GetProcessById(int processId)
     {
         var process = Process.GetProcessById(processId);
 
