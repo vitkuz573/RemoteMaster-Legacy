@@ -9,8 +9,14 @@ using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem) : IEnvironmentProvider
+public partial class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem) : IEnvironmentProvider
 {
+    [GeneratedRegex(@"\s(?<display>:\d+)\b", RegexOptions.None, 1000)]
+    private static partial Regex DisplayRegex();
+
+    [GeneratedRegex(@"-auth\s+(\S+)", RegexOptions.None, 1000)]
+    private static partial Regex XAuthRegex();
+
     public string GetDisplay()
     {
         var xorgProcesses = processService.GetProcessesByName("Xorg");
@@ -22,7 +28,7 @@ public class EnvironmentProvider(IProcessService processService, ICommandLinePro
                 var args = commandLineProvider.GetCommandLine(proc);
 
                 var cmdLine = string.Join(" ", proc);
-                var match = Regex.Match(cmdLine, @"\s(?<display>:\d+)\b");
+                var match = DisplayRegex().Match(cmdLine);
 
                 if (match.Success)
                 {
@@ -84,7 +90,7 @@ public class EnvironmentProvider(IProcessService processService, ICommandLinePro
                 var args = commandLineProvider.GetCommandLine(proc);
 
                 var cmdLine = string.Join(" ", args);
-                var match = Regex.Match(cmdLine, @"-auth\s+(\S+)");
+                var match = XAuthRegex().Match(cmdLine);
 
                 if (match.Success)
                 {
