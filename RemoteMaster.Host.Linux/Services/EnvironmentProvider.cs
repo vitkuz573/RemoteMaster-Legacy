@@ -66,6 +66,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
                 // ignored
             }
         }
+
         for (var i = 0; i < 10; i++)
         {
             var socketPath = $"/tmp/.X11-unix/X{i}";
