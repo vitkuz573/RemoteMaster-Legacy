@@ -35,6 +35,8 @@ public class NativeProcess : IProcess
 
     public int ExitCode { get; private set; }
 
+    public int SessionId { get; private set; }
+
     public StreamWriter? StandardInput { get; private set; }
 
     public StreamReader? StandardOutput { get; private set; }

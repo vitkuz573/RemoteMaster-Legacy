@@ -2,7 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.RemoteDesktop;
@@ -10,7 +10,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class SessionService : ISessionService
+public class SessionService(IProcessService processService) : ISessionService
 {
     public uint GetActiveConsoleSessionId()
     {
@@ -70,7 +70,7 @@ public class SessionService : ISessionService
 
     public uint GetProcessId(uint sessionId, string processName)
     {
-        foreach (var process in Process.GetProcessesByName(processName))
+        foreach (var process in processService.GetProcessesByName(processName))
         {
             if ((uint)process.SessionId == sessionId)
             {

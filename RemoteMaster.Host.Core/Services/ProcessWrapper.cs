@@ -15,6 +15,8 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
 
     public int ExitCode => process.ExitCode;
 
+    public int SessionId => process.SessionId;
+
     public StreamWriter StandardInput => process.StandardInput;
 
     public StreamReader StandardOutput => process.StandardOutput;

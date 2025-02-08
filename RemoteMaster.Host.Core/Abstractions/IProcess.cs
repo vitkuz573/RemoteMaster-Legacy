@@ -11,6 +11,8 @@ public interface IProcess : IDisposable
     int Id { get; }
 
     int ExitCode { get; }
+
+    int SessionId { get; }
     
     StreamWriter? StandardInput { get; }
     

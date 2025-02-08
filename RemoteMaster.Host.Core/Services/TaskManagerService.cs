@@ -11,7 +11,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class TaskManagerService : ITaskManagerService
+public class TaskManagerService(IProcessService processService, IProcessWrapperFactory processWrapperFactory) : ITaskManagerService
 {
     private static readonly ConcurrentDictionary<string, byte[]> IconCache = new();
 
@@ -76,12 +76,15 @@ public class TaskManagerService : ITaskManagerService
 
     public void KillProcess(int processId)
     {
-        var process = Process.GetProcessById(processId);
+        var process = processService.GetProcessById(processId);
+
         process.Kill();
     }
 
     public void StartProcess(string processPath)
     {
-        Process.Start(processPath);
+        var process = processWrapperFactory.Create();
+
+        process.Start(new ProcessStartInfo(processPath));
     }
 }

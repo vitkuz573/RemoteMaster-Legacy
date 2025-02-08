@@ -20,6 +20,8 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
     public int ExitCode { get; private set; }
 
+    public int SessionId { get; private set; }
+
     public StreamWriter? StandardInput => null;
 
     public StreamReader? StandardOutput => null;
