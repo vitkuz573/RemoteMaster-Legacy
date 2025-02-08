@@ -9,6 +9,9 @@ using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
+/// <summary>
+/// Provides environment details for Linux systems.
+/// </summary>
 public partial class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem) : IEnvironmentProvider
 {
     [GeneratedRegex(@"\s(?<display>:\d+)\b", RegexOptions.None, 1000)]
@@ -17,24 +20,25 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
     [GeneratedRegex(@"-auth\s+(\S+)", RegexOptions.None, 1000)]
     private static partial Regex XAuthRegex();
 
+    /// <inheritdoc/>
     public string GetDisplay()
     {
         var xorgProcesses = processService.GetProcessesByName("Xorg");
 
-        foreach (var proc in xorgProcesses)
+        foreach (var process in xorgProcesses)
         {
             try
             {
-                var args = commandLineProvider.GetCommandLine(proc);
+                var args = commandLineProvider.GetCommandLine(process);
 
-                var cmdLine = string.Join(" ", proc);
-                var match = DisplayRegex().Match(cmdLine);
+                var commandLine = string.Join(" ", args);
+                var displayMatch = DisplayRegex().Match(commandLine);
 
-                if (match.Success)
+                if (displayMatch.Success)
                 {
-                    var display = match.Groups["display"].Value;
+                    var display = displayMatch.Groups["display"].Value;
 
-                    if (!string.IsNullOrEmpty(display))
+                    if (!string.IsNullOrWhiteSpace(display))
                     {
                         return display;
                     }
@@ -42,26 +46,19 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
 
                 for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] != "-displayfd" || i + 1 >= args.Length)
+                    if (args[i] == "-displayfd" && i + 1 < args.Length && int.TryParse(args[i + 1], out var fd))
                     {
-                        continue;
-                    }
+                        var linkPath = $"/proc/{process.Id}/fd/{fd}";
+                        var fileInfo = fileSystem.FileInfo.New(linkPath);
 
-                    if (!int.TryParse(args[i + 1], out var fd))
-                    {
-                        continue;
-                    }
-
-                    var linkPath = $"/proc/{proc.Id}/fd/{fd}";
-                    var fi = fileSystem.FileInfo.New(linkPath);
-
-                    if (!string.IsNullOrEmpty(fi.LinkTarget) && !fi.LinkTarget.StartsWith("socket:"))
-                    {
-                        return fi.LinkTarget;
+                        if (!string.IsNullOrWhiteSpace(fileInfo.LinkTarget) && !fileInfo.LinkTarget.StartsWith("socket:", StringComparison.Ordinal))
+                        {
+                            return fileInfo.LinkTarget;
+                        }
                     }
                 }
             }
-            catch
+            catch (Exception)
             {
                 // ignored
             }
@@ -70,7 +67,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         for (var i = 0; i < 10; i++)
         {
             var socketPath = $"/tmp/.X11-unix/X{i}";
-            
+
             if (fileSystem.File.Exists(socketPath))
             {
                 return $":{i}";
@@ -80,45 +77,44 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         return ":0";
     }
 
+    /// <inheritdoc/>
     public string GetXAuthority()
     {
         var xorgProcesses = processService.GetProcessesByName("Xorg");
-        
-        foreach (var proc in xorgProcesses)
+
+        foreach (var process in xorgProcesses)
         {
             try
             {
-                var args = commandLineProvider.GetCommandLine(proc);
+                var args = commandLineProvider.GetCommandLine(process);
 
-                var cmdLine = string.Join(" ", args);
-                var match = XAuthRegex().Match(cmdLine);
+                var commandLine = string.Join(" ", args);
+                var authMatch = XAuthRegex().Match(commandLine);
 
-                if (match.Success)
+                if (authMatch.Success)
                 {
-                    var xAuth = match.Groups[1].Value;
+                    var xAuthority = authMatch.Groups[1].Value;
 
-                    if (!string.IsNullOrEmpty(xAuth))
+                    if (!string.IsNullOrWhiteSpace(xAuthority))
                     {
-                        return xAuth;
+                        return xAuthority;
                     }
                 }
 
                 for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] != "-auth" || i + 1 >= args.Length)
+                    if (args[i] == "-auth" && i + 1 < args.Length)
                     {
-                        continue;
-                    }
+                        var xAuthority = args[i + 1];
 
-                    var xAuth = args[i + 1];
-
-                    if (!string.IsNullOrEmpty(xAuth))
-                    {
-                        return xAuth;
+                        if (!string.IsNullOrWhiteSpace(xAuthority))
+                        {
+                            return xAuthority;
+                        }
                     }
                 }
             }
-            catch
+            catch (Exception)
             {
                 // ignored
             }
