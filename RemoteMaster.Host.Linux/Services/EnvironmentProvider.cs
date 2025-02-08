@@ -2,14 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text;
+using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class EnvironmentProvider(IProcessService processService) : IEnvironmentProvider
+public class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem) : IEnvironmentProvider
 {
     public string GetDisplay()
     {
@@ -19,7 +19,9 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
         {
             try
             {
-                var cmdLine = GetCommandLine(proc);
+                var args = commandLineProvider.GetCommandLine(proc);
+
+                var cmdLine = string.Join(" ", proc);
                 var match = Regex.Match(cmdLine, @"\s(?<display>:\d+)\b");
 
                 if (match.Success)
@@ -32,11 +34,9 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
                     }
                 }
 
-                var args = SplitCommandLine(cmdLine);
-
-                for (var i = 0; i < args.Count; i++)
+                for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] != "-displayfd" || i + 1 >= args.Count)
+                    if (args[i] != "-displayfd" || i + 1 >= args.Length)
                     {
                         continue;
                     }
@@ -47,7 +47,7 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
                     }
 
                     var linkPath = $"/proc/{proc.Id}/fd/{fd}";
-                    var fi = new FileInfo(linkPath);
+                    var fi = fileSystem.FileInfo.New(linkPath);
 
                     if (!string.IsNullOrEmpty(fi.LinkTarget) && !fi.LinkTarget.StartsWith("socket:"))
                     {
@@ -64,7 +64,7 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
         {
             var socketPath = $"/tmp/.X11-unix/X{i}";
             
-            if (File.Exists(socketPath))
+            if (fileSystem.File.Exists(socketPath))
             {
                 return $":{i}";
             }
@@ -81,7 +81,9 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
         {
             try
             {
-                var cmdLine = GetCommandLine(proc);
+                var args = commandLineProvider.GetCommandLine(proc);
+
+                var cmdLine = string.Join(" ", args);
                 var match = Regex.Match(cmdLine, @"-auth\s+(\S+)");
 
                 if (match.Success)
@@ -94,11 +96,9 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
                     }
                 }
 
-                var args = SplitCommandLine(cmdLine);
-
-                for (var i = 0; i < args.Count; i++)
+                for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] != "-auth" || i + 1 >= args.Count)
+                    if (args[i] != "-auth" || i + 1 >= args.Length)
                     {
                         continue;
                     }
@@ -118,63 +118,5 @@ public class EnvironmentProvider(IProcessService processService) : IEnvironmentP
         }
 
         return string.Empty;
-    }
-
-    private static string GetCommandLine(IProcess process)
-    {
-        var path = $"/proc/{process.Id}/cmdline";
-
-        if (!File.Exists(path))
-        {
-            return string.Empty;
-        }
-
-        var bytes = File.ReadAllBytes(path);
-            
-        return string.Join(" ", Encoding.UTF8.GetString(bytes).Split('\0', StringSplitOptions.RemoveEmptyEntries));
-
-    }
-
-    private static List<string> SplitCommandLine(string commandLine)
-    {
-        var args = new List<string>();
-        
-        if (string.IsNullOrWhiteSpace(commandLine))
-        {
-            return args;
-        }
-
-        var inQuotes = false;
-        var currentArg = new StringBuilder();
-        
-        foreach (var c in commandLine)
-        {
-            if (c == '\"')
-            {
-                inQuotes = !inQuotes;
-                continue;
-            }
-
-            if (!inQuotes && char.IsWhiteSpace(c))
-            {
-                if (currentArg.Length <= 0)
-                {
-                    continue;
-                }
-
-                args.Add(currentArg.ToString());
-                currentArg.Clear();
-            }
-            else
-            {
-                currentArg.Append(c);
-            }
-        }
-        if (currentArg.Length > 0)
-        {
-            args.Add(currentArg.ToString());
-        }
-
-        return args;
     }
 }
