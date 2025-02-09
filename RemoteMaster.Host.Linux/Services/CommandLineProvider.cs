@@ -8,8 +8,12 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
+/// <summary>
+/// Provides functionality to retrieve the command line arguments of a process from the /proc file system.
+/// </summary>
 public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
 {
+    /// <inheritdoc/>
     public string[] GetCommandLine(IProcess process)
     {
         ArgumentNullException.ThrowIfNull(process);
@@ -25,30 +29,7 @@ public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
         {
             var bytes = fileSystem.File.ReadAllBytes(cmdlinePath);
             
-            if (bytes.Length == 0)
-            {
-                return [];
-            }
-
-            var arguments = new List<string>(8);
-            ReadOnlySpan<byte> span = bytes.AsSpan();
-            var start = 0;
-            
-            for (var i = 0; i <= span.Length; i++)
-            {
-                if (i == span.Length || span[i] == 0)
-                {
-                    if (i > start)
-                    {
-                        var argument = Encoding.UTF8.GetString(span[start..i]);
-                        arguments.Add(argument);
-                    }
-
-                    start = i + 1;
-                }
-            }
-
-            return [.. arguments];
+            return ParseCommandLine(bytes);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -58,5 +39,43 @@ public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
         {
             throw new InvalidOperationException($"Failed to retrieve the command line for process with ID {process.Id}.", ex);
         }
+    }
+
+    /// <summary>
+    /// Parses the null-delimited command line byte array into an array of UTF-8 encoded arguments.
+    /// </summary>
+    /// <param name="bytes">The byte array representing the process command line.</param>
+    /// <returns>An array of command line arguments.</returns>
+    private static string[] ParseCommandLine(byte[] bytes)
+    {
+        ArgumentNullException.ThrowIfNull(bytes);
+
+        if (bytes.Length == 0)
+        {
+            return [];
+        }
+
+        var arguments = new List<string>(capacity: 8);
+        ReadOnlySpan<byte> span = bytes.AsSpan();
+        var start = 0;
+
+        while (start < span.Length)
+        {
+            var end = span[start..].IndexOf((byte)0);
+            
+            if (end == -1)
+            {
+                end = span.Length - start;
+            }
+
+            if (end > 0)
+            {
+                arguments.Add(Encoding.UTF8.GetString(span.Slice(start, end)));
+            }
+
+            start += end + 1;
+        }
+
+        return [.. arguments];
     }
 }
