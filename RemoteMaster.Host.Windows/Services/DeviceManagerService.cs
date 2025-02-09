@@ -293,32 +293,26 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
         unsafe
         {
-            fixed (char* pInstanceId = instanceIdBuffer)
+            if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, instanceIdBuffer, &requiredSize))
             {
-                if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, pInstanceId, (uint)instanceIdBuffer.Length, &requiredSize))
-                {
-                    return new string(pInstanceId, 0, (int)requiredSize - 1);
-                }
+                return new string(instanceIdBuffer, 0, (int)requiredSize - 1);
+            }
 
-                if (requiredSize > instanceIdBuffer.Length)
-                {
-                    instanceIdBuffer = new char[requiredSize];
+            if (requiredSize > instanceIdBuffer.Length)
+            {
+                instanceIdBuffer = new char[requiredSize];
 
-                    fixed (char* pInstanceIdExpanded = instanceIdBuffer)
-                    {
-                        if (!SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, pInstanceIdExpanded, requiredSize, &requiredSize))
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-                else
+                if (!SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, instanceIdBuffer, &requiredSize))
                 {
                     return string.Empty;
                 }
-
-                return new string(pInstanceId, 0, (int)requiredSize - 1);
             }
+            else
+            {
+                return string.Empty;
+            }
+
+            return new string(instanceIdBuffer, 0, (int)requiredSize - 1);
         }
     }
 
@@ -329,17 +323,14 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
 
         unsafe
         {
-            fixed (char* classNamePtr = classNameBuffer)
+            var result = SetupDiClassNameFromGuid(classGuid, classNameBuffer, &requiredSize);
+
+            if (result == 0)
             {
-                var result = SetupDiClassNameFromGuid(classGuid, classNamePtr, (uint)classNameBuffer.Length, &requiredSize);
-
-                if (result == 0)
-                {
-                    throw new Exception("Failed to retrieve class name for the specified GUID.");
-                }
-
-                return new string(classNamePtr, 0, (int)requiredSize - 1);
+                throw new Exception("Failed to retrieve class name for the specified GUID.");
             }
+
+            return new string(classNameBuffer, 0, (int)requiredSize - 1);
         }
     }
 
@@ -361,8 +352,8 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
     {
         var str = Encoding.Unicode.GetString(buffer);
 
-        var strings = str.Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+        var strings = str.Split(['\0'], StringSplitOptions.RemoveEmptyEntries);
 
-        return strings.ToList();
+        return [.. strings];
     }
 }
