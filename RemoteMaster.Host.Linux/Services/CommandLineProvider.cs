@@ -55,7 +55,7 @@ public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
             return [];
         }
 
-        var arguments = new List<string>(capacity: 8);
+        var arguments = new List<string>(8);
         var span = (ReadOnlySpan<byte>)bytes.AsSpan();
         var start = 0;
 
