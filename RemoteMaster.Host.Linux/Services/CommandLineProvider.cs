@@ -56,7 +56,7 @@ public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
         }
 
         var arguments = new List<string>(capacity: 8);
-        ReadOnlySpan<byte> span = bytes.AsSpan();
+        var span = (ReadOnlySpan<byte>)bytes.AsSpan();
         var start = 0;
 
         while (start < span.Length)
