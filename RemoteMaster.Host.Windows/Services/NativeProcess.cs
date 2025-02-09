@@ -27,15 +27,18 @@ public class NativeProcess : IProcess
     private readonly NativeProcessOptions _options;
     private readonly ISessionService _sessionService;
     private readonly ICommandLineProvider _commandLineProvider;
+    private readonly IProcessService _processService;
 
     private SafeProcessHandle? _processHandle;
     private bool _haveProcessId;
 
+    private IProcess? _attachedProcess;
+
     public int Id { get; private set; }
 
-    public int ExitCode { get; private set; }
+    public int ExitCode => _attachedProcess?.ExitCode ?? 0;
 
-    public int SessionId { get; private set; }
+    public int SessionId => _attachedProcess?.SessionId ?? 0;
 
     public StreamWriter StandardInput { get; private set; }
 
@@ -43,11 +46,11 @@ public class NativeProcess : IProcess
 
     public StreamReader StandardError { get; private set; }
 
-    public ProcessModule? MainModule { get; private set; }
+    public ProcessModule? MainModule => _attachedProcess?.MainModule;
 
-    public string ProcessName { get; private set; }
+    public string ProcessName => _attachedProcess?.ProcessName ?? string.Empty;
 
-    public long WorkingSet64 { get; private set; }
+    public long WorkingSet64 => _attachedProcess?.WorkingSet64 ?? 0;
 
     public bool HasExited
     {
@@ -67,7 +70,7 @@ public class NativeProcess : IProcess
         }
     }
 
-    public NativeProcess(INativeProcessOptions options, ISessionService sessionService, ICommandLineProvider commandLineProvider)
+    public NativeProcess(INativeProcessOptions options, ISessionService sessionService, ICommandLineProvider commandLineProvider, IProcessService processService)
     {
         if (options is not NativeProcessOptions nativeOptions)
         {
@@ -77,6 +80,7 @@ public class NativeProcess : IProcess
         _options = nativeOptions;
         _sessionService = sessionService;
         _commandLineProvider = commandLineProvider;
+        _processService = processService;
     }
 
     public void Start(ProcessStartInfo startInfo)
@@ -328,6 +332,15 @@ public class NativeProcess : IProcess
 
         _processHandle = new SafeProcessHandle(processInfo.hProcess, true);
         SetProcessId((int)processInfo.dwProcessId);
+
+        try
+        {
+            _attachedProcess = _processService.GetProcessById(Id);
+        }
+        catch
+        {
+            _attachedProcess = null;
+        }
 
         return true;
     }

@@ -8,7 +8,7 @@ using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class NativeProcessFactory(ISessionService sessionService, ICommandLineProvider commandLineProvider) : INativeProcessFactory
+public class NativeProcessFactory(ISessionService sessionService, ICommandLineProvider commandLineProvider, IProcessService processService) : INativeProcessFactory
 {
     public IProcess Create(INativeProcessOptions options)
     {
@@ -17,6 +17,6 @@ public class NativeProcessFactory(ISessionService sessionService, ICommandLinePr
             throw new ArgumentException("Invalid process options for Windows platform.", nameof(options));
         }
 
-        return new NativeProcess(nativeOptions, sessionService, commandLineProvider);
+        return new NativeProcess(nativeOptions, sessionService, commandLineProvider, processService);
     }
 }
