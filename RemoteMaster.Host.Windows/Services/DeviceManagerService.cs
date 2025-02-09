@@ -21,7 +21,7 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
     {
         var devices = new List<DeviceDto>();
 
-        using var deviceInfoSetHandle = SetupDiGetClassDevs(null, (string)null!, default, SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
+        using var deviceInfoSetHandle = SetupDiGetClassDevs(null, null, default, SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
 
         if (deviceInfoSetHandle.IsInvalid)
         {
