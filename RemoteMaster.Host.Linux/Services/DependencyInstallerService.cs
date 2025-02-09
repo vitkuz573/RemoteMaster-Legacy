@@ -23,6 +23,18 @@ public class DependencyInstallerService(IProcessWrapperFactory processWrapperFac
             Name = "libX11",
             CheckCommand = "dpkg -l | grep libx11-dev",
             InstallCommand = "sudo apt-get install -y libx11-dev"
+        },
+        new()
+        {
+            Name = "libXrandr",
+            CheckCommand = "dpkg -l | grep libxrandr-dev",
+            InstallCommand = "sudo apt-get install -y libxrandr-dev"
+        },
+        new()
+        {
+            Name = "libXtst",
+            CheckCommand = "dpkg -l | grep libxtst-dev",
+            InstallCommand = "sudo apt-get install -y libxtst-dev"
         }
     ];
 
