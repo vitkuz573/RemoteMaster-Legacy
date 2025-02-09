@@ -107,6 +107,11 @@ public class InputService : IInputService
 
     private static string ConvertInputCodeToKeysym(string code)
     {
+        if (string.IsNullOrEmpty(code))
+        {
+            return code;
+        }
+
         if (code.StartsWith("Key"))
         {
             return code[3..];
@@ -115,6 +120,39 @@ public class InputService : IInputService
         if (code.StartsWith("Digit"))
         {
             return code[5..];
+        }
+
+        if (code.StartsWith("Arrow"))
+        {
+            return code["Arrow".Length..];
+        }
+
+        if (code.StartsWith("Numpad"))
+        {
+            var suffix = code["Numpad".Length..];
+
+            switch (suffix)
+            {
+                case "Enter":
+                    return "KP_Enter";
+                case "Decimal":
+                    return "KP_Decimal";
+                case "Multiply":
+                    return "KP_Multiply";
+                case "Add":
+                    return "KP_Add";
+                case "Subtract":
+                    return "KP_Subtract";
+                case "Divide":
+                    return "KP_Divide";
+                default:
+                    if (int.TryParse(suffix, out _))
+                    {
+                        return "KP_" + suffix;
+                    }
+
+                    return suffix;
+            }
         }
 
         return code switch
@@ -126,9 +164,14 @@ public class InputService : IInputService
             "ControlRight" => "Control_R",
             "AltLeft" => "Alt_L",
             "AltRight" => "Alt_R",
+            "MetaLeft" => "Meta_L",
+            "MetaRight" => "Meta_R",
+            "CapsLock" => "Caps_Lock",
             "Escape" => "Escape",
             "Space" => "space",
             "Backspace" => "BackSpace",
+            "Tab" => "Tab",
+            "ContextMenu" => "Menu",
             _ => code
         };
     }
