@@ -295,7 +295,7 @@ public class TrayIconManager : ITrayIconManager
         }
         else if (msg == WM_RBUTTONUP)
         {
-            var eventCode = (uint)LOWORD(lParam.Value);
+            var eventCode = (uint)LOWORD((uint)lParam.Value);
 
             switch (eventCode)
             {
@@ -307,11 +307,6 @@ public class TrayIconManager : ITrayIconManager
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
-
-    private static int LOWORD(nint value)
-    {
-        return unchecked((short)value);
     }
 
     private void CreateContextMenu()

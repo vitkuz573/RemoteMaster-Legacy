@@ -421,7 +421,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
                         break;
                     default:
                     {
-                        if (wmId == IDC_CHAT_INPUT && HIWORD((nint)wParam.Value) == EN_CHANGE)
+                        if (wmId == IDC_CHAT_INPUT && HIWORD((uint)wParam.Value) == EN_CHANGE)
                         {
                             _ = NotifyTypingAsync();
                         }
@@ -557,6 +557,4 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
             SetWindowText(chatInput, "");
         }
     }
-
-    private static int HIWORD(nint n) => (int)((n >> 16) & 0xFFFF);
 }
