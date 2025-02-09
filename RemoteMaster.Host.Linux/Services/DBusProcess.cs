@@ -18,21 +18,21 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
     public int Id { get; private set; }
 
-    public int ExitCode { get; private set; }
+    public int ExitCode => _attachedProcess?.ExitCode ?? 0;
 
-    public int SessionId { get; private set; }
+    public int SessionId => _attachedProcess?.SessionId ?? 0;
 
-    public StreamWriter StandardInput => throw new NotImplementedException();
+    public StreamWriter StandardInput => _attachedProcess?.StandardInput ?? throw new InvalidOperationException("The process standard input is not available.");
 
-    public StreamReader StandardOutput => throw new NotImplementedException();
+    public StreamReader StandardOutput => _attachedProcess?.StandardOutput ?? throw new InvalidOperationException("The process standard output is not available.");
 
-    public StreamReader StandardError => throw new NotImplementedException();
+    public StreamReader StandardError => _attachedProcess?.StandardError ?? throw new InvalidOperationException("The process standard error is not available.");
 
-    public ProcessModule? MainModule { get; private set; }
+    public ProcessModule? MainModule => _attachedProcess?.MainModule;
 
-    public string ProcessName { get; private set; }
+    public string ProcessName => _attachedProcess?.ProcessName ?? string.Empty;
 
-    public long WorkingSet64 { get; private set; }
+    public long WorkingSet64 => _attachedProcess?.WorkingSet64 ?? 0;
 
     public bool HasExited
     {
