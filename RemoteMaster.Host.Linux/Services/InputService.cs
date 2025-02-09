@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Helpers;
 using RemoteMaster.Shared.DTOs;
@@ -11,17 +12,40 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class InputService : IInputService
 {
+    private static readonly Dictionary<string, string> KeyMap = new()
+    {
+        { "Enter", "Return" },
+        { "ShiftLeft", "Shift_L" },
+        { "ShiftRight", "Shift_R" },
+        { "ControlLeft", "Control_L" },
+        { "ControlRight", "Control_R" },
+        { "AltLeft", "Alt_L" },
+        { "AltRight", "Alt_R" },
+        { "MetaLeft", "Meta_L" },
+        { "MetaRight", "Meta_R" },
+        { "CapsLock", "Caps_Lock" },
+        { "Escape", "Escape" },
+        { "Space", "space" },
+        { "Backspace", "BackSpace" },
+        { "Tab", "Tab" },
+        { "ContextMenu", "Menu" }
+    };
+
     private readonly CancellationTokenSource _cts = new();
 
     private bool _disposed;
     private nint _display;
 
+    private readonly ILogger<InputService> _logger;
+
     public bool InputEnabled { get; set; } = true;
 
     public bool BlockUserInput { get; set; }
 
-    public InputService()
+    public InputService(ILogger<InputService> logger)
     {
+        _logger = logger;
+
         if (!X11Native.XInitThreads())
         {
             throw new Exception("Failed to initialize X threading support (XInitThreads).");
@@ -32,6 +56,11 @@ public class InputService : IInputService
         if (_display == nint.Zero)
         {
             throw new Exception("Unable to open X display");
+        }
+
+        if (!XtstNative.XTestQueryExtension(_display, out _, out _, out _, out _))
+        {
+            throw new Exception("XTest extension is not available on this X server.");
         }
     }
 
@@ -61,6 +90,8 @@ public class InputService : IInputService
 
         if (keycode == 0)
         {
+            _logger.LogError("Unable to find keycode for keysym '{KeysymStr}'", keysymStr);
+
             return;
         }
 
@@ -88,9 +119,17 @@ public class InputService : IInputService
         {
             var pos = dto.Position.Value;
             var screen = X11Native.XDefaultScreen(_display);
+
             var absolutePos = pos.X is >= 0 and <= 1 && pos.Y is >= 0 and <= 1
                 ? GetAbsoluteCoordinatesFromRelative(pos)
                 : new Point((int)pos.X, (int)pos.Y);
+
+            if (absolutePos.X < 0 || absolutePos.Y < 0)
+            {
+                _logger.LogError("Invalid mouse coordinates.");
+                
+                return;
+            }
 
             XtstNative.XTestFakeMotionEvent(_display, screen, absolutePos.X, absolutePos.Y, 0);
         }
@@ -129,51 +168,10 @@ public class InputService : IInputService
 
         if (code.StartsWith("Numpad"))
         {
-            var suffix = code["Numpad".Length..];
-
-            switch (suffix)
-            {
-                case "Enter":
-                    return "KP_Enter";
-                case "Decimal":
-                    return "KP_Decimal";
-                case "Multiply":
-                    return "KP_Multiply";
-                case "Add":
-                    return "KP_Add";
-                case "Subtract":
-                    return "KP_Subtract";
-                case "Divide":
-                    return "KP_Divide";
-                default:
-                    if (int.TryParse(suffix, out _))
-                    {
-                        return "KP_" + suffix;
-                    }
-
-                    return suffix;
-            }
+            return code.Replace("Numpad", "KP_");
         }
 
-        return code switch
-        {
-            "Enter" => "Return",
-            "ShiftLeft" => "Shift_L",
-            "ShiftRight" => "Shift_R",
-            "ControlLeft" => "Control_L",
-            "ControlRight" => "Control_R",
-            "AltLeft" => "Alt_L",
-            "AltRight" => "Alt_R",
-            "MetaLeft" => "Meta_L",
-            "MetaRight" => "Meta_R",
-            "CapsLock" => "Caps_Lock",
-            "Escape" => "Escape",
-            "Space" => "space",
-            "Backspace" => "BackSpace",
-            "Tab" => "Tab",
-            "ContextMenu" => "Menu",
-            _ => code
-        };
+        return KeyMap.TryGetValue(code, out var keysym) ? keysym : code;
     }
 
     private Point GetAbsoluteCoordinatesFromRelative(PointF relative)
