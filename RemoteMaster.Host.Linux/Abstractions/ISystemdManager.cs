@@ -213,1843 +213,983 @@ public class SystemdManagerProperties
 
     public string Version
     {
-        get
-        {
-            return _Version;
-        }
-
-        set
-        {
-            _Version = (value);
-        }
+        get => _Version;
+        set => _Version = (value);
     }
 
     private string _Features = default;
 
     public string Features
     {
-        get
-        {
-            return _Features;
-        }
-
-        set
-        {
-            _Features = (value);
-        }
+        get => _Features;
+        set => _Features = (value);
     }
 
     private string _Virtualization = default;
 
     public string Virtualization
     {
-        get
-        {
-            return _Virtualization;
-        }
-
-        set
-        {
-            _Virtualization = (value);
-        }
+        get => _Virtualization;
+        set => _Virtualization = (value);
     }
 
     private string _ConfidentialVirtualization = default;
 
     public string ConfidentialVirtualization
     {
-        get
-        {
-            return _ConfidentialVirtualization;
-        }
-
-        set
-        {
-            _ConfidentialVirtualization = (value);
-        }
+        get => _ConfidentialVirtualization;
+        set => _ConfidentialVirtualization = (value);
     }
 
     private string _Architecture = default;
 
     public string Architecture
     {
-        get
-        {
-            return _Architecture;
-        }
-
-        set
-        {
-            _Architecture = (value);
-        }
+        get => _Architecture;
+        set => _Architecture = (value);
     }
 
     private string _Tainted = default;
 
     public string Tainted
     {
-        get
-        {
-            return _Tainted;
-        }
-
-        set
-        {
-            _Tainted = (value);
-        }
+        get => _Tainted;
+        set => _Tainted = (value);
     }
 
     private ulong _FirmwareTimestamp = default;
 
     public ulong FirmwareTimestamp
     {
-        get
-        {
-            return _FirmwareTimestamp;
-        }
-
-        set
-        {
-            _FirmwareTimestamp = (value);
-        }
+        get => _FirmwareTimestamp;
+        set => _FirmwareTimestamp = (value);
     }
 
     private ulong _FirmwareTimestampMonotonic = default;
 
     public ulong FirmwareTimestampMonotonic
     {
-        get
-        {
-            return _FirmwareTimestampMonotonic;
-        }
-
-        set
-        {
-            _FirmwareTimestampMonotonic = (value);
-        }
+        get => _FirmwareTimestampMonotonic;
+        set => _FirmwareTimestampMonotonic = (value);
     }
 
     private ulong _LoaderTimestamp = default;
 
     public ulong LoaderTimestamp
     {
-        get
-        {
-            return _LoaderTimestamp;
-        }
-
-        set
-        {
-            _LoaderTimestamp = (value);
-        }
+        get => _LoaderTimestamp;
+        set => _LoaderTimestamp = (value);
     }
 
     private ulong _LoaderTimestampMonotonic = default;
 
     public ulong LoaderTimestampMonotonic
     {
-        get
-        {
-            return _LoaderTimestampMonotonic;
-        }
-
-        set
-        {
-            _LoaderTimestampMonotonic = (value);
-        }
+        get => _LoaderTimestampMonotonic;
+        set => _LoaderTimestampMonotonic = (value);
     }
 
     private ulong _KernelTimestamp = default;
 
     public ulong KernelTimestamp
     {
-        get
-        {
-            return _KernelTimestamp;
-        }
-
-        set
-        {
-            _KernelTimestamp = (value);
-        }
+        get => _KernelTimestamp;
+        set => _KernelTimestamp = (value);
     }
 
     private ulong _KernelTimestampMonotonic = default;
 
     public ulong KernelTimestampMonotonic
     {
-        get
-        {
-            return _KernelTimestampMonotonic;
-        }
-
-        set
-        {
-            _KernelTimestampMonotonic = (value);
-        }
+        get => _KernelTimestampMonotonic;
+        set => _KernelTimestampMonotonic = (value);
     }
 
     private ulong _InitRDTimestamp = default;
 
     public ulong InitRDTimestamp
     {
-        get
-        {
-            return _InitRDTimestamp;
-        }
-
-        set
-        {
-            _InitRDTimestamp = (value);
-        }
+        get => _InitRDTimestamp;
+        set => _InitRDTimestamp = (value);
     }
 
     private ulong _InitRDTimestampMonotonic = default;
 
     public ulong InitRDTimestampMonotonic
     {
-        get
-        {
-            return _InitRDTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDTimestampMonotonic = (value);
-        }
+        get => _InitRDTimestampMonotonic;
+        set => _InitRDTimestampMonotonic = (value);
     }
 
     private ulong _UserspaceTimestamp = default;
 
     public ulong UserspaceTimestamp
     {
-        get
-        {
-            return _UserspaceTimestamp;
-        }
-
-        set
-        {
-            _UserspaceTimestamp = (value);
-        }
+        get => _UserspaceTimestamp;
+        set => _UserspaceTimestamp = (value);
     }
 
     private ulong _UserspaceTimestampMonotonic = default;
 
     public ulong UserspaceTimestampMonotonic
     {
-        get
-        {
-            return _UserspaceTimestampMonotonic;
-        }
-
-        set
-        {
-            _UserspaceTimestampMonotonic = (value);
-        }
+        get => _UserspaceTimestampMonotonic;
+        set => _UserspaceTimestampMonotonic = (value);
     }
 
     private ulong _FinishTimestamp = default;
 
     public ulong FinishTimestamp
     {
-        get
-        {
-            return _FinishTimestamp;
-        }
-
-        set
-        {
-            _FinishTimestamp = (value);
-        }
+        get => _FinishTimestamp;
+        set => _FinishTimestamp = (value);
     }
 
     private ulong _FinishTimestampMonotonic = default;
 
     public ulong FinishTimestampMonotonic
     {
-        get
-        {
-            return _FinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _FinishTimestampMonotonic = (value);
-        }
+        get => _FinishTimestampMonotonic;
+        set => _FinishTimestampMonotonic = (value);
     }
 
     private ulong _SecurityStartTimestamp = default;
 
     public ulong SecurityStartTimestamp
     {
-        get
-        {
-            return _SecurityStartTimestamp;
-        }
-
-        set
-        {
-            _SecurityStartTimestamp = (value);
-        }
+        get => _SecurityStartTimestamp;
+        set => _SecurityStartTimestamp = (value);
     }
 
     private ulong _SecurityStartTimestampMonotonic = default;
 
     public ulong SecurityStartTimestampMonotonic
     {
-        get
-        {
-            return _SecurityStartTimestampMonotonic;
-        }
-
-        set
-        {
-            _SecurityStartTimestampMonotonic = (value);
-        }
+        get => _SecurityStartTimestampMonotonic;
+        set => _SecurityStartTimestampMonotonic = (value);
     }
 
     private ulong _SecurityFinishTimestamp = default;
 
     public ulong SecurityFinishTimestamp
     {
-        get
-        {
-            return _SecurityFinishTimestamp;
-        }
-
-        set
-        {
-            _SecurityFinishTimestamp = (value);
-        }
+        get => _SecurityFinishTimestamp;
+        set => _SecurityFinishTimestamp = (value);
     }
 
     private ulong _SecurityFinishTimestampMonotonic = default;
 
     public ulong SecurityFinishTimestampMonotonic
     {
-        get
-        {
-            return _SecurityFinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _SecurityFinishTimestampMonotonic = (value);
-        }
+        get => _SecurityFinishTimestampMonotonic;
+        set => _SecurityFinishTimestampMonotonic = (value);
     }
 
     private ulong _GeneratorsStartTimestamp = default;
 
     public ulong GeneratorsStartTimestamp
     {
-        get
-        {
-            return _GeneratorsStartTimestamp;
-        }
-
-        set
-        {
-            _GeneratorsStartTimestamp = (value);
-        }
+        get => _GeneratorsStartTimestamp;
+        set => _GeneratorsStartTimestamp = (value);
     }
 
     private ulong _GeneratorsStartTimestampMonotonic = default;
 
     public ulong GeneratorsStartTimestampMonotonic
     {
-        get
-        {
-            return _GeneratorsStartTimestampMonotonic;
-        }
-
-        set
-        {
-            _GeneratorsStartTimestampMonotonic = (value);
-        }
+        get => _GeneratorsStartTimestampMonotonic;
+        set => _GeneratorsStartTimestampMonotonic = (value);
     }
 
     private ulong _GeneratorsFinishTimestamp = default;
 
     public ulong GeneratorsFinishTimestamp
     {
-        get
-        {
-            return _GeneratorsFinishTimestamp;
-        }
-
-        set
-        {
-            _GeneratorsFinishTimestamp = (value);
-        }
+        get => _GeneratorsFinishTimestamp;
+        set => _GeneratorsFinishTimestamp = (value);
     }
 
     private ulong _GeneratorsFinishTimestampMonotonic = default;
 
     public ulong GeneratorsFinishTimestampMonotonic
     {
-        get
-        {
-            return _GeneratorsFinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _GeneratorsFinishTimestampMonotonic = (value);
-        }
+        get => _GeneratorsFinishTimestampMonotonic;
+        set => _GeneratorsFinishTimestampMonotonic = (value);
     }
 
     private ulong _UnitsLoadStartTimestamp = default;
 
     public ulong UnitsLoadStartTimestamp
     {
-        get
-        {
-            return _UnitsLoadStartTimestamp;
-        }
-
-        set
-        {
-            _UnitsLoadStartTimestamp = (value);
-        }
+        get => _UnitsLoadStartTimestamp;
+        set => _UnitsLoadStartTimestamp = (value);
     }
 
     private ulong _UnitsLoadStartTimestampMonotonic = default;
 
     public ulong UnitsLoadStartTimestampMonotonic
     {
-        get
-        {
-            return _UnitsLoadStartTimestampMonotonic;
-        }
-
-        set
-        {
-            _UnitsLoadStartTimestampMonotonic = (value);
-        }
+        get => _UnitsLoadStartTimestampMonotonic;
+        set => _UnitsLoadStartTimestampMonotonic = (value);
     }
 
     private ulong _UnitsLoadFinishTimestamp = default;
 
     public ulong UnitsLoadFinishTimestamp
     {
-        get
-        {
-            return _UnitsLoadFinishTimestamp;
-        }
-
-        set
-        {
-            _UnitsLoadFinishTimestamp = (value);
-        }
+        get => _UnitsLoadFinishTimestamp;
+        set => _UnitsLoadFinishTimestamp = (value);
     }
 
     private ulong _UnitsLoadFinishTimestampMonotonic = default;
 
     public ulong UnitsLoadFinishTimestampMonotonic
     {
-        get
-        {
-            return _UnitsLoadFinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _UnitsLoadFinishTimestampMonotonic = (value);
-        }
+        get => _UnitsLoadFinishTimestampMonotonic;
+        set => _UnitsLoadFinishTimestampMonotonic = (value);
     }
 
     private ulong _UnitsLoadTimestamp = default;
 
     public ulong UnitsLoadTimestamp
     {
-        get
-        {
-            return _UnitsLoadTimestamp;
-        }
-
-        set
-        {
-            _UnitsLoadTimestamp = (value);
-        }
+        get => _UnitsLoadTimestamp;
+        set => _UnitsLoadTimestamp = (value);
     }
 
     private ulong _UnitsLoadTimestampMonotonic = default;
 
     public ulong UnitsLoadTimestampMonotonic
     {
-        get
-        {
-            return _UnitsLoadTimestampMonotonic;
-        }
-
-        set
-        {
-            _UnitsLoadTimestampMonotonic = (value);
-        }
+        get => _UnitsLoadTimestampMonotonic;
+        set => _UnitsLoadTimestampMonotonic = (value);
     }
 
     private ulong _InitRDSecurityStartTimestamp = default;
 
     public ulong InitRDSecurityStartTimestamp
     {
-        get
-        {
-            return _InitRDSecurityStartTimestamp;
-        }
-
-        set
-        {
-            _InitRDSecurityStartTimestamp = (value);
-        }
+        get => _InitRDSecurityStartTimestamp;
+        set => _InitRDSecurityStartTimestamp = (value);
     }
 
     private ulong _InitRDSecurityStartTimestampMonotonic = default;
 
     public ulong InitRDSecurityStartTimestampMonotonic
     {
-        get
-        {
-            return _InitRDSecurityStartTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDSecurityStartTimestampMonotonic = (value);
-        }
+        get => _InitRDSecurityStartTimestampMonotonic;
+        set => _InitRDSecurityStartTimestampMonotonic = (value);
     }
 
     private ulong _InitRDSecurityFinishTimestamp = default;
 
     public ulong InitRDSecurityFinishTimestamp
     {
-        get
-        {
-            return _InitRDSecurityFinishTimestamp;
-        }
-
-        set
-        {
-            _InitRDSecurityFinishTimestamp = (value);
-        }
+        get => _InitRDSecurityFinishTimestamp;
+        set => _InitRDSecurityFinishTimestamp = (value);
     }
 
     private ulong _InitRDSecurityFinishTimestampMonotonic = default;
 
     public ulong InitRDSecurityFinishTimestampMonotonic
     {
-        get
-        {
-            return _InitRDSecurityFinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDSecurityFinishTimestampMonotonic = (value);
-        }
+        get => _InitRDSecurityFinishTimestampMonotonic;
+        set => _InitRDSecurityFinishTimestampMonotonic = (value);
     }
 
     private ulong _InitRDGeneratorsStartTimestamp = default;
 
     public ulong InitRDGeneratorsStartTimestamp
     {
-        get
-        {
-            return _InitRDGeneratorsStartTimestamp;
-        }
-
-        set
-        {
-            _InitRDGeneratorsStartTimestamp = (value);
-        }
+        get => _InitRDGeneratorsStartTimestamp;
+        set => _InitRDGeneratorsStartTimestamp = (value);
     }
 
     private ulong _InitRDGeneratorsStartTimestampMonotonic = default;
 
     public ulong InitRDGeneratorsStartTimestampMonotonic
     {
-        get
-        {
-            return _InitRDGeneratorsStartTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDGeneratorsStartTimestampMonotonic = (value);
-        }
+        get => _InitRDGeneratorsStartTimestampMonotonic;
+        set => _InitRDGeneratorsStartTimestampMonotonic = (value);
     }
 
     private ulong _InitRDGeneratorsFinishTimestamp = default;
 
     public ulong InitRDGeneratorsFinishTimestamp
     {
-        get
-        {
-            return _InitRDGeneratorsFinishTimestamp;
-        }
-
-        set
-        {
-            _InitRDGeneratorsFinishTimestamp = (value);
-        }
+        get => _InitRDGeneratorsFinishTimestamp;
+        set => _InitRDGeneratorsFinishTimestamp = (value);
     }
 
     private ulong _InitRDGeneratorsFinishTimestampMonotonic = default;
 
     public ulong InitRDGeneratorsFinishTimestampMonotonic
     {
-        get
-        {
-            return _InitRDGeneratorsFinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDGeneratorsFinishTimestampMonotonic = (value);
-        }
+        get => _InitRDGeneratorsFinishTimestampMonotonic;
+        set => _InitRDGeneratorsFinishTimestampMonotonic = (value);
     }
 
     private ulong _InitRDUnitsLoadStartTimestamp = default;
 
     public ulong InitRDUnitsLoadStartTimestamp
     {
-        get
-        {
-            return _InitRDUnitsLoadStartTimestamp;
-        }
-
-        set
-        {
-            _InitRDUnitsLoadStartTimestamp = (value);
-        }
+        get => _InitRDUnitsLoadStartTimestamp;
+        set => _InitRDUnitsLoadStartTimestamp = (value);
     }
 
     private ulong _InitRDUnitsLoadStartTimestampMonotonic = default;
 
     public ulong InitRDUnitsLoadStartTimestampMonotonic
     {
-        get
-        {
-            return _InitRDUnitsLoadStartTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDUnitsLoadStartTimestampMonotonic = (value);
-        }
+        get => _InitRDUnitsLoadStartTimestampMonotonic;
+        set => _InitRDUnitsLoadStartTimestampMonotonic = (value);
     }
 
     private ulong _InitRDUnitsLoadFinishTimestamp = default;
 
     public ulong InitRDUnitsLoadFinishTimestamp
     {
-        get
-        {
-            return _InitRDUnitsLoadFinishTimestamp;
-        }
-
-        set
-        {
-            _InitRDUnitsLoadFinishTimestamp = (value);
-        }
+        get => _InitRDUnitsLoadFinishTimestamp;
+        set => _InitRDUnitsLoadFinishTimestamp = (value);
     }
 
     private ulong _InitRDUnitsLoadFinishTimestampMonotonic = default;
 
     public ulong InitRDUnitsLoadFinishTimestampMonotonic
     {
-        get
-        {
-            return _InitRDUnitsLoadFinishTimestampMonotonic;
-        }
-
-        set
-        {
-            _InitRDUnitsLoadFinishTimestampMonotonic = (value);
-        }
+        get => _InitRDUnitsLoadFinishTimestampMonotonic;
+        set => _InitRDUnitsLoadFinishTimestampMonotonic = (value);
     }
 
     private string _LogLevel = default;
 
     public string LogLevel
     {
-        get
-        {
-            return _LogLevel;
-        }
-
-        set
-        {
-            _LogLevel = (value);
-        }
+        get => _LogLevel;
+        set => _LogLevel = (value);
     }
 
     private string _LogTarget = default;
 
     public string LogTarget
     {
-        get
-        {
-            return _LogTarget;
-        }
-
-        set
-        {
-            _LogTarget = (value);
-        }
+        get => _LogTarget;
+        set => _LogTarget = (value);
     }
 
     private uint _NNames = default;
 
     public uint NNames
     {
-        get
-        {
-            return _NNames;
-        }
-
-        set
-        {
-            _NNames = (value);
-        }
+        get => _NNames;
+        set => _NNames = (value);
     }
 
     private uint _NFailedUnits = default;
 
     public uint NFailedUnits
     {
-        get
-        {
-            return _NFailedUnits;
-        }
-
-        set
-        {
-            _NFailedUnits = (value);
-        }
+        get => _NFailedUnits;
+        set => _NFailedUnits = (value);
     }
 
     private uint _NJobs = default;
 
     public uint NJobs
     {
-        get
-        {
-            return _NJobs;
-        }
-
-        set
-        {
-            _NJobs = (value);
-        }
+        get => _NJobs;
+        set => _NJobs = (value);
     }
 
     private uint _NInstalledJobs = default;
 
     public uint NInstalledJobs
     {
-        get
-        {
-            return _NInstalledJobs;
-        }
-
-        set
-        {
-            _NInstalledJobs = (value);
-        }
+        get => _NInstalledJobs;
+        set => _NInstalledJobs = (value);
     }
 
     private uint _NFailedJobs = default;
 
     public uint NFailedJobs
     {
-        get
-        {
-            return _NFailedJobs;
-        }
-
-        set
-        {
-            _NFailedJobs = (value);
-        }
+        get => _NFailedJobs;
+        set => _NFailedJobs = (value);
     }
 
     private double _Progress = default;
 
     public double Progress
     {
-        get
-        {
-            return _Progress;
-        }
-
-        set
-        {
-            _Progress = (value);
-        }
+        get => _Progress;
+        set => _Progress = (value);
     }
 
     private string[] _Environment = default;
     public string[] Environment
     {
-        get
-        {
-            return _Environment;
-        }
-
-        set
-        {
-            _Environment = (value);
-        }
+        get => _Environment;
+        set => _Environment = (value);
     }
 
     private bool _ConfirmSpawn = default;
 
     public bool ConfirmSpawn
     {
-        get
-        {
-            return _ConfirmSpawn;
-        }
-
-        set
-        {
-            _ConfirmSpawn = (value);
-        }
+        get => _ConfirmSpawn;
+        set => _ConfirmSpawn = (value);
     }
 
     private bool _ShowStatus = default;
 
     public bool ShowStatus
     {
-        get
-        {
-            return _ShowStatus;
-        }
-
-        set
-        {
-            _ShowStatus = (value);
-        }
+        get => _ShowStatus;
+        set => _ShowStatus = (value);
     }
 
     private string[] _UnitPath = default;
+
     public string[] UnitPath
     {
-        get
-        {
-            return _UnitPath;
-        }
-
-        set
-        {
-            _UnitPath = (value);
-        }
+        get => _UnitPath;
+        set => _UnitPath = (value);
     }
 
     private string _DefaultStandardOutput = default;
 
     public string DefaultStandardOutput
     {
-        get
-        {
-            return _DefaultStandardOutput;
-        }
-
-        set
-        {
-            _DefaultStandardOutput = (value);
-        }
+        get => _DefaultStandardOutput;
+        set => _DefaultStandardOutput = (value);
     }
 
     private string _DefaultStandardError = default;
 
     public string DefaultStandardError
     {
-        get
-        {
-            return _DefaultStandardError;
-        }
-
-        set
-        {
-            _DefaultStandardError = (value);
-        }
+        get => _DefaultStandardError;
+        set => _DefaultStandardError = (value);
     }
 
     private string _WatchdogDevice = default;
 
     public string WatchdogDevice
     {
-        get
-        {
-            return _WatchdogDevice;
-        }
-
-        set
-        {
-            _WatchdogDevice = (value);
-        }
+        get => _WatchdogDevice;
+        set => _WatchdogDevice = (value);
     }
 
     private ulong _WatchdogLastPingTimestamp = default;
 
     public ulong WatchdogLastPingTimestamp
     {
-        get
-        {
-            return _WatchdogLastPingTimestamp;
-        }
-
-        set
-        {
-            _WatchdogLastPingTimestamp = (value);
-        }
+        get => _WatchdogLastPingTimestamp;
+        set => _WatchdogLastPingTimestamp = (value);
     }
 
     private ulong _WatchdogLastPingTimestampMonotonic = default;
 
     public ulong WatchdogLastPingTimestampMonotonic
     {
-        get
-        {
-            return _WatchdogLastPingTimestampMonotonic;
-        }
-
-        set
-        {
-            _WatchdogLastPingTimestampMonotonic = (value);
-        }
+        get => _WatchdogLastPingTimestampMonotonic;
+        set => _WatchdogLastPingTimestampMonotonic = (value);
     }
 
     private ulong _RuntimeWatchdogUSec = default;
 
     public ulong RuntimeWatchdogUSec
     {
-        get
-        {
-            return _RuntimeWatchdogUSec;
-        }
-
-        set
-        {
-            _RuntimeWatchdogUSec = (value);
-        }
+        get => _RuntimeWatchdogUSec;
+        set => _RuntimeWatchdogUSec = (value);
     }
 
     private ulong _RuntimeWatchdogPreUSec = default;
 
     public ulong RuntimeWatchdogPreUSec
     {
-        get
-        {
-            return _RuntimeWatchdogPreUSec;
-        }
-
-        set
-        {
-            _RuntimeWatchdogPreUSec = (value);
-        }
+        get => _RuntimeWatchdogPreUSec;
+        set => _RuntimeWatchdogPreUSec = (value);
     }
 
     private string _RuntimeWatchdogPreGovernor = default;
 
     public string RuntimeWatchdogPreGovernor
     {
-        get
-        {
-            return _RuntimeWatchdogPreGovernor;
-        }
-
-        set
-        {
-            _RuntimeWatchdogPreGovernor = (value);
-        }
+        get => _RuntimeWatchdogPreGovernor;
+        set => _RuntimeWatchdogPreGovernor = (value);
     }
 
     private ulong _RebootWatchdogUSec = default;
 
     public ulong RebootWatchdogUSec
     {
-        get
-        {
-            return _RebootWatchdogUSec;
-        }
-
-        set
-        {
-            _RebootWatchdogUSec = (value);
-        }
+        get => _RebootWatchdogUSec;
+        set => _RebootWatchdogUSec = (value);
     }
 
     private ulong _KExecWatchdogUSec = default;
 
     public ulong KExecWatchdogUSec
     {
-        get
-        {
-            return _KExecWatchdogUSec;
-        }
-
-        set
-        {
-            _KExecWatchdogUSec = (value);
-        }
+        get => _KExecWatchdogUSec;
+        set => _KExecWatchdogUSec = (value);
     }
 
     private bool _ServiceWatchdogs = default;
 
     public bool ServiceWatchdogs
     {
-        get
-        {
-            return _ServiceWatchdogs;
-        }
-
-        set
-        {
-            _ServiceWatchdogs = (value);
-        }
+        get => _ServiceWatchdogs;
+        set => _ServiceWatchdogs = (value);
     }
 
     private string _ControlGroup = default;
 
     public string ControlGroup
     {
-        get
-        {
-            return _ControlGroup;
-        }
-
-        set
-        {
-            _ControlGroup = (value);
-        }
+        get => _ControlGroup;
+        set => _ControlGroup = (value);
     }
 
     private string _SystemState = default;
 
     public string SystemState
     {
-        get
-        {
-            return _SystemState;
-        }
-
-        set
-        {
-            _SystemState = (value);
-        }
+        get => _SystemState;
+        set => _SystemState = (value);
     }
 
     private byte _ExitCode = default;
 
     public byte ExitCode
     {
-        get
-        {
-            return _ExitCode;
-        }
-
-        set
-        {
-            _ExitCode = (value);
-        }
+        get => _ExitCode;
+        set => _ExitCode = (value);
     }
 
     private ulong _DefaultTimerAccuracyUSec = default;
 
     public ulong DefaultTimerAccuracyUSec
     {
-        get
-        {
-            return _DefaultTimerAccuracyUSec;
-        }
-
-        set
-        {
-            _DefaultTimerAccuracyUSec = (value);
-        }
+        get => _DefaultTimerAccuracyUSec;
+        set => _DefaultTimerAccuracyUSec = (value);
     }
 
     private ulong _DefaultTimeoutStartUSec = default;
 
     public ulong DefaultTimeoutStartUSec
     {
-        get
-        {
-            return _DefaultTimeoutStartUSec;
-        }
-
-        set
-        {
-            _DefaultTimeoutStartUSec = (value);
-        }
+        get => _DefaultTimeoutStartUSec;
+        set => _DefaultTimeoutStartUSec = (value);
     }
 
     private ulong _DefaultTimeoutStopUSec = default;
 
     public ulong DefaultTimeoutStopUSec
     {
-        get
-        {
-            return _DefaultTimeoutStopUSec;
-        }
-
-        set
-        {
-            _DefaultTimeoutStopUSec = (value);
-        }
+        get => _DefaultTimeoutStopUSec;
+        set => _DefaultTimeoutStopUSec = (value);
     }
 
     private ulong _DefaultTimeoutAbortUSec = default;
 
     public ulong DefaultTimeoutAbortUSec
     {
-        get
-        {
-            return _DefaultTimeoutAbortUSec;
-        }
-
-        set
-        {
-            _DefaultTimeoutAbortUSec = (value);
-        }
+        get => _DefaultTimeoutAbortUSec;
+        set => _DefaultTimeoutAbortUSec = (value);
     }
 
     private ulong _DefaultDeviceTimeoutUSec = default;
 
     public ulong DefaultDeviceTimeoutUSec
     {
-        get
-        {
-            return _DefaultDeviceTimeoutUSec;
-        }
-
-        set
-        {
-            _DefaultDeviceTimeoutUSec = (value);
-        }
+        get => _DefaultDeviceTimeoutUSec;
+        set => _DefaultDeviceTimeoutUSec = (value);
     }
 
     private ulong _DefaultRestartUSec = default;
 
     public ulong DefaultRestartUSec
     {
-        get
-        {
-            return _DefaultRestartUSec;
-        }
-
-        set
-        {
-            _DefaultRestartUSec = (value);
-        }
+        get => _DefaultRestartUSec;
+        set => _DefaultRestartUSec = (value);
     }
 
     private ulong _DefaultStartLimitIntervalUSec = default;
 
     public ulong DefaultStartLimitIntervalUSec
     {
-        get
-        {
-            return _DefaultStartLimitIntervalUSec;
-        }
-
-        set
-        {
-            _DefaultStartLimitIntervalUSec = (value);
-        }
+        get => _DefaultStartLimitIntervalUSec;
+        set => _DefaultStartLimitIntervalUSec = (value);
     }
 
     private uint _DefaultStartLimitBurst = default;
 
     public uint DefaultStartLimitBurst
     {
-        get
-        {
-            return _DefaultStartLimitBurst;
-        }
-
-        set
-        {
-            _DefaultStartLimitBurst = (value);
-        }
+        get => _DefaultStartLimitBurst;
+        set => _DefaultStartLimitBurst = (value);
     }
 
     private bool _DefaultCPUAccounting = default;
 
     public bool DefaultCPUAccounting
     {
-        get
-        {
-            return _DefaultCPUAccounting;
-        }
-
-        set
-        {
-            _DefaultCPUAccounting = (value);
-        }
+        get => _DefaultCPUAccounting;
+        set => _DefaultCPUAccounting = (value);
     }
 
     private bool _DefaultBlockIOAccounting = default;
 
     public bool DefaultBlockIOAccounting
     {
-        get
-        {
-            return _DefaultBlockIOAccounting;
-        }
-
-        set
-        {
-            _DefaultBlockIOAccounting = (value);
-        }
+        get => _DefaultBlockIOAccounting;
+        set => _DefaultBlockIOAccounting = (value);
     }
 
     private bool _DefaultIOAccounting = default;
 
     public bool DefaultIOAccounting
     {
-        get
-        {
-            return _DefaultIOAccounting;
-        }
-
-        set
-        {
-            _DefaultIOAccounting = (value);
-        }
+        get => _DefaultIOAccounting;
+        set => _DefaultIOAccounting = (value);
     }
 
     private bool _DefaultIPAccounting = default;
 
     public bool DefaultIPAccounting
     {
-        get
-        {
-            return _DefaultIPAccounting;
-        }
-
-        set
-        {
-            _DefaultIPAccounting = (value);
-        }
+        get => _DefaultIPAccounting;
+        set => _DefaultIPAccounting = (value);
     }
 
     private bool _DefaultMemoryAccounting = default;
 
     public bool DefaultMemoryAccounting
     {
-        get
-        {
-            return _DefaultMemoryAccounting;
-        }
-
-        set
-        {
-            _DefaultMemoryAccounting = (value);
-        }
+        get => _DefaultMemoryAccounting;
+        set => _DefaultMemoryAccounting = (value);
     }
 
     private bool _DefaultTasksAccounting = default;
 
     public bool DefaultTasksAccounting
     {
-        get
-        {
-            return _DefaultTasksAccounting;
-        }
-
-        set
-        {
-            _DefaultTasksAccounting = (value);
-        }
+        get => _DefaultTasksAccounting;
+        set => _DefaultTasksAccounting = (value);
     }
 
     private ulong _DefaultLimitCPU = default;
 
     public ulong DefaultLimitCPU
     {
-        get
-        {
-            return _DefaultLimitCPU;
-        }
-
-        set
-        {
-            _DefaultLimitCPU = (value);
-        }
+        get => _DefaultLimitCPU;
+        set => _DefaultLimitCPU = (value);
     }
 
     private ulong _DefaultLimitCPUSoft = default;
 
     public ulong DefaultLimitCPUSoft
     {
-        get
-        {
-            return _DefaultLimitCPUSoft;
-        }
-
-        set
-        {
-            _DefaultLimitCPUSoft = (value);
-        }
+        get => _DefaultLimitCPUSoft;
+        set => _DefaultLimitCPUSoft = (value);
     }
 
     private ulong _DefaultLimitFSIZE = default;
 
     public ulong DefaultLimitFSIZE
     {
-        get
-        {
-            return _DefaultLimitFSIZE;
-        }
-
-        set
-        {
-            _DefaultLimitFSIZE = (value);
-        }
+        get => _DefaultLimitFSIZE;
+        set => _DefaultLimitFSIZE = (value);
     }
 
     private ulong _DefaultLimitFSIZESoft = default;
 
     public ulong DefaultLimitFSIZESoft
     {
-        get
-        {
-            return _DefaultLimitFSIZESoft;
-        }
-
-        set
-        {
-            _DefaultLimitFSIZESoft = (value);
-        }
+        get => _DefaultLimitFSIZESoft;
+        set => _DefaultLimitFSIZESoft = (value);
     }
 
     private ulong _DefaultLimitDATA = default;
 
     public ulong DefaultLimitDATA
     {
-        get
-        {
-            return _DefaultLimitDATA;
-        }
-
-        set
-        {
-            _DefaultLimitDATA = (value);
-        }
+        get => _DefaultLimitDATA;
+        set => _DefaultLimitDATA = (value);
     }
 
     private ulong _DefaultLimitDATASoft = default;
 
     public ulong DefaultLimitDATASoft
     {
-        get
-        {
-            return _DefaultLimitDATASoft;
-        }
-
-        set
-        {
-            _DefaultLimitDATASoft = (value);
-        }
+        get => _DefaultLimitDATASoft;
+        set => _DefaultLimitDATASoft = (value);
     }
 
     private ulong _DefaultLimitSTACK = default;
 
     public ulong DefaultLimitSTACK
     {
-        get
-        {
-            return _DefaultLimitSTACK;
-        }
-
-        set
-        {
-            _DefaultLimitSTACK = (value);
-        }
+        get => _DefaultLimitSTACK;
+        set => _DefaultLimitSTACK = (value);
     }
 
     private ulong _DefaultLimitSTACKSoft = default;
 
     public ulong DefaultLimitSTACKSoft
     {
-        get
-        {
-            return _DefaultLimitSTACKSoft;
-        }
-
-        set
-        {
-            _DefaultLimitSTACKSoft = (value);
-        }
+        get => _DefaultLimitSTACKSoft;
+        set => _DefaultLimitSTACKSoft = (value);
     }
 
     private ulong _DefaultLimitCORE = default;
 
     public ulong DefaultLimitCORE
     {
-        get
-        {
-            return _DefaultLimitCORE;
-        }
-
-        set
-        {
-            _DefaultLimitCORE = (value);
-        }
+        get => _DefaultLimitCORE;
+        set => _DefaultLimitCORE = (value);
     }
 
     private ulong _DefaultLimitCORESoft = default;
 
     public ulong DefaultLimitCORESoft
     {
-        get
-        {
-            return _DefaultLimitCORESoft;
-        }
-
-        set
-        {
-            _DefaultLimitCORESoft = (value);
-        }
+        get => _DefaultLimitCORESoft;
+        set => _DefaultLimitCORESoft = (value);
     }
 
     private ulong _DefaultLimitRSS = default;
 
     public ulong DefaultLimitRSS
     {
-        get
-        {
-            return _DefaultLimitRSS;
-        }
-
-        set
-        {
-            _DefaultLimitRSS = (value);
-        }
+        get => _DefaultLimitRSS;
+        set => _DefaultLimitRSS = (value);
     }
 
     private ulong _DefaultLimitRSSSoft = default;
 
     public ulong DefaultLimitRSSSoft
     {
-        get
-        {
-            return _DefaultLimitRSSSoft;
-        }
-
-        set
-        {
-            _DefaultLimitRSSSoft = (value);
-        }
+        get => _DefaultLimitRSSSoft;
+        set => _DefaultLimitRSSSoft = (value);
     }
 
     private ulong _DefaultLimitNOFILE = default;
 
     public ulong DefaultLimitNOFILE
     {
-        get
-        {
-            return _DefaultLimitNOFILE;
-        }
-
-        set
-        {
-            _DefaultLimitNOFILE = (value);
-        }
+        get => _DefaultLimitNOFILE;
+        set => _DefaultLimitNOFILE = (value);
     }
 
     private ulong _DefaultLimitNOFILESoft = default;
 
     public ulong DefaultLimitNOFILESoft
     {
-        get
-        {
-            return _DefaultLimitNOFILESoft;
-        }
-
-        set
-        {
-            _DefaultLimitNOFILESoft = (value);
-        }
+        get => _DefaultLimitNOFILESoft;
+        set => _DefaultLimitNOFILESoft = (value);
     }
 
     private ulong _DefaultLimitAS = default;
 
     public ulong DefaultLimitAS
     {
-        get
-        {
-            return _DefaultLimitAS;
-        }
-
-        set
-        {
-            _DefaultLimitAS = (value);
-        }
+        get => _DefaultLimitAS;
+        set => _DefaultLimitAS = (value);
     }
 
     private ulong _DefaultLimitASSoft = default;
 
     public ulong DefaultLimitASSoft
     {
-        get
-        {
-            return _DefaultLimitASSoft;
-        }
-
-        set
-        {
-            _DefaultLimitASSoft = (value);
-        }
+        get => _DefaultLimitASSoft;
+        set => _DefaultLimitASSoft = (value);
     }
 
     private ulong _DefaultLimitNPROC = default;
 
     public ulong DefaultLimitNPROC
     {
-        get
-        {
-            return _DefaultLimitNPROC;
-        }
-
-        set
-        {
-            _DefaultLimitNPROC = (value);
-        }
+        get => _DefaultLimitNPROC;
+        set => _DefaultLimitNPROC = (value);
     }
 
     private ulong _DefaultLimitNPROCSoft = default;
 
     public ulong DefaultLimitNPROCSoft
     {
-        get
-        {
-            return _DefaultLimitNPROCSoft;
-        }
-
-        set
-        {
-            _DefaultLimitNPROCSoft = (value);
-        }
+        get => _DefaultLimitNPROCSoft;
+        set => _DefaultLimitNPROCSoft = (value);
     }
 
     private ulong _DefaultLimitMEMLOCK = default;
 
     public ulong DefaultLimitMEMLOCK
     {
-        get
-        {
-            return _DefaultLimitMEMLOCK;
-        }
-
-        set
-        {
-            _DefaultLimitMEMLOCK = (value);
-        }
+        get => _DefaultLimitMEMLOCK;
+        set => _DefaultLimitMEMLOCK = (value);
     }
 
     private ulong _DefaultLimitMEMLOCKSoft = default;
 
     public ulong DefaultLimitMEMLOCKSoft
     {
-        get
-        {
-            return _DefaultLimitMEMLOCKSoft;
-        }
-
-        set
-        {
-            _DefaultLimitMEMLOCKSoft = (value);
-        }
+        get => _DefaultLimitMEMLOCKSoft;
+        set => _DefaultLimitMEMLOCKSoft = (value);
     }
 
     private ulong _DefaultLimitLOCKS = default;
 
     public ulong DefaultLimitLOCKS
     {
-        get
-        {
-            return _DefaultLimitLOCKS;
-        }
-
-        set
-        {
-            _DefaultLimitLOCKS = (value);
-        }
+        get => _DefaultLimitLOCKS;
+        set => _DefaultLimitLOCKS = (value);
     }
 
     private ulong _DefaultLimitLOCKSSoft = default;
 
     public ulong DefaultLimitLOCKSSoft
     {
-        get
-        {
-            return _DefaultLimitLOCKSSoft;
-        }
-
-        set
-        {
-            _DefaultLimitLOCKSSoft = (value);
-        }
+        get => _DefaultLimitLOCKSSoft;
+        set => _DefaultLimitLOCKSSoft = (value);
     }
 
     private ulong _DefaultLimitSIGPENDING = default;
 
     public ulong DefaultLimitSIGPENDING
     {
-        get
-        {
-            return _DefaultLimitSIGPENDING;
-        }
-
-        set
-        {
-            _DefaultLimitSIGPENDING = (value);
-        }
+        get => _DefaultLimitSIGPENDING;
+        set => _DefaultLimitSIGPENDING = (value);
     }
 
     private ulong _DefaultLimitSIGPENDINGSoft = default;
 
     public ulong DefaultLimitSIGPENDINGSoft
     {
-        get
-        {
-            return _DefaultLimitSIGPENDINGSoft;
-        }
-
-        set
-        {
-            _DefaultLimitSIGPENDINGSoft = (value);
-        }
+        get => _DefaultLimitSIGPENDINGSoft;
+        set => _DefaultLimitSIGPENDINGSoft = (value);
     }
 
     private ulong _DefaultLimitMSGQUEUE = default;
 
     public ulong DefaultLimitMSGQUEUE
     {
-        get
-        {
-            return _DefaultLimitMSGQUEUE;
-        }
-
-        set
-        {
-            _DefaultLimitMSGQUEUE = (value);
-        }
+        get => _DefaultLimitMSGQUEUE;
+        set => _DefaultLimitMSGQUEUE = (value);
     }
 
     private ulong _DefaultLimitMSGQUEUESoft = default;
 
     public ulong DefaultLimitMSGQUEUESoft
     {
-        get
-        {
-            return _DefaultLimitMSGQUEUESoft;
-        }
-
-        set
-        {
-            _DefaultLimitMSGQUEUESoft = (value);
-        }
+        get => _DefaultLimitMSGQUEUESoft;
+        set => _DefaultLimitMSGQUEUESoft = (value);
     }
 
     private ulong _DefaultLimitNICE = default;
 
     public ulong DefaultLimitNICE
     {
-        get
-        {
-            return _DefaultLimitNICE;
-        }
-
-        set
-        {
-            _DefaultLimitNICE = (value);
-        }
+        get => _DefaultLimitNICE;
+        set => _DefaultLimitNICE = (value);
     }
 
     private ulong _DefaultLimitNICESoft = default;
 
     public ulong DefaultLimitNICESoft
     {
-        get
-        {
-            return _DefaultLimitNICESoft;
-        }
-
-        set
-        {
-            _DefaultLimitNICESoft = (value);
-        }
+        get => _DefaultLimitNICESoft;
+        set => _DefaultLimitNICESoft = (value);
     }
 
     private ulong _DefaultLimitRTPRIO = default;
 
     public ulong DefaultLimitRTPRIO
     {
-        get
-        {
-            return _DefaultLimitRTPRIO;
-        }
-
-        set
-        {
-            _DefaultLimitRTPRIO = (value);
-        }
+        get => _DefaultLimitRTPRIO;
+        set => _DefaultLimitRTPRIO = (value);
     }
 
     private ulong _DefaultLimitRTPRIOSoft = default;
 
     public ulong DefaultLimitRTPRIOSoft
     {
-        get
-        {
-            return _DefaultLimitRTPRIOSoft;
-        }
-
-        set
-        {
-            _DefaultLimitRTPRIOSoft = (value);
-        }
+        get => _DefaultLimitRTPRIOSoft;
+        set => _DefaultLimitRTPRIOSoft = (value);
     }
 
     private ulong _DefaultLimitRTTIME = default;
 
     public ulong DefaultLimitRTTIME
     {
-        get
-        {
-            return _DefaultLimitRTTIME;
-        }
-
-        set
-        {
-            _DefaultLimitRTTIME = (value);
-        }
+        get => _DefaultLimitRTTIME;
+        set => _DefaultLimitRTTIME = (value);
     }
 
     private ulong _DefaultLimitRTTIMESoft = default;
 
     public ulong DefaultLimitRTTIMESoft
     {
-        get
-        {
-            return _DefaultLimitRTTIMESoft;
-        }
-
-        set
-        {
-            _DefaultLimitRTTIMESoft = (value);
-        }
+        get => _DefaultLimitRTTIMESoft;
+        set => _DefaultLimitRTTIMESoft = (value);
     }
 
     private ulong _DefaultTasksMax = default;
 
     public ulong DefaultTasksMax
     {
-        get
-        {
-            return _DefaultTasksMax;
-        }
-
-        set
-        {
-            _DefaultTasksMax = (value);
-        }
+        get => _DefaultTasksMax;
+        set => _DefaultTasksMax = (value);
     }
 
     private ulong _DefaultMemoryPressureThresholdUSec = default;
 
     public ulong DefaultMemoryPressureThresholdUSec
     {
-        get
-        {
-            return _DefaultMemoryPressureThresholdUSec;
-        }
-
-        set
-        {
-            _DefaultMemoryPressureThresholdUSec = (value);
-        }
+        get => _DefaultMemoryPressureThresholdUSec;
+        set => _DefaultMemoryPressureThresholdUSec = (value);
     }
 
     private string _DefaultMemoryPressureWatch = default;
 
     public string DefaultMemoryPressureWatch
     {
-        get
-        {
-            return _DefaultMemoryPressureWatch;
-        }
-
-        set
-        {
-            _DefaultMemoryPressureWatch = (value);
-        }
+        get => _DefaultMemoryPressureWatch;
+        set => _DefaultMemoryPressureWatch = (value);
     }
 
     private ulong _TimerSlackNSec = default;
 
     public ulong TimerSlackNSec
     {
-        get
-        {
-            return _TimerSlackNSec;
-        }
-
-        set
-        {
-            _TimerSlackNSec = (value);
-        }
+        get => _TimerSlackNSec;
+        set => _TimerSlackNSec = (value);
     }
 
     private string _DefaultOOMPolicy = default;
 
     public string DefaultOOMPolicy
     {
-        get
-        {
-            return _DefaultOOMPolicy;
-        }
-
-        set
-        {
-            _DefaultOOMPolicy = (value);
-        }
+        get => _DefaultOOMPolicy;
+        set => _DefaultOOMPolicy = (value);
     }
 
     private int _DefaultOOMScoreAdjust = default;
 
     public int DefaultOOMScoreAdjust
     {
-        get
-        {
-            return _DefaultOOMScoreAdjust;
-        }
-
-        set
-        {
-            _DefaultOOMScoreAdjust = (value);
-        }
+        get => _DefaultOOMScoreAdjust;
+        set => _DefaultOOMScoreAdjust = (value);
     }
 
     private string _CtrlAltDelBurstAction = default;
 
     public string CtrlAltDelBurstAction
     {
-        get
-        {
-            return _CtrlAltDelBurstAction;
-        }
-
-        set
-        {
-            _CtrlAltDelBurstAction = (value);
-        }
+        get => _CtrlAltDelBurstAction;
+        set => _CtrlAltDelBurstAction = (value);
     }
 }
 

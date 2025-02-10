@@ -161,690 +161,368 @@ public class LoginManagerProperties
 
     public bool EnableWallMessages
     {
-        get
-        {
-            return _EnableWallMessages;
-        }
-
-        set
-        {
-            _EnableWallMessages = (value);
-        }
+        get => _EnableWallMessages;
+        set => _EnableWallMessages = (value);
     }
 
     private string _WallMessage = default;
 
     public string WallMessage
     {
-        get
-        {
-            return _WallMessage;
-        }
-
-        set
-        {
-            _WallMessage = (value);
-        }
+        get => _WallMessage;
+        set => _WallMessage = (value);
     }
 
     private uint _NAutoVTs = default;
 
     public uint NAutoVTs
     {
-        get
-        {
-            return _NAutoVTs;
-        }
-
-        set
-        {
-            _NAutoVTs = (value);
-        }
+        get => _NAutoVTs;
+        set => _NAutoVTs = (value);
     }
 
     private string[] _KillOnlyUsers = default;
 
     public string[] KillOnlyUsers
     {
-        get
-        {
-            return _KillOnlyUsers;
-        }
-
-        set
-        {
-            _KillOnlyUsers = (value);
-        }
+        get => _KillOnlyUsers;
+        set => _KillOnlyUsers = (value);
     }
 
     private string[] _KillExcludeUsers = default;
 
     public string[] KillExcludeUsers
     {
-        get
-        {
-            return _KillExcludeUsers;
-        }
-
-        set
-        {
-            _KillExcludeUsers = (value);
-        }
+        get => _KillExcludeUsers;
+        set => _KillExcludeUsers = (value);
     }
 
     private bool _KillUserProcesses = default;
 
     public bool KillUserProcesses
     {
-        get
-        {
-            return _KillUserProcesses;
-        }
-
-        set
-        {
-            _KillUserProcesses = (value);
-        }
+        get => _KillUserProcesses;
+        set => _KillUserProcesses = (value);
     }
 
     private string _RebootParameter = default;
 
     public string RebootParameter
     {
-        get
-        {
-            return _RebootParameter;
-        }
-
-        set
-        {
-            _RebootParameter = (value);
-        }
+        get => _RebootParameter;
+        set => _RebootParameter = (value);
     }
 
     private bool _RebootToFirmwareSetup = default;
 
     public bool RebootToFirmwareSetup
     {
-        get
-        {
-            return _RebootToFirmwareSetup;
-        }
-
-        set
-        {
-            _RebootToFirmwareSetup = (value);
-        }
+        get => _RebootToFirmwareSetup;
+        set => _RebootToFirmwareSetup = (value);
     }
 
     private ulong _RebootToBootLoaderMenu = default;
 
     public ulong RebootToBootLoaderMenu
     {
-        get
-        {
-            return _RebootToBootLoaderMenu;
-        }
-
-        set
-        {
-            _RebootToBootLoaderMenu = (value);
-        }
+        get => _RebootToBootLoaderMenu;
+        set => _RebootToBootLoaderMenu = (value);
     }
 
     private string _RebootToBootLoaderEntry = default;
 
     public string RebootToBootLoaderEntry
     {
-        get
-        {
-            return _RebootToBootLoaderEntry;
-        }
-
-        set
-        {
-            _RebootToBootLoaderEntry = (value);
-        }
+        get => _RebootToBootLoaderEntry;
+        set => _RebootToBootLoaderEntry = (value);
     }
 
     private string[] _BootLoaderEntries = default;
 
     public string[] BootLoaderEntries
     {
-        get
-        {
-            return _BootLoaderEntries;
-        }
-
-        set
-        {
-            _BootLoaderEntries = (value);
-        }
+        get => _BootLoaderEntries;
+        set => _BootLoaderEntries = (value);
     }
 
     private bool _IdleHint = default;
 
     public bool IdleHint
     {
-        get
-        {
-            return _IdleHint;
-        }
-
-        set
-        {
-            _IdleHint = (value);
-        }
+        get => _IdleHint;
+        set => _IdleHint = (value);
     }
 
     private ulong _IdleSinceHint = default;
 
     public ulong IdleSinceHint
     {
-        get
-        {
-            return _IdleSinceHint;
-        }
-
-        set
-        {
-            _IdleSinceHint = (value);
-        }
+        get => _IdleSinceHint;
+        set => _IdleSinceHint = (value);
     }
 
     private ulong _IdleSinceHintMonotonic = default;
 
     public ulong IdleSinceHintMonotonic
     {
-        get
-        {
-            return _IdleSinceHintMonotonic;
-        }
-
-        set
-        {
-            _IdleSinceHintMonotonic = (value);
-        }
+        get => _IdleSinceHintMonotonic;
+        set => _IdleSinceHintMonotonic = (value);
     }
 
     private string _BlockInhibited = default;
 
     public string BlockInhibited
     {
-        get
-        {
-            return _BlockInhibited;
-        }
-
-        set
-        {
-            _BlockInhibited = (value);
-        }
+        get => _BlockInhibited;
+        set => _BlockInhibited = (value);
     }
 
     private string _DelayInhibited = default;
 
     public string DelayInhibited
     {
-        get
-        {
-            return _DelayInhibited;
-        }
-
-        set
-        {
-            _DelayInhibited = (value);
-        }
+        get => _DelayInhibited;
+        set => _DelayInhibited = (value);
     }
 
     private ulong _InhibitDelayMaxUSec = default;
 
     public ulong InhibitDelayMaxUSec
     {
-        get
-        {
-            return _InhibitDelayMaxUSec;
-        }
-
-        set
-        {
-            _InhibitDelayMaxUSec = (value);
-        }
+        get => _InhibitDelayMaxUSec;
+        set => _InhibitDelayMaxUSec = (value);
     }
 
     private ulong _UserStopDelayUSec = default;
 
     public ulong UserStopDelayUSec
     {
-        get
-        {
-            return _UserStopDelayUSec;
-        }
-
-        set
-        {
-            _UserStopDelayUSec = (value);
-        }
+        get => _UserStopDelayUSec;
+        set => _UserStopDelayUSec = (value);
     }
 
     private string _HandlePowerKey = default;
 
     public string HandlePowerKey
     {
-        get
-        {
-            return _HandlePowerKey;
-        }
-
-        set
-        {
-            _HandlePowerKey = (value);
-        }
+        get => _HandlePowerKey;
+        set => _HandlePowerKey = (value);
     }
 
     private string _HandlePowerKeyLongPress = default;
 
     public string HandlePowerKeyLongPress
     {
-        get
-        {
-            return _HandlePowerKeyLongPress;
-        }
-
-        set
-        {
-            _HandlePowerKeyLongPress = (value);
-        }
+        get => _HandlePowerKeyLongPress;
+        set => _HandlePowerKeyLongPress = (value);
     }
 
     private string _HandleRebootKey = default;
 
     public string HandleRebootKey
     {
-        get
-        {
-            return _HandleRebootKey;
-        }
-
-        set
-        {
-            _HandleRebootKey = (value);
-        }
+        get => _HandleRebootKey;
+        set => _HandleRebootKey = (value);
     }
 
     private string _HandleRebootKeyLongPress = default;
 
     public string HandleRebootKeyLongPress
     {
-        get
-        {
-            return _HandleRebootKeyLongPress;
-        }
-
-        set
-        {
-            _HandleRebootKeyLongPress = (value);
-        }
+        get => _HandleRebootKeyLongPress;
+        set => _HandleRebootKeyLongPress = (value);
     }
 
     private string _HandleSuspendKey = default;
 
     public string HandleSuspendKey
     {
-        get
-        {
-            return _HandleSuspendKey;
-        }
-
-        set
-        {
-            _HandleSuspendKey = (value);
-        }
+        get => _HandleSuspendKey;
+        set => _HandleSuspendKey = (value);
     }
 
     private string _HandleSuspendKeyLongPress = default;
 
     public string HandleSuspendKeyLongPress
     {
-        get
-        {
-            return _HandleSuspendKeyLongPress;
-        }
-
-        set
-        {
-            _HandleSuspendKeyLongPress = (value);
-        }
+        get => _HandleSuspendKeyLongPress;
+        set => _HandleSuspendKeyLongPress = (value);
     }
 
     private string _HandleHibernateKey = default;
 
     public string HandleHibernateKey
     {
-        get
-        {
-            return _HandleHibernateKey;
-        }
-
-        set
-        {
-            _HandleHibernateKey = (value);
-        }
+        get => _HandleHibernateKey;
+        set => _HandleHibernateKey = (value);
     }
 
     private string _HandleHibernateKeyLongPress = default;
 
     public string HandleHibernateKeyLongPress
     {
-        get
-        {
-            return _HandleHibernateKeyLongPress;
-        }
-
-        set
-        {
-            _HandleHibernateKeyLongPress = (value);
-        }
+        get => _HandleHibernateKeyLongPress;
+        set => _HandleHibernateKeyLongPress = (value);
     }
 
     private string _HandleLidSwitch = default;
 
     public string HandleLidSwitch
     {
-        get
-        {
-            return _HandleLidSwitch;
-        }
-
-        set
-        {
-            _HandleLidSwitch = (value);
-        }
+        get => _HandleLidSwitch;
+        set => _HandleLidSwitch = (value);
     }
 
     private string _HandleLidSwitchExternalPower = default;
 
     public string HandleLidSwitchExternalPower
     {
-        get
-        {
-            return _HandleLidSwitchExternalPower;
-        }
-
-        set
-        {
-            _HandleLidSwitchExternalPower = (value);
-        }
+        get => _HandleLidSwitchExternalPower;
+        set => _HandleLidSwitchExternalPower = (value);
     }
 
     private string _HandleLidSwitchDocked = default;
 
     public string HandleLidSwitchDocked
     {
-        get
-        {
-            return _HandleLidSwitchDocked;
-        }
-
-        set
-        {
-            _HandleLidSwitchDocked = (value);
-        }
+        get => _HandleLidSwitchDocked;
+        set => _HandleLidSwitchDocked = (value);
     }
 
     private ulong _HoldoffTimeoutUSec = default;
 
     public ulong HoldoffTimeoutUSec
     {
-        get
-        {
-            return _HoldoffTimeoutUSec;
-        }
-
-        set
-        {
-            _HoldoffTimeoutUSec = (value);
-        }
+        get => _HoldoffTimeoutUSec;
+        set => _HoldoffTimeoutUSec = (value);
     }
 
     private string _IdleAction = default;
 
     public string IdleAction
     {
-        get
-        {
-            return _IdleAction;
-        }
-
-        set
-        {
-            _IdleAction = (value);
-        }
+        get => _IdleAction;
+        set => _IdleAction = (value);
     }
 
     private ulong _IdleActionUSec = default;
 
     public ulong IdleActionUSec
     {
-        get
-        {
-            return _IdleActionUSec;
-        }
-
-        set
-        {
-            _IdleActionUSec = (value);
-        }
+        get => _IdleActionUSec;
+        set => _IdleActionUSec = (value);
     }
 
     private bool _PreparingForShutdown = default;
 
     public bool PreparingForShutdown
     {
-        get
-        {
-            return _PreparingForShutdown;
-        }
-
-        set
-        {
-            _PreparingForShutdown = (value);
-        }
+        get => _PreparingForShutdown;
+        set => _PreparingForShutdown = (value);
     }
 
     private bool _PreparingForSleep = default;
 
     public bool PreparingForSleep
     {
-        get
-        {
-            return _PreparingForSleep;
-        }
-
-        set
-        {
-            _PreparingForSleep = (value);
-        }
+        get => _PreparingForSleep;
+        set => _PreparingForSleep = (value);
     }
 
     private (string, ulong) _ScheduledShutdown = default;
 
     public (string, ulong) ScheduledShutdown
     {
-        get
-        {
-            return _ScheduledShutdown;
-        }
-
-        set
-        {
-            _ScheduledShutdown = (value);
-        }
+        get => _ScheduledShutdown;
+        set => _ScheduledShutdown = (value);
     }
 
     private bool _Docked = default;
 
     public bool Docked
     {
-        get
-        {
-            return _Docked;
-        }
-
-        set
-        {
-            _Docked = (value);
-        }
+        get => _Docked;
+        set => _Docked = (value);
     }
 
     private bool _LidClosed = default;
 
     public bool LidClosed
     {
-        get
-        {
-            return _LidClosed;
-        }
-
-        set
-        {
-            _LidClosed = (value);
-        }
+        get => _LidClosed;
+        set => _LidClosed = (value);
     }
 
     private bool _OnExternalPower = default;
 
     public bool OnExternalPower
     {
-        get
-        {
-            return _OnExternalPower;
-        }
-
-        set
-        {
-            _OnExternalPower = (value);
-        }
+        get => _OnExternalPower;
+        set => _OnExternalPower = (value);
     }
 
     private bool _RemoveIPC = default;
 
     public bool RemoveIPC
     {
-        get
-        {
-            return _RemoveIPC;
-        }
-
-        set
-        {
-            _RemoveIPC = (value);
-        }
+        get => _RemoveIPC;
+        set => _RemoveIPC = (value);
     }
 
     private ulong _RuntimeDirectorySize = default;
 
     public ulong RuntimeDirectorySize
     {
-        get
-        {
-            return _RuntimeDirectorySize;
-        }
-
-        set
-        {
-            _RuntimeDirectorySize = (value);
-        }
+        get => _RuntimeDirectorySize;
+        set => _RuntimeDirectorySize = (value);
     }
 
     private ulong _RuntimeDirectoryInodesMax = default;
 
     public ulong RuntimeDirectoryInodesMax
     {
-        get
-        {
-            return _RuntimeDirectoryInodesMax;
-        }
-
-        set
-        {
-            _RuntimeDirectoryInodesMax = (value);
-        }
+        get => _RuntimeDirectoryInodesMax;
+        set => _RuntimeDirectoryInodesMax = (value);
     }
 
     private ulong _InhibitorsMax = default;
 
     public ulong InhibitorsMax
     {
-        get
-        {
-            return _InhibitorsMax;
-        }
-
-        set
-        {
-            _InhibitorsMax = (value);
-        }
+        get => _InhibitorsMax;
+        set => _InhibitorsMax = (value);
     }
 
     private ulong _NCurrentInhibitors = default;
 
     public ulong NCurrentInhibitors
     {
-        get
-        {
-            return _NCurrentInhibitors;
-        }
-
-        set
-        {
-            _NCurrentInhibitors = (value);
-        }
+        get => _NCurrentInhibitors;
+        set => _NCurrentInhibitors = (value);
     }
 
     private ulong _SessionsMax = default;
 
     public ulong SessionsMax
     {
-        get
-        {
-            return _SessionsMax;
-        }
-
-        set
-        {
-            _SessionsMax = (value);
-        }
+        get => _SessionsMax;
+        set => _SessionsMax = (value);
     }
 
     private ulong _NCurrentSessions = default;
 
     public ulong NCurrentSessions
     {
-        get
-        {
-            return _NCurrentSessions;
-        }
-
-        set
-        {
-            _NCurrentSessions = (value);
-        }
+        get => _NCurrentSessions;
+        set => _NCurrentSessions = (value);
     }
 
     private ulong _StopIdleSessionUSec = default;
 
     public ulong StopIdleSessionUSec
     {
-        get
-        {
-            return _StopIdleSessionUSec;
-        }
-
-        set
-        {
-            _StopIdleSessionUSec = (value);
-        }
+        get => _StopIdleSessionUSec;
+        set => _StopIdleSessionUSec = (value);
     }
 }
 
