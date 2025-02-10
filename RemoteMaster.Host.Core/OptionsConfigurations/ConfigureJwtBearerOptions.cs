@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -10,7 +11,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.OptionsConfigurations;
 
-public class ConfigureJwtBearerOptions(IRsaKeyProvider rsaKeyProvider) : IConfigureNamedOptions<JwtBearerOptions>
+public class ConfigureJwtBearerOptions(IFileSystem fileSystem, IRsaKeyProvider rsaKeyProvider) : IConfigureNamedOptions<JwtBearerOptions>
 {
     public void Configure(string? name, JwtBearerOptions options)
     {
@@ -38,10 +39,10 @@ public class ConfigureJwtBearerOptions(IRsaKeyProvider rsaKeyProvider) : IConfig
         Configure(Options.DefaultName, options);
     }
 
-    private static bool IsWinPe()
+    private bool IsWinPe()
     {
         var systemDirectory = Environment.SystemDirectory;
-        var systemDrive = Path.GetPathRoot(systemDirectory);
+        var systemDrive = fileSystem.Path.GetPathRoot(systemDirectory);
 
         return !string.Equals(systemDrive, @"C:\", StringComparison.OrdinalIgnoreCase);
     }
