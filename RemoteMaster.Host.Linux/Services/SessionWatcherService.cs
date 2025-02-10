@@ -47,11 +47,40 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
         return Task.CompletedTask;
     }
 
-    private void OnSessionNew(string sessionId, ObjectPath objectPath)
+    private async void OnSessionNew(string sessionId, ObjectPath objectPath)
     {
         logger.LogInformation($"[SessionWatcherService] New session detected: {sessionId}, ObjectPath: {objectPath}");
 
-        sessionChangeEventService.OnSessionChanged(0);
+        if (_loginManager == null)
+        {
+            logger.LogError("[SessionWatcherService] _loginManager is null, cannot fetch session details.");
+            return;
+        }
+
+        try
+        {
+            var userId = await _loginManager.GetAsync<uint>("User");
+
+            var userPath = await _loginManager.GetUserAsync(userId);
+
+            var userName = await _loginManager.GetAsync<string>("Name");
+            var sessionType = await _loginManager.GetAsync<string>("Type");
+            var remoteHost = await _loginManager.GetAsync<string>("RemoteHost");
+            var ttyPath = await _loginManager.GetAsync<string>("TTY");
+
+            logger.LogInformation($"[SessionWatcherService] Session {sessionId} details:");
+            logger.LogInformation($"  - User ID: {userId}");
+            logger.LogInformation($"  - Username: {userName}");
+            logger.LogInformation($"  - Session Type: {sessionType}");
+            logger.LogInformation($"  - Remote Host: {remoteHost}");
+            logger.LogInformation($"  - TTY: {ttyPath}");
+
+            sessionChangeEventService.OnSessionChanged(0);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"[SessionWatcherService] Failed to get details for session {sessionId}");
+        }
     }
 
     private void OnSessionRemoved(string sessionId, ObjectPath objectPath)
