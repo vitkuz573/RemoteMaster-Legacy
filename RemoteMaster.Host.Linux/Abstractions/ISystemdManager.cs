@@ -199,7 +199,7 @@ public interface ISystemdManager : IDBusObject
     
     Task<T> GetAsync<T>(string prop);
     
-    Task<ManagerProperties> GetAllAsync();
+    Task<SystemdManagerProperties> GetAllAsync();
     
     Task SetAsync(string prop, object val);
     
@@ -207,7 +207,7 @@ public interface ISystemdManager : IDBusObject
 }
 
 [Dictionary]
-public class ManagerProperties
+public class SystemdManagerProperties
 {
     private string _Version = default;
 
@@ -2053,7 +2053,7 @@ public class ManagerProperties
     }
 }
 
-public static class ManagerExtensions
+public static class SystemdManagerExtensions
 {
     public static Task<string> GetVersionAsync(this ISystemdManager o)
     {
