@@ -157,7 +157,8 @@ public interface ILoginManager : IDBusObject
 [Dictionary]
 public class ManagerProperties
 {
-    private bool _EnableWallMessages = default(bool);
+    private bool _EnableWallMessages = default;
+
     public bool EnableWallMessages
     {
         get
@@ -186,7 +187,8 @@ public class ManagerProperties
         }
     }
 
-    private uint _NAutoVTs = default(uint);
+    private uint _NAutoVTs = default;
+
     public uint NAutoVTs
     {
         get
