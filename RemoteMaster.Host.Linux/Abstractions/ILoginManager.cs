@@ -147,7 +147,7 @@ public interface ILoginManager : IDBusObject
     
     Task<T> GetAsync<T>(string prop);
     
-    Task<ManagerProperties> GetAllAsync();
+    Task<LoginManagerProperties> GetAllAsync();
     
     Task SetAsync(string prop, object val);
     
@@ -155,7 +155,7 @@ public interface ILoginManager : IDBusObject
 }
 
 [Dictionary]
-public class ManagerProperties
+public class LoginManagerProperties
 {
     private bool _EnableWallMessages = default;
 
