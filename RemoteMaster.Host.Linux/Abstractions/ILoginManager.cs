@@ -848,7 +848,7 @@ public class ManagerProperties
     }
 }
 
-public static class ManagerExtensions
+public static class LoginManagerExtensions
 {
     public static Task<bool> GetEnableWallMessagesAsync(this ILoginManager o)
     {
