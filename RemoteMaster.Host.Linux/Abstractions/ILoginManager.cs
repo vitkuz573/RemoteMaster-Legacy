@@ -127,23 +127,23 @@ public interface ILoginManager : IDBusObject
     
     Task SetWallMessageAsync(string WallMessage, bool Enable);
     
-    Task<IDisposable> WatchSessionNewAsync(Action<(string sessionId, ObjectPath objectPath)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchSessionNewAsync(Action<(string sessionId, ObjectPath objectPath)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchSessionRemovedAsync(Action<(string sessionId, ObjectPath objectPath)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchSessionRemovedAsync(Action<(string sessionId, ObjectPath objectPath)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchUserNewAsync(Action<(uint uid, ObjectPath objectPath)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchUserNewAsync(Action<(uint uid, ObjectPath objectPath)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchUserRemovedAsync(Action<(uint uid, ObjectPath objectPath)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchUserRemovedAsync(Action<(uint uid, ObjectPath objectPath)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchSeatNewAsync(Action<(string seatId, ObjectPath objectPath)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchSeatNewAsync(Action<(string seatId, ObjectPath objectPath)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchSeatRemovedAsync(Action<(string seatId, ObjectPath objectPath)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchSeatRemovedAsync(Action<(string seatId, ObjectPath objectPath)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchPrepareForShutdownAsync(Action<bool> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchPrepareForShutdownAsync(Action<bool> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchPrepareForShutdownWithMetadataAsync(Action<(bool start, IDictionary<string, object> metadata)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchPrepareForShutdownWithMetadataAsync(Action<(bool start, IDictionary<string, object> metadata)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchPrepareForSleepAsync(Action<bool> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchPrepareForSleepAsync(Action<bool> handler, Action<Exception>? onError = null);
     
     Task<T> GetAsync<T>(string prop);
     
@@ -165,7 +165,7 @@ public class LoginManagerProperties
         set => _EnableWallMessages = (value);
     }
 
-    private string _WallMessage = default;
+    private string _WallMessage = string.Empty;
 
     public string WallMessage
     {
@@ -181,7 +181,7 @@ public class LoginManagerProperties
         set => _NAutoVTs = (value);
     }
 
-    private string[] _KillOnlyUsers = default;
+    private string[] _KillOnlyUsers = [];
 
     public string[] KillOnlyUsers
     {
@@ -189,7 +189,7 @@ public class LoginManagerProperties
         set => _KillOnlyUsers = (value);
     }
 
-    private string[] _KillExcludeUsers = default;
+    private string[] _KillExcludeUsers = [];
 
     public string[] KillExcludeUsers
     {
@@ -205,7 +205,7 @@ public class LoginManagerProperties
         set => _KillUserProcesses = (value);
     }
 
-    private string _RebootParameter = default;
+    private string _RebootParameter = string.Empty;
 
     public string RebootParameter
     {
@@ -229,7 +229,7 @@ public class LoginManagerProperties
         set => _RebootToBootLoaderMenu = (value);
     }
 
-    private string _RebootToBootLoaderEntry = default;
+    private string _RebootToBootLoaderEntry = string.Empty;
 
     public string RebootToBootLoaderEntry
     {
@@ -237,7 +237,7 @@ public class LoginManagerProperties
         set => _RebootToBootLoaderEntry = (value);
     }
 
-    private string[] _BootLoaderEntries = default;
+    private string[] _BootLoaderEntries = [];
 
     public string[] BootLoaderEntries
     {
@@ -269,7 +269,7 @@ public class LoginManagerProperties
         set => _IdleSinceHintMonotonic = (value);
     }
 
-    private string _BlockInhibited = default;
+    private string _BlockInhibited = string.Empty;
 
     public string BlockInhibited
     {
@@ -277,7 +277,7 @@ public class LoginManagerProperties
         set => _BlockInhibited = (value);
     }
 
-    private string _DelayInhibited = default;
+    private string _DelayInhibited = string.Empty;
 
     public string DelayInhibited
     {
@@ -301,7 +301,7 @@ public class LoginManagerProperties
         set => _UserStopDelayUSec = (value);
     }
 
-    private string _HandlePowerKey = default;
+    private string _HandlePowerKey = string.Empty;
 
     public string HandlePowerKey
     {
@@ -309,7 +309,7 @@ public class LoginManagerProperties
         set => _HandlePowerKey = (value);
     }
 
-    private string _HandlePowerKeyLongPress = default;
+    private string _HandlePowerKeyLongPress = string.Empty;
 
     public string HandlePowerKeyLongPress
     {
@@ -317,7 +317,7 @@ public class LoginManagerProperties
         set => _HandlePowerKeyLongPress = (value);
     }
 
-    private string _HandleRebootKey = default;
+    private string _HandleRebootKey = string.Empty;
 
     public string HandleRebootKey
     {
@@ -325,7 +325,7 @@ public class LoginManagerProperties
         set => _HandleRebootKey = (value);
     }
 
-    private string _HandleRebootKeyLongPress = default;
+    private string _HandleRebootKeyLongPress = string.Empty;
 
     public string HandleRebootKeyLongPress
     {
@@ -333,7 +333,7 @@ public class LoginManagerProperties
         set => _HandleRebootKeyLongPress = (value);
     }
 
-    private string _HandleSuspendKey = default;
+    private string _HandleSuspendKey = string.Empty;
 
     public string HandleSuspendKey
     {
@@ -341,7 +341,7 @@ public class LoginManagerProperties
         set => _HandleSuspendKey = (value);
     }
 
-    private string _HandleSuspendKeyLongPress = default;
+    private string _HandleSuspendKeyLongPress = string.Empty;
 
     public string HandleSuspendKeyLongPress
     {
@@ -349,7 +349,7 @@ public class LoginManagerProperties
         set => _HandleSuspendKeyLongPress = (value);
     }
 
-    private string _HandleHibernateKey = default;
+    private string _HandleHibernateKey = string.Empty;
 
     public string HandleHibernateKey
     {
@@ -357,7 +357,7 @@ public class LoginManagerProperties
         set => _HandleHibernateKey = (value);
     }
 
-    private string _HandleHibernateKeyLongPress = default;
+    private string _HandleHibernateKeyLongPress = string.Empty;
 
     public string HandleHibernateKeyLongPress
     {
@@ -365,7 +365,7 @@ public class LoginManagerProperties
         set => _HandleHibernateKeyLongPress = (value);
     }
 
-    private string _HandleLidSwitch = default;
+    private string _HandleLidSwitch = string.Empty;
 
     public string HandleLidSwitch
     {
@@ -373,7 +373,7 @@ public class LoginManagerProperties
         set => _HandleLidSwitch = (value);
     }
 
-    private string _HandleLidSwitchExternalPower = default;
+    private string _HandleLidSwitchExternalPower = string.Empty;
 
     public string HandleLidSwitchExternalPower
     {
@@ -381,7 +381,7 @@ public class LoginManagerProperties
         set => _HandleLidSwitchExternalPower = (value);
     }
 
-    private string _HandleLidSwitchDocked = default;
+    private string _HandleLidSwitchDocked = string.Empty;
 
     public string HandleLidSwitchDocked
     {
@@ -397,7 +397,7 @@ public class LoginManagerProperties
         set => _HoldoffTimeoutUSec = (value);
     }
 
-    private string _IdleAction = default;
+    private string _IdleAction = string.Empty;
 
     public string IdleAction
     {

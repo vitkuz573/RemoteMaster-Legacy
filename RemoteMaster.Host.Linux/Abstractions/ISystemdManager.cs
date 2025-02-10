@@ -183,19 +183,19 @@ public interface ISystemdManager : IDBusObject
     
     Task<(string, uint, uint, uint, ulong, uint, uint, string, uint)[]> DumpUnitFileDescriptorStoreAsync(string Name);
     
-    Task<IDisposable> WatchUnitNewAsync(Action<(string id, ObjectPath unit)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchUnitNewAsync(Action<(string id, ObjectPath unit)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchUnitRemovedAsync(Action<(string id, ObjectPath unit)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchUnitRemovedAsync(Action<(string id, ObjectPath unit)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchJobNewAsync(Action<(uint id, ObjectPath job, string unit)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchJobNewAsync(Action<(uint id, ObjectPath job, string unit)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchJobRemovedAsync(Action<(uint id, ObjectPath job, string unit, string result)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchJobRemovedAsync(Action<(uint id, ObjectPath job, string unit, string result)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchStartupFinishedAsync(Action<(ulong firmware, ulong loader, ulong kernel, ulong initrd, ulong userspace, ulong total)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchStartupFinishedAsync(Action<(ulong firmware, ulong loader, ulong kernel, ulong initrd, ulong userspace, ulong total)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchUnitFilesChangedAsync(Action handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchUnitFilesChangedAsync(Action handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchReloadingAsync(Action<bool> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchReloadingAsync(Action<bool> handler, Action<Exception>? onError = null);
     
     Task<T> GetAsync<T>(string prop);
     
@@ -209,7 +209,7 @@ public interface ISystemdManager : IDBusObject
 [Dictionary]
 public class SystemdManagerProperties
 {
-    private string _Version = default;
+    private string _Version = string.Empty;
 
     public string Version
     {
@@ -217,7 +217,7 @@ public class SystemdManagerProperties
         set => _Version = (value);
     }
 
-    private string _Features = default;
+    private string _Features = string.Empty;
 
     public string Features
     {
@@ -225,7 +225,7 @@ public class SystemdManagerProperties
         set => _Features = (value);
     }
 
-    private string _Virtualization = default;
+    private string _Virtualization = string.Empty;
 
     public string Virtualization
     {
@@ -233,7 +233,7 @@ public class SystemdManagerProperties
         set => _Virtualization = (value);
     }
 
-    private string _ConfidentialVirtualization = default;
+    private string _ConfidentialVirtualization = string.Empty;
 
     public string ConfidentialVirtualization
     {
@@ -241,7 +241,7 @@ public class SystemdManagerProperties
         set => _ConfidentialVirtualization = (value);
     }
 
-    private string _Architecture = default;
+    private string _Architecture = string.Empty;
 
     public string Architecture
     {
@@ -249,7 +249,7 @@ public class SystemdManagerProperties
         set => _Architecture = (value);
     }
 
-    private string _Tainted = default;
+    private string _Tainted = string.Empty;
 
     public string Tainted
     {
@@ -561,7 +561,7 @@ public class SystemdManagerProperties
         set => _InitRDUnitsLoadFinishTimestampMonotonic = (value);
     }
 
-    private string _LogLevel = default;
+    private string _LogLevel = string.Empty;
 
     public string LogLevel
     {
@@ -569,7 +569,7 @@ public class SystemdManagerProperties
         set => _LogLevel = (value);
     }
 
-    private string _LogTarget = default;
+    private string _LogTarget = string.Empty;
 
     public string LogTarget
     {
@@ -625,7 +625,7 @@ public class SystemdManagerProperties
         set => _Progress = (value);
     }
 
-    private string[] _Environment = default;
+    private string[] _Environment = [];
     public string[] Environment
     {
         get => _Environment;
@@ -648,7 +648,7 @@ public class SystemdManagerProperties
         set => _ShowStatus = (value);
     }
 
-    private string[] _UnitPath = default;
+    private string[] _UnitPath = [];
 
     public string[] UnitPath
     {
@@ -656,7 +656,7 @@ public class SystemdManagerProperties
         set => _UnitPath = (value);
     }
 
-    private string _DefaultStandardOutput = default;
+    private string _DefaultStandardOutput = string.Empty;
 
     public string DefaultStandardOutput
     {
@@ -664,7 +664,7 @@ public class SystemdManagerProperties
         set => _DefaultStandardOutput = (value);
     }
 
-    private string _DefaultStandardError = default;
+    private string _DefaultStandardError = string.Empty;
 
     public string DefaultStandardError
     {
@@ -672,7 +672,7 @@ public class SystemdManagerProperties
         set => _DefaultStandardError = (value);
     }
 
-    private string _WatchdogDevice = default;
+    private string _WatchdogDevice = string.Empty;
 
     public string WatchdogDevice
     {
@@ -712,7 +712,7 @@ public class SystemdManagerProperties
         set => _RuntimeWatchdogPreUSec = (value);
     }
 
-    private string _RuntimeWatchdogPreGovernor = default;
+    private string _RuntimeWatchdogPreGovernor = string.Empty;
 
     public string RuntimeWatchdogPreGovernor
     {
@@ -744,7 +744,7 @@ public class SystemdManagerProperties
         set => _ServiceWatchdogs = (value);
     }
 
-    private string _ControlGroup = default;
+    private string _ControlGroup = string.Empty;
 
     public string ControlGroup
     {
@@ -752,7 +752,7 @@ public class SystemdManagerProperties
         set => _ControlGroup = (value);
     }
 
-    private string _SystemState = default;
+    private string _SystemState = string.Empty;
 
     public string SystemState
     {
@@ -1152,7 +1152,7 @@ public class SystemdManagerProperties
         set => _DefaultMemoryPressureThresholdUSec = (value);
     }
 
-    private string _DefaultMemoryPressureWatch = default;
+    private string _DefaultMemoryPressureWatch = string.Empty;
 
     public string DefaultMemoryPressureWatch
     {
@@ -1168,7 +1168,7 @@ public class SystemdManagerProperties
         set => _TimerSlackNSec = (value);
     }
 
-    private string _DefaultOOMPolicy = default;
+    private string _DefaultOOMPolicy = string.Empty;
 
     public string DefaultOOMPolicy
     {
@@ -1184,7 +1184,7 @@ public class SystemdManagerProperties
         set => _DefaultOOMScoreAdjust = (value);
     }
 
-    private string _CtrlAltDelBurstAction = default;
+    private string _CtrlAltDelBurstAction = string.Empty;
 
     public string CtrlAltDelBurstAction
     {
