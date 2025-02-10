@@ -27,8 +27,8 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
 
             _loginManager = _connection.CreateProxy<ILoginManager>("org.freedesktop.login1", new ObjectPath("/org/freedesktop/login1"));
 
-            _sessionNewSubscription = await _loginManager.WatchSessionNewAsync(args => OnSessionNew(args.sessionId, args.sessionPath), OnError);
-            _sessionRemovedSubscription = await _loginManager.WatchSessionRemovedAsync(args => OnSessionRemoved(args.sessionId, args.sessionPath), OnError);
+            _sessionNewSubscription = await _loginManager.WatchSessionNewAsync(args => OnSessionNew(args.sessionId, args.objectPath), OnError);
+            _sessionRemovedSubscription = await _loginManager.WatchSessionRemovedAsync(args => OnSessionRemoved(args.sessionId, args.objectPath), OnError);
 
             logger.LogInformation("[SessionWatcherService] Started and subscribed to session signals.");
         }
@@ -47,16 +47,16 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
         return Task.CompletedTask;
     }
 
-    private void OnSessionNew(string sessionId, ObjectPath sessionPath)
+    private void OnSessionNew(string sessionId, ObjectPath objectPath)
     {
-        logger.LogInformation($"[SessionWatcherService] New session detected: {sessionId}, ObjectPath: {sessionPath}");
+        logger.LogInformation($"[SessionWatcherService] New session detected: {sessionId}, ObjectPath: {objectPath}");
 
         sessionChangeEventService.OnSessionChanged(0);
     }
 
-    private void OnSessionRemoved(string sessionId, ObjectPath sessionPath)
+    private void OnSessionRemoved(string sessionId, ObjectPath objectPath)
     {
-        logger.LogInformation($"[SessionWatcherService] Session removed: {sessionId}, ObjectPath: {sessionPath}");
+        logger.LogInformation($"[SessionWatcherService] Session removed: {sessionId}, ObjectPath: {objectPath}");
     }
 
     private void OnError(Exception ex)
