@@ -14,7 +14,7 @@ public class SystemdManagerProperties
     public string Version
     {
         get => _Version;
-        set => _Version = (value);
+        set => _Version = value;
     }
 
     private string _Features = string.Empty;
@@ -22,7 +22,7 @@ public class SystemdManagerProperties
     public string Features
     {
         get => _Features;
-        set => _Features = (value);
+        set => _Features = value;
     }
 
     private string _Virtualization = string.Empty;
@@ -30,7 +30,7 @@ public class SystemdManagerProperties
     public string Virtualization
     {
         get => _Virtualization;
-        set => _Virtualization = (value);
+        set => _Virtualization = value;
     }
 
     private string _ConfidentialVirtualization = string.Empty;
@@ -38,7 +38,7 @@ public class SystemdManagerProperties
     public string ConfidentialVirtualization
     {
         get => _ConfidentialVirtualization;
-        set => _ConfidentialVirtualization = (value);
+        set => _ConfidentialVirtualization = value;
     }
 
     private string _Architecture = string.Empty;
@@ -46,7 +46,7 @@ public class SystemdManagerProperties
     public string Architecture
     {
         get => _Architecture;
-        set => _Architecture = (value);
+        set => _Architecture = value;
     }
 
     private string _Tainted = string.Empty;
@@ -54,7 +54,7 @@ public class SystemdManagerProperties
     public string Tainted
     {
         get => _Tainted;
-        set => _Tainted = (value);
+        set => _Tainted = value;
     }
 
     private ulong _FirmwareTimestamp = default;
@@ -62,7 +62,7 @@ public class SystemdManagerProperties
     public ulong FirmwareTimestamp
     {
         get => _FirmwareTimestamp;
-        set => _FirmwareTimestamp = (value);
+        set => _FirmwareTimestamp = value;
     }
 
     private ulong _FirmwareTimestampMonotonic = default;
@@ -70,7 +70,7 @@ public class SystemdManagerProperties
     public ulong FirmwareTimestampMonotonic
     {
         get => _FirmwareTimestampMonotonic;
-        set => _FirmwareTimestampMonotonic = (value);
+        set => _FirmwareTimestampMonotonic = value;
     }
 
     private ulong _LoaderTimestamp = default;
@@ -78,7 +78,7 @@ public class SystemdManagerProperties
     public ulong LoaderTimestamp
     {
         get => _LoaderTimestamp;
-        set => _LoaderTimestamp = (value);
+        set => _LoaderTimestamp = value;
     }
 
     private ulong _LoaderTimestampMonotonic = default;
@@ -86,7 +86,7 @@ public class SystemdManagerProperties
     public ulong LoaderTimestampMonotonic
     {
         get => _LoaderTimestampMonotonic;
-        set => _LoaderTimestampMonotonic = (value);
+        set => _LoaderTimestampMonotonic = value;
     }
 
     private ulong _KernelTimestamp = default;
@@ -94,7 +94,7 @@ public class SystemdManagerProperties
     public ulong KernelTimestamp
     {
         get => _KernelTimestamp;
-        set => _KernelTimestamp = (value);
+        set => _KernelTimestamp = value;
     }
 
     private ulong _KernelTimestampMonotonic = default;
@@ -102,7 +102,7 @@ public class SystemdManagerProperties
     public ulong KernelTimestampMonotonic
     {
         get => _KernelTimestampMonotonic;
-        set => _KernelTimestampMonotonic = (value);
+        set => _KernelTimestampMonotonic = value;
     }
 
     private ulong _InitRDTimestamp = default;
@@ -110,7 +110,7 @@ public class SystemdManagerProperties
     public ulong InitRDTimestamp
     {
         get => _InitRDTimestamp;
-        set => _InitRDTimestamp = (value);
+        set => _InitRDTimestamp = value;
     }
 
     private ulong _InitRDTimestampMonotonic = default;
@@ -118,7 +118,7 @@ public class SystemdManagerProperties
     public ulong InitRDTimestampMonotonic
     {
         get => _InitRDTimestampMonotonic;
-        set => _InitRDTimestampMonotonic = (value);
+        set => _InitRDTimestampMonotonic = value;
     }
 
     private ulong _UserspaceTimestamp = default;
@@ -126,7 +126,7 @@ public class SystemdManagerProperties
     public ulong UserspaceTimestamp
     {
         get => _UserspaceTimestamp;
-        set => _UserspaceTimestamp = (value);
+        set => _UserspaceTimestamp = value;
     }
 
     private ulong _UserspaceTimestampMonotonic = default;
@@ -134,7 +134,7 @@ public class SystemdManagerProperties
     public ulong UserspaceTimestampMonotonic
     {
         get => _UserspaceTimestampMonotonic;
-        set => _UserspaceTimestampMonotonic = (value);
+        set => _UserspaceTimestampMonotonic = value;
     }
 
     private ulong _FinishTimestamp = default;
@@ -142,7 +142,7 @@ public class SystemdManagerProperties
     public ulong FinishTimestamp
     {
         get => _FinishTimestamp;
-        set => _FinishTimestamp = (value);
+        set => _FinishTimestamp = value;
     }
 
     private ulong _FinishTimestampMonotonic = default;
@@ -150,7 +150,7 @@ public class SystemdManagerProperties
     public ulong FinishTimestampMonotonic
     {
         get => _FinishTimestampMonotonic;
-        set => _FinishTimestampMonotonic = (value);
+        set => _FinishTimestampMonotonic = value;
     }
 
     private ulong _SecurityStartTimestamp = default;
@@ -158,7 +158,7 @@ public class SystemdManagerProperties
     public ulong SecurityStartTimestamp
     {
         get => _SecurityStartTimestamp;
-        set => _SecurityStartTimestamp = (value);
+        set => _SecurityStartTimestamp = value;
     }
 
     private ulong _SecurityStartTimestampMonotonic = default;
@@ -166,7 +166,7 @@ public class SystemdManagerProperties
     public ulong SecurityStartTimestampMonotonic
     {
         get => _SecurityStartTimestampMonotonic;
-        set => _SecurityStartTimestampMonotonic = (value);
+        set => _SecurityStartTimestampMonotonic = value;
     }
 
     private ulong _SecurityFinishTimestamp = default;
@@ -174,7 +174,7 @@ public class SystemdManagerProperties
     public ulong SecurityFinishTimestamp
     {
         get => _SecurityFinishTimestamp;
-        set => _SecurityFinishTimestamp = (value);
+        set => _SecurityFinishTimestamp = value;
     }
 
     private ulong _SecurityFinishTimestampMonotonic = default;
@@ -182,7 +182,7 @@ public class SystemdManagerProperties
     public ulong SecurityFinishTimestampMonotonic
     {
         get => _SecurityFinishTimestampMonotonic;
-        set => _SecurityFinishTimestampMonotonic = (value);
+        set => _SecurityFinishTimestampMonotonic = value;
     }
 
     private ulong _GeneratorsStartTimestamp = default;
@@ -190,7 +190,7 @@ public class SystemdManagerProperties
     public ulong GeneratorsStartTimestamp
     {
         get => _GeneratorsStartTimestamp;
-        set => _GeneratorsStartTimestamp = (value);
+        set => _GeneratorsStartTimestamp = value;
     }
 
     private ulong _GeneratorsStartTimestampMonotonic = default;
@@ -198,7 +198,7 @@ public class SystemdManagerProperties
     public ulong GeneratorsStartTimestampMonotonic
     {
         get => _GeneratorsStartTimestampMonotonic;
-        set => _GeneratorsStartTimestampMonotonic = (value);
+        set => _GeneratorsStartTimestampMonotonic = value;
     }
 
     private ulong _GeneratorsFinishTimestamp = default;
@@ -206,7 +206,7 @@ public class SystemdManagerProperties
     public ulong GeneratorsFinishTimestamp
     {
         get => _GeneratorsFinishTimestamp;
-        set => _GeneratorsFinishTimestamp = (value);
+        set => _GeneratorsFinishTimestamp = value;
     }
 
     private ulong _GeneratorsFinishTimestampMonotonic = default;
@@ -214,7 +214,7 @@ public class SystemdManagerProperties
     public ulong GeneratorsFinishTimestampMonotonic
     {
         get => _GeneratorsFinishTimestampMonotonic;
-        set => _GeneratorsFinishTimestampMonotonic = (value);
+        set => _GeneratorsFinishTimestampMonotonic = value;
     }
 
     private ulong _UnitsLoadStartTimestamp = default;
@@ -222,7 +222,7 @@ public class SystemdManagerProperties
     public ulong UnitsLoadStartTimestamp
     {
         get => _UnitsLoadStartTimestamp;
-        set => _UnitsLoadStartTimestamp = (value);
+        set => _UnitsLoadStartTimestamp = value;
     }
 
     private ulong _UnitsLoadStartTimestampMonotonic = default;
@@ -230,7 +230,7 @@ public class SystemdManagerProperties
     public ulong UnitsLoadStartTimestampMonotonic
     {
         get => _UnitsLoadStartTimestampMonotonic;
-        set => _UnitsLoadStartTimestampMonotonic = (value);
+        set => _UnitsLoadStartTimestampMonotonic = value;
     }
 
     private ulong _UnitsLoadFinishTimestamp = default;
@@ -238,7 +238,7 @@ public class SystemdManagerProperties
     public ulong UnitsLoadFinishTimestamp
     {
         get => _UnitsLoadFinishTimestamp;
-        set => _UnitsLoadFinishTimestamp = (value);
+        set => _UnitsLoadFinishTimestamp = value;
     }
 
     private ulong _UnitsLoadFinishTimestampMonotonic = default;
@@ -246,7 +246,7 @@ public class SystemdManagerProperties
     public ulong UnitsLoadFinishTimestampMonotonic
     {
         get => _UnitsLoadFinishTimestampMonotonic;
-        set => _UnitsLoadFinishTimestampMonotonic = (value);
+        set => _UnitsLoadFinishTimestampMonotonic = value;
     }
 
     private ulong _UnitsLoadTimestamp = default;
@@ -254,7 +254,7 @@ public class SystemdManagerProperties
     public ulong UnitsLoadTimestamp
     {
         get => _UnitsLoadTimestamp;
-        set => _UnitsLoadTimestamp = (value);
+        set => _UnitsLoadTimestamp = value;
     }
 
     private ulong _UnitsLoadTimestampMonotonic = default;
@@ -262,7 +262,7 @@ public class SystemdManagerProperties
     public ulong UnitsLoadTimestampMonotonic
     {
         get => _UnitsLoadTimestampMonotonic;
-        set => _UnitsLoadTimestampMonotonic = (value);
+        set => _UnitsLoadTimestampMonotonic = value;
     }
 
     private ulong _InitRDSecurityStartTimestamp = default;
@@ -270,7 +270,7 @@ public class SystemdManagerProperties
     public ulong InitRDSecurityStartTimestamp
     {
         get => _InitRDSecurityStartTimestamp;
-        set => _InitRDSecurityStartTimestamp = (value);
+        set => _InitRDSecurityStartTimestamp = value;
     }
 
     private ulong _InitRDSecurityStartTimestampMonotonic = default;
@@ -278,7 +278,7 @@ public class SystemdManagerProperties
     public ulong InitRDSecurityStartTimestampMonotonic
     {
         get => _InitRDSecurityStartTimestampMonotonic;
-        set => _InitRDSecurityStartTimestampMonotonic = (value);
+        set => _InitRDSecurityStartTimestampMonotonic = value;
     }
 
     private ulong _InitRDSecurityFinishTimestamp = default;
@@ -286,7 +286,7 @@ public class SystemdManagerProperties
     public ulong InitRDSecurityFinishTimestamp
     {
         get => _InitRDSecurityFinishTimestamp;
-        set => _InitRDSecurityFinishTimestamp = (value);
+        set => _InitRDSecurityFinishTimestamp = value;
     }
 
     private ulong _InitRDSecurityFinishTimestampMonotonic = default;
@@ -294,7 +294,7 @@ public class SystemdManagerProperties
     public ulong InitRDSecurityFinishTimestampMonotonic
     {
         get => _InitRDSecurityFinishTimestampMonotonic;
-        set => _InitRDSecurityFinishTimestampMonotonic = (value);
+        set => _InitRDSecurityFinishTimestampMonotonic = value;
     }
 
     private ulong _InitRDGeneratorsStartTimestamp = default;
@@ -302,7 +302,7 @@ public class SystemdManagerProperties
     public ulong InitRDGeneratorsStartTimestamp
     {
         get => _InitRDGeneratorsStartTimestamp;
-        set => _InitRDGeneratorsStartTimestamp = (value);
+        set => _InitRDGeneratorsStartTimestamp = value;
     }
 
     private ulong _InitRDGeneratorsStartTimestampMonotonic = default;
@@ -310,7 +310,7 @@ public class SystemdManagerProperties
     public ulong InitRDGeneratorsStartTimestampMonotonic
     {
         get => _InitRDGeneratorsStartTimestampMonotonic;
-        set => _InitRDGeneratorsStartTimestampMonotonic = (value);
+        set => _InitRDGeneratorsStartTimestampMonotonic = value;
     }
 
     private ulong _InitRDGeneratorsFinishTimestamp = default;
@@ -318,7 +318,7 @@ public class SystemdManagerProperties
     public ulong InitRDGeneratorsFinishTimestamp
     {
         get => _InitRDGeneratorsFinishTimestamp;
-        set => _InitRDGeneratorsFinishTimestamp = (value);
+        set => _InitRDGeneratorsFinishTimestamp = value;
     }
 
     private ulong _InitRDGeneratorsFinishTimestampMonotonic = default;
@@ -326,7 +326,7 @@ public class SystemdManagerProperties
     public ulong InitRDGeneratorsFinishTimestampMonotonic
     {
         get => _InitRDGeneratorsFinishTimestampMonotonic;
-        set => _InitRDGeneratorsFinishTimestampMonotonic = (value);
+        set => _InitRDGeneratorsFinishTimestampMonotonic = value;
     }
 
     private ulong _InitRDUnitsLoadStartTimestamp = default;
@@ -334,7 +334,7 @@ public class SystemdManagerProperties
     public ulong InitRDUnitsLoadStartTimestamp
     {
         get => _InitRDUnitsLoadStartTimestamp;
-        set => _InitRDUnitsLoadStartTimestamp = (value);
+        set => _InitRDUnitsLoadStartTimestamp = value;
     }
 
     private ulong _InitRDUnitsLoadStartTimestampMonotonic = default;
@@ -342,7 +342,7 @@ public class SystemdManagerProperties
     public ulong InitRDUnitsLoadStartTimestampMonotonic
     {
         get => _InitRDUnitsLoadStartTimestampMonotonic;
-        set => _InitRDUnitsLoadStartTimestampMonotonic = (value);
+        set => _InitRDUnitsLoadStartTimestampMonotonic = value;
     }
 
     private ulong _InitRDUnitsLoadFinishTimestamp = default;
@@ -350,7 +350,7 @@ public class SystemdManagerProperties
     public ulong InitRDUnitsLoadFinishTimestamp
     {
         get => _InitRDUnitsLoadFinishTimestamp;
-        set => _InitRDUnitsLoadFinishTimestamp = (value);
+        set => _InitRDUnitsLoadFinishTimestamp = value;
     }
 
     private ulong _InitRDUnitsLoadFinishTimestampMonotonic = default;
@@ -358,7 +358,7 @@ public class SystemdManagerProperties
     public ulong InitRDUnitsLoadFinishTimestampMonotonic
     {
         get => _InitRDUnitsLoadFinishTimestampMonotonic;
-        set => _InitRDUnitsLoadFinishTimestampMonotonic = (value);
+        set => _InitRDUnitsLoadFinishTimestampMonotonic = value;
     }
 
     private string _LogLevel = string.Empty;
@@ -366,7 +366,7 @@ public class SystemdManagerProperties
     public string LogLevel
     {
         get => _LogLevel;
-        set => _LogLevel = (value);
+        set => _LogLevel = value;
     }
 
     private string _LogTarget = string.Empty;
@@ -374,7 +374,7 @@ public class SystemdManagerProperties
     public string LogTarget
     {
         get => _LogTarget;
-        set => _LogTarget = (value);
+        set => _LogTarget = value;
     }
 
     private uint _NNames = default;
@@ -382,7 +382,7 @@ public class SystemdManagerProperties
     public uint NNames
     {
         get => _NNames;
-        set => _NNames = (value);
+        set => _NNames = value;
     }
 
     private uint _NFailedUnits = default;
@@ -390,7 +390,7 @@ public class SystemdManagerProperties
     public uint NFailedUnits
     {
         get => _NFailedUnits;
-        set => _NFailedUnits = (value);
+        set => _NFailedUnits = value;
     }
 
     private uint _NJobs = default;
@@ -398,7 +398,7 @@ public class SystemdManagerProperties
     public uint NJobs
     {
         get => _NJobs;
-        set => _NJobs = (value);
+        set => _NJobs = value;
     }
 
     private uint _NInstalledJobs = default;
@@ -406,7 +406,7 @@ public class SystemdManagerProperties
     public uint NInstalledJobs
     {
         get => _NInstalledJobs;
-        set => _NInstalledJobs = (value);
+        set => _NInstalledJobs = value;
     }
 
     private uint _NFailedJobs = default;
@@ -414,7 +414,7 @@ public class SystemdManagerProperties
     public uint NFailedJobs
     {
         get => _NFailedJobs;
-        set => _NFailedJobs = (value);
+        set => _NFailedJobs = value;
     }
 
     private double _Progress = default;
@@ -422,14 +422,14 @@ public class SystemdManagerProperties
     public double Progress
     {
         get => _Progress;
-        set => _Progress = (value);
+        set => _Progress = value;
     }
 
     private string[] _Environment = [];
     public string[] Environment
     {
         get => _Environment;
-        set => _Environment = (value);
+        set => _Environment = value;
     }
 
     private bool _ConfirmSpawn = default;
@@ -437,7 +437,7 @@ public class SystemdManagerProperties
     public bool ConfirmSpawn
     {
         get => _ConfirmSpawn;
-        set => _ConfirmSpawn = (value);
+        set => _ConfirmSpawn = value;
     }
 
     private bool _ShowStatus = default;
@@ -445,7 +445,7 @@ public class SystemdManagerProperties
     public bool ShowStatus
     {
         get => _ShowStatus;
-        set => _ShowStatus = (value);
+        set => _ShowStatus = value;
     }
 
     private string[] _UnitPath = [];
@@ -453,7 +453,7 @@ public class SystemdManagerProperties
     public string[] UnitPath
     {
         get => _UnitPath;
-        set => _UnitPath = (value);
+        set => _UnitPath = value;
     }
 
     private string _DefaultStandardOutput = string.Empty;
@@ -461,7 +461,7 @@ public class SystemdManagerProperties
     public string DefaultStandardOutput
     {
         get => _DefaultStandardOutput;
-        set => _DefaultStandardOutput = (value);
+        set => _DefaultStandardOutput = value;
     }
 
     private string _DefaultStandardError = string.Empty;
@@ -469,7 +469,7 @@ public class SystemdManagerProperties
     public string DefaultStandardError
     {
         get => _DefaultStandardError;
-        set => _DefaultStandardError = (value);
+        set => _DefaultStandardError = value;
     }
 
     private string _WatchdogDevice = string.Empty;
@@ -477,7 +477,7 @@ public class SystemdManagerProperties
     public string WatchdogDevice
     {
         get => _WatchdogDevice;
-        set => _WatchdogDevice = (value);
+        set => _WatchdogDevice = value;
     }
 
     private ulong _WatchdogLastPingTimestamp = default;
@@ -485,7 +485,7 @@ public class SystemdManagerProperties
     public ulong WatchdogLastPingTimestamp
     {
         get => _WatchdogLastPingTimestamp;
-        set => _WatchdogLastPingTimestamp = (value);
+        set => _WatchdogLastPingTimestamp = value;
     }
 
     private ulong _WatchdogLastPingTimestampMonotonic = default;
@@ -493,7 +493,7 @@ public class SystemdManagerProperties
     public ulong WatchdogLastPingTimestampMonotonic
     {
         get => _WatchdogLastPingTimestampMonotonic;
-        set => _WatchdogLastPingTimestampMonotonic = (value);
+        set => _WatchdogLastPingTimestampMonotonic = value;
     }
 
     private ulong _RuntimeWatchdogUSec = default;
@@ -501,7 +501,7 @@ public class SystemdManagerProperties
     public ulong RuntimeWatchdogUSec
     {
         get => _RuntimeWatchdogUSec;
-        set => _RuntimeWatchdogUSec = (value);
+        set => _RuntimeWatchdogUSec = value;
     }
 
     private ulong _RuntimeWatchdogPreUSec = default;
@@ -509,7 +509,7 @@ public class SystemdManagerProperties
     public ulong RuntimeWatchdogPreUSec
     {
         get => _RuntimeWatchdogPreUSec;
-        set => _RuntimeWatchdogPreUSec = (value);
+        set => _RuntimeWatchdogPreUSec = value;
     }
 
     private string _RuntimeWatchdogPreGovernor = string.Empty;
@@ -517,7 +517,7 @@ public class SystemdManagerProperties
     public string RuntimeWatchdogPreGovernor
     {
         get => _RuntimeWatchdogPreGovernor;
-        set => _RuntimeWatchdogPreGovernor = (value);
+        set => _RuntimeWatchdogPreGovernor = value;
     }
 
     private ulong _RebootWatchdogUSec = default;
@@ -525,7 +525,7 @@ public class SystemdManagerProperties
     public ulong RebootWatchdogUSec
     {
         get => _RebootWatchdogUSec;
-        set => _RebootWatchdogUSec = (value);
+        set => _RebootWatchdogUSec = value;
     }
 
     private ulong _KExecWatchdogUSec = default;
@@ -533,7 +533,7 @@ public class SystemdManagerProperties
     public ulong KExecWatchdogUSec
     {
         get => _KExecWatchdogUSec;
-        set => _KExecWatchdogUSec = (value);
+        set => _KExecWatchdogUSec = value;
     }
 
     private bool _ServiceWatchdogs = default;
@@ -541,7 +541,7 @@ public class SystemdManagerProperties
     public bool ServiceWatchdogs
     {
         get => _ServiceWatchdogs;
-        set => _ServiceWatchdogs = (value);
+        set => _ServiceWatchdogs = value;
     }
 
     private string _ControlGroup = string.Empty;
@@ -549,7 +549,7 @@ public class SystemdManagerProperties
     public string ControlGroup
     {
         get => _ControlGroup;
-        set => _ControlGroup = (value);
+        set => _ControlGroup = value;
     }
 
     private string _SystemState = string.Empty;
@@ -557,7 +557,7 @@ public class SystemdManagerProperties
     public string SystemState
     {
         get => _SystemState;
-        set => _SystemState = (value);
+        set => _SystemState = value;
     }
 
     private byte _ExitCode = default;
@@ -565,7 +565,7 @@ public class SystemdManagerProperties
     public byte ExitCode
     {
         get => _ExitCode;
-        set => _ExitCode = (value);
+        set => _ExitCode = value;
     }
 
     private ulong _DefaultTimerAccuracyUSec = default;
@@ -573,7 +573,7 @@ public class SystemdManagerProperties
     public ulong DefaultTimerAccuracyUSec
     {
         get => _DefaultTimerAccuracyUSec;
-        set => _DefaultTimerAccuracyUSec = (value);
+        set => _DefaultTimerAccuracyUSec = value;
     }
 
     private ulong _DefaultTimeoutStartUSec = default;
@@ -581,7 +581,7 @@ public class SystemdManagerProperties
     public ulong DefaultTimeoutStartUSec
     {
         get => _DefaultTimeoutStartUSec;
-        set => _DefaultTimeoutStartUSec = (value);
+        set => _DefaultTimeoutStartUSec = value;
     }
 
     private ulong _DefaultTimeoutStopUSec = default;
@@ -589,7 +589,7 @@ public class SystemdManagerProperties
     public ulong DefaultTimeoutStopUSec
     {
         get => _DefaultTimeoutStopUSec;
-        set => _DefaultTimeoutStopUSec = (value);
+        set => _DefaultTimeoutStopUSec = value;
     }
 
     private ulong _DefaultTimeoutAbortUSec = default;
@@ -597,7 +597,7 @@ public class SystemdManagerProperties
     public ulong DefaultTimeoutAbortUSec
     {
         get => _DefaultTimeoutAbortUSec;
-        set => _DefaultTimeoutAbortUSec = (value);
+        set => _DefaultTimeoutAbortUSec = value;
     }
 
     private ulong _DefaultDeviceTimeoutUSec = default;
@@ -605,7 +605,7 @@ public class SystemdManagerProperties
     public ulong DefaultDeviceTimeoutUSec
     {
         get => _DefaultDeviceTimeoutUSec;
-        set => _DefaultDeviceTimeoutUSec = (value);
+        set => _DefaultDeviceTimeoutUSec = value;
     }
 
     private ulong _DefaultRestartUSec = default;
@@ -613,7 +613,7 @@ public class SystemdManagerProperties
     public ulong DefaultRestartUSec
     {
         get => _DefaultRestartUSec;
-        set => _DefaultRestartUSec = (value);
+        set => _DefaultRestartUSec = value;
     }
 
     private ulong _DefaultStartLimitIntervalUSec = default;
@@ -621,7 +621,7 @@ public class SystemdManagerProperties
     public ulong DefaultStartLimitIntervalUSec
     {
         get => _DefaultStartLimitIntervalUSec;
-        set => _DefaultStartLimitIntervalUSec = (value);
+        set => _DefaultStartLimitIntervalUSec = value;
     }
 
     private uint _DefaultStartLimitBurst = default;
@@ -629,7 +629,7 @@ public class SystemdManagerProperties
     public uint DefaultStartLimitBurst
     {
         get => _DefaultStartLimitBurst;
-        set => _DefaultStartLimitBurst = (value);
+        set => _DefaultStartLimitBurst = value;
     }
 
     private bool _DefaultCPUAccounting = default;
@@ -637,7 +637,7 @@ public class SystemdManagerProperties
     public bool DefaultCPUAccounting
     {
         get => _DefaultCPUAccounting;
-        set => _DefaultCPUAccounting = (value);
+        set => _DefaultCPUAccounting = value;
     }
 
     private bool _DefaultBlockIOAccounting = default;
@@ -645,7 +645,7 @@ public class SystemdManagerProperties
     public bool DefaultBlockIOAccounting
     {
         get => _DefaultBlockIOAccounting;
-        set => _DefaultBlockIOAccounting = (value);
+        set => _DefaultBlockIOAccounting = value;
     }
 
     private bool _DefaultIOAccounting = default;
@@ -653,7 +653,7 @@ public class SystemdManagerProperties
     public bool DefaultIOAccounting
     {
         get => _DefaultIOAccounting;
-        set => _DefaultIOAccounting = (value);
+        set => _DefaultIOAccounting = value;
     }
 
     private bool _DefaultIPAccounting = default;
@@ -661,7 +661,7 @@ public class SystemdManagerProperties
     public bool DefaultIPAccounting
     {
         get => _DefaultIPAccounting;
-        set => _DefaultIPAccounting = (value);
+        set => _DefaultIPAccounting = value;
     }
 
     private bool _DefaultMemoryAccounting = default;
@@ -669,7 +669,7 @@ public class SystemdManagerProperties
     public bool DefaultMemoryAccounting
     {
         get => _DefaultMemoryAccounting;
-        set => _DefaultMemoryAccounting = (value);
+        set => _DefaultMemoryAccounting = value;
     }
 
     private bool _DefaultTasksAccounting = default;
@@ -677,7 +677,7 @@ public class SystemdManagerProperties
     public bool DefaultTasksAccounting
     {
         get => _DefaultTasksAccounting;
-        set => _DefaultTasksAccounting = (value);
+        set => _DefaultTasksAccounting = value;
     }
 
     private ulong _DefaultLimitCPU = default;
@@ -685,7 +685,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitCPU
     {
         get => _DefaultLimitCPU;
-        set => _DefaultLimitCPU = (value);
+        set => _DefaultLimitCPU = value;
     }
 
     private ulong _DefaultLimitCPUSoft = default;
@@ -693,7 +693,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitCPUSoft
     {
         get => _DefaultLimitCPUSoft;
-        set => _DefaultLimitCPUSoft = (value);
+        set => _DefaultLimitCPUSoft = value;
     }
 
     private ulong _DefaultLimitFSIZE = default;
@@ -701,7 +701,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitFSIZE
     {
         get => _DefaultLimitFSIZE;
-        set => _DefaultLimitFSIZE = (value);
+        set => _DefaultLimitFSIZE = value;
     }
 
     private ulong _DefaultLimitFSIZESoft = default;
@@ -709,7 +709,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitFSIZESoft
     {
         get => _DefaultLimitFSIZESoft;
-        set => _DefaultLimitFSIZESoft = (value);
+        set => _DefaultLimitFSIZESoft = value;
     }
 
     private ulong _DefaultLimitDATA = default;
@@ -717,7 +717,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitDATA
     {
         get => _DefaultLimitDATA;
-        set => _DefaultLimitDATA = (value);
+        set => _DefaultLimitDATA = value;
     }
 
     private ulong _DefaultLimitDATASoft = default;
@@ -725,7 +725,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitDATASoft
     {
         get => _DefaultLimitDATASoft;
-        set => _DefaultLimitDATASoft = (value);
+        set => _DefaultLimitDATASoft = value;
     }
 
     private ulong _DefaultLimitSTACK = default;
@@ -733,7 +733,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitSTACK
     {
         get => _DefaultLimitSTACK;
-        set => _DefaultLimitSTACK = (value);
+        set => _DefaultLimitSTACK = value;
     }
 
     private ulong _DefaultLimitSTACKSoft = default;
@@ -741,7 +741,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitSTACKSoft
     {
         get => _DefaultLimitSTACKSoft;
-        set => _DefaultLimitSTACKSoft = (value);
+        set => _DefaultLimitSTACKSoft = value;
     }
 
     private ulong _DefaultLimitCORE = default;
@@ -749,7 +749,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitCORE
     {
         get => _DefaultLimitCORE;
-        set => _DefaultLimitCORE = (value);
+        set => _DefaultLimitCORE = value;
     }
 
     private ulong _DefaultLimitCORESoft = default;
@@ -757,7 +757,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitCORESoft
     {
         get => _DefaultLimitCORESoft;
-        set => _DefaultLimitCORESoft = (value);
+        set => _DefaultLimitCORESoft = value;
     }
 
     private ulong _DefaultLimitRSS = default;
@@ -765,7 +765,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitRSS
     {
         get => _DefaultLimitRSS;
-        set => _DefaultLimitRSS = (value);
+        set => _DefaultLimitRSS = value;
     }
 
     private ulong _DefaultLimitRSSSoft = default;
@@ -773,7 +773,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitRSSSoft
     {
         get => _DefaultLimitRSSSoft;
-        set => _DefaultLimitRSSSoft = (value);
+        set => _DefaultLimitRSSSoft = value;
     }
 
     private ulong _DefaultLimitNOFILE = default;
@@ -781,7 +781,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitNOFILE
     {
         get => _DefaultLimitNOFILE;
-        set => _DefaultLimitNOFILE = (value);
+        set => _DefaultLimitNOFILE = value;
     }
 
     private ulong _DefaultLimitNOFILESoft = default;
@@ -789,7 +789,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitNOFILESoft
     {
         get => _DefaultLimitNOFILESoft;
-        set => _DefaultLimitNOFILESoft = (value);
+        set => _DefaultLimitNOFILESoft = value;
     }
 
     private ulong _DefaultLimitAS = default;
@@ -797,7 +797,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitAS
     {
         get => _DefaultLimitAS;
-        set => _DefaultLimitAS = (value);
+        set => _DefaultLimitAS = value;
     }
 
     private ulong _DefaultLimitASSoft = default;
@@ -805,7 +805,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitASSoft
     {
         get => _DefaultLimitASSoft;
-        set => _DefaultLimitASSoft = (value);
+        set => _DefaultLimitASSoft = value;
     }
 
     private ulong _DefaultLimitNPROC = default;
@@ -813,7 +813,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitNPROC
     {
         get => _DefaultLimitNPROC;
-        set => _DefaultLimitNPROC = (value);
+        set => _DefaultLimitNPROC = value;
     }
 
     private ulong _DefaultLimitNPROCSoft = default;
@@ -821,7 +821,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitNPROCSoft
     {
         get => _DefaultLimitNPROCSoft;
-        set => _DefaultLimitNPROCSoft = (value);
+        set => _DefaultLimitNPROCSoft = value;
     }
 
     private ulong _DefaultLimitMEMLOCK = default;
@@ -829,7 +829,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitMEMLOCK
     {
         get => _DefaultLimitMEMLOCK;
-        set => _DefaultLimitMEMLOCK = (value);
+        set => _DefaultLimitMEMLOCK = value;
     }
 
     private ulong _DefaultLimitMEMLOCKSoft = default;
@@ -837,7 +837,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitMEMLOCKSoft
     {
         get => _DefaultLimitMEMLOCKSoft;
-        set => _DefaultLimitMEMLOCKSoft = (value);
+        set => _DefaultLimitMEMLOCKSoft = value;
     }
 
     private ulong _DefaultLimitLOCKS = default;
@@ -845,7 +845,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitLOCKS
     {
         get => _DefaultLimitLOCKS;
-        set => _DefaultLimitLOCKS = (value);
+        set => _DefaultLimitLOCKS = value;
     }
 
     private ulong _DefaultLimitLOCKSSoft = default;
@@ -853,7 +853,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitLOCKSSoft
     {
         get => _DefaultLimitLOCKSSoft;
-        set => _DefaultLimitLOCKSSoft = (value);
+        set => _DefaultLimitLOCKSSoft = value;
     }
 
     private ulong _DefaultLimitSIGPENDING = default;
@@ -861,7 +861,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitSIGPENDING
     {
         get => _DefaultLimitSIGPENDING;
-        set => _DefaultLimitSIGPENDING = (value);
+        set => _DefaultLimitSIGPENDING = value;
     }
 
     private ulong _DefaultLimitSIGPENDINGSoft = default;
@@ -869,7 +869,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitSIGPENDINGSoft
     {
         get => _DefaultLimitSIGPENDINGSoft;
-        set => _DefaultLimitSIGPENDINGSoft = (value);
+        set => _DefaultLimitSIGPENDINGSoft = value;
     }
 
     private ulong _DefaultLimitMSGQUEUE = default;
@@ -877,7 +877,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitMSGQUEUE
     {
         get => _DefaultLimitMSGQUEUE;
-        set => _DefaultLimitMSGQUEUE = (value);
+        set => _DefaultLimitMSGQUEUE = value;
     }
 
     private ulong _DefaultLimitMSGQUEUESoft = default;
@@ -885,7 +885,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitMSGQUEUESoft
     {
         get => _DefaultLimitMSGQUEUESoft;
-        set => _DefaultLimitMSGQUEUESoft = (value);
+        set => _DefaultLimitMSGQUEUESoft = value;
     }
 
     private ulong _DefaultLimitNICE = default;
@@ -893,7 +893,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitNICE
     {
         get => _DefaultLimitNICE;
-        set => _DefaultLimitNICE = (value);
+        set => _DefaultLimitNICE = value;
     }
 
     private ulong _DefaultLimitNICESoft = default;
@@ -901,7 +901,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitNICESoft
     {
         get => _DefaultLimitNICESoft;
-        set => _DefaultLimitNICESoft = (value);
+        set => _DefaultLimitNICESoft = value;
     }
 
     private ulong _DefaultLimitRTPRIO = default;
@@ -909,7 +909,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitRTPRIO
     {
         get => _DefaultLimitRTPRIO;
-        set => _DefaultLimitRTPRIO = (value);
+        set => _DefaultLimitRTPRIO = value;
     }
 
     private ulong _DefaultLimitRTPRIOSoft = default;
@@ -917,7 +917,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitRTPRIOSoft
     {
         get => _DefaultLimitRTPRIOSoft;
-        set => _DefaultLimitRTPRIOSoft = (value);
+        set => _DefaultLimitRTPRIOSoft = value;
     }
 
     private ulong _DefaultLimitRTTIME = default;
@@ -925,7 +925,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitRTTIME
     {
         get => _DefaultLimitRTTIME;
-        set => _DefaultLimitRTTIME = (value);
+        set => _DefaultLimitRTTIME = value;
     }
 
     private ulong _DefaultLimitRTTIMESoft = default;
@@ -933,7 +933,7 @@ public class SystemdManagerProperties
     public ulong DefaultLimitRTTIMESoft
     {
         get => _DefaultLimitRTTIMESoft;
-        set => _DefaultLimitRTTIMESoft = (value);
+        set => _DefaultLimitRTTIMESoft = value;
     }
 
     private ulong _DefaultTasksMax = default;
@@ -941,7 +941,7 @@ public class SystemdManagerProperties
     public ulong DefaultTasksMax
     {
         get => _DefaultTasksMax;
-        set => _DefaultTasksMax = (value);
+        set => _DefaultTasksMax = value;
     }
 
     private ulong _DefaultMemoryPressureThresholdUSec = default;
@@ -949,7 +949,7 @@ public class SystemdManagerProperties
     public ulong DefaultMemoryPressureThresholdUSec
     {
         get => _DefaultMemoryPressureThresholdUSec;
-        set => _DefaultMemoryPressureThresholdUSec = (value);
+        set => _DefaultMemoryPressureThresholdUSec = value;
     }
 
     private string _DefaultMemoryPressureWatch = string.Empty;
@@ -957,7 +957,7 @@ public class SystemdManagerProperties
     public string DefaultMemoryPressureWatch
     {
         get => _DefaultMemoryPressureWatch;
-        set => _DefaultMemoryPressureWatch = (value);
+        set => _DefaultMemoryPressureWatch = value;
     }
 
     private ulong _TimerSlackNSec = default;
@@ -965,7 +965,7 @@ public class SystemdManagerProperties
     public ulong TimerSlackNSec
     {
         get => _TimerSlackNSec;
-        set => _TimerSlackNSec = (value);
+        set => _TimerSlackNSec = value;
     }
 
     private string _DefaultOOMPolicy = string.Empty;
@@ -973,7 +973,7 @@ public class SystemdManagerProperties
     public string DefaultOOMPolicy
     {
         get => _DefaultOOMPolicy;
-        set => _DefaultOOMPolicy = (value);
+        set => _DefaultOOMPolicy = value;
     }
 
     private int _DefaultOOMScoreAdjust = default;
@@ -981,7 +981,7 @@ public class SystemdManagerProperties
     public int DefaultOOMScoreAdjust
     {
         get => _DefaultOOMScoreAdjust;
-        set => _DefaultOOMScoreAdjust = (value);
+        set => _DefaultOOMScoreAdjust = value;
     }
 
     private string _CtrlAltDelBurstAction = string.Empty;
@@ -989,6 +989,6 @@ public class SystemdManagerProperties
     public string CtrlAltDelBurstAction
     {
         get => _CtrlAltDelBurstAction;
-        set => _CtrlAltDelBurstAction = (value);
+        set => _CtrlAltDelBurstAction = value;
     }
 }

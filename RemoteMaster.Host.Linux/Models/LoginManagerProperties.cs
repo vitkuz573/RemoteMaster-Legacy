@@ -14,7 +14,7 @@ public class LoginManagerProperties
     public bool EnableWallMessages
     {
         get => _EnableWallMessages;
-        set => _EnableWallMessages = (value);
+        set => _EnableWallMessages = value;
     }
 
     private string _WallMessage = string.Empty;
@@ -22,7 +22,7 @@ public class LoginManagerProperties
     public string WallMessage
     {
         get => _WallMessage;
-        set => _WallMessage = (value);
+        set => _WallMessage = value;
     }
 
     private uint _NAutoVTs = default;
@@ -30,7 +30,7 @@ public class LoginManagerProperties
     public uint NAutoVTs
     {
         get => _NAutoVTs;
-        set => _NAutoVTs = (value);
+        set => _NAutoVTs = value;
     }
 
     private string[] _KillOnlyUsers = [];
@@ -38,7 +38,7 @@ public class LoginManagerProperties
     public string[] KillOnlyUsers
     {
         get => _KillOnlyUsers;
-        set => _KillOnlyUsers = (value);
+        set => _KillOnlyUsers = value;
     }
 
     private string[] _KillExcludeUsers = [];
@@ -46,7 +46,7 @@ public class LoginManagerProperties
     public string[] KillExcludeUsers
     {
         get => _KillExcludeUsers;
-        set => _KillExcludeUsers = (value);
+        set => _KillExcludeUsers = value;
     }
 
     private bool _KillUserProcesses = default;
@@ -54,7 +54,7 @@ public class LoginManagerProperties
     public bool KillUserProcesses
     {
         get => _KillUserProcesses;
-        set => _KillUserProcesses = (value);
+        set => _KillUserProcesses = value;
     }
 
     private string _RebootParameter = string.Empty;
@@ -62,7 +62,7 @@ public class LoginManagerProperties
     public string RebootParameter
     {
         get => _RebootParameter;
-        set => _RebootParameter = (value);
+        set => _RebootParameter = value;
     }
 
     private bool _RebootToFirmwareSetup = default;
@@ -70,7 +70,7 @@ public class LoginManagerProperties
     public bool RebootToFirmwareSetup
     {
         get => _RebootToFirmwareSetup;
-        set => _RebootToFirmwareSetup = (value);
+        set => _RebootToFirmwareSetup = value;
     }
 
     private ulong _RebootToBootLoaderMenu = default;
@@ -78,7 +78,7 @@ public class LoginManagerProperties
     public ulong RebootToBootLoaderMenu
     {
         get => _RebootToBootLoaderMenu;
-        set => _RebootToBootLoaderMenu = (value);
+        set => _RebootToBootLoaderMenu = value;
     }
 
     private string _RebootToBootLoaderEntry = string.Empty;
@@ -86,7 +86,7 @@ public class LoginManagerProperties
     public string RebootToBootLoaderEntry
     {
         get => _RebootToBootLoaderEntry;
-        set => _RebootToBootLoaderEntry = (value);
+        set => _RebootToBootLoaderEntry = value;
     }
 
     private string[] _BootLoaderEntries = [];
@@ -94,7 +94,7 @@ public class LoginManagerProperties
     public string[] BootLoaderEntries
     {
         get => _BootLoaderEntries;
-        set => _BootLoaderEntries = (value);
+        set => _BootLoaderEntries = value;
     }
 
     private bool _IdleHint = default;
@@ -102,7 +102,7 @@ public class LoginManagerProperties
     public bool IdleHint
     {
         get => _IdleHint;
-        set => _IdleHint = (value);
+        set => _IdleHint = value;
     }
 
     private ulong _IdleSinceHint = default;
@@ -110,7 +110,7 @@ public class LoginManagerProperties
     public ulong IdleSinceHint
     {
         get => _IdleSinceHint;
-        set => _IdleSinceHint = (value);
+        set => _IdleSinceHint = value;
     }
 
     private ulong _IdleSinceHintMonotonic = default;
@@ -118,7 +118,7 @@ public class LoginManagerProperties
     public ulong IdleSinceHintMonotonic
     {
         get => _IdleSinceHintMonotonic;
-        set => _IdleSinceHintMonotonic = (value);
+        set => _IdleSinceHintMonotonic = value;
     }
 
     private string _BlockInhibited = string.Empty;
@@ -126,7 +126,7 @@ public class LoginManagerProperties
     public string BlockInhibited
     {
         get => _BlockInhibited;
-        set => _BlockInhibited = (value);
+        set => _BlockInhibited = value;
     }
 
     private string _DelayInhibited = string.Empty;
@@ -134,7 +134,7 @@ public class LoginManagerProperties
     public string DelayInhibited
     {
         get => _DelayInhibited;
-        set => _DelayInhibited = (value);
+        set => _DelayInhibited = value;
     }
 
     private ulong _InhibitDelayMaxUSec = default;
@@ -142,7 +142,7 @@ public class LoginManagerProperties
     public ulong InhibitDelayMaxUSec
     {
         get => _InhibitDelayMaxUSec;
-        set => _InhibitDelayMaxUSec = (value);
+        set => _InhibitDelayMaxUSec = value;
     }
 
     private ulong _UserStopDelayUSec = default;
@@ -150,7 +150,7 @@ public class LoginManagerProperties
     public ulong UserStopDelayUSec
     {
         get => _UserStopDelayUSec;
-        set => _UserStopDelayUSec = (value);
+        set => _UserStopDelayUSec = value;
     }
 
     private string _HandlePowerKey = string.Empty;
@@ -158,7 +158,7 @@ public class LoginManagerProperties
     public string HandlePowerKey
     {
         get => _HandlePowerKey;
-        set => _HandlePowerKey = (value);
+        set => _HandlePowerKey = value;
     }
 
     private string _HandlePowerKeyLongPress = string.Empty;
@@ -166,7 +166,7 @@ public class LoginManagerProperties
     public string HandlePowerKeyLongPress
     {
         get => _HandlePowerKeyLongPress;
-        set => _HandlePowerKeyLongPress = (value);
+        set => _HandlePowerKeyLongPress = value;
     }
 
     private string _HandleRebootKey = string.Empty;
@@ -174,7 +174,7 @@ public class LoginManagerProperties
     public string HandleRebootKey
     {
         get => _HandleRebootKey;
-        set => _HandleRebootKey = (value);
+        set => _HandleRebootKey = value;
     }
 
     private string _HandleRebootKeyLongPress = string.Empty;
@@ -182,7 +182,7 @@ public class LoginManagerProperties
     public string HandleRebootKeyLongPress
     {
         get => _HandleRebootKeyLongPress;
-        set => _HandleRebootKeyLongPress = (value);
+        set => _HandleRebootKeyLongPress = value;
     }
 
     private string _HandleSuspendKey = string.Empty;
@@ -190,7 +190,7 @@ public class LoginManagerProperties
     public string HandleSuspendKey
     {
         get => _HandleSuspendKey;
-        set => _HandleSuspendKey = (value);
+        set => _HandleSuspendKey = value;
     }
 
     private string _HandleSuspendKeyLongPress = string.Empty;
@@ -198,7 +198,7 @@ public class LoginManagerProperties
     public string HandleSuspendKeyLongPress
     {
         get => _HandleSuspendKeyLongPress;
-        set => _HandleSuspendKeyLongPress = (value);
+        set => _HandleSuspendKeyLongPress = value;
     }
 
     private string _HandleHibernateKey = string.Empty;
@@ -206,7 +206,7 @@ public class LoginManagerProperties
     public string HandleHibernateKey
     {
         get => _HandleHibernateKey;
-        set => _HandleHibernateKey = (value);
+        set => _HandleHibernateKey = value;
     }
 
     private string _HandleHibernateKeyLongPress = string.Empty;
@@ -214,7 +214,7 @@ public class LoginManagerProperties
     public string HandleHibernateKeyLongPress
     {
         get => _HandleHibernateKeyLongPress;
-        set => _HandleHibernateKeyLongPress = (value);
+        set => _HandleHibernateKeyLongPress = value;
     }
 
     private string _HandleLidSwitch = string.Empty;
@@ -222,7 +222,7 @@ public class LoginManagerProperties
     public string HandleLidSwitch
     {
         get => _HandleLidSwitch;
-        set => _HandleLidSwitch = (value);
+        set => _HandleLidSwitch = value;
     }
 
     private string _HandleLidSwitchExternalPower = string.Empty;
@@ -230,7 +230,7 @@ public class LoginManagerProperties
     public string HandleLidSwitchExternalPower
     {
         get => _HandleLidSwitchExternalPower;
-        set => _HandleLidSwitchExternalPower = (value);
+        set => _HandleLidSwitchExternalPower = value;
     }
 
     private string _HandleLidSwitchDocked = string.Empty;
@@ -238,7 +238,7 @@ public class LoginManagerProperties
     public string HandleLidSwitchDocked
     {
         get => _HandleLidSwitchDocked;
-        set => _HandleLidSwitchDocked = (value);
+        set => _HandleLidSwitchDocked = value;
     }
 
     private ulong _HoldoffTimeoutUSec = default;
@@ -246,7 +246,7 @@ public class LoginManagerProperties
     public ulong HoldoffTimeoutUSec
     {
         get => _HoldoffTimeoutUSec;
-        set => _HoldoffTimeoutUSec = (value);
+        set => _HoldoffTimeoutUSec = value;
     }
 
     private string _IdleAction = string.Empty;
@@ -254,7 +254,7 @@ public class LoginManagerProperties
     public string IdleAction
     {
         get => _IdleAction;
-        set => _IdleAction = (value);
+        set => _IdleAction = value;
     }
 
     private ulong _IdleActionUSec = default;
@@ -262,7 +262,7 @@ public class LoginManagerProperties
     public ulong IdleActionUSec
     {
         get => _IdleActionUSec;
-        set => _IdleActionUSec = (value);
+        set => _IdleActionUSec = value;
     }
 
     private bool _PreparingForShutdown = default;
@@ -270,7 +270,7 @@ public class LoginManagerProperties
     public bool PreparingForShutdown
     {
         get => _PreparingForShutdown;
-        set => _PreparingForShutdown = (value);
+        set => _PreparingForShutdown = value;
     }
 
     private bool _PreparingForSleep = default;
@@ -278,7 +278,7 @@ public class LoginManagerProperties
     public bool PreparingForSleep
     {
         get => _PreparingForSleep;
-        set => _PreparingForSleep = (value);
+        set => _PreparingForSleep = value;
     }
 
     private (string, ulong) _ScheduledShutdown = default;
@@ -286,7 +286,7 @@ public class LoginManagerProperties
     public (string, ulong) ScheduledShutdown
     {
         get => _ScheduledShutdown;
-        set => _ScheduledShutdown = (value);
+        set => _ScheduledShutdown = value;
     }
 
     private bool _Docked = default;
@@ -294,7 +294,7 @@ public class LoginManagerProperties
     public bool Docked
     {
         get => _Docked;
-        set => _Docked = (value);
+        set => _Docked = value;
     }
 
     private bool _LidClosed = default;
@@ -302,7 +302,7 @@ public class LoginManagerProperties
     public bool LidClosed
     {
         get => _LidClosed;
-        set => _LidClosed = (value);
+        set => _LidClosed = value;
     }
 
     private bool _OnExternalPower = default;
@@ -310,7 +310,7 @@ public class LoginManagerProperties
     public bool OnExternalPower
     {
         get => _OnExternalPower;
-        set => _OnExternalPower = (value);
+        set => _OnExternalPower = value;
     }
 
     private bool _RemoveIPC = default;
@@ -318,7 +318,7 @@ public class LoginManagerProperties
     public bool RemoveIPC
     {
         get => _RemoveIPC;
-        set => _RemoveIPC = (value);
+        set => _RemoveIPC = value;
     }
 
     private ulong _RuntimeDirectorySize = default;
@@ -326,7 +326,7 @@ public class LoginManagerProperties
     public ulong RuntimeDirectorySize
     {
         get => _RuntimeDirectorySize;
-        set => _RuntimeDirectorySize = (value);
+        set => _RuntimeDirectorySize = value;
     }
 
     private ulong _RuntimeDirectoryInodesMax = default;
@@ -334,7 +334,7 @@ public class LoginManagerProperties
     public ulong RuntimeDirectoryInodesMax
     {
         get => _RuntimeDirectoryInodesMax;
-        set => _RuntimeDirectoryInodesMax = (value);
+        set => _RuntimeDirectoryInodesMax = value;
     }
 
     private ulong _InhibitorsMax = default;
@@ -342,7 +342,7 @@ public class LoginManagerProperties
     public ulong InhibitorsMax
     {
         get => _InhibitorsMax;
-        set => _InhibitorsMax = (value);
+        set => _InhibitorsMax = value;
     }
 
     private ulong _NCurrentInhibitors = default;
@@ -350,7 +350,7 @@ public class LoginManagerProperties
     public ulong NCurrentInhibitors
     {
         get => _NCurrentInhibitors;
-        set => _NCurrentInhibitors = (value);
+        set => _NCurrentInhibitors = value;
     }
 
     private ulong _SessionsMax = default;
@@ -358,7 +358,7 @@ public class LoginManagerProperties
     public ulong SessionsMax
     {
         get => _SessionsMax;
-        set => _SessionsMax = (value);
+        set => _SessionsMax = value;
     }
 
     private ulong _NCurrentSessions = default;
@@ -366,7 +366,7 @@ public class LoginManagerProperties
     public ulong NCurrentSessions
     {
         get => _NCurrentSessions;
-        set => _NCurrentSessions = (value);
+        set => _NCurrentSessions = value;
     }
 
     private ulong _StopIdleSessionUSec = default;
@@ -374,6 +374,6 @@ public class LoginManagerProperties
     public ulong StopIdleSessionUSec
     {
         get => _StopIdleSessionUSec;
-        set => _StopIdleSessionUSec = (value);
+        set => _StopIdleSessionUSec = value;
     }
 }
