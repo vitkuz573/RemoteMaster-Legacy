@@ -78,6 +78,7 @@ public partial class ScriptExecutorDialog
                 ".bat" => Shell.Cmd,
                 ".cmd" => Shell.Cmd,
                 ".ps1" => Shell.PowerShell,
+                ".sh" => Shell.Bash,
                 _ => _shell
             };
         }

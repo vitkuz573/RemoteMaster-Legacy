@@ -114,6 +114,7 @@ internal class Program
         services.AddHttpContextAccessor();
 
         services.AddTransient<INativeProcessFactory, DBusProcessFactory>();
+        services.AddTransient<IShellScriptHandlerFactory, ShellScriptHandlerFactory>();
         services.AddSingleton<IUserInstanceService, UserInstanceService>();
         services.AddSingleton<ICommandLineProvider, CommandLineProvider>();
         services.AddSingleton<IInputService, InputService>();

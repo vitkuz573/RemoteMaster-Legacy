@@ -26,6 +26,7 @@ public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory sh
         var scriptHandler = shellScriptHandlerFactory.Create(scriptExecutionRequest.Shell);
 
         const string publicDirectory = @"C:\Users\Public";
+
         var fileName = $"{Guid.NewGuid()}{scriptHandler.FileExtension}";
         var tempFilePath = fileSystem.Path.Combine(publicDirectory, fileName);
 
@@ -67,8 +68,8 @@ public class ScriptService(IFileSystem fileSystem, IShellScriptHandlerFactory sh
                 Meta = MessageMeta.ProcessIdInformation
             });
 
-            var readErrorTask = ReadStreamAsync(process.StandardError!, MessageSeverity.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput!, MessageSeverity.Information);
+            var readErrorTask = ReadStreamAsync(process.StandardError, MessageSeverity.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageSeverity.Information);
 
             process.WaitForExit();
 

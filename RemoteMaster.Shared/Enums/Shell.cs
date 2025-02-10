@@ -8,5 +8,6 @@ public enum Shell
 {
     Cmd,
     PowerShell,
-    Pwsh
+    Pwsh,
+    Bash
 }
