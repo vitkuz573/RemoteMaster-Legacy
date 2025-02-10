@@ -110,8 +110,8 @@ public class InputService : IInputService
 
         if (dto.DeltaY.HasValue)
         {
-            var wheelButton = dto.DeltaY.Value > 0 ? 4u : 5u;
-            
+            var wheelButton = dto.DeltaY.Value > 0 ? 5u : 4u;
+
             XtstNative.XTestFakeButtonEvent(_display, wheelButton, true, 0);
             XtstNative.XTestFakeButtonEvent(_display, wheelButton, false, 0);
         }
