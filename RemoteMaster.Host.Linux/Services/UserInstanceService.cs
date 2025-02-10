@@ -6,19 +6,39 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.EventArguments;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Linux.Abstractions;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class UserInstanceService(IEnvironmentProvider environmentProvider, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger) : IUserInstanceService
+public class UserInstanceService : IUserInstanceService
 {
     private const string Command = "user";
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
-    public bool IsRunning => processService
-        .GetProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath))
+    private readonly IEnvironmentProvider _environmentProvider;
+    private readonly IInstanceManagerService _instanceManagerService;
+    private readonly IProcessService _processService;
+    private readonly IFileSystem _fileSystem;
+    private readonly ILogger<UserInstanceService> _logger;
+
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IEnvironmentProvider environmentProvider, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
+    {
+        ArgumentNullException.ThrowIfNull(sessionChangeEventService);
+
+        _environmentProvider = environmentProvider;
+        _instanceManagerService = instanceManagerService;
+        _processService = processService;
+        _fileSystem = fileSystem;
+        _logger = logger;
+
+        sessionChangeEventService.SessionChanged += OnSessionChanged;
+    }
+
+    public bool IsRunning => _processService
+        .GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath))
         .Any(p => p.HasArgument(Command));
 
     public void Start()
@@ -27,17 +47,17 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
         {
             var processId = StartNewInstance();
 
-            logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
+            _logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
+            _logger.LogError(e, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
         }
     }
 
     public void Stop()
     {
-        var processes = processService.GetProcessesByName(fileSystem.Path.GetFileName(_currentExecutablePath));
+        var processes = _processService.GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath));
 
         foreach (var process in processes)
         {
@@ -48,13 +68,13 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
 
             try
             {
-                logger.LogInformation("Attempting to kill {Command} instance with ID: {ProcessId}.", Command, process.Id);
+                _logger.LogInformation("Attempting to kill {Command} instance with ID: {ProcessId}.", Command, process.Id);
                 process.Kill();
-                logger.LogInformation("Successfully stopped an {Command} instance of the host. Process ID: {ProcessId}", Command, process.Id);
+                _logger.LogInformation("Successfully stopped an {Command} instance of the host. Process ID: {ProcessId}", Command, process.Id);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error stopping {Command} instance of the host. Process ID: {ProcessId}. Message: {Message}", Command, process.Id, ex.Message);
+                _logger.LogError(ex, "Error stopping {Command} instance of the host. Process ID: {ProcessId}. Message: {Message}", Command, process.Id, ex.Message);
             }
         }
     }
@@ -78,9 +98,14 @@ public class UserInstanceService(IEnvironmentProvider environmentProvider, IInst
             CreateNoWindow = true
         };
 
-        startInfo.Environment.Add("DISPLAY", environmentProvider.GetDisplay());
-        startInfo.Environment.Add("XAUTHORITY", environmentProvider.GetXAuthority());
+        startInfo.Environment.Add("DISPLAY", _environmentProvider.GetDisplay());
+        startInfo.Environment.Add("XAUTHORITY", _environmentProvider.GetXAuthority());
 
-        return instanceManagerService.StartNewInstance(null, Command, [], startInfo);
+        return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);
+    }
+
+    private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
+    {
+        Restart();
     }
 }

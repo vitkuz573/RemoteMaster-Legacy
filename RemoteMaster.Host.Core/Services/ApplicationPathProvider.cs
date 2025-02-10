@@ -76,12 +76,14 @@ public class ApplicationPathProvider : IApplicationPathProvider
                 _logger.LogInformation("Created RootDirectory at {Path}.", RootDirectory);
             }
 
-            if (!_fileSystem.Directory.Exists(DataDirectory))
+            if (_fileSystem.Directory.Exists(DataDirectory))
             {
-                _fileSystem.Directory.CreateDirectory(DataDirectory);
-                
-                _logger.LogInformation("Created DataDirectory at {Path}.", DataDirectory);
+                return;
             }
+
+            _fileSystem.Directory.CreateDirectory(DataDirectory);
+                
+            _logger.LogInformation("Created DataDirectory at {Path}.", DataDirectory);
         }
         catch (Exception ex)
         {

@@ -4,12 +4,13 @@
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
 using Tmds.DBus;
 
 namespace RemoteMaster.Host.Linux.Services;
 
-public class SessionWatcherService(ILogger<SessionWatcherService> logger) : IHostedService, IDisposable
+public class SessionWatcherService(ISessionChangeEventService sessionChangeEventService, ILogger<SessionWatcherService> logger) : IHostedService, IDisposable
 {
     private Connection? _connection;
     private ILoginManager? _loginManager;
@@ -49,6 +50,8 @@ public class SessionWatcherService(ILogger<SessionWatcherService> logger) : IHos
     private void OnSessionNew(string sessionId, ObjectPath sessionPath)
     {
         logger.LogInformation($"[SessionWatcherService] New session detected: {sessionId}, ObjectPath: {sessionPath}");
+
+        sessionChangeEventService.OnSessionChanged(0);
     }
 
     private void OnSessionRemoved(string sessionId, ObjectPath sessionPath)
