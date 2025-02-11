@@ -9,371 +9,95 @@ namespace RemoteMaster.Host.Linux.Models;
 [Dictionary]
 public class LoginManagerProperties
 {
-    private bool _EnableWallMessages = default;
-
-    public bool EnableWallMessages
-    {
-        get => _EnableWallMessages;
-        set => _EnableWallMessages = value;
-    }
+    public bool EnableWallMessages { get; set; } = default;
 
-    private string _WallMessage = string.Empty;
-
-    public string WallMessage
-    {
-        get => _WallMessage;
-        set => _WallMessage = value;
-    }
+    public string WallMessage { get; set; } = string.Empty;
 
-    private uint _NAutoVTs = default;
-
-    public uint NAutoVTs
-    {
-        get => _NAutoVTs;
-        set => _NAutoVTs = value;
-    }
+    public uint NAutoVTs { get; set; } = default;
 
-    private string[] _KillOnlyUsers = [];
-
-    public string[] KillOnlyUsers
-    {
-        get => _KillOnlyUsers;
-        set => _KillOnlyUsers = value;
-    }
+    public string[] KillOnlyUsers { get; set; } = [];
 
-    private string[] _KillExcludeUsers = [];
-
-    public string[] KillExcludeUsers
-    {
-        get => _KillExcludeUsers;
-        set => _KillExcludeUsers = value;
-    }
+    public string[] KillExcludeUsers { get; set; } = [];
 
-    private bool _KillUserProcesses = default;
-
-    public bool KillUserProcesses
-    {
-        get => _KillUserProcesses;
-        set => _KillUserProcesses = value;
-    }
+    public bool KillUserProcesses { get; set; } = default;
 
-    private string _RebootParameter = string.Empty;
-
-    public string RebootParameter
-    {
-        get => _RebootParameter;
-        set => _RebootParameter = value;
-    }
+    public string RebootParameter { get; set; } = string.Empty;
 
-    private bool _RebootToFirmwareSetup = default;
-
-    public bool RebootToFirmwareSetup
-    {
-        get => _RebootToFirmwareSetup;
-        set => _RebootToFirmwareSetup = value;
-    }
+    public bool RebootToFirmwareSetup { get; set; } = default;
 
-    private ulong _RebootToBootLoaderMenu = default;
-
-    public ulong RebootToBootLoaderMenu
-    {
-        get => _RebootToBootLoaderMenu;
-        set => _RebootToBootLoaderMenu = value;
-    }
+    public ulong RebootToBootLoaderMenu { get; set; } = default;
 
-    private string _RebootToBootLoaderEntry = string.Empty;
-
-    public string RebootToBootLoaderEntry
-    {
-        get => _RebootToBootLoaderEntry;
-        set => _RebootToBootLoaderEntry = value;
-    }
+    public string RebootToBootLoaderEntry { get; set; } = string.Empty;
 
-    private string[] _BootLoaderEntries = [];
-
-    public string[] BootLoaderEntries
-    {
-        get => _BootLoaderEntries;
-        set => _BootLoaderEntries = value;
-    }
+    public string[] BootLoaderEntries { get; set; } = [];
 
-    private bool _IdleHint = default;
-
-    public bool IdleHint
-    {
-        get => _IdleHint;
-        set => _IdleHint = value;
-    }
+    public bool IdleHint { get; set; } = default;
 
-    private ulong _IdleSinceHint = default;
-
-    public ulong IdleSinceHint
-    {
-        get => _IdleSinceHint;
-        set => _IdleSinceHint = value;
-    }
+    public ulong IdleSinceHint { get; set; } = default;
 
-    private ulong _IdleSinceHintMonotonic = default;
-
-    public ulong IdleSinceHintMonotonic
-    {
-        get => _IdleSinceHintMonotonic;
-        set => _IdleSinceHintMonotonic = value;
-    }
+    public ulong IdleSinceHintMonotonic { get; set; } = default;
 
-    private string _BlockInhibited = string.Empty;
-
-    public string BlockInhibited
-    {
-        get => _BlockInhibited;
-        set => _BlockInhibited = value;
-    }
+    public string BlockInhibited { get; set; } = string.Empty;
 
-    private string _DelayInhibited = string.Empty;
-
-    public string DelayInhibited
-    {
-        get => _DelayInhibited;
-        set => _DelayInhibited = value;
-    }
+    public string DelayInhibited { get; set; } = string.Empty;
 
-    private ulong _InhibitDelayMaxUSec = default;
-
-    public ulong InhibitDelayMaxUSec
-    {
-        get => _InhibitDelayMaxUSec;
-        set => _InhibitDelayMaxUSec = value;
-    }
+    public ulong InhibitDelayMaxUSec { get; set; } = default;
 
-    private ulong _UserStopDelayUSec = default;
-
-    public ulong UserStopDelayUSec
-    {
-        get => _UserStopDelayUSec;
-        set => _UserStopDelayUSec = value;
-    }
+    public ulong UserStopDelayUSec { get; set; } = default;
 
-    private string _HandlePowerKey = string.Empty;
-
-    public string HandlePowerKey
-    {
-        get => _HandlePowerKey;
-        set => _HandlePowerKey = value;
-    }
+    public string HandlePowerKey { get; set; } = string.Empty;
 
-    private string _HandlePowerKeyLongPress = string.Empty;
-
-    public string HandlePowerKeyLongPress
-    {
-        get => _HandlePowerKeyLongPress;
-        set => _HandlePowerKeyLongPress = value;
-    }
+    public string HandlePowerKeyLongPress { get; set; } = string.Empty;
 
-    private string _HandleRebootKey = string.Empty;
-
-    public string HandleRebootKey
-    {
-        get => _HandleRebootKey;
-        set => _HandleRebootKey = value;
-    }
+    public string HandleRebootKey { get; set; } = string.Empty;
 
-    private string _HandleRebootKeyLongPress = string.Empty;
-
-    public string HandleRebootKeyLongPress
-    {
-        get => _HandleRebootKeyLongPress;
-        set => _HandleRebootKeyLongPress = value;
-    }
+    public string HandleRebootKeyLongPress { get; set; } = string.Empty;
 
-    private string _HandleSuspendKey = string.Empty;
-
-    public string HandleSuspendKey
-    {
-        get => _HandleSuspendKey;
-        set => _HandleSuspendKey = value;
-    }
+    public string HandleSuspendKey { get; set; } = string.Empty;
 
-    private string _HandleSuspendKeyLongPress = string.Empty;
-
-    public string HandleSuspendKeyLongPress
-    {
-        get => _HandleSuspendKeyLongPress;
-        set => _HandleSuspendKeyLongPress = value;
-    }
+    public string HandleSuspendKeyLongPress { get; set; } = string.Empty;
 
-    private string _HandleHibernateKey = string.Empty;
-
-    public string HandleHibernateKey
-    {
-        get => _HandleHibernateKey;
-        set => _HandleHibernateKey = value;
-    }
+    public string HandleHibernateKey { get; set; } = string.Empty;
 
-    private string _HandleHibernateKeyLongPress = string.Empty;
-
-    public string HandleHibernateKeyLongPress
-    {
-        get => _HandleHibernateKeyLongPress;
-        set => _HandleHibernateKeyLongPress = value;
-    }
+    public string HandleHibernateKeyLongPress { get; set; } = string.Empty;
 
-    private string _HandleLidSwitch = string.Empty;
-
-    public string HandleLidSwitch
-    {
-        get => _HandleLidSwitch;
-        set => _HandleLidSwitch = value;
-    }
+    public string HandleLidSwitch { get; set; } = string.Empty;
 
-    private string _HandleLidSwitchExternalPower = string.Empty;
-
-    public string HandleLidSwitchExternalPower
-    {
-        get => _HandleLidSwitchExternalPower;
-        set => _HandleLidSwitchExternalPower = value;
-    }
+    public string HandleLidSwitchExternalPower { get; set; } = string.Empty;
 
-    private string _HandleLidSwitchDocked = string.Empty;
-
-    public string HandleLidSwitchDocked
-    {
-        get => _HandleLidSwitchDocked;
-        set => _HandleLidSwitchDocked = value;
-    }
+    public string HandleLidSwitchDocked { get; set; } = string.Empty;
 
-    private ulong _HoldoffTimeoutUSec = default;
-
-    public ulong HoldoffTimeoutUSec
-    {
-        get => _HoldoffTimeoutUSec;
-        set => _HoldoffTimeoutUSec = value;
-    }
+    public ulong HoldoffTimeoutUSec { get; set; } = default;
 
-    private string _IdleAction = string.Empty;
-
-    public string IdleAction
-    {
-        get => _IdleAction;
-        set => _IdleAction = value;
-    }
+    public string IdleAction { get; set; } = string.Empty;
 
-    private ulong _IdleActionUSec = default;
-
-    public ulong IdleActionUSec
-    {
-        get => _IdleActionUSec;
-        set => _IdleActionUSec = value;
-    }
+    public ulong IdleActionUSec { get; set; } = default;
 
-    private bool _PreparingForShutdown = default;
-
-    public bool PreparingForShutdown
-    {
-        get => _PreparingForShutdown;
-        set => _PreparingForShutdown = value;
-    }
+    public bool PreparingForShutdown { get; set; } = default;
 
-    private bool _PreparingForSleep = default;
-
-    public bool PreparingForSleep
-    {
-        get => _PreparingForSleep;
-        set => _PreparingForSleep = value;
-    }
-
-    private (string, ulong) _ScheduledShutdown = default;
-
-    public (string, ulong) ScheduledShutdown
-    {
-        get => _ScheduledShutdown;
-        set => _ScheduledShutdown = value;
-    }
-
-    private bool _Docked = default;
-
-    public bool Docked
-    {
-        get => _Docked;
-        set => _Docked = value;
-    }
-
-    private bool _LidClosed = default;
-
-    public bool LidClosed
-    {
-        get => _LidClosed;
-        set => _LidClosed = value;
-    }
-
-    private bool _OnExternalPower = default;
-
-    public bool OnExternalPower
-    {
-        get => _OnExternalPower;
-        set => _OnExternalPower = value;
-    }
-
-    private bool _RemoveIPC = default;
-
-    public bool RemoveIPC
-    {
-        get => _RemoveIPC;
-        set => _RemoveIPC = value;
-    }
-
-    private ulong _RuntimeDirectorySize = default;
-
-    public ulong RuntimeDirectorySize
-    {
-        get => _RuntimeDirectorySize;
-        set => _RuntimeDirectorySize = value;
-    }
-
-    private ulong _RuntimeDirectoryInodesMax = default;
-
-    public ulong RuntimeDirectoryInodesMax
-    {
-        get => _RuntimeDirectoryInodesMax;
-        set => _RuntimeDirectoryInodesMax = value;
-    }
-
-    private ulong _InhibitorsMax = default;
-
-    public ulong InhibitorsMax
-    {
-        get => _InhibitorsMax;
-        set => _InhibitorsMax = value;
-    }
-
-    private ulong _NCurrentInhibitors = default;
-
-    public ulong NCurrentInhibitors
-    {
-        get => _NCurrentInhibitors;
-        set => _NCurrentInhibitors = value;
-    }
-
-    private ulong _SessionsMax = default;
-
-    public ulong SessionsMax
-    {
-        get => _SessionsMax;
-        set => _SessionsMax = value;
-    }
-
-    private ulong _NCurrentSessions = default;
-
-    public ulong NCurrentSessions
-    {
-        get => _NCurrentSessions;
-        set => _NCurrentSessions = value;
-    }
-
-    private ulong _StopIdleSessionUSec = default;
-
-    public ulong StopIdleSessionUSec
-    {
-        get => _StopIdleSessionUSec;
-        set => _StopIdleSessionUSec = value;
-    }
+    public bool PreparingForSleep { get; set; } = default;
+
+    public (string, ulong) ScheduledShutdown { get; set; } = default;
+
+    public bool Docked { get; set; } = default;
+
+    public bool LidClosed { get; set; } = default;
+
+    public bool OnExternalPower { get; set; } = default;
+
+    public bool RemoveIPC { get; set; } = default;
+
+    public ulong RuntimeDirectorySize { get; set; } = default;
+
+    public ulong RuntimeDirectoryInodesMax { get; set; } = default;
+
+    public ulong InhibitorsMax { get; set; } = default;
+
+    public ulong NCurrentInhibitors { get; set; } = default;
+
+    public ulong SessionsMax { get; set; } = default;
+
+    public ulong NCurrentSessions { get; set; } = default;
+
+    public ulong StopIdleSessionUSec { get; set; } = default;
 }
