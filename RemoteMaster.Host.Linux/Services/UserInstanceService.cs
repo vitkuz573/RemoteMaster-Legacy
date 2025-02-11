@@ -9,6 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Linux.Abstractions;
+using RemoteMaster.Host.Linux.Helpers;
 
 namespace RemoteMaster.Host.Linux.Services;
 
@@ -104,8 +105,52 @@ public class UserInstanceService : IUserInstanceService
         return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 
-    private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
+    private async Task<bool> WaitForXServerAsync(TimeSpan timeout, TimeSpan pollingInterval)
     {
-        Restart();
+        var sw = Stopwatch.StartNew();
+
+        while (sw.Elapsed < timeout)
+        {
+            try
+            {
+                var display = X11Native.XOpenDisplay(string.Empty);
+
+                if (display != IntPtr.Zero)
+                {
+                    X11Native.XCloseDisplay(display);
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Error trying to connect to the X server.");
+            }
+
+            await Task.Delay(pollingInterval);
+        }
+
+        return false;
+    }
+
+    private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
+    {
+        var timeout = TimeSpan.FromSeconds(30);
+        var pollingInterval = TimeSpan.FromMilliseconds(200);
+
+        _logger.LogInformation("Session change detected. Waiting for the X server to become available...");
+
+        var xServerReady = await WaitForXServerAsync(timeout, pollingInterval);
+
+        if (xServerReady)
+        {
+            _logger.LogInformation("X server is available, restarting the user instance.");
+
+            Restart();
+        }
+        else
+        {
+            _logger.LogError("X server did not become available within {Timeout} seconds.", timeout.TotalSeconds);
+        }
     }
 }
