@@ -97,9 +97,9 @@ public class SystemdManagerProperties
 
     public ulong InitRDUnitsLoadFinishTimestampMonotonic { get; set; } = default;
 
-    public string LogLevel { get; set; } = default;
+    public string LogLevel { get; set; } = string.Empty;
 
-    public string LogTarget { get; set; } = default;
+    public string LogTarget { get; set; } = string.Empty;
 
     public uint NNames { get; set; } = default;
 
@@ -113,7 +113,7 @@ public class SystemdManagerProperties
 
     public double Progress { get; set; } = default;
 
-    public string[] Environment { get; set; } = default;
+    public string[] Environment { get; set; } = [];
 
     public bool ConfirmSpawn { get; set; } = default;
 
