@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
+using RemoteMaster.Host.Linux.Extensions;
 using Tmds.DBus;
 
 namespace RemoteMaster.Host.Linux.Services;
@@ -51,22 +52,22 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
     {
         logger.LogInformation($"[SessionWatcherService] New session detected: {sessionId}, ObjectPath: {objectPath}");
 
-        if (_loginManager == null)
+        if (_connection == null)
         {
-            logger.LogError("[SessionWatcherService] _loginManager is null, cannot fetch session details.");
+            logger.LogError("[SessionWatcherService] DBus connection is null.");
+
             return;
         }
 
         try
         {
-            var userId = await _loginManager.GetAsync<uint>("User");
+            var sessionProxy = _connection.CreateProxy<ILoginSession>("org.freedesktop.login1", objectPath);
 
-            var userPath = await _loginManager.GetUserAsync(userId);
-
-            var userName = await _loginManager.GetAsync<string>("Name");
-            var sessionType = await _loginManager.GetAsync<string>("Type");
-            var remoteHost = await _loginManager.GetAsync<string>("RemoteHost");
-            var ttyPath = await _loginManager.GetAsync<string>("TTY");
+            var userId = await sessionProxy.GetUserAsync();
+            var userName = await sessionProxy.GetNameAsync();
+            var sessionType = await sessionProxy.GetTypeAsync();
+            var remoteHost = await sessionProxy.GetRemoteAsync();
+            var ttyPath = await sessionProxy.GetTTYAsync();
 
             logger.LogInformation($"[SessionWatcherService] Session {sessionId} details:");
             logger.LogInformation($"  - User ID: {userId}");
