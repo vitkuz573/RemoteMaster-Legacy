@@ -5,6 +5,7 @@
 using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
+using RemoteMaster.Host.Linux.Extensions;
 using Tmds.DBus;
 
 namespace RemoteMaster.Host.Linux.Services;
@@ -12,8 +13,8 @@ namespace RemoteMaster.Host.Linux.Services;
 public class DBusProcess(INativeProcessOptions processOptions, IProcessService processService, ICommandLineProvider commandLineProvider) : IProcess
 {
     private Connection? _connection;
-    private ObjectPath _unitJobPath;
-    private ObjectPath _unitPath;
+    private ObjectPath _serviceJobPath;
+    private ObjectPath _servicePath;
     private IProcess? _attachedProcess;
 
     public int Id { get; private set; }
@@ -60,7 +61,7 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
     private async Task StartAsync(ProcessStartInfo startInfo)
     {
-        var unitName = $"dbusprocess-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.service";
+        var serviceName = $"dbusprocess-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.service";
 
         var execCommand = startInfo.FileName;
 
@@ -82,23 +83,21 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
         var aux = Array.Empty<(string, (string, object)[])>();
 
-        var job = await manager.StartTransientUnitAsync(unitName, "replace", properties, aux);
+        var job = await manager.StartTransientUnitAsync(serviceName, "replace", properties, aux);
 
-        _unitJobPath = job;
+        _serviceJobPath = job;
 
-        var unitPathName = unitName.ToLower()
+        var servicePathName = serviceName.ToLower()
             .Replace("-", "_2d")
             .Replace(".", "_2e");
 
-        _unitPath = new ObjectPath($"/org/freedesktop/systemd1/unit/{unitPathName}");
+        _servicePath = new ObjectPath($"/org/freedesktop/systemd1/unit/{servicePathName}");
 
         await Task.Delay(5000);
 
-        var unitProxy = _connection.CreateProxy<IUnit>("org.freedesktop.systemd1", _unitPath);
+        var serviceProxy = _connection.CreateProxy<ISystemdService>("org.freedesktop.systemd1", _servicePath);
 
-        var unitProps = await unitProxy.GetAllAsync();
-        
-        Id = (int)unitProps.MainPID;
+        Id = (int)await serviceProxy.GetMainPIDAsync();
 
         try
         {
