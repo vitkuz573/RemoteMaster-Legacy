@@ -87,6 +87,8 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
     private void OnSessionRemoved(string sessionId, ObjectPath objectPath)
     {
         logger.LogInformation($"[SessionWatcherService] Session removed: {sessionId}, ObjectPath: {objectPath}");
+
+        sessionChangeEventService.OnSessionChanged(0);
     }
 
     private void OnError(Exception ex)
