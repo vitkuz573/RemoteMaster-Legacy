@@ -76,7 +76,10 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
             logger.LogInformation($"  - Remote Host: {remoteHost}");
             logger.LogInformation($"  - TTY: {ttyPath}");
 
-            sessionChangeEventService.OnSessionChanged(0);
+            if (!remoteHost)
+            {
+                sessionChangeEventService.OnSessionChanged(0);
+            }
         }
         catch (Exception ex)
         {
@@ -88,7 +91,7 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
     {
         logger.LogInformation($"[SessionWatcherService] Session removed: {sessionId}, ObjectPath: {objectPath}");
 
-        sessionChangeEventService.OnSessionChanged(0);
+        // sessionChangeEventService.OnSessionChanged(0);
     }
 
     private void OnError(Exception ex)
