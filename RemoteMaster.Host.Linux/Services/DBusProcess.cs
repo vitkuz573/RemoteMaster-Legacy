@@ -86,12 +86,11 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
         _unitJobPath = job;
 
-        var unitBasePath = "/org/freedesktop/systemd1/unit";
         var unitPathName = unitName.ToLower()
             .Replace("-", "_2d")
             .Replace(".", "_2e");
 
-        _unitPath = new ObjectPath($"{unitBasePath}/{unitPathName}");
+        _unitPath = new ObjectPath($"/org/freedesktop/systemd1/unit/{unitPathName}");
 
         await Task.Delay(5000);
 

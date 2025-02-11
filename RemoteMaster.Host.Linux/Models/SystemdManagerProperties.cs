@@ -254,5 +254,4 @@ public class SystemdManagerProperties
     public int DefaultOOMScoreAdjust { get; set; } = default;
 
     public string CtrlAltDelBurstAction { get; set; } = string.Empty;
-
 }
