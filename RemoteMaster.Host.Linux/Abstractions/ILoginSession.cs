@@ -42,13 +42,13 @@ public interface ILoginSession : IDBusObject
     
     Task SetBrightnessAsync(string Subsystem, string Name, uint Brightness);
     
-    Task<IDisposable> WatchPauseDeviceAsync(Action<(uint major, uint minor, string type)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchPauseDeviceAsync(Action<(uint major, uint minor, string type)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchResumeDeviceAsync(Action<(uint major, uint minor, CloseSafeHandle fd)> handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchResumeDeviceAsync(Action<(uint major, uint minor, CloseSafeHandle fd)> handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchLockAsync(Action handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchLockAsync(Action handler, Action<Exception>? onError = null);
     
-    Task<IDisposable> WatchUnlockAsync(Action handler, Action<Exception> onError = null);
+    Task<IDisposable> WatchUnlockAsync(Action handler, Action<Exception>? onError = null);
     
     Task<T> GetAsync<T>(string prop);
     
