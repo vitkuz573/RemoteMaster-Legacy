@@ -14,7 +14,7 @@ public class CapturingContext : ICapturingContext
 
     public string SelectedCodec { get; set; } = string.Empty;
 
-    public int ImageQuality { get; set; }
+    public int ImageQuality { get; set; } = 25;
 
     public int FrameRate { get; set; } = 60;
 
