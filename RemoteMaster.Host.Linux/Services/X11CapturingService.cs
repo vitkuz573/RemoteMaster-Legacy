@@ -27,6 +27,8 @@ public class X11CapturingService : ScreenCapturingService
         {
             throw new Exception("Unable to open X display");
         }
+
+        X11Native.XSetErrorHandler(X11Native.MyXErrorHandler);
     }
 
     protected override byte[] CaptureScreen(string connectionId, Rectangle bounds, int imageQuality, string codec)
@@ -37,6 +39,15 @@ public class X11CapturingService : ScreenCapturingService
 
         var window = X11Native.XDefaultRootWindow(_display);
         var imagePointer = X11Native.XGetImage(_display, window, bounds.X, bounds.Y, (uint)bounds.Width, (uint)bounds.Height, ~0UL, 2);
+
+        X11Native.XSync(_display, false);
+
+        if (X11Native.XErrorOccurred)
+        {
+            X11Native.XErrorOccurred = false;
+
+            throw new Exception("X error occurred during screen capture.");
+        }
 
         if (imagePointer == nint.Zero)
         {

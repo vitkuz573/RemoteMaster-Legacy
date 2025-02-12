@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace RemoteMaster.Host.Linux.Helpers;
@@ -93,6 +94,35 @@ public static class X11Native
 
     [DllImport(LibraryName)]
     public static extern bool XInitThreads();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int XErrorHandlerDelegate(nint display, ref XErrorEvent errorEvent);
+
+    [DllImport(LibraryName)]
+    public static extern XErrorHandlerDelegate XSetErrorHandler(XErrorHandlerDelegate handler);
+
+    internal static volatile bool XErrorOccurred;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct XErrorEvent
+    {
+        public int type;
+        public nint display;
+        public nint resourceid;
+        public ulong serial;
+        public byte error_code;
+        public byte request_code;
+        public byte minor_code;
+    }
+
+    public static int MyXErrorHandler(nint display, ref XErrorEvent errorEvent)
+    {
+        Debug.WriteLine($"X error occurred: error code {errorEvent.error_code}, request code {errorEvent.request_code}, minor code {errorEvent.minor_code}");
+        
+        XErrorOccurred = true;
+        
+        return 0;
+    }
 
     public struct XImage
     {

@@ -113,9 +113,16 @@ public class UserInstanceService : IUserInstanceService
         {
             try
             {
-                var display = X11Native.XOpenDisplay(string.Empty);
+                var displayName = _environmentProvider.GetDisplay();
+                var xAuthority = _environmentProvider.GetXAuthority();
 
-                if (display != IntPtr.Zero)
+                _logger.LogDebug("Using DISPLAY: {Display}, XAUTHORITY: {XAuthority}", displayName, xAuthority);
+
+                Environment.SetEnvironmentVariable("XAUTHORITY", xAuthority);
+
+                var display = X11Native.XOpenDisplay(displayName);
+
+                if (display != nint.Zero)
                 {
                     X11Native.XCloseDisplay(display);
 
@@ -135,6 +142,10 @@ public class UserInstanceService : IUserInstanceService
 
     private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
+        Stop();
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
         var timeout = TimeSpan.FromSeconds(30);
         var pollingInterval = TimeSpan.FromMilliseconds(200);
 
@@ -144,9 +155,14 @@ public class UserInstanceService : IUserInstanceService
 
         if (xServerReady)
         {
-            _logger.LogInformation("X server is available, restarting the user instance.");
+            _logger.LogInformation("X server is available, starting the user instance.");
 
-            Restart();
+            while (IsRunning)
+            {
+                Task.Delay(50).Wait();
+            }
+
+            Start();
         }
         else
         {
