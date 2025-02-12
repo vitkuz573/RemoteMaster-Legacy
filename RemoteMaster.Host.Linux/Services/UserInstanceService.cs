@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.IO.Abstractions;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
@@ -105,68 +106,97 @@ public class UserInstanceService : IUserInstanceService
         return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 
-    private async Task<bool> WaitForXServerAsync(TimeSpan timeout, TimeSpan pollingInterval)
+    private async Task<bool> IsProcessEnvironmentValid(IProcess process)
     {
-        var sw = Stopwatch.StartNew();
+        await Task.Delay(5000);
 
-        while (sw.Elapsed < timeout)
+        var expectedDisplay = _environmentProvider.GetDisplay();
+        var expectedXAuthority = _environmentProvider.GetXAuthority();
+
+        try
         {
-            try
+            var envFilePath = $"/proc/{process.Id}/environ";
+
+            if (!_fileSystem.File.Exists(envFilePath))
             {
-                var displayName = _environmentProvider.GetDisplay();
-                var xAuthority = _environmentProvider.GetXAuthority();
+                _logger.LogWarning("Environment file {EnvFilePath} not found for process {ProcessId}.", envFilePath, process.Id);
 
-                _logger.LogDebug("Using DISPLAY: {Display}, XAUTHORITY: {XAuthority}", displayName, xAuthority);
+                return false;
+            }
 
-                Environment.SetEnvironmentVariable("XAUTHORITY", xAuthority);
+            var envBytes = await _fileSystem.File.ReadAllBytesAsync(envFilePath);
+            var envText = Encoding.UTF8.GetString(envBytes);
+            var envVars = envText.Split('\0', StringSplitOptions.RemoveEmptyEntries);
 
-                var display = X11Native.XOpenDisplay(displayName);
+            string? actualDisplay = null;
+            string? actualXAuthority = null;
 
-                if (display != nint.Zero)
+            foreach (var envVar in envVars)
+            {
+                if (envVar.StartsWith("DISPLAY="))
                 {
-                    X11Native.XCloseDisplay(display);
-
-                    return true;
+                    actualDisplay = envVar["DISPLAY=".Length..];
+                }
+                else if (envVar.StartsWith("XAUTHORITY="))
+                {
+                    actualXAuthority = envVar["XAUTHORITY=".Length..];
                 }
             }
-            catch (Exception ex)
+
+            if (actualDisplay == expectedDisplay && actualXAuthority == expectedXAuthority)
             {
-                _logger.LogDebug(ex, "Error trying to connect to the X server.");
+                return true;
             }
 
-            await Task.Delay(pollingInterval);
-        }
+            _logger.LogWarning("Process {ProcessId} has invalid environment. Expected: DISPLAY={ExpectedDisplay}, XAUTHORITY={ExpectedXAuthority}. Actual: DISPLAY={ActualDisplay}, XAUTHORITY={ActualXAuthority}.", process.Id, expectedDisplay, expectedXAuthority, actualDisplay, actualXAuthority);
 
-        return false;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking environment for process {ProcessId}.", process.Id);
+
+            return false;
+        }
     }
 
     private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
-        Stop();
+        _logger.LogInformation("Session change detected. Restarting user instance...");
 
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        Restart();
 
-        var timeout = TimeSpan.FromSeconds(30);
-        var pollingInterval = TimeSpan.FromMilliseconds(200);
-
-        _logger.LogInformation("Session change detected. Waiting for the X server to become available...");
-
-        var xServerReady = await WaitForXServerAsync(timeout, pollingInterval);
-
-        if (xServerReady)
+        while (true)
         {
-            _logger.LogInformation("X server is available, starting the user instance.");
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
-            while (IsRunning)
+            var processes = _processService
+                .GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath))
+                .Where(p => p.HasArgument(Command))
+                .ToList();
+
+            if (!processes.Any())
             {
-                Task.Delay(50).Wait();
+                _logger.LogWarning("User instance not found. Restarting...");
+
+                Restart();
+
+                continue;
             }
 
-            Start();
-        }
-        else
-        {
-            _logger.LogError("X server did not become available within {Timeout} seconds.", timeout.TotalSeconds);
+            var validationTasks = processes.Select(IsProcessEnvironmentValid);
+            var results = await Task.WhenAll(validationTasks);
+
+            if (results.Any(valid => valid))
+            {
+                _logger.LogInformation("User instance environment is valid.");
+
+                break;
+            }
+
+            _logger.LogWarning("User instance environment is invalid. Restarting...");
+
+            Restart();
         }
     }
 }
