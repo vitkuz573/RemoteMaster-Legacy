@@ -8,4 +8,5 @@ public static class PipeNames
 {
     public const string CommandPipe = "CommandPipe";
     public const string UpdaterReadyPipe = "UpdaterReadyPipe";
+    public const string EnvironmentMonitorPipe = "EnvironmentMonitorPipe";
 }

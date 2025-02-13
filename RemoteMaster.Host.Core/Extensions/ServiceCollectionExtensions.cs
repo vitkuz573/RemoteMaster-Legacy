@@ -92,6 +92,7 @@ public static class ServiceCollectionExtensions
                 services.AddHostedService<UpdaterReadyService>();
                 break;
             case "service":
+                services.AddHostedService<EnvironmentMonitorListenerService>();
                 services.AddHostedService<CertificateManagementService>();
                 services.AddHostedService<HostProcessMonitorService>();
                 services.AddHostedService<HostRegistrationMonitorService>();

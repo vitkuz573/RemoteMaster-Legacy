@@ -20,7 +20,7 @@ internal class Program
     private static async Task Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Information()
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
@@ -133,9 +133,14 @@ internal class Program
 
         services.AddHostedService<DependencyInstallerService>();
 
-        if (commandName == "service")
+        switch (commandName)
         {
-            services.AddHostedService<SessionWatcherService>();
+            case "user":
+                services.AddHostedService<EnvironmentMonitorService>();
+                break;
+            case "service":
+                services.AddHostedService<SessionWatcherService>();
+                break;
         }
 
         if (commandName != "install")

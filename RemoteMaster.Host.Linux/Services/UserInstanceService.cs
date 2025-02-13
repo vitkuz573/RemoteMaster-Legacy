@@ -4,13 +4,11 @@
 
 using System.Diagnostics;
 using System.IO.Abstractions;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.EventArguments;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Linux.Abstractions;
-using RemoteMaster.Host.Linux.Helpers;
 
 namespace RemoteMaster.Host.Linux.Services;
 
@@ -106,97 +104,8 @@ public class UserInstanceService : IUserInstanceService
         return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 
-    private async Task<bool> IsProcessEnvironmentValid(IProcess process)
+    private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
-        await Task.Delay(5000);
-
-        var expectedDisplay = _environmentProvider.GetDisplay();
-        var expectedXAuthority = _environmentProvider.GetXAuthority();
-
-        try
-        {
-            var envFilePath = $"/proc/{process.Id}/environ";
-
-            if (!_fileSystem.File.Exists(envFilePath))
-            {
-                _logger.LogWarning("Environment file {EnvFilePath} not found for process {ProcessId}.", envFilePath, process.Id);
-
-                return false;
-            }
-
-            var envBytes = await _fileSystem.File.ReadAllBytesAsync(envFilePath);
-            var envText = Encoding.UTF8.GetString(envBytes);
-            var envVars = envText.Split('\0', StringSplitOptions.RemoveEmptyEntries);
-
-            string? actualDisplay = null;
-            string? actualXAuthority = null;
-
-            foreach (var envVar in envVars)
-            {
-                if (envVar.StartsWith("DISPLAY="))
-                {
-                    actualDisplay = envVar["DISPLAY=".Length..];
-                }
-                else if (envVar.StartsWith("XAUTHORITY="))
-                {
-                    actualXAuthority = envVar["XAUTHORITY=".Length..];
-                }
-            }
-
-            if (actualDisplay == expectedDisplay && actualXAuthority == expectedXAuthority)
-            {
-                return true;
-            }
-
-            _logger.LogWarning("Process {ProcessId} has invalid environment. Expected: DISPLAY={ExpectedDisplay}, XAUTHORITY={ExpectedXAuthority}. Actual: DISPLAY={ActualDisplay}, XAUTHORITY={ActualXAuthority}.", process.Id, expectedDisplay, expectedXAuthority, actualDisplay, actualXAuthority);
-
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking environment for process {ProcessId}.", process.Id);
-
-            return false;
-        }
-    }
-
-    private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
-    {
-        _logger.LogInformation("Session change detected. Restarting user instance...");
-
         Restart();
-
-        while (true)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2));
-
-            var processes = _processService
-                .GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath))
-                .Where(p => p.HasArgument(Command))
-                .ToList();
-
-            if (!processes.Any())
-            {
-                _logger.LogWarning("User instance not found. Restarting...");
-
-                Restart();
-
-                continue;
-            }
-
-            var validationTasks = processes.Select(IsProcessEnvironmentValid);
-            var results = await Task.WhenAll(validationTasks);
-
-            if (results.Any(valid => valid))
-            {
-                _logger.LogInformation("User instance environment is valid.");
-
-                break;
-            }
-
-            _logger.LogWarning("User instance environment is invalid. Restarting...");
-
-            Restart();
-        }
     }
 }

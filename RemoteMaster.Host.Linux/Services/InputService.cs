@@ -55,7 +55,9 @@ public class InputService : IInputService
 
         if (_display == nint.Zero)
         {
-            throw new Exception("Unable to open X display");
+            _logger.LogInformation("Unable to open X display");
+
+            // throw new Exception("Unable to open X display");
         }
 
         if (!XtstNative.XTestQueryExtension(_display, out _, out _, out _, out _))
