@@ -46,16 +46,33 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
     private async Task<string> GetDisplayFromDBus()
     {
         using var connection = new Connection(Address.System);
-
         await connection.ConnectAsync();
 
         var loginManager = connection.CreateProxy<ILoginManager>("org.freedesktop.login1", "/org/freedesktop/login1");
-        var pid = (uint)processService.GetCurrentProcess().Id;
-        var sessionPath = await loginManager.GetSessionByPIDAsync(pid);
-        var loginSession = connection.CreateProxy<ILoginSession>("org.freedesktop.login1", sessionPath);
-        var display = await loginSession.GetDisplayAsync();
 
-        return display;
+        var xorgProcesses = processService.GetProcessesByName("Xorg");
+        
+        foreach (var process in xorgProcesses)
+        {
+            try
+            {
+                var pid = (uint)process.Id;
+                var sessionPath = await loginManager.GetSessionByPIDAsync(pid);
+                var loginSession = connection.CreateProxy<ILoginSession>("org.freedesktop.login1", sessionPath);
+                var display = await loginSession.GetDisplayAsync();
+
+                if (!string.IsNullOrWhiteSpace(display))
+                {
+                    return display;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("DBus display lookup failed for Xorg process with PID {Pid}: {Message}", process.Id, ex.Message);
+            }
+        }
+
+        return string.Empty;
     }
 
     private string GetDisplayFallback()
