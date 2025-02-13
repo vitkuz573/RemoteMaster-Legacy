@@ -45,7 +45,7 @@ public class UserInstanceService : IUserInstanceService
     {
         try
         {
-            var processId = StartNewInstance();
+            var processId = StartNewInstance().GetAwaiter().GetResult();
 
             _logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
         }
@@ -91,14 +91,14 @@ public class UserInstanceService : IUserInstanceService
         Start();
     }
 
-    private int StartNewInstance()
+    private async Task<int> StartNewInstance()
     {
         var startInfo = new ProcessStartInfo
         {
             CreateNoWindow = true
         };
 
-        startInfo.Environment.Add("DISPLAY", _environmentProvider.GetDisplay());
+        startInfo.Environment.Add("DISPLAY", await _environmentProvider.GetDisplayAsync());
         startInfo.Environment.Add("XAUTHORITY", _environmentProvider.GetXAuthority());
 
         return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);

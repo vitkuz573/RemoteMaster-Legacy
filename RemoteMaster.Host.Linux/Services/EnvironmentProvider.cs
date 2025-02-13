@@ -25,11 +25,11 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
     private static partial Regex XAuthRegex();
 
     /// <inheritdoc/>
-    public string GetDisplay()
+    public async Task<string> GetDisplayAsync()
     {
         try
         {
-            var dbusDisplay = GetDisplayFromDBus();
+            var dbusDisplay = await GetDisplayFromDBus();
 
             if (!string.IsNullOrWhiteSpace(dbusDisplay))
             {
@@ -44,16 +44,17 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         return GetDisplayFallback();
     }
 
-    private string GetDisplayFromDBus()
+    private async Task<string> GetDisplayFromDBus()
     {
         using var connection = new Connection(Address.System);
-        connection.ConnectAsync().GetAwaiter().GetResult();
+
+        await connection.ConnectAsync();
 
         var loginManager = connection.CreateProxy<ILoginManager>("org.freedesktop.login1", "/org/freedesktop/login1");
         var pid = (uint)processService.GetCurrentProcess().Id;
-        var sessionPath = loginManager.GetSessionByPIDAsync(pid).GetAwaiter().GetResult();
+        var sessionPath = await loginManager.GetSessionByPIDAsync(pid);
         var loginSession = connection.CreateProxy<ILoginSession>("org.freedesktop.login1", sessionPath);
-        var display = loginSession.GetDisplayAsync().GetAwaiter().GetResult();
+        var display = await loginSession.GetDisplayAsync();
 
         return display;
     }

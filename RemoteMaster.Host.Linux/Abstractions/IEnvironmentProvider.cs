@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Linux.Abstractions;
 
 public interface IEnvironmentProvider
 {
-    string GetDisplay();
+    Task<string> GetDisplayAsync();
 
     string GetXAuthority();
 }
