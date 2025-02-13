@@ -17,7 +17,6 @@ namespace RemoteMaster.Host.Linux.Services;
 /// </summary>
 public partial class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem, ILogger<EnvironmentProvider> logger) : IEnvironmentProvider
 {
-    // Regex definitions (as before)
     [GeneratedRegex(@"\s(?<display>:\d+)\b", RegexOptions.None, 1000)]
     private static partial Regex DisplayRegex();
 
@@ -38,7 +37,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         }
         catch (Exception ex)
         {
-            logger.LogError($"DBus display lookup failed: {ex.Message}");
+            logger.LogError("DBus display lookup failed: {Message}", ex.Message);
         }
 
         return GetDisplayFallback();
