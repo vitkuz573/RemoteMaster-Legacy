@@ -51,7 +51,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
                         var linkPath = $"/proc/{process.Id}/fd/{fd}";
                         var fileInfo = fileSystem.FileInfo.New(linkPath);
 
-                        if (!string.IsNullOrWhiteSpace(fileInfo.LinkTarget) && !fileInfo.LinkTarget.StartsWith("socket:", StringComparison.Ordinal))
+                        if (!string.IsNullOrWhiteSpace(fileInfo.LinkTarget) && !fileInfo.LinkTarget.StartsWith("socket:", StringComparison.Ordinal) && !fileInfo.LinkTarget.StartsWith("pipe:", StringComparison.Ordinal))
                         {
                             return fileInfo.LinkTarget;
                         }
