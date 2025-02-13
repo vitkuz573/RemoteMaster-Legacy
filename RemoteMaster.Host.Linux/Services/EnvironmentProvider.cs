@@ -4,16 +4,20 @@
 
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Linux.Abstractions;
+using RemoteMaster.Host.Linux.Extensions;
+using Tmds.DBus;
 
 namespace RemoteMaster.Host.Linux.Services;
 
 /// <summary>
 /// Provides environment details for Linux systems.
 /// </summary>
-public partial class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem) : IEnvironmentProvider
+public partial class EnvironmentProvider(IProcessService processService, ICommandLineProvider commandLineProvider, IFileSystem fileSystem, ILogger<EnvironmentProvider> logger) : IEnvironmentProvider
 {
+    // Regex definitions (as before)
     [GeneratedRegex(@"\s(?<display>:\d+)\b", RegexOptions.None, 1000)]
     private static partial Regex DisplayRegex();
 
@@ -23,6 +27,39 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
     /// <inheritdoc/>
     public string GetDisplay()
     {
+        try
+        {
+            var dbusDisplay = GetDisplayFromDBus();
+
+            if (!string.IsNullOrWhiteSpace(dbusDisplay))
+            {
+                return dbusDisplay;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"DBus display lookup failed: {ex.Message}");
+        }
+
+        return GetDisplayFallback();
+    }
+
+    private string GetDisplayFromDBus()
+    {
+        using var connection = new Connection(Address.System);
+        connection.ConnectAsync().GetAwaiter().GetResult();
+
+        var loginManager = connection.CreateProxy<ILoginManager>("org.freedesktop.login1", "/org/freedesktop/login1");
+        var pid = (uint)processService.GetCurrentProcess().Id;
+        var sessionPath = loginManager.GetSessionByPIDAsync(pid).GetAwaiter().GetResult();
+        var loginSession = connection.CreateProxy<ILoginSession>("org.freedesktop.login1", sessionPath);
+        var display = loginSession.GetDisplayAsync().GetAwaiter().GetResult();
+
+        return display;
+    }
+
+    private string GetDisplayFallback()
+    {
         var xorgProcesses = processService.GetProcessesByName("Xorg");
 
         foreach (var process in xorgProcesses)
@@ -30,14 +67,14 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
             try
             {
                 var args = commandLineProvider.GetCommandLine(process);
-
+                
                 var commandLine = string.Join(" ", args);
                 var displayMatch = DisplayRegex().Match(commandLine);
 
                 if (displayMatch.Success)
                 {
                     var display = displayMatch.Groups["display"].Value;
-
+                    
                     if (!string.IsNullOrWhiteSpace(display))
                     {
                         return display;
@@ -46,15 +83,17 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
 
                 for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] == "-displayfd" && i + 1 < args.Length && int.TryParse(args[i + 1], out var fd))
+                    if (args[i] != "-displayfd" || i + 1 >= args.Length || !int.TryParse(args[i + 1], out var fd))
                     {
-                        var linkPath = $"/proc/{process.Id}/fd/{fd}";
-                        var fileInfo = fileSystem.FileInfo.New(linkPath);
+                        continue;
+                    }
 
-                        if (!string.IsNullOrWhiteSpace(fileInfo.LinkTarget) && !fileInfo.LinkTarget.StartsWith("socket:", StringComparison.Ordinal) && !fileInfo.LinkTarget.StartsWith("pipe:", StringComparison.Ordinal))
-                        {
-                            return fileInfo.LinkTarget;
-                        }
+                    var linkPath = $"/proc/{process.Id}/fd/{fd}";
+                    var fileInfo = fileSystem.FileInfo.New(linkPath);
+
+                    if (!string.IsNullOrWhiteSpace(fileInfo.LinkTarget) && !fileInfo.LinkTarget.StartsWith("socket:", StringComparison.Ordinal) && !fileInfo.LinkTarget.StartsWith("pipe:", StringComparison.Ordinal))
+                    {
+                        return fileInfo.LinkTarget;
                     }
                 }
             }
@@ -87,14 +126,14 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
             try
             {
                 var args = commandLineProvider.GetCommandLine(process);
-
+                
                 var commandLine = string.Join(" ", args);
                 var authMatch = XAuthRegex().Match(commandLine);
 
                 if (authMatch.Success)
                 {
                     var xAuthority = authMatch.Groups[1].Value;
-
+                    
                     if (!string.IsNullOrWhiteSpace(xAuthority))
                     {
                         return xAuthority;
@@ -103,14 +142,16 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
 
                 for (var i = 0; i < args.Length; i++)
                 {
-                    if (args[i] == "-auth" && i + 1 < args.Length)
+                    if (args[i] != "-auth" || i + 1 >= args.Length)
                     {
-                        var xAuthority = args[i + 1];
+                        continue;
+                    }
 
-                        if (!string.IsNullOrWhiteSpace(xAuthority))
-                        {
-                            return xAuthority;
-                        }
+                    var xAuthority = args[i + 1];
+
+                    if (!string.IsNullOrWhiteSpace(xAuthority))
+                    {
+                        return xAuthority;
                     }
                 }
             }
