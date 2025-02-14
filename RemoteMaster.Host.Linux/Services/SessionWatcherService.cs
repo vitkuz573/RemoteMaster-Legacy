@@ -66,17 +66,17 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
             var userId = await sessionProxy.GetUserAsync();
             var userName = await sessionProxy.GetNameAsync();
             var sessionType = await sessionProxy.GetTypeAsync();
-            var remoteHost = await sessionProxy.GetRemoteAsync();
+            var remote = await sessionProxy.GetRemoteAsync();
             var ttyPath = await sessionProxy.GetTTYAsync();
 
             logger.LogInformation($"[SessionWatcherService] Session {sessionId} details:");
             logger.LogInformation($"  - User ID: {userId}");
             logger.LogInformation($"  - Username: {userName}");
             logger.LogInformation($"  - Session Type: {sessionType}");
-            logger.LogInformation($"  - Remote Host: {remoteHost}");
+            logger.LogInformation($"  - Remote Host: {remote}");
             logger.LogInformation($"  - TTY: {ttyPath}");
 
-            if (!remoteHost)
+            if (!remote)
             {
                 sessionChangeEventService.OnSessionChanged(0);
             }
