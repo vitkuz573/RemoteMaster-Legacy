@@ -129,6 +129,7 @@ internal class Program
         services.AddSingleton<IScreenProvider, ScreenProvider>();
         services.AddSingleton<IEnvironmentProvider, EnvironmentProvider>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
+        services.AddSingleton<ISystemInhibitor, SystemInhibitor>();
         services.AddSingleton<IService, HostService>();
 
         services.AddHostedService<DependencyInstallerService>();
