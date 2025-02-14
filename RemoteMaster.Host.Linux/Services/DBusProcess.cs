@@ -13,8 +13,6 @@ namespace RemoteMaster.Host.Linux.Services;
 public class DBusProcess(INativeProcessOptions processOptions, IProcessService processService, ICommandLineProvider commandLineProvider) : IProcess
 {
     private Connection? _connection;
-    private ObjectPath _serviceJobPath;
-    private ObjectPath _servicePath;
     private IProcess? _attachedProcess;
 
     public int Id { get; private set; }
@@ -72,7 +70,7 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
         await _connection.ConnectAsync();
 
-        var manager = _connection.CreateProxy<ISystemdManager>("org.freedesktop.systemd1", new ObjectPath("/org/freedesktop/systemd1"));
+        var manager = _connection.CreateProxy<ISystemdManager>("org.freedesktop.systemd1", "/org/freedesktop/systemd1");
 
         var properties = new (string, object)[]
         {
@@ -83,19 +81,15 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
 
         var aux = Array.Empty<(string, (string, object)[])>();
 
-        var job = await manager.StartTransientUnitAsync(serviceName, "replace", properties, aux);
-
-        _serviceJobPath = job;
+        await manager.StartTransientUnitAsync(serviceName, "replace", properties, aux);
 
         var servicePathName = serviceName.ToLower()
             .Replace("-", "_2d")
             .Replace(".", "_2e");
 
-        _servicePath = new ObjectPath($"/org/freedesktop/systemd1/unit/{servicePathName}");
-
         await Task.Delay(5000);
 
-        var serviceProxy = _connection.CreateProxy<ISystemdService>("org.freedesktop.systemd1", _servicePath);
+        var serviceProxy = _connection.CreateProxy<ISystemdService>("org.freedesktop.systemd1", $"/org/freedesktop/systemd1/unit/{servicePathName}");
 
         Id = (int)await serviceProxy.GetMainPIDAsync();
 

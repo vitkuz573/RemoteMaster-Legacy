@@ -26,7 +26,7 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
 
             await _connection.ConnectAsync();
 
-            _loginManager = _connection.CreateProxy<ILoginManager>("org.freedesktop.login1", new ObjectPath("/org/freedesktop/login1"));
+            _loginManager = _connection.CreateProxy<ILoginManager>("org.freedesktop.login1", "/org/freedesktop/login1");
 
             _sessionNewSubscription = await _loginManager.WatchSessionNewAsync(args => OnSessionNew(args.sessionId, args.objectPath), OnError);
             _sessionRemovedSubscription = await _loginManager.WatchSessionRemovedAsync(args => OnSessionRemoved(args.sessionId, args.objectPath), OnError);
