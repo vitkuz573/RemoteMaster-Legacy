@@ -154,7 +154,25 @@ public class NetworkDriveService : INetworkDriveService
 
     private string GetMountPoint(string remotePath)
     {
-        var sanitized = remotePath.TrimStart('/').Replace('/', '_');
+        if (string.IsNullOrWhiteSpace(remotePath))
+        {
+            throw new ArgumentException("Remote path cannot be null or empty.", nameof(remotePath));
+        }
+
+        var normalizedPath = remotePath.Replace('\\', '/');
+        normalizedPath = normalizedPath.Trim('/');
+
+        var intermediate = normalizedPath.Replace("/", "_");
+        var invalidChars = _fileSystem.Path.GetInvalidFileNameChars();
+
+        var sanitized = new string(intermediate.Select(ch => invalidChars.Contains(ch) ? '_' : ch).ToArray());
+
+        const int maxLength = 100;
+
+        if (sanitized.Length > maxLength)
+        {
+            sanitized = sanitized[..maxLength];
+        }
 
         return _fileSystem.Path.Combine(BaseMountPoint, sanitized);
     }
