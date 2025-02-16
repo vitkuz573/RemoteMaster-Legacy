@@ -360,7 +360,7 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
     {
         WNDCLASSEXW wc;
 
-        using (var moduleHandle = GetModuleHandle((string)null!))
+        using (var moduleHandle = GetModuleHandle(null))
         {
             wc = new WNDCLASSEXW
             {

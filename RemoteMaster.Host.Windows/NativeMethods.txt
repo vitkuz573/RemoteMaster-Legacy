@@ -200,3 +200,9 @@ UNICODE_STRING
 
 HIWORD
 LOWORD
+
+SetThreadExecutionState
+ShutdownBlockReasonCreate
+ShutdownBlockReasonDestroy
+
+WM_APP
