@@ -49,7 +49,7 @@ public class TrayIconManager : ITrayIconManager
         _appState.ViewerAdded += OnViewerChanged;
         _appState.ViewerRemoved += OnViewerChanged;
 
-        _moduleHandle = GetModuleHandle((string)null!) ?? throw new InvalidOperationException("Failed to retrieve module handle.");
+        _moduleHandle = GetModuleHandle(null) ?? throw new InvalidOperationException("Failed to retrieve module handle.");
 
         var defaultIcon = Icons.without_connections;
         _iconHandle = new DestroyIconSafeHandle(defaultIcon.Handle);
@@ -269,7 +269,7 @@ public class TrayIconManager : ITrayIconManager
         return $"{GetBaseTooltipText()}\nActive Connections: {activeConnections}";
     }
 
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static LRESULT StaticWndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         var ptr = GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
