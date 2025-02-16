@@ -84,14 +84,14 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
             try
             {
                 var args = commandLineProvider.GetCommandLine(process);
-                
+   
                 var commandLine = string.Join(" ", args);
                 var displayMatch = DisplayRegex().Match(commandLine);
 
                 if (displayMatch.Success)
                 {
                     var display = displayMatch.Groups["display"].Value;
-                    
+
                     if (!string.IsNullOrWhiteSpace(display))
                     {
                         return display;
@@ -105,18 +105,28 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
                         continue;
                     }
 
-                    var linkPath = $"/proc/{process.Id}/fd/{fd}";
-                    var fileInfo = fileSystem.FileInfo.New(linkPath);
+                    var fdPath = $"/proc/{process.Id}/fd/{fd}";
 
-                    if (!string.IsNullOrWhiteSpace(fileInfo.LinkTarget) && !fileInfo.LinkTarget.StartsWith("socket:", StringComparison.Ordinal) && !fileInfo.LinkTarget.StartsWith("pipe:", StringComparison.Ordinal))
+                    try
                     {
-                        return fileInfo.LinkTarget;
+                        using var stream = fileSystem.File.OpenRead(fdPath);
+                        using var reader = new StreamReader(stream);
+                        var displayData = reader.ReadToEnd()?.Trim();
+
+                        if (!string.IsNullOrWhiteSpace(displayData))
+                        {
+                            return displayData;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError("Error reading displayfd for process {Pid}: {Message}", process.Id, ex.Message);
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // ignored
+                logger.LogError("Error processing Xorg process with PID {Pid}: {Message}", process.Id, ex.Message);
             }
         }
 
