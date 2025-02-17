@@ -19,6 +19,6 @@ public class JwtOptions
 
     [Required(ErrorMessage = "KeyPassword cannot be null or empty.")]
     [CustomMinLength(8, ErrorMessage = "KeyPassword must be at least 8 characters long.")]
-    [PasswordComplexity(ErrorMessage = "KeyPassword must contain at least one uppercase letter, one lowercase letter, and one digit.")]
+    [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$", ErrorMessage = "KeyPassword must contain at least one uppercase letter, one lowercase letter, and one digit.")]
     public string KeyPassword { get; set; } = string.Empty;
 }
