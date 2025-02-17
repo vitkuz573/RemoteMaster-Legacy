@@ -94,15 +94,26 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
     private Result GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
     {
         _logger.LogDebug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
+#pragma warning disable
+        RSA? rsaProvider = null;
+        var shouldDisposeRsa = false;
 
         try
         {
-            using var rsaProvider = reuseKey ? externalRsaProvider : RSA.Create(_options.KeySize);
+            if (reuseKey)
+            {
+                rsaProvider = externalRsaProvider;
+            }
+            else
+            {
+                rsaProvider = RSA.Create(_options.KeySize);
+                shouldDisposeRsa = true;
+            }
 
             if (rsaProvider == null)
             {
                 _logger.LogError("RSA provider is null.");
-
+               
                 return Result.Fail("RSA provider is null.");
             }
 
@@ -132,26 +143,24 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 caCert.FriendlyName = _options.CommonName;
+               
+                var pfxData = caCert.Export(X509ContentType.Pfx, _options.CertificatePassword);
+                var certificateWithKey = new X509Certificate2(pfxData, _options.CertificatePassword, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
 
-                AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
+                AddCertificateToStore(certificateWithKey, StoreName.Root, StoreLocation.LocalMachine);
             }
             else
             {
                 var certDirectory = _fileSystem.Path.GetDirectoryName(_certPath);
-
                 if (!string.IsNullOrEmpty(certDirectory) && !_fileSystem.Directory.Exists(certDirectory))
                 {
                     _logger.LogDebug("Creating directory '{Directory}'.", certDirectory);
-
                     _fileSystem.Directory.CreateDirectory(certDirectory);
-
                     _logger.LogInformation("Directory '{Directory}' created.", certDirectory);
                 }
 
                 var exportedCert = caCert.Export(X509ContentType.Pfx, _options.CertificatePassword);
-                
                 _fileSystem.File.WriteAllBytes(_certPath, exportedCert);
-                
                 _logger.LogInformation("CA certificate generated and saved to '{CertPath}'.", _certPath);
             }
 
@@ -160,8 +169,14 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate CA certificate.");
-            
             return Result.Fail("Failed to generate CA certificate.").WithError(ex.Message);
+        }
+        finally
+        {
+            if (shouldDisposeRsa && rsaProvider != null)
+            {
+                rsaProvider.Dispose();
+            }
         }
     }
 
