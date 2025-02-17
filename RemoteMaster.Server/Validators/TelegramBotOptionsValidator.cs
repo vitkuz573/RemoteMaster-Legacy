@@ -7,22 +7,5 @@ using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Validators;
 
-public class TelegramBotOptionsValidator : IValidateOptions<TelegramBotOptions>
-{
-    public ValidateOptionsResult Validate(string? name, TelegramBotOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-
-        if (!options.IsEnabled)
-        {
-            return ValidateOptionsResult.Success;
-        }
-
-        if (string.IsNullOrWhiteSpace(options.BotToken))
-        {
-            return ValidateOptionsResult.Fail("BotToken is required when Telegram bot is enabled.");
-        }
-
-        return options.ChatIds.Count == 0 ? ValidateOptionsResult.Fail("At least one chat ID is required when Telegram bot is enabled.") : ValidateOptionsResult.Success;
-    }
-}
+[OptionsValidator]
+public partial class TelegramBotOptionsValidator : IValidateOptions<TelegramBotOptions>;
