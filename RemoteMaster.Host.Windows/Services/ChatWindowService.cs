@@ -518,43 +518,40 @@ public class ChatWindowService(IHostConfigurationService hostConfigurationServic
         if (chatInput.IsNull)
         {
             logger.LogError("Failed to access chat input window.");
+            
             return;
         }
 
         var length = GetWindowTextLength(chatInput);
-
+        
         if (length > 0)
         {
-            string message;
-
-            unsafe
+            Span<char> inputBuffer = stackalloc char[length + 1];
+            
+            var copied = GetWindowText(chatInput, inputBuffer);
+            
+            if (copied > 0)
             {
-                var inputBuffer = stackalloc char[length + 1];
+                var message = new string(inputBuffer[..copied]);
+                var chatMessageDto = new ChatMessageDto(UserName, message);
 
-                if (GetWindowText(chatInput, new PWSTR(inputBuffer), length + 1) > 0)
+                try
                 {
-                    message = new string(inputBuffer, 0, length);
+                    await _connection.SendAsync("SendMessage", chatMessageDto);
                 }
-                else
+                catch (Exception ex)
                 {
-                    logger.LogError("Failed to retrieve text from the input field.");
+                    logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
+                    
                     return;
                 }
+
+                SetWindowText(chatInput, "");
             }
-
-            var chatMessageDto = new ChatMessageDto(UserName, message);
-
-            try
+            else
             {
-                await _connection.SendAsync("SendMessage", chatMessageDto);
+                logger.LogError("Failed to retrieve text from the input field.");
             }
-            catch (Exception ex)
-            {
-                logger.LogError("Error sending message via SignalR. Exception: {ExceptionMessage}", ex.Message);
-                return;
-            }
-
-            SetWindowText(chatInput, "");
         }
     }
 }
