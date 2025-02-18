@@ -59,6 +59,8 @@ public class Organization : IAggregateRoot
         unit.AssignToOrganization(Id);
 
         _organizationalUnits.Add(unit);
+
+        AddDomainEvent(new OrganizationalUnitCreatedEvent(Id, unit.Id, unit.Name));
     }
 
     public void RemoveOrganizationalUnit(Guid unitId)
