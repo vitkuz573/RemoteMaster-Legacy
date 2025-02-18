@@ -54,15 +54,7 @@ public class NetworkDriveService(ILogger<NetworkDriveService> logger) : INetwork
     {
         logger.LogInformation("Attempting to cancel network drive with remote path: {RemotePath}", remotePath);
 
-        WIN32_ERROR result;
-
-        unsafe
-        {
-            fixed (char* pRemotePath = remotePath)
-            {
-                result = WNetCancelConnection2W(pRemotePath, 0, true);
-            }
-        }
+        var result = WNetCancelConnection2W(remotePath, 0, true);
 
         if (result != WIN32_ERROR.NO_ERROR)
         {

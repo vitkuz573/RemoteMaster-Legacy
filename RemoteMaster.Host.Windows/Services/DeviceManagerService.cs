@@ -155,12 +155,9 @@ public class DeviceManagerService(ILogger<DeviceManagerService> logger) : IDevic
                         return false;
                     }
 
-                    fixed (char* vetoNamePtr = vetoNameBuffer)
-                    {
-                        result = CM_Request_Device_Eject(devInst, &vetoType, vetoNamePtr, (uint)vetoNameBuffer.Length, 0);
+                    result = CM_Request_Device_Eject(devInst, &vetoType, vetoNameBuffer, 0);
 
-                        return result == CONFIGRET.CR_SUCCESS;
-                    }
+                    return result == CONFIGRET.CR_SUCCESS;
                 }
             }
         }
