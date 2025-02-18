@@ -5,6 +5,7 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -28,6 +29,7 @@ public class NativeProcess : IProcess
     private readonly ISessionService _sessionService;
     private readonly ICommandLineProvider _commandLineProvider;
     private readonly IProcessService _processService;
+    private readonly IFileSystem _fileSystem;
 
     private SafeProcessHandle? _processHandle;
     private bool _haveProcessId;
@@ -70,7 +72,7 @@ public class NativeProcess : IProcess
         }
     }
 
-    public NativeProcess(INativeProcessOptions options, ISessionService sessionService, ICommandLineProvider commandLineProvider, IProcessService processService)
+    public NativeProcess(INativeProcessOptions options, ISessionService sessionService, ICommandLineProvider commandLineProvider, IProcessService processService, IFileSystem fileSystem)
     {
         if (options is not NativeProcessOptions nativeOptions)
         {
@@ -81,6 +83,7 @@ public class NativeProcess : IProcess
         _sessionService = sessionService;
         _commandLineProvider = commandLineProvider;
         _processService = processService;
+        _fileSystem = fileSystem;
     }
 
     public void Start(ProcessStartInfo startInfo)
@@ -303,7 +306,7 @@ public class NativeProcess : IProcess
         {
             var enc = startInfo.StandardInputEncoding ?? Encoding.GetEncoding((int)GetConsoleCP());
 
-            StandardInput = new StreamWriter(new FileStream(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
+            StandardInput = new StreamWriter(_fileSystem.FileStream.New(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
             {
                 AutoFlush = true
             };
@@ -313,14 +316,14 @@ public class NativeProcess : IProcess
         {
             var enc = startInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
-            StandardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
+            StandardOutput = new StreamReader(_fileSystem.FileStream.New(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
         if (startInfo.RedirectStandardError)
         {
             var enc = startInfo.StandardErrorEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
-            StandardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
+            StandardError = new StreamReader(_fileSystem.FileStream.New(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
         if (procSH.IsInvalid)

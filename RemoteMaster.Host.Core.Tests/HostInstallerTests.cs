@@ -207,9 +207,9 @@ public class HostInstallerTests
     {
         // Arrange
         var sourcePath = Environment.ProcessPath!;
-        var sourceFileName = Path.GetFileName(sourcePath);
+        var sourceFileName = _mockFileSystem.Path.GetFileName(sourcePath);
         const string targetDirectoryPath = "C:\\ProgramFiles\\RemoteMaster\\Host";
-        var targetPath = Path.Combine(targetDirectoryPath, sourceFileName);
+        var targetPath = _mockFileSystem.Path.Combine(targetDirectoryPath, sourceFileName);
 
         // Act
         InvokePrivateMethod(_installer, "CopyToTargetPath", [targetDirectoryPath]);
