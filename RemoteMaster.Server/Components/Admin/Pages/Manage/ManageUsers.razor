@@ -25,23 +25,23 @@
 
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                <InputText @bind-Value="Input.Username" id="username" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="Input.Username" id="username" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Username" class="text-red-500 mt-1" />
             </div>
 
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Password" class="text-red-600 mt-1" />
             </div>
 
             <div>
                 <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-red-600 mt-1" />
             </div>
 
-            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-hidden">
                 @(Input.Id != null ? "Save" : "Create")
             </button>
         </EditForm>
@@ -50,7 +50,7 @@
     <!-- Users Table -->
     <div class="w-full">
         <div class="mt-4">
-            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <div class="overflow-hidden border-b border-gray-200 shadow-sm sm:rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -91,7 +91,7 @@
                                     <div class="flex items-center justify-center">
                                         @if (!_userRoles[user].Contains("RootAdministrator") && !_userRoles[user].Contains("ServiceUser"))
                                         {
-                                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(user)">
+                                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-hidden" @onclick="() => ShowDeleteConfirmation(user)">
                                                 Delete
                                             </button>
                                         }

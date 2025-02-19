@@ -58,26 +58,26 @@
             {
                 <form style="display: inline-block" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
                     <AntiforgeryToken />
-                    <button type="submit" class="w-full rounded-md bg-red-600 px-4 py-2 text-lg text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">Forget this browser</button>
+                    <button type="submit" class="w-full rounded-md bg-red-600 px-4 py-2 text-lg text-white hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-red-500">Forget this browser</button>
                 </form>
             }
 
             <div class="space-y-4">
-                <a href="Account/Manage/Disable2fa" class="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Disable 2FA</a>
-                <a href="Account/Manage/GenerateRecoveryCodes" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset recovery codes</a>
+                <a href="Account/Manage/Disable2fa" class="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-base font-medium text-white shadow-xs hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Disable 2FA</a>
+                <a href="Account/Manage/GenerateRecoveryCodes" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset recovery codes</a>
             </div>
         }
 
         <h4 class="text-xl font-semibold text-gray-900">Authenticator app</h4>
         @if (!_hasAuthenticator)
         {
-            <a href="Account/Manage/EnableAuthenticator" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Add authenticator app</a>
+            <a href="Account/Manage/EnableAuthenticator" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Add authenticator app</a>
         }
         else
         {
             <div class="space-y-4">
-                <a href="Account/Manage/EnableAuthenticator" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Set up authenticator app</a>
-                <a href="Account/Manage/ResetAuthenticator" class="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Reset authenticator app</a>
+                <a href="Account/Manage/EnableAuthenticator" class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Set up authenticator app</a>
+                <a href="Account/Manage/ResetAuthenticator" class="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-base font-medium text-white shadow-xs hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Reset authenticator app</a>
             </div>
         }
     }

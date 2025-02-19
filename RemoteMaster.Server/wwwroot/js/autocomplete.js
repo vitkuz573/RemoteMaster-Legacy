@@ -11,7 +11,7 @@ export function setupAutocomplete(inputId, suggestions) {
         }
         list = document.createElement('div');
         list.setAttribute('id', inputId + "-autocomplete-list");
-        list.setAttribute('class', 'absolute z-10 bg-white border border-gray-300 mt-1 rounded shadow-lg');
+        list.setAttribute('class', 'absolute z-10 bg-white border border-gray-300 mt-1 rounded-sm shadow-lg');
         this.parentNode?.appendChild(list);
         list.style.width = `${input.offsetWidth}px`;
         list.style.left = `${input.offsetLeft}px`;

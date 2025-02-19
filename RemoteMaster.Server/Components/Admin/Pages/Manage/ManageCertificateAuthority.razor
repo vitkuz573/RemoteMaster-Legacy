@@ -14,33 +14,33 @@
     <div class="w-full space-y-6">
         <div>
             <label class="block text-sm font-medium text-gray-700">Subject</label>
-            <input type="text" value="@_subject" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
+            <input type="text" value="@_subject" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" readonly />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Serial Number</label>
-            <input type="text" value="@_serialNumber" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
+            <input type="text" value="@_serialNumber" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" readonly />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Signature Algorithm</label>
-            <input type="text" value="@_signatureAlgorithm" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
+            <input type="text" value="@_signatureAlgorithm" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" readonly />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Key Size</label>
-            <input type="text" value="@_keySize" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
+            <input type="text" value="@_keySize" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" readonly />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Issue Date</label>
-            <input type="text" value="@_issueDate.ToString("yyyy-MM-dd")" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
+            <input type="text" value="@_issueDate.ToString("yyyy-MM-dd")" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" readonly />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
-            <input type="text" value="@_expiryDate.ToString("yyyy-MM-dd")" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
+            <input type="text" value="@_expiryDate.ToString("yyyy-MM-dd")" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" readonly />
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Password for Export</label>
-            <input type="password" @bind="_exportPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" />
+            <input type="password" @bind="_exportPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden" />
         </div>
-        <button @onclick="ExportCaCertificateAsync" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none" disabled="@string.IsNullOrEmpty(_exportPassword)">
+        <button @onclick="ExportCaCertificateAsync" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-hidden" disabled="@string.IsNullOrEmpty(_exportPassword)">
             Export
         </button>
     </div>

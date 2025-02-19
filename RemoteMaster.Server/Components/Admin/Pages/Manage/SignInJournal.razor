@@ -13,7 +13,7 @@
     <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center">
             <label class="mr-2">Items per page:</label>
-            <InputSelect @bind-Value="PageSize" class="rounded border border-gray-300 px-2 py-1">
+            <InputSelect @bind-Value="PageSize" class="rounded-sm border border-gray-300 px-2 py-1">
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="20">20</option>
@@ -21,9 +21,9 @@
         </div>
         <div class="relative flex items-center">
             <label class="mr-2">Filter:</label>
-            <InputText id="filterInput" class="rounded border border-gray-300 px-2 py-1" @bind-Value="Filter" @oninput="ApplyFilter" />
+            <InputText id="filterInput" class="rounded-sm border border-gray-300 px-2 py-1" @bind-Value="Filter" @oninput="ApplyFilter" />
             <div id="filterInput-autocomplete-list" class="autocomplete-items"></div>
-            <button class="ml-2 rounded bg-blue-500 px-4 py-2 text-white" @onclick="ShowFilterHelp">Help</button>
+            <button class="ml-2 rounded-sm bg-blue-500 px-4 py-2 text-white" @onclick="ShowFilterHelp">Help</button>
         </div>
     </div>
 
@@ -64,18 +64,18 @@
         </table>
 
         <div class="mt-4 flex items-center justify-between">
-            <button class="rounded bg-gray-300 px-4 py-2" @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
+            <button class="rounded-sm bg-gray-300 px-4 py-2" @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
             <span>Page @_currentPage of @TotalPages</span>
-            <button class="rounded bg-gray-300 px-4 py-2" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
+            <button class="rounded-sm bg-gray-300 px-4 py-2" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
         </div>
 
-        <button class="mt-4 rounded bg-red-500 px-4 py-2 text-white" @onclick="ClearJournal">Clear Journal</button>
+        <button class="mt-4 rounded-sm bg-red-500 px-4 py-2 text-white" @onclick="ClearJournal">Clear Journal</button>
     }
 
     @if (_showFilterHelp)
     {
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="w-full max-w-4xl rounded bg-white p-8 shadow-lg">
+            <div class="w-full max-w-4xl rounded-sm bg-white p-8 shadow-lg">
                 <div class="max-h-[75vh] overflow-y-auto">
                     <h2 class="mb-4 text-lg">Filter Help</h2>
                     <p class="mb-4 text-sm">You can filter the sign-in journal using the following syntax:</p>
@@ -109,7 +109,7 @@
                         <li><strong>User~Admin CASE SENSITIVE</strong> - Find entries where the username contains "Admin" with case sensitivity.</li>
                     </ul>
                 </div>
-                <button class="mt-4 rounded bg-blue-500 px-4 py-2 text-sm text-white" @onclick="CloseFilterHelp">Close</button>
+                <button class="mt-4 rounded-sm bg-blue-500 px-4 py-2 text-sm text-white" @onclick="CloseFilterHelp">Close</button>
             </div>
         </div>
     }

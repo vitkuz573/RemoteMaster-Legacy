@@ -23,12 +23,12 @@
 
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                <InputText @bind-Value="Input.Name" id="name" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="Input.Name" id="name" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Name" class="text-red-500 mt-1" />
             </div>
             <div>
                 <label for="organization" class="block text-sm font-medium text-gray-700">Organization</label>
-                <InputSelect Value="@Input.OrganizationId" ValueChanged="EventCallback.Factory.Create<Guid>(this, OnOrganizationChanged)" ValueExpression="() => Input.OrganizationId" id="organization" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <InputSelect Value="@Input.OrganizationId" ValueChanged="EventCallback.Factory.Create<Guid>(this, OnOrganizationChanged)" ValueExpression="() => Input.OrganizationId" id="organization" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500">
                     <option value="@Guid.Empty">Select an organization</option>
                     @foreach (var organization in _organizations)
                     {
@@ -39,7 +39,7 @@
             </div>
             <div>
                 <label for="parentOU" class="block text-sm font-medium text-gray-700">Parent Organizational Unit</label>
-                <InputSelect @bind-Value="Input.ParentId" id="parentOU" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" disabled="@(Input.OrganizationId == Guid.Empty)">
+                <InputSelect @bind-Value="Input.ParentId" id="parentOU" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" disabled="@(Input.OrganizationId == Guid.Empty)">
                     <option value="@Guid.Empty">Select a parent organizational unit (optional)</option>
                     @foreach (var ou in _filteredOrganizationalUnits)
                     {
@@ -49,7 +49,7 @@
                 <ValidationMessage For="() => Input.ParentId" class="text-red-500 mt-1" />
             </div>
 
-            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-hidden">
                 @(Input.Id.HasValue ? "Save" : "Create")
             </button>
         </EditForm>
@@ -58,7 +58,7 @@
     <!-- Organizational Units Table -->
     <div class="w-full">
         <div class="mt-4">
-            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <div class="overflow-hidden border-b border-gray-200 shadow-sm sm:rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -90,10 +90,10 @@
                                     @(_organizationalUnits.FirstOrDefault(ou => ou.Id == organizationalUnit.ParentId)?.Name ?? "N/A")
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganizationalUnit(organizationalUnit)">
+                                    <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-hidden" @onclick="() => EditOrganizationalUnit(organizationalUnit)">
                                         Edit
                                     </button>
-                                    <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(organizationalUnit)">
+                                    <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-hidden" @onclick="() => ShowDeleteConfirmation(organizationalUnit)">
                                         Delete
                                     </button>
                                 </td>

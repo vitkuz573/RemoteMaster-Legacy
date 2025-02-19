@@ -21,11 +21,11 @@
 
             <div>
                 <label for="roleName" class="block text-sm font-medium text-gray-700">Role Name</label>
-                <InputText @bind-Value="Input.Name" id="roleName" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
+                <InputText @bind-Value="Input.Name" id="roleName" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs" />
                 <ValidationMessage For="() => Input.Name" class="text-red-500 mt-1" />
             </div>
 
-            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-hidden">
                 Create Role
             </button>
         </EditForm>
@@ -34,7 +34,7 @@
     <!-- Roles Table -->
     <div class="w-full">
         <div class="mt-4">
-            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <div class="overflow-hidden border-b border-gray-200 shadow-sm sm:rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -57,7 +57,7 @@
                                     <div class="flex items-center justify-center">
                                         @if (role.Name != "RootAdministrator" && role.Name != "ServiceUser")
                                         {
-                                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(role)">
+                                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-hidden" @onclick="() => ShowDeleteConfirmation(role)">
                                                 Delete
                                             </button>
                                         }

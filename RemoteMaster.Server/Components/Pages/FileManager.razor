@@ -39,16 +39,16 @@
             @if (_currentPath != null)
             {
                 <div class="flex space-x-2">
-                    <button class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                    <button class="rounded-sm bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                             @onclick="CreateNewItem">
                         New Item
                     </button>
-                    <button class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                    <button class="rounded-sm bg-red-500 px-4 py-2 text-white hover:bg-red-600"
                             @onclick="DeleteSelectedItem" disabled="@string.IsNullOrEmpty(_selectedItem)">
                         Delete
                     </button>
                     <!-- <InputFile OnChange="@OnInputFileChange" /> -->
-                    <button class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                    <button class="rounded-sm bg-green-500 px-4 py-2 text-white hover:bg-green-600"
                             @onclick="UploadFile">
                         Upload File
                     </button>
@@ -57,7 +57,7 @@
         </div>
 
         <!-- File manager table -->
-        <div class="flex-1 overflow-auto rounded border border-gray-200">
+        <div class="flex-1 overflow-auto rounded-sm border border-gray-200">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="sticky top-0 bg-gray-50">
                     <tr>

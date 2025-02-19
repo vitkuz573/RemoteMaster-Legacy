@@ -35,7 +35,7 @@ else
                     </span>
                 </li>
                 <li>
-                    <span>Scan the QR Code or enter this key <kbd class="select-text rounded bg-gray-100 px-2 py-1">@_sharedKey</kbd> into your two-factor authenticator app. Spaces and casing do not matter.</span>
+                    <span>Scan the QR Code or enter this key <kbd class="select-text rounded-sm bg-gray-100 px-2 py-1">@_sharedKey</kbd> into your two-factor authenticator app. Spaces and casing do not matter.</span>
                     <div class="my-4 flex justify-center">
                         <div id="qrCodeData" data-url="@_authenticatorUri"></div>
                         <div id="qrCode" class="flex items-center justify-center border p-4"></div>
@@ -51,10 +51,10 @@ else
                             <DataAnnotationsValidator />
                             <div class="space-y-1">
                                 <label for="code" class="block text-sm font-medium text-gray-700">Verification Code</label>
-                                <InputText @bind-Value="Input.Code" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" autocomplete="off" placeholder="Please enter the code." />
+                                <InputText @bind-Value="Input.Code" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" autocomplete="off" placeholder="Please enter the code." />
                                 <ValidationMessage For="() => Input.Code" class="text-red-600 mt-2" />
                             </div>
-                            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Verify</button>
+                            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Verify</button>
                             <ValidationSummary class="mt-4 text-red-600" role="alert" />
                         </EditForm>
                     </div>

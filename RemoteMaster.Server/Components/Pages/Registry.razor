@@ -49,15 +49,15 @@
             @if (_currentPath != null)
             {
                 <div class="flex space-x-2">
-                    <button class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                    <button class="rounded-sm bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                             @onclick="AddRegistryValue">
                         Add Value
                     </button>
-                    <button class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                    <button class="rounded-sm bg-red-500 px-4 py-2 text-white hover:bg-red-600"
                             @onclick="RemoveSelectedValue" disabled="@string.IsNullOrEmpty(_selectedValue)">
                         Delete Value
                     </button>
-                    <button class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                    <button class="rounded-sm bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                             @onclick="ExportRegistryBranch">
                         Export Branch
                     </button>

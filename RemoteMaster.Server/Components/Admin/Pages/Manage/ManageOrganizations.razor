@@ -24,25 +24,25 @@
 
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                <InputText @bind-Value="Input.Name" id="name" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="Input.Name" id="name" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Name" class="text-red-500 mt-1" />
             </div>
 
             <div>
                 <label for="locality" class="block text-sm font-medium text-gray-700">Locality</label>
-                <InputText @bind-Value="Input.Locality" id="locality" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="Input.Locality" id="locality" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Locality" class="text-red-500 mt-1" />
             </div>
 
             <div>
                 <label for="state" class="block text-sm font-medium text-gray-700">State</label>
-                <InputText @bind-Value="Input.State" id="state" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="Input.State" id="state" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.State" class="text-red-500 mt-1" />
             </div>
 
             <div>
                 <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
-                <InputSelect @bind-Value="Input.Country" id="country" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <InputSelect @bind-Value="Input.Country" id="country" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500">
                     <option value="">Select an country</option>
                     @foreach (var country in _countries)
                     {
@@ -52,7 +52,7 @@
                 <ValidationMessage For="() => Input.Country" class="text-red-500 mt-1" />
             </div>
 
-            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-hidden">
                 @(Input.Id.HasValue ? "Save" : "Create")
             </button>
         </EditForm>
@@ -61,7 +61,7 @@
     <!-- Organizations Table -->
     <div class="w-full">
         <div class="mt-4">
-            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <div class="overflow-hidden border-b border-gray-200 shadow-sm sm:rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -99,10 +99,10 @@
                                     @organization.Address.Country.Code
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganization(organization)">
+                                    <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-hidden" @onclick="() => EditOrganization(organization)">
                                         Edit
                                     </button>
-                                    <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(organization)">
+                                    <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-hidden" @onclick="() => ShowDeleteConfirmation(organization)">
                                         Delete
                                     </button>
                                 </td>

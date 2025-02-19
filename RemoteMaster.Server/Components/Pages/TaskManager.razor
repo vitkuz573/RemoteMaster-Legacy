@@ -16,18 +16,18 @@
     <div class="mx-auto max-w-7xl">
         <div class="mb-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
             <div class="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-                <InputText @bind-Value="_processPath" placeholder="Enter process path" class="h-10 w-64 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" />
-                <button @onclick="StartProcess" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
+                <InputText @bind-Value="_processPath" placeholder="Enter process path" class="h-10 w-64 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" />
+                <button @onclick="StartProcess" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-hidden sm:w-auto">
                     Start Process
                 </button>
             </div>
             <div class="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 sm:ml-auto">
-                <InputText @bind-Value="_searchQuery" placeholder="Search" class="h-10 w-80 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" @oninput="UpdateSearchQuery" />
+                <InputText @bind-Value="_searchQuery" placeholder="Search" class="h-10 w-80 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" @oninput="UpdateSearchQuery" />
             </div>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full overflow-hidden rounded-md bg-white shadow">
+            <table class="min-w-full overflow-hidden rounded-md bg-white shadow-sm">
                 <thead>
                     <tr class="bg-gray-50">
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -61,7 +61,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@FormatSize(process.MemoryUsage)</td>
                             <td class="whitespace-nowrap px-6 py-4 text-center text-sm font-medium">
                                 <div class="flex justify-center">
-                                    <button @onclick="() => KillProcess(process.Id)" class="rounded-full bg-red-600 p-2 text-white hover:bg-red-700 focus:outline-none">
+                                    <button @onclick="() => KillProcess(process.Id)" class="rounded-full bg-red-600 p-2 text-white hover:bg-red-700 focus:outline-hidden">
                                         <span class="material-icons">delete</span>
                                     </button>
                                 </div>

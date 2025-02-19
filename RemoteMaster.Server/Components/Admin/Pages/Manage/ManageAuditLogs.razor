@@ -16,20 +16,20 @@
         <div class="flex items-center space-x-4">
             <div>
                 <label for="actionTypeFilter" class="block text-sm font-medium text-gray-700">Action Type:</label>
-                <InputText id="actionTypeFilter" @bind-Value="FilterActionType" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none" placeholder="Enter action type" />
+                <InputText id="actionTypeFilter" @bind-Value="FilterActionType" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-xs focus:outline-hidden" placeholder="Enter action type" />
             </div>
             <div>
                 <label for="userNameFilter" class="block text-sm font-medium text-gray-700">User Name:</label>
-                <InputText id="userNameFilter" @bind-Value="FilterUserName" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none" placeholder="Enter user name" />
+                <InputText id="userNameFilter" @bind-Value="FilterUserName" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-xs focus:outline-hidden" placeholder="Enter user name" />
             </div>
-            <button @onclick="ApplyFilters" class="mt-6 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none md:mt-0">
+            <button @onclick="ApplyFilters" class="mt-6 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-hidden md:mt-0">
                 Apply Filters
             </button>
         </div>
         <!-- Page Size Selector -->
         <div class="flex items-center space-x-2">
             <label for="pageSize" class="text-sm font-medium text-gray-700">Records per page:</label>
-            <InputSelect id="pageSize" @bind-Value="PageSize" class="mt-1 block rounded-md border border-gray-300 bg-white px-2 py-1 shadow-sm focus:outline-none">
+            <InputSelect id="pageSize" @bind-Value="PageSize" class="mt-1 block rounded-md border border-gray-300 bg-white px-2 py-1 shadow-xs focus:outline-hidden">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
@@ -74,11 +74,11 @@
 
         <!-- Pagination Controls -->
         <div class="mt-4 flex items-center justify-between">
-            <button @onclick="PreviousPage" disabled="@(!HasPreviousPage)" class="rounded bg-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-400 focus:outline-none disabled:opacity-50">
+            <button @onclick="PreviousPage" disabled="@(!HasPreviousPage)" class="rounded-sm bg-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-400 focus:outline-hidden disabled:opacity-50">
                 Previous
             </button>
             <span class="text-sm text-gray-700">Page @CurrentPage of @TotalPages</span>
-            <button @onclick="NextPage" disabled="@(!HasNextPage)" class="rounded bg-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-400 focus:outline-none disabled:opacity-50">
+            <button @onclick="NextPage" disabled="@(!HasNextPage)" class="rounded-sm bg-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-400 focus:outline-hidden disabled:opacity-50">
                 Next
             </button>
         </div>
