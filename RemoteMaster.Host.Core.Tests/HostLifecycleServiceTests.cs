@@ -477,7 +477,7 @@ public class HostLifecycleServiceTests
 
     #endregion
 
-    #region GetOrganizationAddressAsync Tests
+    #region GetOrganizationAsync Tests
 
     [Fact]
     public async Task GetOrganizationAddressAsync_Success_ReturnsAddressDto()
@@ -487,7 +487,7 @@ public class HostLifecycleServiceTests
         var expectedAddress = new AddressDto("Metropolis", "StateName", "FD");
 
         _apiServiceMock
-            .Setup(api => api.GetOrganizationAddressAsync(organization))
+            .Setup(api => api.GetOrganizationAsync(organization))
             .ReturnsAsync(expectedAddress);
 
         // Act
@@ -499,7 +499,7 @@ public class HostLifecycleServiceTests
         Assert.Equal(expectedAddress.State, result.State);
         Assert.Equal(expectedAddress.Country, result.Country);
 
-        _apiServiceMock.Verify(api => api.GetOrganizationAddressAsync(organization), Times.Once);
+        _apiServiceMock.Verify(api => api.GetOrganizationAsync(organization), Times.Once);
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
@@ -525,7 +525,7 @@ public class HostLifecycleServiceTests
         const string organization = "TestOrg";
 
         _apiServiceMock
-            .Setup(api => api.GetOrganizationAddressAsync(organization))
+            .Setup(api => api.GetOrganizationAsync(organization))
             .ReturnsAsync((AddressDto)null);
 
         // Act
@@ -533,7 +533,7 @@ public class HostLifecycleServiceTests
 
         // Assert
         Assert.Equal($"Failed to retrieve address for organization: {organization}", exception.Message);
-        _apiServiceMock.Verify(api => api.GetOrganizationAddressAsync(organization), Times.Once);
+        _apiServiceMock.Verify(api => api.GetOrganizationAsync(organization), Times.Once);
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
@@ -560,7 +560,7 @@ public class HostLifecycleServiceTests
         var exception = new Exception("API failure");
 
         _apiServiceMock
-            .Setup(api => api.GetOrganizationAddressAsync(organization))
+            .Setup(api => api.GetOrganizationAsync(organization))
             .ThrowsAsync(exception);
 
         // Act
@@ -568,7 +568,7 @@ public class HostLifecycleServiceTests
 
         // Assert
         Assert.Equal("API failure", thrownException.Message);
-        _apiServiceMock.Verify(api => api.GetOrganizationAddressAsync(organization), Times.Once);
+        _apiServiceMock.Verify(api => api.GetOrganizationAsync(organization), Times.Once);
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Error,

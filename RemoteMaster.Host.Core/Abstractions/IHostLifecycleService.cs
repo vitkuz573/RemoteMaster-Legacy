@@ -16,5 +16,5 @@ public interface IHostLifecycleService
 
     Task<bool> IsHostRegisteredAsync();
 
-    Task<AddressDto> GetOrganizationAddressAsync(string organization);
+    Task<AddressDto> GetOrganizationAddressAsync(string name);
 }

@@ -19,6 +19,7 @@ namespace RemoteMaster.Host.Core.Services;
 public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationProvider hostConfigurationProvider, IHostInformationService hostInformationService, ILogger<ApiService> logger) : IApiService
 {
     private const string CurrentApiVersion = "1.0";
+    private const string ApiDeprecatedVersionsHeader = "api-deprecated-versions";
 
     private HttpClient CreateClient(string server)
     {
@@ -57,9 +58,9 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
     private async Task CheckDeprecatedVersionAsync(HostConfiguration hostConfiguration, HttpResponseMessage response)
     {
-        if (response.Headers.Contains("api-deprecated-versions"))
+        if (response.Headers.Contains(ApiDeprecatedVersionsHeader))
         {
-            var deprecatedVersions = response.Headers.GetValues("api-deprecated-versions");
+            var deprecatedVersions = response.Headers.GetValues(ApiDeprecatedVersionsHeader);
 
             if (deprecatedVersions.Contains(CurrentApiVersion))
             {
@@ -75,9 +76,9 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             return ApiJsonSerializerContext.Default.ApiResponseByteArray;
         }
 
-        if (typeof(T) == typeof(AddressDto))
+        if (typeof(T) == typeof(OrganizationDto))
         {
-            return ApiJsonSerializerContext.Default.ApiResponseAddressDto;
+            return ApiJsonSerializerContext.Default.ApiResponseOrganizationDto;
         }
 
         if (typeof(T) == typeof(HostMoveRequest))
@@ -203,7 +204,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
+        var response = await client.GetAsync($"/api/host/{WebUtility.UrlEncode(hostConfiguration.Host.MacAddress.ToString())}/status");
 
         return await ProcessSimpleResponse(hostConfiguration, response);
     }
@@ -243,11 +244,13 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
     public async Task<HostMoveRequest?> GetHostMoveRequestAsync(PhysicalAddress macAddress)
     {
+        ArgumentNullException.ThrowIfNull(macAddress);
+
         var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/hostMoveRequest?macAddress={macAddress}");
+        var response = await client.GetAsync($"/api/host/{WebUtility.UrlEncode(macAddress.ToString())}/moveRequest");
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -265,7 +268,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/hostMoveRequest?macAddress={WebUtility.UrlEncode(macAddress.ToString())}");
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/host/{WebUtility.UrlEncode(macAddress.ToString())}/moveRequest");
         var response = await client.SendAsync(request);
 
         return await ProcessSimpleResponse(hostConfiguration, response);
@@ -280,14 +283,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         await ProcessSimpleResponse(hostConfiguration, response);
     }
 
-    public async Task<AddressDto?> GetOrganizationAddressAsync(string organizationName)
+    public async Task<OrganizationDto?> GetOrganizationAsync(string name)
     {
         var hostConfiguration = hostConfigurationProvider.Current ?? throw new InvalidOperationException("HostConfiguration is not set.");
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/organization?name={organizationName}");
+        var response = await client.GetAsync($"/api/organization/{name}");
 
-        return await ProcessResponse<AddressDto>(hostConfiguration, response);
+        return await ProcessResponse<OrganizationDto>(hostConfiguration, response);
     }
 }

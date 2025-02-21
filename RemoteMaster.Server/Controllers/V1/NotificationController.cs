@@ -22,6 +22,7 @@ public class NotificationController(INotificationService notificationService) : 
     {
         var notifications = await notificationService.GetNotifications();
         var response = ApiResponse<IDictionary<NotificationMessage, bool>>.Success(notifications, "Notifications retrieved successfully.");
+
         return Ok(response);
     }
 
@@ -31,20 +32,6 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> GetNotificationById(string id)
     {
         var message = await notificationService.GetMessageById(id);
-
-        if (message == null)
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Notification not found",
-                Detail = "The notification with the specified ID was not found.",
-                Status = StatusCodes.Status404NotFound
-            };
-
-            var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status404NotFound);
-
-            return NotFound(errorResponse);
-        }
 
         var response = ApiResponse<NotificationMessage>.Success(message, "Notification retrieved successfully.");
 
@@ -56,7 +43,9 @@ public class NotificationController(INotificationService notificationService) : 
     [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     public async Task<IActionResult> AddNotification([FromBody] NotificationMessage message)
     {
-        if (message == null || string.IsNullOrWhiteSpace(message.Id))
+        ArgumentNullException.ThrowIfNull(message);
+
+        if (string.IsNullOrWhiteSpace(message.Id))
         {
             var problemDetails = new ProblemDetails
             {
@@ -80,6 +69,7 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> MarkAsRead(string id)
     {
         await notificationService.MarkNotificationsAsRead(id);
+
         var response = ApiResponse<bool>.Success(true, "Notification marked as read successfully.");
 
         return Ok(response);
@@ -100,6 +90,7 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> MarkAllAsRead()
     {
         await notificationService.MarkNotificationsAsRead();
+
         var response = ApiResponse<bool>.Success(true, "All notifications marked as read successfully.");
 
         return Ok(response);

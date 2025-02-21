@@ -28,5 +28,5 @@ public interface IApiService
 
     Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress);
 
-    Task<AddressDto?> GetOrganizationAddressAsync(string organizationName);
+    Task<OrganizationDto?> GetOrganizationAsync(string name);
 }

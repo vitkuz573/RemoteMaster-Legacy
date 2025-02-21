@@ -5,6 +5,7 @@
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.DTOs;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Abstractions;
 

@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.DTOs;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
@@ -17,17 +19,18 @@ namespace RemoteMaster.Server.Controllers.V1;
 [Produces("application/vnd.remotemaster.v1+json")]
 public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork) : ControllerBase
 {
-    [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<AddressDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<string>), 404)]
-    public async Task<IActionResult> GetOrganizationAddress([FromQuery] string name)
+    [HttpGet("{name}")]
+    [ProducesResponseType(typeof(ApiResponse<AddressDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetOrganization([FromRoute, Required] string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             var problemDetails = new ProblemDetails
             {
-                Title = "Invalid request",
-                Detail = "Organization name is required.",
+                Title = "Invalid Request",
+                Detail = "The organization name is required and cannot be empty.",
                 Status = StatusCodes.Status400BadRequest
             };
 
@@ -36,16 +39,14 @@ public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork
             return BadRequest(errorResponse);
         }
 
-        var organization = await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == name);
-
-        var organizationEntity = organization.FirstOrDefault();
+        var organizationEntity = (await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == name)).FirstOrDefault();
 
         if (organizationEntity == null)
         {
             var problemDetails = new ProblemDetails
             {
-                Title = "Organization not found",
-                Detail = $"Organization with name {name} was not found.",
+                Title = "Organization Not Found",
+                Detail = $"No organization with the name '{name}' was found.",
                 Status = StatusCodes.Status404NotFound
             };
 
@@ -56,7 +57,9 @@ public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork
 
         var organizationAddress = new AddressDto(organizationEntity.Address.Locality, organizationEntity.Address.State, organizationEntity.Address.Country.Code);
 
-        var response = ApiResponse<AddressDto>.Success(organizationAddress, "Organization address retrieved successfully.");
+        var organizationDto = new OrganizationDto(organizationEntity.Id, organizationEntity.Name, organizationAddress);
+
+        var response = ApiResponse<OrganizationDto>.Success(organizationDto, "Organization address retrieved successfully.");
 
         return Ok(response);
     }

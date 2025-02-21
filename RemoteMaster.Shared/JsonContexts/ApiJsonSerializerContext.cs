@@ -12,7 +12,7 @@ namespace RemoteMaster.Shared.JsonContexts;
 [JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(IPAddressConverter), typeof(PhysicalAddressConverter)])]
 [JsonSerializable(typeof(ApiResponse))]
 [JsonSerializable(typeof(ApiResponse<byte[]>))]
-[JsonSerializable(typeof(ApiResponse<AddressDto>))]
+[JsonSerializable(typeof(ApiResponse<OrganizationDto>))]
 [JsonSerializable(typeof(ApiResponse<HostMoveRequest>))]
 [JsonSerializable(typeof(ApiResponse<List<HealthCheck>>))]
 public partial class ApiJsonSerializerContext : JsonSerializerContext;

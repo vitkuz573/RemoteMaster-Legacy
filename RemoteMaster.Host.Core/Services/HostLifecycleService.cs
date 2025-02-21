@@ -148,16 +148,16 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
         }
     }
 
-    public async Task<AddressDto> GetOrganizationAddressAsync(string organization)
+    public async Task<AddressDto> GetOrganizationAddressAsync(string name)
     {
         try
         {
-            logger.LogInformation("Requesting organization address for organization: {Organization}", organization);
+            logger.LogInformation("Requesting organization address for organization: {Organization}", name);
 
-            var organizationAddress = await apiService.GetOrganizationAddressAsync(organization) ?? throw new InvalidOperationException($"Failed to retrieve address for organization: {organization}");
+            var organization = await apiService.GetOrganizationAsync(name) ?? throw new InvalidOperationException($"Failed to retrieve address for organization: {name}");
             logger.LogInformation("Successfully retrieved address for organization: {Organization}", organization);
 
-            return organizationAddress;
+            return organization.Address;
         }
         catch (Exception ex)
         {

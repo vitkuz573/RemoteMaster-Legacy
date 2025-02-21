@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
 using System.Net.NetworkInformation;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class HostController(IHostRegistrationService registrationService) : ControllerBase
+public class HostController(IHostRegistrationService registrationService, IHostMoveRequestService hostMoveRequestService) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse), 200)]
@@ -100,10 +101,10 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         return BadRequest(failureResponse);
     }
 
-    [HttpGet("status")]
+    [HttpGet("{macAddress}/status")]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> CheckHostRegistration([FromQuery] PhysicalAddress macAddress)
+    public async Task<IActionResult> CheckHostRegistration([FromRoute, Required] PhysicalAddress macAddress)
     {
         var result = await registrationService.IsHostRegisteredAsync(macAddress);
 
@@ -204,5 +205,68 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         var failureResponse = ApiResponse.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
+    }
+
+    [HttpGet("{macAddress}/moveRequest")]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 400)]
+    public async Task<IActionResult> GetHostMoveRequest([FromRoute, Required] PhysicalAddress macAddress)
+    {
+        var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
+
+        if (hostMoveRequestResult.IsSuccess)
+        {
+            if (hostMoveRequestResult.Value is not null)
+            {
+                var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequestResult.Value, "Host move request retrieved successfully.");
+
+                return Ok(response);
+            }
+
+            var notFoundProblemDetails = new ProblemDetails
+            {
+                Title = "Host move request not found",
+                Detail = "The specified MAC address does not have any pending move requests.",
+                Status = StatusCodes.Status404NotFound
+            };
+
+            return NotFound(ApiResponse<HostMoveRequest>.Failure(notFoundProblemDetails, StatusCodes.Status404NotFound));
+        }
+
+        var problemDetailsForFailure = new ProblemDetails
+        {
+            Title = "Failed to retrieve host move request",
+            Detail = hostMoveRequestResult.Errors.FirstOrDefault()?.Message,
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        return BadRequest(ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure));
+    }
+
+    [HttpDelete("{macAddress}/moveRequest")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    public async Task<IActionResult> AcknowledgeMoveRequest([FromRoute, Required] PhysicalAddress macAddress)
+    {
+        var result = await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
+
+        if (result.IsSuccess)
+        {
+            var response = ApiResponse<bool>.Success(true, "Host move request acknowledged successfully.");
+
+            return Ok(response);
+        }
+
+        var problemDetailsForFailure = new ProblemDetails
+        {
+            Title = "Failed to acknowledge host move request",
+            Detail = result.Errors.FirstOrDefault()?.Message,
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        var errorResponseWithDetails = ApiResponse<bool>.Failure(problemDetailsForFailure);
+
+        return BadRequest(errorResponseWithDetails);
     }
 }
