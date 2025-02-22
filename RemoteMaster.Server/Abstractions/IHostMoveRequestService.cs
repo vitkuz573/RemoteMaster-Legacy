@@ -14,18 +14,6 @@ namespace RemoteMaster.Server.Abstractions;
 public interface IHostMoveRequestService
 {
     /// <summary>
-    /// Retrieves all host move requests.
-    /// </summary>
-    /// <returns>A list of <see cref="HostMoveRequest"/> wrapped in a <see cref="Result"/>.</returns>
-    Task<Result<List<HostMoveRequest>>> GetHostMoveRequestsAsync();
-
-    /// <summary>
-    /// Saves host move requests.
-    /// </summary>
-    /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
-    Task<Result> SaveHostMoveRequestsAsync();
-
-    /// <summary>
     /// Retrieves a specific host move request by MAC address.
     /// </summary>
     /// <param name="macAddress">The MAC address of the host.</param>

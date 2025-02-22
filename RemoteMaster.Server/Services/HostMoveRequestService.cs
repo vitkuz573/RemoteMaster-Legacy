@@ -11,49 +11,13 @@ namespace RemoteMaster.Server.Services;
 
 public class HostMoveRequestService(IEventNotificationService eventNotificationService, IHostMoveRequestUnitOfWork hostMoveRequestUnitOfWork) : IHostMoveRequestService
 {
-    public async Task<Result<List<HostMoveRequest>>> GetHostMoveRequestsAsync()
-    {
-        try
-        {
-            var hostMoveRequests = (await hostMoveRequestUnitOfWork.HostMoveRequests.GetAllAsync()).ToList();
-
-            return Result.Ok(hostMoveRequests);
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail<List<HostMoveRequest>>("Failed to retrieve host move requests.")
-                         .WithError(ex.Message);
-        }
-    }
-
-    public async Task<Result> SaveHostMoveRequestsAsync()
-    {
-        try
-        {
-            await hostMoveRequestUnitOfWork.CommitAsync();
-
-            return Result.Ok();
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail("Failed to save host move requests.")
-                         .WithError(ex.Message);
-        }
-    }
-
     public async Task<Result<HostMoveRequest?>> GetHostMoveRequestAsync(PhysicalAddress macAddress)
     {
         try
         {
-            var hostMoveRequestsResult = await GetHostMoveRequestsAsync();
+            var hostMoveRequests = await hostMoveRequestUnitOfWork.HostMoveRequests.GetAllAsync();
 
-            if (hostMoveRequestsResult.IsFailed)
-            {
-                return Result.Fail<HostMoveRequest?>("Failed to retrieve host move requests.")
-                             .WithErrors(hostMoveRequestsResult.Errors);
-            }
-
-            var request = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress));
+            var request = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress));
 
             return Result.Ok(request);
         }
@@ -72,13 +36,7 @@ public class HostMoveRequestService(IEventNotificationService eventNotificationS
 
             hostMoveRequestUnitOfWork.HostMoveRequests.Delete(hostMoveRequestToRemove);
 
-            var saveResult = await SaveHostMoveRequestsAsync();
-
-            if (saveResult.IsFailed)
-            {
-                return Result.Fail("Failed to save updated host move requests.")
-                             .WithErrors(saveResult.Errors);
-            }
+            await hostMoveRequestUnitOfWork.CommitAsync();
 
             await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
 
