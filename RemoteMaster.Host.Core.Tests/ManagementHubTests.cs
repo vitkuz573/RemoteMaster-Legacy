@@ -33,7 +33,7 @@ public class ManagementHubTests
         // Arrange
         var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
 
-        var hostMoveRequest = new HostMoveRequest(macAddress, "NewOrg", ["NewOU"]);
+        var hostMoveRequest = new HostMoveRequestDto(macAddress, "NewOrg", ["NewOU"]);
 
         var subject = new SubjectDto("OldOrg", ["OldOU"]);
 

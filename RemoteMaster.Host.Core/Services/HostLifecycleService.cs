@@ -155,7 +155,7 @@ public class HostLifecycleService(IApiService apiService, IFileSystem fileSystem
             logger.LogInformation("Requesting organization address for organization: {Organization}", name);
 
             var organization = await apiService.GetOrganizationAsync(name) ?? throw new InvalidOperationException($"Failed to retrieve address for organization: {name}");
-            logger.LogInformation("Successfully retrieved address for organization: {Organization}", organization);
+            logger.LogInformation("Successfully retrieved address for organization: {Organization}", organization.Name);
 
             return organization.Address;
         }

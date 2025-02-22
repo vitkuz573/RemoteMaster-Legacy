@@ -484,11 +484,13 @@ public class HostLifecycleServiceTests
     {
         // Arrange
         const string organization = "TestOrg";
+
         var expectedAddress = new AddressDto("Metropolis", "StateName", "FD");
+        var expectedOrganization = new OrganizationDto(It.IsAny<Guid>(), It.IsAny<string>(), expectedAddress);
 
         _apiServiceMock
             .Setup(api => api.GetOrganizationAsync(organization))
-            .ReturnsAsync(expectedAddress);
+            .ReturnsAsync(expectedOrganization);
 
         // Act
         var result = await _service.GetOrganizationAddressAsync(organization);
@@ -526,7 +528,7 @@ public class HostLifecycleServiceTests
 
         _apiServiceMock
             .Setup(api => api.GetOrganizationAsync(organization))
-            .ReturnsAsync((AddressDto)null);
+            .ReturnsAsync((OrganizationDto)null!);
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetOrganizationAddressAsync(organization));
