@@ -46,10 +46,10 @@ public partial class ManageRoleClaims
                 })
                 .ToList();
 
-            _claimTypes = groupedClaims.Select(c => new ClaimTypeViewModel(
+            _claimTypes = [.. groupedClaims.Select(c => new ClaimTypeViewModel(
                 c.ClaimType,
                 c.Values
-            )).ToList();
+            ))];
         }
         else
         {

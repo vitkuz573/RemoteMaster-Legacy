@@ -11,7 +11,7 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvider applicationPathProvider, IHostUpdaterNotifier notifier, IChecksumValidator checksumValidator, IFileService fileService, IFileSystem fileSystem, IApplicationVersionProvider applicationVersionProvider, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory, IHostConfigurationService hostConfigurationService) : IHostUpdater
+public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvider applicationPathProvider, IHostUpdaterNotifier notifier, IChecksumValidator checksumValidator, IFileService fileService, IFileSystem fileSystem, IApplicationVersionProvider applicationVersionProvider, INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IChatInstanceService chatInstanceService, IServiceFactory serviceFactory) : IHostUpdater
 {
     private readonly string _rootDirectory = applicationPathProvider.RootDirectory;
     private readonly string _updateDirectory = applicationPathProvider.UpdateDirectory;
