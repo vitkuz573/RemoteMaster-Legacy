@@ -18,7 +18,8 @@ public class MigrationService(IServiceScopeFactory serviceScopeFactory, ILogger<
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
             scope.ServiceProvider.GetRequiredService<CrlDbContext>(),
             scope.ServiceProvider.GetRequiredService<CertificateTaskDbContext>(),
-            scope.ServiceProvider.GetRequiredService<AuditLogDbContext>()
+            scope.ServiceProvider.GetRequiredService<AuditLogDbContext>(),
+            scope.ServiceProvider.GetRequiredService<HostMoveRequestDbContext>()
         };
 
         try

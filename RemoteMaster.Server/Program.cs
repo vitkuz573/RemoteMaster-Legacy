@@ -112,6 +112,7 @@ public static class Program
         services.AddDbContext<CrlDbContext>();
         services.AddDbContext<CertificateTaskDbContext>();
         services.AddDbContext<AuditLogDbContext>();
+        services.AddDbContext<HostMoveRequestDbContext>();
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -139,6 +140,7 @@ public static class Program
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<ICertificateRenewalTaskRepository, CertificateRenewalTaskRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IHostMoveRequestRepository, HostMoveRequestRepository>();
         services.AddScoped<IHostCommandService, HostCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
@@ -157,6 +159,7 @@ public static class Program
         services.AddScoped<ICrlUnitOfWork, CrlUnitOfWork>();
         services.AddScoped<ICertificateTaskUnitOfWork, CertificateTaskUnitOfWork>();
         services.AddScoped<IAuditLogUnitOfWork, AuditLogUnitOfWork>();
+        services.AddScoped<IHostMoveRequestUnitOfWork, HostMoveRequestUnitOfWork>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IHostAccessService, HostAccessService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

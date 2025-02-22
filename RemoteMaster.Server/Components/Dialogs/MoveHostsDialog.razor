@@ -3,12 +3,11 @@
 @using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Aggregates.ApplicationUserAggregate
-@using System.IO.Abstractions
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IOrganizationalUnitService OrganizationalUnitService
 @inject IApplicationUnitOfWork ApplicationUnitOfWork
-@inject IFileSystem FileSystem
+@inject IHostMoveRequestUnitOfWork HostMoveRequestUnitOfWork
 
 <CommonDialog>
     <Content>

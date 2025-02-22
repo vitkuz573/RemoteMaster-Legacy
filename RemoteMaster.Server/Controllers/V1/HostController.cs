@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Controllers.V1;
@@ -208,9 +209,9 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     }
 
     [HttpGet("{macAddress}/moveRequest")]
-    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 404)]
-    [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequestDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequestDto>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<HostMoveRequestDto>), 400)]
     public async Task<IActionResult> GetHostMoveRequest([FromRoute, Required] PhysicalAddress macAddress)
     {
         var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
@@ -219,7 +220,10 @@ public class HostController(IHostRegistrationService registrationService, IHostM
         {
             if (hostMoveRequestResult.Value is not null)
             {
-                var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequestResult.Value, "Host move request retrieved successfully.");
+                var result = hostMoveRequestResult.Value;
+                var dto = new HostMoveRequestDto(result.MacAddress, result.Organization, result.OrganizationalUnit);
+
+                var response = ApiResponse<HostMoveRequestDto>.Success(dto, "Host move request retrieved successfully.");
 
                 return Ok(response);
             }
@@ -231,7 +235,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
                 Status = StatusCodes.Status404NotFound
             };
 
-            return NotFound(ApiResponse<HostMoveRequest>.Failure(notFoundProblemDetails, StatusCodes.Status404NotFound));
+            return NotFound(ApiResponse<HostMoveRequestDto>.Failure(notFoundProblemDetails, StatusCodes.Status404NotFound));
         }
 
         var problemDetailsForFailure = new ProblemDetails
@@ -241,7 +245,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
             Status = StatusCodes.Status400BadRequest
         };
 
-        return BadRequest(ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure));
+        return BadRequest(ApiResponse<HostMoveRequestDto>.Failure(problemDetailsForFailure));
     }
 
     [HttpDelete("{macAddress}/moveRequest")]

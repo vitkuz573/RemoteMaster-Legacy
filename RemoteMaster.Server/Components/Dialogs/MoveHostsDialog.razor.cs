@@ -2,16 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
+using RemoteMaster.Server.Aggregates.HostMoveRequestAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.JsonContexts;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -95,9 +93,7 @@ public partial class MoveHostsDialog
                 
                 if (organization != null)
                 {
-                    _organizationalUnits = organization.OrganizationalUnits
-                        .Where(ou => appUser.UserOrganizationalUnits.Any(uou => uou.OrganizationalUnitId == ou.Id))
-                        .ToList();
+                    _organizationalUnits = [.. organization.OrganizationalUnits.Where(ou => appUser.UserOrganizationalUnits.Any(uou => uou.OrganizationalUnitId == ou.Id))];
                 }
             }
         }
@@ -169,50 +165,23 @@ public partial class MoveHostsDialog
 
     private async Task AppendHostMoveRequests(List<HostDto> unavailableHosts, string targetOrganization, List<string> targetOrganizationalUnits)
     {
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var applicationData = FileSystem.Path.Combine(programDataPath, "RemoteMaster", "Server");
-
-        if (!FileSystem.Directory.Exists(applicationData))
-        {
-            FileSystem.Directory.CreateDirectory(applicationData);
-        }
-
-        var hostMoveRequestsFilePath = FileSystem.Path.Combine(applicationData, "HostMoveRequests.json");
-
-        List<HostMoveRequest> hostMoveRequests;
-
-        if (FileSystem.File.Exists(hostMoveRequestsFilePath))
-        {
-            var existingJson = await FileSystem.File.ReadAllTextAsync(hostMoveRequestsFilePath);
-            hostMoveRequests = JsonSerializer.Deserialize(existingJson, HostJsonSerializerContext.Default.ListHostMoveRequest) ?? [];
-        }
-        else
-        {
-            hostMoveRequests = [];
-        }
-
         foreach (var host in unavailableHosts)
         {
-            var existingRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(host.MacAddress));
+            var existingRequest = (await HostMoveRequestUnitOfWork.HostMoveRequests.FindAsync(r => r.MacAddress.Equals(host.MacAddress))).FirstOrDefault();
 
             if (existingRequest != null)
             {
-                var updatedRequest = existingRequest with
-                {
-                    Organization = targetOrganization,
-                    OrganizationalUnit = targetOrganizationalUnits
-                };
+                existingRequest.SetOrganization(targetOrganization);
+                existingRequest.SetOrganizationalUnit(targetOrganizationalUnits);
 
-                hostMoveRequests[hostMoveRequests.IndexOf(existingRequest)] = updatedRequest;
+                HostMoveRequestUnitOfWork.HostMoveRequests.Update(existingRequest);
             }
             else
             {
-                hostMoveRequests.Add(new HostMoveRequest(host.MacAddress, targetOrganization, targetOrganizationalUnits));
+                await HostMoveRequestUnitOfWork.HostMoveRequests.AddAsync(new HostMoveRequest(host.MacAddress, targetOrganization, targetOrganizationalUnits));
             }
+
+            await HostMoveRequestUnitOfWork.CommitAsync();
         }
-
-        var json = JsonSerializer.Serialize(hostMoveRequests, HostJsonSerializerContext.Default.ListHostMoveRequest);
-
-        await FileSystem.File.WriteAllTextAsync(hostMoveRequestsFilePath, json);
     }
 }

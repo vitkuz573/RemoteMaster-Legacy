@@ -13,6 +13,6 @@ namespace RemoteMaster.Shared.JsonContexts;
 [JsonSerializable(typeof(ApiResponse))]
 [JsonSerializable(typeof(ApiResponse<byte[]>))]
 [JsonSerializable(typeof(ApiResponse<OrganizationDto>))]
-[JsonSerializable(typeof(ApiResponse<HostMoveRequest>))]
+[JsonSerializable(typeof(ApiResponse<HostMoveRequestDto>))]
 [JsonSerializable(typeof(ApiResponse<List<HealthCheck>>))]
 public partial class ApiJsonSerializerContext : JsonSerializerContext;

@@ -4,12 +4,13 @@
 
 using System.Text.Json.Serialization;
 using RemoteMaster.Shared.Converters;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.JsonContexts;
 
 [JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(IPAddressConverter), typeof(PhysicalAddressConverter)])]
-[JsonSerializable(typeof(List<HostMoveRequest>))]
+[JsonSerializable(typeof(List<HostMoveRequestDto>))]
 [JsonSerializable(typeof(HostRegisterRequest))]
 [JsonSerializable(typeof(HostUnregisterRequest))]
 [JsonSerializable(typeof(HostUpdateRequest))]

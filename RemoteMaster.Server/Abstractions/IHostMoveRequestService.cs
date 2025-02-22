@@ -4,7 +4,7 @@
 
 using System.Net.NetworkInformation;
 using FluentResults;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Server.Aggregates.HostMoveRequestAggregate;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -20,11 +20,10 @@ public interface IHostMoveRequestService
     Task<Result<List<HostMoveRequest>>> GetHostMoveRequestsAsync();
 
     /// <summary>
-    /// Saves the provided list of host move requests.
+    /// Saves host move requests.
     /// </summary>
-    /// <param name="hostMoveRequests">The list of <see cref="HostMoveRequest"/> to save.</param>
     /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
-    Task<Result> SaveHostMoveRequestsAsync(List<HostMoveRequest> hostMoveRequests);
+    Task<Result> SaveHostMoveRequestsAsync();
 
     /// <summary>
     /// Retrieves a specific host move request by MAC address.

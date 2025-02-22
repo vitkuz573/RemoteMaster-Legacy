@@ -81,9 +81,9 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             return ApiJsonSerializerContext.Default.ApiResponseOrganizationDto;
         }
 
-        if (typeof(T) == typeof(HostMoveRequest))
+        if (typeof(T) == typeof(HostMoveRequestDto))
         {
-            return ApiJsonSerializerContext.Default.ApiResponseHostMoveRequest;
+            return ApiJsonSerializerContext.Default.ApiResponseHostMoveRequestDto;
         }
 
         throw new NotSupportedException($"Type {typeof(T)} is not supported for deserialization.");
@@ -242,7 +242,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<byte[]>(hostConfiguration, response);
     }
 
-    public async Task<HostMoveRequest?> GetHostMoveRequestAsync(PhysicalAddress macAddress)
+    public async Task<HostMoveRequestDto?> GetHostMoveRequestAsync(PhysicalAddress macAddress)
     {
         ArgumentNullException.ThrowIfNull(macAddress);
 
@@ -257,7 +257,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             return null;
         }
 
-        return await ProcessResponse<HostMoveRequest>(hostConfiguration, response);
+        return await ProcessResponse<HostMoveRequestDto>(hostConfiguration, response);
     }
 
     public async Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress)

@@ -5,14 +5,14 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using RemoteMaster.Server.Aggregates.AuditLogAggregate;
+using RemoteMaster.Server.Aggregates.HostMoveRequestAggregate;
 using RemoteMaster.Server.Configurations;
 
 namespace RemoteMaster.Server.Data;
 
-public class AuditLogDbContext(DbContextOptions<AuditLogDbContext> options, IConfiguration? configuration = null) : DbContext(options)
+public class HostMoveRequestDbContext(DbContextOptions<HostMoveRequestDbContext> options, IConfiguration? configuration = null) : DbContext(options)
 {
-    public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<HostMoveRequest> HostMoveRequests { get; set; }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -22,7 +22,7 @@ public class AuditLogDbContext(DbContextOptions<AuditLogDbContext> options, ICon
             return;
         }
 
-        var connectionString = configuration.GetConnectionString("AuditLogConnection");
+        var connectionString = configuration.GetConnectionString("HostMoveRequestConnection");
 
         optionsBuilder.UseSqlite(connectionString, options =>
         {
@@ -37,6 +37,6 @@ public class AuditLogDbContext(DbContextOptions<AuditLogDbContext> options, ICon
     {
         base.OnModelCreating(builder);
 
-        builder.ApplyConfiguration(new AuditLogConfiguration());
+        builder.ApplyConfiguration(new HostMoveRequestConfiguration());
     }
 }

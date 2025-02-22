@@ -6,14 +6,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
 public class ManagementHub(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, ICertificateService certificateService) : Hub
 {
     [Authorize(Policy = "MoveHostPolicy")]
-    public async Task MoveHost(HostMoveRequest hostMoveRequest)
+    public async Task MoveHost(HostMoveRequestDto hostMoveRequest)
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);
 

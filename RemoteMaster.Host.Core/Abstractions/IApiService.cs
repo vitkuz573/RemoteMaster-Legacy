@@ -4,7 +4,6 @@
 
 using System.Net.NetworkInformation;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
@@ -24,7 +23,7 @@ public interface IApiService
 
     Task<byte[]?> IssueCertificateAsync(byte[] csrBytes);
 
-    Task<HostMoveRequest?> GetHostMoveRequestAsync(PhysicalAddress macAddress);
+    Task<HostMoveRequestDto?> GetHostMoveRequestAsync(PhysicalAddress macAddress);
 
     Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress);
 

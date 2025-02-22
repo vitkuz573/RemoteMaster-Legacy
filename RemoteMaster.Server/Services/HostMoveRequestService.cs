@@ -2,44 +2,20 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.IO.Abstractions;
 using System.Net.NetworkInformation;
-using System.Text.Json;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.JsonContexts;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Server.Aggregates.HostMoveRequestAggregate;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostMoveRequestService : IHostMoveRequestService
+public class HostMoveRequestService(IEventNotificationService eventNotificationService, IHostMoveRequestUnitOfWork hostMoveRequestUnitOfWork) : IHostMoveRequestService
 {
-    private readonly IEventNotificationService _eventNotificationService;
-    private readonly IFileSystem _fileSystem;
-
-    private readonly string _hostMoveRequestsFilePath;
-
-    public HostMoveRequestService(IEventNotificationService eventNotificationService, IFileSystem fileSystem)
-    {
-        _eventNotificationService = eventNotificationService;
-        _fileSystem = fileSystem;
-        
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        
-        _hostMoveRequestsFilePath = _fileSystem.Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
-    }
-
     public async Task<Result<List<HostMoveRequest>>> GetHostMoveRequestsAsync()
     {
         try
         {
-            if (!_fileSystem.File.Exists(_hostMoveRequestsFilePath))
-            {
-                return Result.Ok(new List<HostMoveRequest>());
-            }
-
-            var json = await _fileSystem.File.ReadAllTextAsync(_hostMoveRequestsFilePath);
-            var hostMoveRequests = JsonSerializer.Deserialize(json, HostJsonSerializerContext.Default.ListHostMoveRequest) ?? [];
+            var hostMoveRequests = (await hostMoveRequestUnitOfWork.HostMoveRequests.GetAllAsync()).ToList();
 
             return Result.Ok(hostMoveRequests);
         }
@@ -50,12 +26,11 @@ public class HostMoveRequestService : IHostMoveRequestService
         }
     }
 
-    public async Task<Result> SaveHostMoveRequestsAsync(List<HostMoveRequest> hostMoveRequests)
+    public async Task<Result> SaveHostMoveRequestsAsync()
     {
         try
         {
-            var updatedJson = JsonSerializer.Serialize(hostMoveRequests, HostJsonSerializerContext.Default.ListHostMoveRequest);
-            await _fileSystem.File.WriteAllTextAsync(_hostMoveRequestsFilePath, updatedJson);
+            await hostMoveRequestUnitOfWork.CommitAsync();
 
             return Result.Ok();
         }
@@ -93,24 +68,11 @@ public class HostMoveRequestService : IHostMoveRequestService
     {
         try
         {
-            var hostMoveRequestsResult = await GetHostMoveRequestsAsync();
+            var hostMoveRequestToRemove = (await hostMoveRequestUnitOfWork.HostMoveRequests.FindAsync(hmr => hmr.MacAddress.Equals(macAddress))).First();
 
-            if (hostMoveRequestsResult.IsFailed)
-            {
-                return Result.Fail("Failed to retrieve host move requests.")
-                             .WithErrors(hostMoveRequestsResult.Errors);
-            }
+            hostMoveRequestUnitOfWork.HostMoveRequests.Delete(hostMoveRequestToRemove);
 
-            var requestToRemove = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress));
-
-            if (requestToRemove == null)
-            {
-                return Result.Ok();
-            }
-
-            hostMoveRequestsResult.Value.Remove(requestToRemove);
-
-            var saveResult = await SaveHostMoveRequestsAsync(hostMoveRequestsResult.Value);
+            var saveResult = await SaveHostMoveRequestsAsync();
 
             if (saveResult.IsFailed)
             {
@@ -118,7 +80,7 @@ public class HostMoveRequestService : IHostMoveRequestService
                              .WithErrors(saveResult.Errors);
             }
 
-            await _eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
+            await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
 
             return Result.Ok();
         }
