@@ -67,9 +67,7 @@ public partial class MoveHostsDialog
 
             if (appUser != null)
             {
-                _organizations = appUser.UserOrganizations
-                    .Select(uo => uo.Organization)
-                    .ToList();
+                _organizations = [.. appUser.UserOrganizations.Select(uo => uo.Organization)];
             }
         }
     }
