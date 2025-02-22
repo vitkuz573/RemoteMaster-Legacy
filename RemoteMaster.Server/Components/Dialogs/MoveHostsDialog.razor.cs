@@ -136,7 +136,7 @@ public partial class MoveHostsDialog
             {
                 if (host.Value != null)
                 {
-                    var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization.Name, targetOrganizationalUnitsPath);
+                    var hostMoveRequest = new HostMoveRequestDto(host.Key.MacAddress, targetOrganization.Name, targetOrganizationalUnitsPath);
                     
                     await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
                 }
