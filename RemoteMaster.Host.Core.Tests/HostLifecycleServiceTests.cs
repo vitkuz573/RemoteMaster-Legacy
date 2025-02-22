@@ -486,7 +486,7 @@ public class HostLifecycleServiceTests
         const string organization = "TestOrg";
 
         var expectedAddress = new AddressDto("Metropolis", "StateName", "FD");
-        var expectedOrganization = new OrganizationDto(It.IsAny<Guid>(), It.IsAny<string>(), expectedAddress);
+        var expectedOrganization = new OrganizationDto(Guid.NewGuid(), "TestOrg", expectedAddress);
 
         _apiServiceMock
             .Setup(api => api.GetOrganizationAsync(organization))
