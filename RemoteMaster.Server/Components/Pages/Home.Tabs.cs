@@ -384,7 +384,7 @@ public partial class Home
     {
         var hosts = includeHosts
             ? onlyAvailable
-                ? _selectedHosts.Where(hd => _availableHosts.ContainsKey(hd.IpAddress)).ToList()
+                ? [.. _selectedHosts.Where(hd => _availableHosts.ContainsKey(hd.IpAddress))]
                 : _selectedHosts.ToList()
             : [];
 

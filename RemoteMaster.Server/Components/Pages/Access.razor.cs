@@ -390,7 +390,7 @@ public partial class Access : IAsyncDisposable
 
             _connection.On<IEnumerable<Display>>("ReceiveDisplays", displays =>
             {
-                _displays = displays.ToList();
+                _displays = [.. displays];
 
                 var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
 
@@ -404,7 +404,7 @@ public partial class Access : IAsyncDisposable
 
             _connection.On<IEnumerable<string>>("ReceiveAvailableCodecs", codecs =>
             {
-                _codecs = codecs.ToList();
+                _codecs = [.. codecs];
 
                 OnChangeCodec(_codecs.FirstOrDefault());
             });

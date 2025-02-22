@@ -74,7 +74,7 @@ public partial class Home
 
         var nodes = await LoadNodes();
 
-        _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).ToList();
+        _treeItems = [.. nodes.Select(node => new UnifiedTreeItemData(node))];
 
         var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
 
@@ -166,7 +166,7 @@ public partial class Home
             case Organization:
                 break;
             case OrganizationalUnit orgUnit:
-                if (!orgUnit.Hosts.Any())
+                if (orgUnit.Hosts.Count == 0)
                 {
                     return;
                 }

@@ -85,9 +85,7 @@ public partial class TaskManager : IAsyncDisposable
         }
         else
         {
-            _processes = _allProcesses
-                .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            _processes = [.. _allProcesses.Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))];
         }
     }
 

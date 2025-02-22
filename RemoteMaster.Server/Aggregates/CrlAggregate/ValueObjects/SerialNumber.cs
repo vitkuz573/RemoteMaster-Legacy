@@ -55,9 +55,7 @@ public partial record SerialNumber
 
     public byte[] ToByteArray()
     {
-        return Enumerable.Range(0, Value.Length / 2)
-            .Select(x => Convert.ToByte(Value.Substring(x * 2, 2), 16))
-            .ToArray();
+        return [.. Enumerable.Range(0, Value.Length / 2).Select(x => Convert.ToByte(Value.Substring(x * 2, 2), 16))];
     }
 
     private static byte[] GenerateSecureRandomBytes(int byteSize)

@@ -52,7 +52,7 @@ public class CertificateProviderTests
 
         var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
         certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "NonExistentCA"))
-                                   .Returns(new List<ICertificateWrapper>());
+                                   .Returns([]);
 
         var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
 
