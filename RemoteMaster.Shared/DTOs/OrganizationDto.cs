@@ -11,4 +11,6 @@ public class OrganizationDto(Guid? id, string name, AddressDto address)
     public string Name { get; } = name;
 
     public AddressDto Address { get; } = address;
+
+    public List<OrganizationalUnitDto> OrganizationalUnits { get; } = [];
 }

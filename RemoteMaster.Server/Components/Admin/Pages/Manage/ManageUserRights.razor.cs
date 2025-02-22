@@ -68,17 +68,16 @@ public partial class ManageUserRights
     {
         var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
-        _organizations = organizations
+        _organizations = [.. organizations
             .Select(o => new OrganizationViewModel(
-                o.Id,
+                o.Id.Value,
                 o.Name,
-                o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
+                [.. o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
                 {
-                    Id = ou.Id,
+                    Id = ou.Id.Value,
                     Name = ou.Name
-                }).ToList()
-            ))
-            .ToList();
+                })]
+            ))];
     }
 
     private async Task OnValidSubmitAsync()
@@ -214,8 +213,8 @@ public partial class ManageUserRights
         _initialLockoutEndDateTime = SelectedUserModel.LockoutEndDateTime;
         _initialCanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
-        _initialSelectedOrganizationIds = user.UserOrganizations.Select(ao => ao.OrganizationId).ToList();
-        _initialSelectedUnitIds = user.UserOrganizationalUnits.Select(aou => aou.OrganizationalUnitId).ToList();
+        _initialSelectedOrganizationIds = [.. user.UserOrganizations.Select(ao => ao.OrganizationId)];
+        _initialSelectedUnitIds = [.. user.UserOrganizationalUnits.Select(aou => aou.OrganizationalUnitId)];
 
         foreach (var organization in _organizations)
         {
@@ -312,8 +311,8 @@ public partial class ManageUserRights
 
     private void UpdateInitialSelections()
     {
-        _initialSelectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
-        _initialSelectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
+        _initialSelectedOrganizationIds = [.. _organizations.Where(o => o.IsSelected).Select(o => o.Id)];
+        _initialSelectedUnitIds = [.. _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id)];
         _initialSelectedRole = SelectedUserModel.Role;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
         _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;

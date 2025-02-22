@@ -4,9 +4,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
-using RemoteMaster.Server.DTOs;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -15,12 +14,12 @@ public partial class ManageOrganizationalUnits
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    private List<Organization> _organizations = [];
-    private List<OrganizationalUnit> _organizationalUnits = [];
-    private List<OrganizationalUnit> _filteredOrganizationalUnits = [];
+    private List<OrganizationDto> _organizations = [];
+    private List<OrganizationalUnitDto> _organizationalUnits = [];
+    private List<OrganizationalUnitDto> _filteredOrganizationalUnits = [];
     private string? _message;
     private ConfirmationDialog? _confirmationDialog;
-    private OrganizationalUnit? _organizationalUnitToDelete;
+    private OrganizationalUnitDto? _organizationalUnitToDelete;
 
     protected async override Task OnInitializedAsync()
     {
@@ -49,14 +48,12 @@ public partial class ManageOrganizationalUnits
     {
         var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
-        _organizations = organizations.ToList();
+        _organizations = [.. organizations];
     }
 
     private async Task LoadOrganizationalUnitsAsync()
     {
-        var organizationalUnits = await OrganizationalUnitService.GetAllOrganizationalUnitsAsync();
-
-        _organizationalUnits = organizationalUnits.ToList();
+        _organizationalUnits = [.. await OrganizationalUnitService.GetAllOrganizationalUnitsAsync()];
 
         FilterOrganizationalUnits();
     }
@@ -70,19 +67,17 @@ public partial class ManageOrganizationalUnits
 
     private void FilterOrganizationalUnits()
     {
-        _filteredOrganizationalUnits = _organizationalUnits
-            .Where(ou => ou.OrganizationId == Input.OrganizationId)
-            .ToList();
+        _filteredOrganizationalUnits = [.. _organizationalUnits.Where(ou => ou.OrganizationId == Input.OrganizationId)];
     }
 
-    private async Task DeleteOrganizationalUnit(OrganizationalUnit organizationalUnit)
+    private async Task DeleteOrganizationalUnit(OrganizationalUnitDto organizationalUnit)
     {
         _message = await OrganizationalUnitService.DeleteOrganizationalUnitAsync(organizationalUnit);
         
         await LoadOrganizationalUnitsAsync();
     }
 
-    private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)
+    private void EditOrganizationalUnit(OrganizationalUnitDto organizationalUnit)
     {
         Input = new InputModel
         {
@@ -93,13 +88,15 @@ public partial class ManageOrganizationalUnits
         };
     }
 
-    private void ShowDeleteConfirmation(OrganizationalUnit organizationalUnit)
+    private async void ShowDeleteConfirmation(OrganizationalUnitDto organizationalUnit)
     {
         _organizationalUnitToDelete = organizationalUnit;
 
+        var organization = await OrganizationService.GetOrganizationById(organizationalUnit.OrganizationId);
+
         var parameters = new Dictionary<string, string>
         {
-            { "Organization", organizationalUnit.Organization.Name },
+            { "Organization", organization.Name },
             { "Organizational Unit", organizationalUnit.Name }
         };
 

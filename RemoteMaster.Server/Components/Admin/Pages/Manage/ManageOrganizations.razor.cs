@@ -4,9 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
-using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 
@@ -17,11 +15,11 @@ public partial class ManageOrganizations
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    private List<Organization> _organizations = [];
+    private List<OrganizationDto> _organizations = [];
     private string? _message;
     private List<Country> _countries = [];
     private ConfirmationDialog? _confirmationDialog;
-    private Organization? _organizationToDelete;
+    private string? _organizationToDelete;
 
     protected async override Task OnInitializedAsync()
     {
@@ -61,19 +59,17 @@ public partial class ManageOrganizations
 
     private async Task LoadOrganizationsAsync()
     {
-        var organizations = await OrganizationService.GetAllOrganizationsAsync();
-
-        _organizations = organizations.ToList();
+        _organizations = [.. await OrganizationService.GetAllOrganizationsAsync()];
     }
 
-    private async Task DeleteOrganization(Organization organization)
+    private async Task DeleteOrganization(string organizationName)
     {
-        _message = await OrganizationService.DeleteOrganizationAsync(organization);
+        _message = await OrganizationService.DeleteOrganizationAsync(organizationName);
 
         await LoadOrganizationsAsync();
     }
 
-    private void EditOrganization(Organization organization)
+    private void EditOrganization(OrganizationDto organization)
     {
         Input = new InputModel
         {
@@ -81,17 +77,17 @@ public partial class ManageOrganizations
             Name = organization.Name,
             Locality = organization.Address.Locality,
             State = organization.Address.State,
-            Country = organization.Address.Country.Code
+            Country = organization.Address.Country
         };
     }
 
-    private void ShowDeleteConfirmation(Organization organization)
+    private void ShowDeleteConfirmation(string organizationName)
     {
-        _organizationToDelete = organization;
+        _organizationToDelete = organizationName;
 
         var parameters = new Dictionary<string, string>
         {
-            { "Organization", organization.Name }
+            { "Organization", organizationName }
         };
 
         _confirmationDialog?.Show(parameters);

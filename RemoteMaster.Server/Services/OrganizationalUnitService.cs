@@ -4,8 +4,7 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.DTOs;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
@@ -99,7 +98,7 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
     }
 
-    public async Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnit organizationalUnit)
+    public async Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnitDto organizationalUnit)
     {
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
@@ -112,7 +111,7 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
 
         try
         {
-            organization.RemoveOrganizationalUnit(organizationalUnit.Id);
+            organization.RemoveOrganizationalUnit(organizationalUnit.Id.Value);
 
             applicationUnitOfWork.Organizations.Update(organization);
             await applicationUnitOfWork.CommitAsync();
@@ -125,11 +124,13 @@ public class OrganizationalUnitService(IApplicationUnitOfWork applicationUnitOfW
         }
     }
 
-    public async Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync()
+    public async Task<IEnumerable<OrganizationalUnitDto>> GetAllOrganizationalUnitsAsync()
     {
         var organizations = await applicationUnitOfWork.Organizations.GetAllAsync();
 
-        return organizations.SelectMany(o => o.OrganizationalUnits);
+        return organizations
+            .SelectMany(o => o.OrganizationalUnits)
+            .Select(ou => new OrganizationalUnitDto(ou.Id, ou.Name, ou.OrganizationId, ou.ParentId));
     }
 
     public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> selectedUnitIds)

@@ -6,7 +6,6 @@ using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.DTOs;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
@@ -17,7 +16,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork) : ControllerBase
+public class OrganizationController(IOrganizationService organizationService) : ControllerBase
 {
     [HttpGet("{name}")]
     [ProducesResponseType(typeof(ApiResponse<AddressDto>), StatusCodes.Status200OK)]
@@ -39,9 +38,9 @@ public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork
             return BadRequest(errorResponse);
         }
 
-        var organizationEntity = (await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == name)).FirstOrDefault();
+        var organization = await organizationService.GetOrganization(name);
 
-        if (organizationEntity == null)
+        if (organization == null)
         {
             var problemDetails = new ProblemDetails
             {
@@ -55,9 +54,9 @@ public class OrganizationController(IApplicationUnitOfWork applicationUnitOfWork
             return NotFound(errorResponse);
         }
 
-        var organizationAddress = new AddressDto(organizationEntity.Address.Locality, organizationEntity.Address.State, organizationEntity.Address.Country.Code);
+        var organizationAddress = new AddressDto(organization.Address.Locality, organization.Address.State, organization.Address.Country);
 
-        var organizationDto = new OrganizationDto(organizationEntity.Id, organizationEntity.Name, organizationAddress);
+        var organizationDto = new OrganizationDto(organization.Id, organization.Name, organizationAddress);
 
         var response = ApiResponse<OrganizationDto>.Success(organizationDto, "Organization address retrieved successfully.");
 

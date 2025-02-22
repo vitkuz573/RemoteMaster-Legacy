@@ -3,8 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.DTOs;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -14,9 +13,9 @@ public interface IOrganizationalUnitService
 
     Task<string> AddOrUpdateOrganizationalUnitAsync(OrganizationalUnitDto dto);
 
-    Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnit organizationalUnit);
+    Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnitDto organizationalUnit);
 
-    Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync();
+    Task<IEnumerable<OrganizationalUnitDto>> GetAllOrganizationalUnitsAsync();
 
     Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> unitIds);
 }

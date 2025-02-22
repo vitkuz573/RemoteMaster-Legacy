@@ -6,16 +6,74 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
-using RemoteMaster.Server.DTOs;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
 public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) : IOrganizationService
 {
-    public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
+    public async Task<IEnumerable<OrganizationDto>> GetAllOrganizationsAsync()
     {
-        return await applicationUnitOfWork.Organizations.GetAllAsync();
+        var organizations = await applicationUnitOfWork.Organizations.GetAllAsync();
+
+        return organizations.Select(o =>
+        {
+            var addressDto = new AddressDto(o.Address.Locality, o.Address.State, o.Address.Country.Code);
+            var organizationDto = new OrganizationDto(o.Id, o.Name, addressDto);
+
+            foreach (var organizationalUnit in o.OrganizationalUnits)
+            {
+                var organizationalUnitDto = new OrganizationalUnitDto(organizationalUnit.Id, organizationalUnit.Name, o.Id, organizationalUnit.ParentId);
+                
+                organizationDto.OrganizationalUnits.Add(organizationalUnitDto);
+            }
+
+            return organizationDto;
+        });
+    }
+
+    public async Task<OrganizationDto?> GetOrganization(string organizationName)
+    {
+        var organization = (await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == organizationName)).FirstOrDefault();
+
+        if (organization == null)
+        {
+            return null;
+        }
+
+        var addressDto = new AddressDto(organization.Address.Locality, organization.Address.State, organization.Address.Country.Code);
+        var organizationDto = new OrganizationDto(organization.Id, organization.Name, addressDto);
+
+        foreach (var organizationalUnit in organization.OrganizationalUnits)
+        {
+            var organizationalUnitDto = new OrganizationalUnitDto(organizationalUnit.Id, organizationalUnit.Name, organization.Id, organizationalUnit.ParentId);
+
+            organizationDto.OrganizationalUnits.Add(organizationalUnitDto);
+        }
+
+        return organizationDto;
+    }
+
+    public async Task<OrganizationDto?> GetOrganizationById(Guid organizationId)
+    {
+        var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(organizationId);
+
+        if (organization == null)
+        {
+            return null;
+        }
+
+        var addressDto = new AddressDto(organization.Address.Locality, organization.Address.State, organization.Address.Country.Code);
+        var organizationDto = new OrganizationDto(organization.Id, organization.Name, addressDto);
+
+        foreach (var organizationalUnit in organization.OrganizationalUnits)
+        {
+            var organizationalUnitDto = new OrganizationalUnitDto(organizationalUnit.Id, organizationalUnit.Name, organization.Id, organizationalUnit.ParentId);
+
+            organizationDto.OrganizationalUnits.Add(organizationalUnitDto);
+        }
+
+        return organizationDto;
     }
 
     public async Task<string> AddOrUpdateOrganizationAsync(OrganizationDto dto)
@@ -44,6 +102,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         else
         {
             organization = new Organization(dto.Name, address);
+
             await applicationUnitOfWork.Organizations.AddAsync(organization);
         }
 
@@ -52,11 +111,17 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         return dto.Id.HasValue ? "Organization updated successfully." : "Organization created successfully.";
     }
 
-    public async Task<string> DeleteOrganizationAsync(Organization organization)
+    public async Task<string> DeleteOrganizationAsync(string organizationName)
     {
-        ArgumentNullException.ThrowIfNull(organization);
+        var organization = (await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == organizationName)).FirstOrDefault();
+
+        if (organization == null)
+        {
+            return $"Organization with name {organizationName} not found.";
+        }
 
         applicationUnitOfWork.Organizations.Delete(organization);
+
         await applicationUnitOfWork.CommitAsync();
 
         return "Organization deleted successfully.";
@@ -103,7 +168,9 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         }
 
         await applicationUnitOfWork.Organizations.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
+        
         applicationUnitOfWork.Organizations.Update(organization);
+        
         await applicationUnitOfWork.CommitAsync();
     }
 }

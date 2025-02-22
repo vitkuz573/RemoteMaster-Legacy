@@ -2,7 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Server.DTOs;
+namespace RemoteMaster.Shared.DTOs;
 
 public class OrganizationalUnitDto(Guid? id, string name, Guid organizationId, Guid? parentId)
 {
