@@ -204,7 +204,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/host/{WebUtility.UrlEncode(hostConfiguration.Host.MacAddress.ToString())}/status");
+        var response = await client.GetAsync($"/api/host/{hostConfiguration.Host.MacAddress}/status");
 
         return await ProcessSimpleResponse(hostConfiguration, response);
     }
@@ -250,7 +250,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        var response = await client.GetAsync($"/api/host/{WebUtility.UrlEncode(macAddress.ToString())}/moveRequest");
+        var response = await client.GetAsync($"/api/host/{macAddress}/moveRequest");
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -268,7 +268,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var client = CreateClient(hostConfiguration.Server);
 
-        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/host/{WebUtility.UrlEncode(macAddress.ToString())}/moveRequest");
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/host/{macAddress}/moveRequest");
         var response = await client.SendAsync(request);
 
         return await ProcessSimpleResponse(hostConfiguration, response);
