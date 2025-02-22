@@ -2,13 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
-using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.DTOs;
 
@@ -106,10 +106,14 @@ public class OrganizationServiceTests
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
 
+        _applicationUnitOfWorkMock
+            .Setup(uow => uow.Organizations.FindAsync(It.IsAny<Expression<Func<Organization, bool>>>()))
+            .ReturnsAsync([organization]);
+
         _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.Delete(organization));
 
         // Act
-        var result = await _organizationService.DeleteOrganizationAsync(organization);
+        var result = await _organizationService.DeleteOrganizationAsync(organization.Name);
 
         // Assert
         Assert.Equal("Organization deleted successfully.", result);
