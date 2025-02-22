@@ -178,8 +178,8 @@ public partial class MoveHostsDialog
             {
                 await HostMoveRequestUnitOfWork.HostMoveRequests.AddAsync(new HostMoveRequest(host.MacAddress, targetOrganization, targetOrganizationalUnits));
             }
-
-            await HostMoveRequestUnitOfWork.CommitAsync();
         }
+
+        await HostMoveRequestUnitOfWork.CommitAsync();
     }
 }
