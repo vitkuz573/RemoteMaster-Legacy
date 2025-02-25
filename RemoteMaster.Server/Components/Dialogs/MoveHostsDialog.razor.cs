@@ -47,7 +47,7 @@ public partial class MoveHostsDialog
                 _currentOrganizationName = organization.Name;
                 _selectedOrganizationId = organization.Id;
 
-                await LoadOrganizationalUnits(organization.Id);
+                await LoadOrganizationalUnitsAsync(organization.Id);
             }
         }
     }
@@ -72,7 +72,7 @@ public partial class MoveHostsDialog
         }
     }
 
-    private async Task LoadOrganizationalUnits(Guid organizationId)
+    private async Task LoadOrganizationalUnitsAsync(Guid organizationId)
     {
         var authState = await AuthenticationStateTask;
         var user = authState.User;
@@ -102,12 +102,12 @@ public partial class MoveHostsDialog
         _selectedOrganizationId = organizationId;
         _selectedOrganizationalUnitId = null;
 
-        await LoadOrganizationalUnits(organizationId);
+        await LoadOrganizationalUnitsAsync(organizationId);
 
         StateHasChanged();
     }
 
-    private async Task MoveHost()
+    private async Task MoveHostAsync()
     {
         if (_selectedOrganizationalUnitId.HasValue && _selectedOrganizationalUnitId != Guid.Empty)
         {

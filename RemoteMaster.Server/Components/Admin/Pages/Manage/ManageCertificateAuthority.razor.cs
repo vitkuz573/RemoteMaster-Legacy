@@ -17,9 +17,9 @@ public partial class ManageCertificateAuthority
     private DateTime _expiryDate;
     private string _exportPassword = string.Empty;
 
-    protected override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
-        var caCertificateResult = CertificateAuthorityService.GetCaCertificate(X509ContentType.Pfx);
+        var caCertificateResult = await CertificateAuthorityService.GetCaCertificateAsync(X509ContentType.Pfx);
 
         if (caCertificateResult.IsSuccess)
         {
@@ -47,7 +47,7 @@ public partial class ManageCertificateAuthority
     {
         try
         {
-            var caCertificateResult = CertificateAuthorityService.GetCaCertificate(X509ContentType.Pfx);
+            var caCertificateResult = await CertificateAuthorityService.GetCaCertificateAsync(X509ContentType.Pfx);
 
             if (caCertificateResult.IsSuccess)
             {

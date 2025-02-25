@@ -23,13 +23,7 @@ public class OverlayManagerService(IEnumerable<IScreenOverlay> screenOverlays) :
 
     public void ActivateOverlay(string name, string connectionId)
     {
-        var overlay = screenOverlays.FirstOrDefault(o => o.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-        if (overlay == null)
-        {
-            throw new ArgumentException($"Overlay with name '{name}' not found.");
-        }
-
+        var overlay = screenOverlays.FirstOrDefault(o => o.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException($"Overlay with name '{name}' not found.");
         var overlays = _activeOverlaysPerConnection.GetOrAdd(connectionId, _ => []);
 
         overlays.Add(overlay);

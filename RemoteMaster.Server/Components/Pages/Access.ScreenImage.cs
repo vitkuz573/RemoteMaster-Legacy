@@ -47,7 +47,7 @@ public partial class Access
                     { "class", cssClass },
                     { "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, () => Task.CompletedTask) },
                     { "draggable", "false" },
-                    { "onload", EventCallback.Factory.Create<EventArgs>(this, OnLoad) },
+                    { "onload", EventCallback.Factory.Create<EventArgs>(this, OnLoadAsync) },
                     { "onmousemove", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
                     { "onmousedown", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },
                     { "onmouseup", EventCallback.Factory.Create<MouseEventArgs>(this, OnMouseEvent) },

@@ -4,13 +4,13 @@
         <div class="w-full transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg">
             <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                 <div class="flex flex-col items-center sm:flex-row sm:items-center">
-                    <div class="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 lg:hidden">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 lg:hidden">
                         <svg class="h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="leading-6 text-lg font-medium text-gray-900" id="modal-title">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
                             @Title
                         </h3>
                         <div class="mt-2 text-sm text-gray-500">
@@ -30,10 +30,10 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse">
-                <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-red-700 focus:outline-hidden sm:mt-0 sm:ml-3 sm:w-auto lg:w-32" @onclick="() => Confirm(true)">
+                <button type="button" class="shadow-xs mt-3 inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-hidden sm:mt-0 sm:ml-3 sm:w-auto lg:w-32" @onclick="() => Confirm(true)">
                     Confirm
                 </button>
-                <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-200 focus:outline-hidden sm:mt-0 sm:w-auto lg:w-32" @onclick="() => Confirm(false)">
+                <button type="button" class="shadow-xs mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-hidden sm:mt-0 sm:w-auto lg:w-32" @onclick="() => Confirm(false)">
                     Cancel
                 </button>
             </div>

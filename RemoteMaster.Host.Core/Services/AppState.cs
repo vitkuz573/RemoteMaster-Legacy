@@ -25,7 +25,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
         return _viewers.TryGetValue(connectionId, out viewer);
     }
 
-    public bool TryAddViewer(IViewer viewer)
+    public async Task<bool> TryAddViewerAsync(IViewer viewer)
     {
         ArgumentNullException.ThrowIfNull(viewer);
 
@@ -38,7 +38,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
                 ViewerAdded?.Invoke(this, viewer);
             }
 
-            NotifyViewersChanged();
+            await NotifyViewersChangedAsync();
         }
         else
         {
@@ -48,7 +48,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
         return result;
     }
 
-    public bool TryRemoveViewer(string connectionId)
+    public async Task<bool> TryRemoveViewerAsync(string connectionId)
     {
         if (!_viewers.TryRemove(connectionId, out var viewer))
         {
@@ -66,7 +66,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
                 ViewerRemoved?.Invoke(this, viewer);
             }
 
-            NotifyViewersChanged();
+            await NotifyViewersChangedAsync();
         }
         finally
         {
@@ -80,10 +80,10 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext, ILogge
 
     public IReadOnlyList<IViewer> GetAllViewers() => [.. _viewers.Values];
 
-    private void NotifyViewersChanged()
+    private async Task NotifyViewersChangedAsync()
     {
         var viewers = GetAllViewers().Select(v => new ViewerDto(v.ConnectionId, v.Group, v.UserName, v.Role, v.ConnectedTime, v.IpAddress, v.AuthenticationType)).ToList();
 
-        hubContext.Clients.All.ReceiveAllViewers(viewers);
+        await hubContext.Clients.All.ReceiveAllViewers(viewers);
     }
 }

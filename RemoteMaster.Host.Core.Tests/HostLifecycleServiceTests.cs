@@ -80,7 +80,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Attempting to register host...")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
         _loggerMock.Verify(
             x => x.Log(
@@ -88,7 +88,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Public key saved successfully at")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
         _loggerMock.Verify(
             x => x.Log(
@@ -96,7 +96,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Host registration successful with certificate received.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -128,7 +128,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Host registration was not successful.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -162,7 +162,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Failed to obtain JWT public key.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -192,7 +192,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Registering host failed: API failure.")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -220,7 +220,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Host unregister successful.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -244,7 +244,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Host unregister was not successful.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -267,7 +267,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Unregistering host failed: API failure.")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -295,7 +295,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Host information updated successfully.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -319,7 +319,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Host information update was not successful.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -342,7 +342,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Update host information failed: API failure.")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -392,7 +392,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -419,7 +419,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -445,7 +445,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Error checking host registration status: Timeout")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -471,7 +471,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Error checking host registration status: General failure")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -486,7 +486,7 @@ public class HostLifecycleServiceTests
         const string organization = "TestOrg";
 
         var expectedAddress = new AddressDto("Metropolis", "StateName", "FD");
-        var expectedOrganization = new OrganizationDto(Guid.NewGuid(), organization, expectedAddress);
+        var expectedOrganization = new OrganizationDto(It.IsAny<Guid>(), organization, expectedAddress);
 
         _apiServiceMock
             .Setup(api => api.GetOrganizationAsync(organization))
@@ -508,7 +508,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains($"Requesting organization address for organization: {organization}")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
         _loggerMock.Verify(
             x => x.Log(
@@ -516,7 +516,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains($"Successfully retrieved address for organization: {organization}")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -542,7 +542,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains($"Requesting organization address for organization: {organization}")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
         _loggerMock.Verify(
             x => x.Log(
@@ -550,7 +550,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains($"Failed to obtain JWT public key.")),
                 null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Never);
     }
 
@@ -577,7 +577,7 @@ public class HostLifecycleServiceTests
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Error retrieving organization address: API failure")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 

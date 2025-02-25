@@ -18,14 +18,14 @@ public class RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptio
     private readonly JwtOptions _options = options.Value;
     private RSA? _validationRsa;
 
-    private RSA GetValidationRsa()
+    private async Task<RSA> GetValidationRsaAsync()
     {
         if (_validationRsa == null)
         {
             try
             {
                 var publicKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "public_key.der");
-                var publicKeyBytes = fileSystem.File.ReadAllBytes(publicKeyPath);
+                var publicKeyBytes = await fileSystem.File.ReadAllBytesAsync(publicKeyPath);
 
                 _validationRsa = RSA.Create();
                 _validationRsa.ImportRSAPublicKey(publicKeyBytes, out _);
@@ -50,7 +50,7 @@ public class RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptio
         return _validationRsa;
     }
 
-    public Result ValidateToken(string accessToken)
+    public async Task<Result> ValidateTokenAsync(string accessToken)
     {
         if (string.IsNullOrEmpty(accessToken))
         {
@@ -61,7 +61,7 @@ public class RsaTokenValidationService(IFileSystem fileSystem, IOptions<JwtOptio
         var validationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new RsaSecurityKey(GetValidationRsa()),
+            IssuerSigningKey = new RsaSecurityKey(await GetValidationRsaAsync()),
             ValidateIssuer = true,
             ValidIssuer = "RemoteMaster Server",
             ValidateAudience = true,

@@ -12,7 +12,7 @@ public class SecurityInitializationService(ICertificateAuthorityService certific
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        certificateAuthorityService.EnsureCaCertificateExists();
+        await certificateAuthorityService.EnsureCaCertificateExistsAsync();
         await jwtSecurityService.EnsureKeysExistAsync();
 
         await EnsureServiceUserExistsAsync();

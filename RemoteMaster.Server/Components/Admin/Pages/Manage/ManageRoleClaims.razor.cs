@@ -57,7 +57,7 @@ public partial class ManageRoleClaims
         }
     }
 
-    private async Task OnRoleChanged(string? roleId)
+    private async Task OnRoleChangedAsync(string? roleId)
     {
         SelectedRoleId = roleId;
         SelectedRoleModel.Role = _roles.FirstOrDefault(r => r.Id == roleId)?.Name;

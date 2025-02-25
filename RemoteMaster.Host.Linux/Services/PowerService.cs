@@ -11,25 +11,25 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class PowerService(IProcessWrapperFactory processWrapperFactory, ILogger<PowerService> logger) : IPowerService
 {
-    public void Shutdown(PowerActionRequest powerActionRequest)
+    public async Task ShutdownAsync(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
         logger.LogInformation("Attempting to shutdown the system with message: {Message}, timeout: {Timeout} seconds, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
         
-        ExecuteShutdownCommand(false, powerActionRequest);
+        await ExecuteShutdownCommandAsync(false, powerActionRequest);
     }
 
-    public void Reboot(PowerActionRequest powerActionRequest)
+    public async Task RebootAsync(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
         logger.LogInformation("Attempting to reboot the system with message: {Message}, timeout: {Timeout} seconds, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
         
-        ExecuteShutdownCommand(true, powerActionRequest);
+        await ExecuteShutdownCommandAsync(true, powerActionRequest);
     }
 
-    private void ExecuteShutdownCommand(bool isReboot, PowerActionRequest powerActionRequest)
+    private async Task ExecuteShutdownCommandAsync(bool isReboot, PowerActionRequest powerActionRequest)
     {
         var timeArg = powerActionRequest.Timeout <= 0 ? "now" : $"+{Math.Ceiling(powerActionRequest.Timeout / 60.0)}";
         var message = string.IsNullOrWhiteSpace(powerActionRequest.Message) ? "" : powerActionRequest.Message;
@@ -56,7 +56,7 @@ public class PowerService(IProcessWrapperFactory processWrapperFactory, ILogger<
 
             if (process.ExitCode != 0)
             {
-                var errorOutput = process.StandardError.ReadToEnd();
+                var errorOutput = await process.StandardError.ReadToEndAsync();
                 
                 logger.LogError("Shutdown command failed with exit code {ExitCode}: {ErrorOutput}", process.ExitCode, errorOutput);
             }

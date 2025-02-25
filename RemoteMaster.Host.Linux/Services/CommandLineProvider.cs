@@ -14,7 +14,7 @@ namespace RemoteMaster.Host.Linux.Services;
 public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
 {
     /// <inheritdoc/>
-    public string[] GetCommandLine(IProcess process)
+    public async Task<string[]> GetCommandLineAsync(IProcess process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
@@ -27,7 +27,7 @@ public class CommandLineProvider(IFileSystem fileSystem) : ICommandLineProvider
 
         try
         {
-            var bytes = fileSystem.File.ReadAllBytes(cmdlinePath);
+            var bytes = await fileSystem.File.ReadAllBytesAsync(cmdlinePath);
             
             return ParseCommandLine(bytes);
         }

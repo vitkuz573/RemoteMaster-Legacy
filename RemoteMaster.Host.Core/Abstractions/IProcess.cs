@@ -32,7 +32,7 @@ public interface IProcess : IDisposable
     
     void Kill();
     
-    string[] GetCommandLine();
+    Task<string[]> GetCommandLineAsync();
     
     bool WaitForExit(uint millisecondsTimeout = uint.MaxValue);
 }

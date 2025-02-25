@@ -30,7 +30,7 @@ public class HostRegistrationMonitorService : IHostedService
         _userInstanceService = userInstanceService;
         _logger = logger;
 
-        _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
+        _timer = new Timer(CheckHostRegistrationAsync, null, Timeout.Infinite, 0);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -40,7 +40,7 @@ public class HostRegistrationMonitorService : IHostedService
         return Task.CompletedTask;
     }
 
-    private async void CheckHostRegistration(object? state)
+    private async void CheckHostRegistrationAsync(object? state)
     {
         try
         {
@@ -77,10 +77,10 @@ public class HostRegistrationMonitorService : IHostedService
                 {
                     _logger.LogError(ex, "Failed to update host information. Sync will be retried.");
 
-                    _syncIndicatorService.SetSyncRequired();
+                    await _syncIndicatorService.SetSyncRequiredAsync();
                 }
 
-                _userInstanceService.Restart();
+                await _userInstanceService.RestartAsync();
             }
             else if (!isHostRegistered)
             {
@@ -92,7 +92,7 @@ public class HostRegistrationMonitorService : IHostedService
 
                 await _certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
                 
-                _userInstanceService.Restart();
+                await _userInstanceService.RestartAsync();
             }
         }
         catch (Exception ex)
@@ -101,10 +101,8 @@ public class HostRegistrationMonitorService : IHostedService
         }
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer.Dispose();
-
-        return Task.CompletedTask;
+        await _timer.DisposeAsync();
     }
 }

@@ -28,11 +28,11 @@ public class SyncIndicatorService : ISyncIndicatorService
         return _fileSystem.File.Exists(_syncIndicatorFilePath);
     }
 
-    public void SetSyncRequired()
+    public async Task SetSyncRequiredAsync()
     {
         try
         {
-            _fileSystem.File.WriteAllText(_syncIndicatorFilePath, "Sync required");
+            await _fileSystem.File.WriteAllTextAsync(_syncIndicatorFilePath, "Sync required");
         }
         catch (Exception ex)
         {

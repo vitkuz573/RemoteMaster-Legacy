@@ -18,7 +18,7 @@ public class NotificationController(INotificationService notificationService) : 
 {
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IDictionary<NotificationMessage, bool>>), 200)]
-    public async Task<IActionResult> GetNotifications()
+    public async Task<IActionResult> GetNotificationsAsync()
     {
         var notifications = await notificationService.GetNotifications();
         var response = ApiResponse<IDictionary<NotificationMessage, bool>>.Success(notifications, "Notifications retrieved successfully.");
@@ -29,7 +29,7 @@ public class NotificationController(INotificationService notificationService) : 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<NotificationMessage>), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 404)]
-    public async Task<IActionResult> GetNotificationById(string id)
+    public async Task<IActionResult> GetNotificationByIdAsync(string id)
     {
         var message = await notificationService.GetMessageById(id);
 
@@ -41,7 +41,7 @@ public class NotificationController(INotificationService notificationService) : 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<string>), 201)]
     [ProducesResponseType(typeof(ApiResponse<string>), 400)]
-    public async Task<IActionResult> AddNotification([FromBody] NotificationMessage message)
+    public async Task<IActionResult> AddNotificationAsync([FromBody] NotificationMessage message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
@@ -61,12 +61,12 @@ public class NotificationController(INotificationService notificationService) : 
         await notificationService.AddNotification(message);
         var response = ApiResponse<string>.Success(message.Id, "Notification added successfully.");
 
-        return CreatedAtAction(nameof(GetNotificationById), new { id = message.Id }, response);
+        return CreatedAtAction(nameof(GetNotificationByIdAsync), new { id = message.Id }, response);
     }
 
     [HttpPut("{id}/read")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    public async Task<IActionResult> MarkAsRead(string id)
+    public async Task<IActionResult> MarkAsReadAsync(string id)
     {
         await notificationService.MarkNotificationsAsRead(id);
 
@@ -77,7 +77,7 @@ public class NotificationController(INotificationService notificationService) : 
 
     [HttpGet("areNewAvailable")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    public async Task<IActionResult> AreNewNotificationsAvailable()
+    public async Task<IActionResult> AreNewNotificationsAvailableAsync()
     {
         var areNewAvailable = await notificationService.AreNewNotificationsAvailable();
         var response = ApiResponse<bool>.Success(areNewAvailable, "Checked for new notifications successfully.");
@@ -87,7 +87,7 @@ public class NotificationController(INotificationService notificationService) : 
 
     [HttpPut("readAll")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    public async Task<IActionResult> MarkAllAsRead()
+    public async Task<IActionResult> MarkAllAsReadAsync()
     {
         await notificationService.MarkNotificationsAsRead();
 

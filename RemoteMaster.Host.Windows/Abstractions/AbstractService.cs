@@ -36,31 +36,31 @@ public abstract class AbstractService(IProcessWrapperFactory processWrapperFacto
 
     protected abstract string? RestartCommand { get; }
 
-    public virtual bool IsInstalled => ServiceController.GetServices().Any(service => service.ServiceName == Name);
-
-    public virtual bool IsRunning
+    public virtual Task<bool> IsInstalledAsync()
     {
-        get
+        return Task.FromResult(ServiceController.GetServices().Any(service => service.ServiceName == Name));
+    }
+
+    public async virtual Task<bool> IsRunningAsync()
+    {
+        if (!await IsInstalledAsync())
         {
-            if (!IsInstalled)
-            {
-                return false;
-            }
+            return false;
+        }
 
-            try
-            {
-                using var serviceController = new ServiceController(Name);
-
-                return serviceController.Status == ServiceControllerStatus.Running;
-            }
-            catch
-            {
-                return false;
-            }
+        try
+        {
+            using var serviceController = new ServiceController(Name);
+            
+            return serviceController.Status == ServiceControllerStatus.Running;
+        }
+        catch
+        {
+            return false;
         }
     }
 
-    public virtual void Create()
+    public virtual Task CreateAsync()
     {
         var binPath = $"{BinPath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}";
 
@@ -88,45 +88,56 @@ public abstract class AbstractService(IProcessWrapperFactory processWrapperFacto
 
         if (Dependencies == null || !Dependencies.Any())
         {
-            return;
+            return Task.CompletedTask;
         }
 
         var dependenciesStr = string.Join("/", Dependencies);
         ExecuteServiceCommand($"config {Name} depend= {dependenciesStr}");
+
+        return Task.CompletedTask;
     }
 
-    public virtual void Start()
+    public virtual Task StartAsync()
     {
         using var serviceController = new ServiceController(Name);
 
         if (serviceController.Status == ServiceControllerStatus.Running)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         serviceController.Start();
         serviceController.WaitForStatus(ServiceControllerStatus.Running);
+
+        return Task.CompletedTask;
     }
 
-    public virtual void Stop()
+    public virtual Task StopAsync()
     {
         using var serviceController = new ServiceController(Name);
 
         if (serviceController.Status == ServiceControllerStatus.Stopped)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         serviceController.Stop();
         serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+
+        return Task.CompletedTask;
     }
 
-    public virtual void Restart()
+    public virtual Task RestartAsync()
     {
         throw new NotImplementedException();
     }
 
-    public virtual void Delete() => ExecuteServiceCommand($"delete {Name}");
+    public virtual Task DeleteAsync()
+    {
+        ExecuteServiceCommand($"delete {Name}");
+
+        return Task.CompletedTask;
+    }
 
     protected virtual void ExecuteServiceCommand(string arguments)
     {
@@ -145,7 +156,6 @@ public abstract class AbstractService(IProcessWrapperFactory processWrapperFacto
 
         process.WaitForExit();
     }
-
 
     protected enum ServiceStartType
     {

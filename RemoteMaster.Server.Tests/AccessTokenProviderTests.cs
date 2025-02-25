@@ -26,8 +26,8 @@ public class AccessTokenProviderTests
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
             .ReturnsAsync(Result.Ok<string?>(accessToken));
-        _mockTokenValidationService.Setup(s => s.ValidateToken(accessToken))
-            .Returns(Result.Ok());
+        _mockTokenValidationService.Setup(s => s.ValidateTokenAsync(accessToken))
+            .ReturnsAsync(Result.Ok());
 
         var provider = new AccessTokenProvider(_mockTokenService.Object, _mockTokenStorageService.Object, _mockTokenValidationService.Object, _fakeNavigationManager);
 
@@ -51,11 +51,11 @@ public class AccessTokenProviderTests
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
             .ReturnsAsync(Result.Ok<string?>(invalidAccessToken));
-        _mockTokenValidationService.Setup(s => s.ValidateToken(invalidAccessToken))
-            .Returns(Result.Fail("Invalid token"));
+        _mockTokenValidationService.Setup(s => s.ValidateTokenAsync(invalidAccessToken))
+            .ReturnsAsync(Result.Fail("Invalid token"));
         _mockTokenStorageService.Setup(s => s.GetRefreshTokenAsync(userId))
             .ReturnsAsync(Result.Ok<string?>(validRefreshToken));
-        _mockTokenService.Setup(s => s.IsRefreshTokenValid(userId, validRefreshToken))
+        _mockTokenService.Setup(s => s.IsRefreshTokenValidAsync(userId, validRefreshToken))
             .Returns(Task.FromResult(Result.Ok()));
         _mockTokenService.Setup(s => s.GenerateTokensAsync(userId, validRefreshToken))
             .ReturnsAsync(Result.Ok(tokenData));
@@ -82,11 +82,11 @@ public class AccessTokenProviderTests
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
             .ReturnsAsync(Result.Ok<string?>(invalidAccessToken));
-        _mockTokenValidationService.Setup(s => s.ValidateToken(invalidAccessToken))
-            .Returns(Result.Fail("Invalid token"));
+        _mockTokenValidationService.Setup(s => s.ValidateTokenAsync(invalidAccessToken))
+            .ReturnsAsync(Result.Fail("Invalid token"));
         _mockTokenStorageService.Setup(s => s.GetRefreshTokenAsync(userId))
             .ReturnsAsync(Result.Ok<string?>(invalidRefreshToken));
-        _mockTokenService.Setup(s => s.IsRefreshTokenValid(userId, invalidRefreshToken))
+        _mockTokenService.Setup(s => s.IsRefreshTokenValidAsync(userId, invalidRefreshToken))
             .Returns(Task.FromResult(Result.Fail("Invalid refresh token")));
         _mockTokenStorageService.Setup(s => s.ClearTokensAsync(userId))
             .ReturnsAsync(Result.Ok());

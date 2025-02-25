@@ -18,7 +18,7 @@ public class CommandListenerService : IHostedService, IAsyncDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _loopTask = Task.Run(() => ListenLoop(_cts.Token), cancellationToken);
+        _loopTask = Task.Run(() => ListenLoopAsync(_cts.Token), cancellationToken);
 
         return Task.CompletedTask;
     }
@@ -35,7 +35,7 @@ public class CommandListenerService : IHostedService, IAsyncDisposable
         await DisposeAsync();
     }
 
-    private static async Task ListenLoop(CancellationToken token)
+    private static async Task ListenLoopAsync(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {

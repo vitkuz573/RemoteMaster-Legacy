@@ -14,7 +14,8 @@ namespace RemoteMaster.Host.Core.Hubs;
 public class CertificateHub(ICertificateService certificateService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<ICertificateClient>
 {
     [Authorize(Policy = "RenewCertificatePolicy")]
-    public async Task RenewCertificate()
+    [HubMethodName("RenewCertificate")]
+    public async Task RenewCertificateAsync()
     {
         var hostConfiguration = await hostConfigurationService.LoadAsync();
         var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
@@ -23,7 +24,8 @@ public class CertificateHub(ICertificateService certificateService, IHostConfigu
     }
 
     [Authorize(Policy = "GetCertificateSerialNumberPolicy")]
-    public async Task GetCertificateSerialNumber()
+    [HubMethodName("GetCertificateSerialNumber")]
+    public async Task GetCertificateSerialNumberAsync()
     {
         var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());
         var certificate = certificates.FirstOrDefault(c => c.HasPrivateKey);

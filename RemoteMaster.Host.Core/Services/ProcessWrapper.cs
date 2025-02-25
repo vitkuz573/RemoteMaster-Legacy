@@ -55,9 +55,9 @@ public class ProcessWrapper(Process process, ICommandLineProvider commandLinePro
         process.Kill();
     }
 
-    public string[] GetCommandLine()
+    public async Task<string[]> GetCommandLineAsync()
     {
-        return commandLineProvider.GetCommandLine(this);
+        return await commandLineProvider.GetCommandLineAsync(this);
     }
 
     public bool WaitForExit(uint millisecondsTimeout)

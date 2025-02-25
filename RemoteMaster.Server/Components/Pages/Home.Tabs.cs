@@ -65,7 +65,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Power",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Power()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await PowerAsync()),
                     IsVisible = () => UserHasClaim("Power", "Reboot") || UserHasClaim("Power", "Shutdown"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -73,7 +73,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Wake Up",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await WakeUp()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await WakeUpAsync()),
                     IsVisible = () => UserHasClaim("Power", "WakeUp"),
                     IsDisabled = () => _selectedHosts.Count == 0 || _selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -81,7 +81,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Connect",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Connect()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ConnectAsync()),
                     IsVisible = () => UserHasAnyClaim("Connect"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -89,7 +89,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Lock",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Lock()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LockAsync()),
                     IsVisible = () => UserHasClaim("Security", "LockWorkStation"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -97,7 +97,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Open Shell",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenShell()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenShellAsync()),
                     IsVisible = () => UserHasClaim("Execution", "OpenShell"),
                     IsDisabled = () => _selectedHosts.Count == 0,
                     Class = "mr-2"
@@ -105,7 +105,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Execute Script",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ExecuteScript()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ExecuteScriptAsync()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -113,7 +113,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Logon",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LogonHosts()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LogonHostsAsync()),
                     IsVisible = () => true,
                     IsDisabled = () => _selectedHosts.Count == 0 || _selectedHosts.Any(hd => _availableHosts.ContainsKey(hd.IpAddress) || _unavailableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -121,7 +121,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Logoff",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LogoffHosts()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await LogoffHostsAsync()),
                     IsVisible = () => true,
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.Any(hd => _availableHosts.ContainsKey(hd.IpAddress) || _unavailableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -129,7 +129,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Refresh",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Refresh()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await RefreshAsync()),
                     IsVisible = () => true,
                     IsDisabled = () => false,
                     Class = "ml-auto"
@@ -145,7 +145,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "App Launcher",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await AppLauncher()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await AppLauncherAsync()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -153,7 +153,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Set Monitor State",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await SetMonitorState()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await SetMonitorStateAsync()),
                     IsVisible = () => UserHasClaim("Hardware", "SetMonitorState"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -161,7 +161,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "PSExec Rules",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ManagePsExecRules()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ManagePsExecRulesAsync()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -169,7 +169,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Screen Recorder",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ScreenRecorder()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ScreenRecorderAsync()),
                     IsVisible = () => UserHasAnyClaim("ScreenRecording"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -177,7 +177,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Domain Membership",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DomainMembership()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DomainMembershipAsync()),
                     IsVisible = () => UserHasAnyClaim("DomainManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -185,7 +185,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Update",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await Update()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await UpdateAsync()),
                     IsVisible = () => UserHasClaim("UpdaterManagement", "Start"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -201,7 +201,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "WIM Boot",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await WimBoot()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await WimBootAsync()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -209,7 +209,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Task Manager",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenTaskManager()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenTaskManagerAsync()),
                     IsVisible = () => UserHasAnyClaim("TaskManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -217,7 +217,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Device Manager",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenDeviceManager()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenDeviceManagerAsync()),
                     IsVisible = () => UserHasAnyClaim("DeviceManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -225,7 +225,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "File Manager",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenFileManager()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenFileManagerAsync()),
                     IsVisible = () => UserHasAnyClaim("FileManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -233,7 +233,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Upload File",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await FileUpload()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await FileUploadAsync()),
                     IsVisible = () => UserHasClaim("FileManagement", "Upload"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -241,7 +241,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Registry Editor",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenRegistryEditor()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenRegistryEditorAsync()),
                     IsVisible = () => UserHasAnyClaim("RegistryManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -249,7 +249,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Message Box",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await MessageBox()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await MessageBoxAsync()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -257,7 +257,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Send Message",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await SendMessage()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await SendMessageAsync()),
                     IsVisible = () => UserHasAnyClaim("ChatManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -265,7 +265,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Chat",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenChat()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenChatAsync()),
                     IsVisible = () => UserHasAnyClaim("ChatManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -273,7 +273,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Logs Viewer",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenLogsManager()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenLogsManagerAsync()),
                     IsVisible = () => UserHasAnyClaim("LogManagement"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)),
                     Class = "mr-2"
@@ -289,7 +289,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Host Info",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenHostInfo()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenHostInfoAsync()),
                     IsVisible = () => UserHasClaim("HostManagement", "View"),
                     IsDisabled = () => _selectedHosts.Count != 1,
                     Class = "mr-2"
@@ -297,7 +297,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Move",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenHostMoveDialog()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenHostMoveDialogAsync()),
                     IsVisible = () => UserHasClaim("HostManagement", "Move"),
                     IsDisabled = () => _selectedHosts.Count == 0,
                     Class = "mr-2"
@@ -305,7 +305,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Remove",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenHostRemoveDialog()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await OpenHostRemoveDialogAsync()),
                     IsVisible = () => UserHasClaim("HostManagement", "Remove"),
                     IsDisabled = () => _selectedHosts.Count == 0,
                     Class = "mr-2"
@@ -313,7 +313,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Renew Certificate",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await RenewCertificate()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await RenewCertificateAsync()),
                     IsVisible = () => UserHasClaim("CertificateManagement", "Renew"),
                     IsDisabled = () => _selectedHosts.Count == 0 || !_selectedHosts.All(hd => _availableHosts.ContainsKey(hd.IpAddress)),
                     Class = "mr-2"
@@ -329,7 +329,7 @@ public partial class Home
                 new ActionDefinition
                 {
                     Label = "Remote Executor",
-                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await RemoteExecutor()),
+                    OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await RemoteExecutorAsync()),
                     IsVisible = () => UserHasClaim("Execution", "Scripts"),
                     IsDisabled = () => _selectedHosts.Count > 0,
                     Class = "mr-2"
@@ -346,19 +346,19 @@ public partial class Home
         return tabs;
     }
 
-    private async Task OpenTaskManager() => await OpenHostWindow("taskmanager");
+    private async Task OpenTaskManagerAsync() => await OpenHostWindowAsync("taskmanager");
 
-    private async Task OpenDeviceManager() => await OpenHostWindow("devicemanager");
+    private async Task OpenDeviceManagerAsync() => await OpenHostWindowAsync("devicemanager");
 
-    private async Task OpenFileManager() => await OpenHostWindow("filemanager", 1120);
+    private async Task OpenFileManagerAsync() => await OpenHostWindowAsync("filemanager", 1120);
 
-    private async Task OpenRegistryEditor() => await OpenHostWindow("registry", 1120);
+    private async Task OpenRegistryEditorAsync() => await OpenHostWindowAsync("registry", 1120);
 
-    private async Task OpenLogsManager() => await OpenHostWindow("logs", 1120);
+    private async Task OpenLogsManagerAsync() => await OpenHostWindowAsync("logs", 1120);
 
-    private async Task OpenChat() => await OpenHostWindow("chat");
+    private async Task OpenChatAsync() => await OpenHostWindowAsync("chat");
 
-    private async Task OpenHostWindow(string path, uint width = 800, uint height = 800)
+    private async Task OpenHostWindowAsync(string path, uint width = 800, uint height = 800)
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
     
@@ -368,7 +368,7 @@ public partial class Home
         }
     }
 
-    private async Task ExecuteDialog<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
+    private async Task ExecuteDialogAsync<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
     {
         var parametersWithAdditional = parameters ?? [];
     
@@ -380,7 +380,7 @@ public partial class Home
         await DialogService.ShowAsync<CommonDialogWrapper<TDialog>>(title, parametersWithAdditional, options);
     }
 
-    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true, bool includeHosts = true, Dictionary<string, object>? additionalParameters = null) where TDialog : ComponentBase
+    private async Task ExecuteActionAsync<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true, bool includeHosts = true, Dictionary<string, object>? additionalParameters = null) where TDialog : ComponentBase
     {
         var hosts = includeHosts
             ? onlyAvailable
@@ -414,23 +414,23 @@ public partial class Home
             dialogParameters.Add(nameof(CommonDialogWrapper<TDialog>.AdditionalParameters), additionalParameters);
         }
 
-        await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
+        await ExecuteDialogAsync<TDialog>(title, dialogParameters, dialogOptions);
     }
 
-    private async Task WimBoot() => await ExecuteAction<BootToWimDialog>("WIM Boot", hubPath: "hubs/control");
+    private async Task WimBootAsync() => await ExecuteActionAsync<BootToWimDialog>("WIM Boot", hubPath: "hubs/control");
 
-    private async Task OpenHostRemoveDialog()
+    private async Task OpenHostRemoveDialogAsync()
     {
         var additionalParameters = new Dictionary<string, object>
         {
-            { nameof(RemoveHostsDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemoved) }
+            { nameof(RemoveHostsDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemovedAsync) }
         };
 
-        await ExecuteAction<RemoveHostsDialog>("Remove Hosts", onlyAvailable: false, startConnection: false, requireConnections: false, additionalParameters: additionalParameters);
+        await ExecuteActionAsync<RemoveHostsDialog>("Remove Hosts", onlyAvailable: false, startConnection: false, requireConnections: false, additionalParameters: additionalParameters);
 
         return;
 
-        async Task OnHostsRemoved(IEnumerable<HostDto> removedHosts)
+        async Task OnHostsRemovedAsync(IEnumerable<HostDto> removedHosts)
         {
             foreach (var removedHost in removedHosts)
             {
@@ -444,18 +444,18 @@ public partial class Home
         }
     }
 
-    private async Task OpenHostMoveDialog()
+    private async Task OpenHostMoveDialogAsync()
     {
         var additionalParameters = new Dictionary<string, object>
         {
-            { nameof(MoveHostsDialog.OnHostsMoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
+            { nameof(MoveHostsDialog.OnHostsMoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMovedAsync) }
         };
 
-        await ExecuteAction<MoveHostsDialog>("Move Hosts", onlyAvailable: false, hubPath: "hubs/management", additionalParameters: additionalParameters);
+        await ExecuteActionAsync<MoveHostsDialog>("Move Hosts", onlyAvailable: false, hubPath: "hubs/management", additionalParameters: additionalParameters);
 
         return;
 
-        async Task OnHostsMoved(IEnumerable<HostDto> movedHosts)
+        async Task OnHostsMovedAsync(IEnumerable<HostDto> movedHosts)
         {
             foreach (var movedHost in movedHosts)
             {
@@ -469,43 +469,43 @@ public partial class Home
         }
     }
 
-    private async Task OpenHostInfo() => await ExecuteAction<HostDialog>("Host Info", false, false, requireConnections: false);
+    private async Task OpenHostInfoAsync() => await ExecuteActionAsync<HostDialog>("Host Info", false, false, requireConnections: false);
 
-    private async Task RemoteExecutor() => await ExecuteAction<RemoteCommandDialog>("Remote Command", includeHosts: false);
+    private async Task RemoteExecutorAsync() => await ExecuteActionAsync<RemoteCommandDialog>("Remote Command", includeHosts: false);
 
-    private async Task Power() => await ExecuteAction<PowerDialog>("Power");
+    private async Task PowerAsync() => await ExecuteActionAsync<PowerDialog>("Power");
 
-    private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false, requireConnections: false);
+    private async Task WakeUpAsync() => await ExecuteActionAsync<WakeUpDialog>("Wake Up", false, false, requireConnections: false);
 
-    private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
+    private async Task ConnectAsync() => await ExecuteActionAsync<ConnectDialog>("Connect");
 
-    private async Task Lock() => await ExecuteAction<LockWorkStationDialog>("Lock Workstation");
+    private async Task LockAsync() => await ExecuteActionAsync<LockWorkStationDialog>("Lock Workstation");
 
-    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
+    private async Task OpenShellAsync() => await ExecuteActionAsync<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
 
-    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Script Executor");
+    private async Task ExecuteScriptAsync() => await ExecuteActionAsync<ScriptExecutorDialog>("Script Executor");
 
-    private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", hubPath: "hubs/service");
+    private async Task ManagePsExecRulesAsync() => await ExecuteActionAsync<PsExecRulesDialog>("PSExec Rules", hubPath: "hubs/service");
 
-    private async Task AppLauncher() => await ExecuteAction<AppLauncherDialog>("App Launcher");
+    private async Task AppLauncherAsync() => await ExecuteActionAsync<AppLauncherDialog>("App Launcher");
 
-    private async Task SetMonitorState() => await ExecuteAction<MonitorStateDialog>("Set Monitor State");
+    private async Task SetMonitorStateAsync() => await ExecuteActionAsync<MonitorStateDialog>("Set Monitor State");
 
-    private async Task ScreenRecorder() => await ExecuteAction<ScreenRecorderDialog>("Screen Recorder", hubPath: "hubs/screenrecorder");
+    private async Task ScreenRecorderAsync() => await ExecuteActionAsync<ScreenRecorderDialog>("Screen Recorder", hubPath: "hubs/screenrecorder");
 
-    private async Task DomainMembership() => await ExecuteAction<DomainMembershipDialog>("Domain Membership", hubPath: "hubs/domainmembership");
+    private async Task DomainMembershipAsync() => await ExecuteActionAsync<DomainMembershipDialog>("Domain Membership", hubPath: "hubs/domainmembership");
 
-    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", hubPath: "hubs/updater");
+    private async Task UpdateAsync() => await ExecuteActionAsync<UpdateDialog>("Update", hubPath: "hubs/updater");
 
-    private async Task FileUpload() => await ExecuteAction<FileUploadDialog>("Upload File", hubPath: "hubs/filemanager");
+    private async Task FileUploadAsync() => await ExecuteActionAsync<FileUploadDialog>("Upload File", hubPath: "hubs/filemanager");
 
-    private async Task MessageBox() => await ExecuteAction<MessageBoxDialog>("Message Box");
+    private async Task MessageBoxAsync() => await ExecuteActionAsync<MessageBoxDialog>("Message Box");
 
-    private async Task SendMessage() => await ExecuteAction<SendMessageDialog>("Send Message", hubPath: "hubs/chat");
+    private async Task SendMessageAsync() => await ExecuteActionAsync<SendMessageDialog>("Send Message", hubPath: "hubs/chat");
 
-    private async Task RenewCertificate() => await ExecuteAction<RenewCertificateDialog>("Renew Certificate", hubPath: "hubs/certificate");
+    private async Task RenewCertificateAsync() => await ExecuteActionAsync<RenewCertificateDialog>("Renew Certificate", hubPath: "hubs/certificate");
 
-    private async Task Refresh()
+    private async Task RefreshAsync()
     {
         if (_logonCts?.Token.IsCancellationRequested ?? true)
         {
@@ -516,13 +516,13 @@ public partial class Home
 
         foreach (var hostDto in hostsToRefresh.TakeWhile(_ => !(_logonCts?.Token.IsCancellationRequested ?? true)))
         {
-            await LogonHost(hostDto, _logonCts!.Token);
+            await LogonHostAsync(hostDto, _logonCts!.Token);
         }
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LogonHosts()
+    private async Task LogonHostsAsync()
     {
         if (_logonCts?.Token.IsCancellationRequested ?? true)
         {
@@ -531,7 +531,7 @@ public partial class Home
 
         var logonTasks = _selectedHosts.Select(async host =>
         {
-            await LogonHost(host, _logonCts!.Token);
+            await LogonHostAsync(host, _logonCts!.Token);
             await InvokeAsync(StateHasChanged);
         });
 
@@ -540,7 +540,7 @@ public partial class Home
         ResetSelections();
     }
 
-    private async Task LogonHost(HostDto hostDto, CancellationToken cancellationToken)
+    private async Task LogonHostAsync(HostDto hostDto, CancellationToken cancellationToken)
     {
         try
         {
@@ -555,11 +555,11 @@ public partial class Home
                 return;
             }
     
-            var connection = await SetupConnection(hostDto, url, true, cancellationToken);
+            var connection = await SetupConnectionAsync(hostDto, url, true, cancellationToken);
     
             if (cancellationToken.IsCancellationRequested || connection.State != HubConnectionState.Connected)
             {
-                await SetHostState(hostDto, HostState.Unavailable, cancellationToken);
+                await SetHostStateAsync(hostDto, HostState.Unavailable, cancellationToken);
 
                 return;
             }
@@ -577,11 +577,11 @@ public partial class Home
                 {
                     hostDto.Thumbnail = thumbnailBytes;
 
-                    await SetHostState(hostDto, HostState.Available, cancellationToken);
+                    await SetHostStateAsync(hostDto, HostState.Available, cancellationToken);
                 }
                 else
                 {
-                    await SetHostState(hostDto, HostState.Unavailable, cancellationToken);
+                    await SetHostStateAsync(hostDto, HostState.Unavailable, cancellationToken);
                 }
     
                 await InvokeAsync(StateHasChanged);
@@ -603,12 +603,12 @@ public partial class Home
             {
                 Logger.LogError("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
     
-                await SetHostState(hostDto, HostState.Unavailable, cancellationToken);
+                await SetHostStateAsync(hostDto, HostState.Unavailable, cancellationToken);
             }
         }
     }
     
-    private async Task LogoffHosts()
+    private async Task LogoffHostsAsync()
     {
         if (_logonCts?.Token.IsCancellationRequested ?? true)
         {
@@ -619,16 +619,16 @@ public partial class Home
 
         var tasks = _selectedHosts
             .Where(hd => _availableHosts.ContainsKey(hd.IpAddress) || _unavailableHosts.ContainsKey(hd.IpAddress))
-            .Select(host => LogoffHost(host, cancellationToken));
+            .Select(host => LogoffHostAsync(host, cancellationToken));
 
         await Task.WhenAll(tasks);
     
         ResetSelections();
     }
     
-    private async Task LogoffHost(HostDto hostDto, CancellationToken cancellationToken) => await SetHostState(hostDto, HostState.Pending, cancellationToken);
+    private async Task LogoffHostAsync(HostDto hostDto, CancellationToken cancellationToken) => await SetHostStateAsync(hostDto, HostState.Pending, cancellationToken);
 
-    private async Task SetHostState(HostDto hostDto, HostState targetState, CancellationToken cancellationToken)
+    private async Task SetHostStateAsync(HostDto hostDto, HostState targetState, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
@@ -668,7 +668,7 @@ public partial class Home
         }
     }
 
-    private async Task<HubConnection> SetupConnection(HostDto hostDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
+    private async Task<HubConnection> SetupConnectionAsync(HostDto hostDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostDto.IpAddress}:5001/{hubPath}", options =>

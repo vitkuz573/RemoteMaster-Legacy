@@ -48,10 +48,10 @@
                         <MudTd DataLabel="Actions">
                             @if (RequireConnections)
                             {
-                                <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(context.Key))"
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnectionAsync(context.Key))"
                                                Class="@GetButtonClass(context.Key)" Disabled="@IsRefreshDisabled(context.Key)" />
                             }
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(async () => await RemoveHost(context.Key))" Class="fixed-size-button" Color="Color.Error" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(async () => await RemoveHostAsync(context.Key))" Class="fixed-size-button" Color="Color.Error" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -60,7 +60,7 @@
         @Content
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="CancelAsync">Cancel</MudButton>
         @Actions
     </DialogActions>
 </MudDialog>

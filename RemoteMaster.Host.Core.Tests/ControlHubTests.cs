@@ -100,14 +100,14 @@ public class ControlHubTests : IDisposable
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewerMock.Object);
 
-        _mockAppState.Setup(a => a.TryRemoveViewer(connectionId))
-            .Returns(true);
+        _mockAppState.Setup(a => a.TryRemoveViewerAsync(connectionId))
+            .ReturnsAsync(true);
 
         // Act
         await _controlHub.OnDisconnectedAsync(null);
 
         // Assert
-        _mockAppState.Verify(a => a.TryRemoveViewer(connectionId), Times.Once);
+        _mockAppState.Verify(a => a.TryRemoveViewerAsync(connectionId), Times.Once);
     }
 
     [Fact]
@@ -262,29 +262,29 @@ public class ControlHubTests : IDisposable
     }
 
     [Fact]
-    public void SendRebootHost_ShouldRebootHost()
+    public async Task SendRebootHost_ShouldRebootHost()
     {
         // Arrange
         var powerActionRequest = new PowerActionRequest();
 
         // Act
-        _controlHub.RebootHost(powerActionRequest);
+        await _controlHub.RebootHostAsync(powerActionRequest);
 
         // Assert
-        _mockPowerService.Verify(p => p.Reboot(powerActionRequest), Times.Once);
+        _mockPowerService.Verify(p => p.RebootAsync(powerActionRequest), Times.Once);
     }
 
     [Fact]
-    public void SendShutdownHost_ShouldShutdownHost()
+    public async Task SendShutdownHost_ShouldShutdownHost()
     {
         // Arrange
         var powerActionRequest = new PowerActionRequest();
 
         // Act
-        _controlHub.ShutdownHost(powerActionRequest);
+        await _controlHub.ShutdownHostAsync(powerActionRequest);
 
         // Assert
-        _mockPowerService.Verify(p => p.Shutdown(powerActionRequest), Times.Once);
+        _mockPowerService.Verify(p => p.ShutdownAsync(powerActionRequest), Times.Once);
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public class ControlHubTests : IDisposable
         _controlHub.ExecuteScript(scriptExecutionRequest);
 
         // Assert
-        _mockScriptService.Verify(s => s.Execute(scriptExecutionRequest), Times.Once);
+        _mockScriptService.Verify(s => s.ExecuteAsync(scriptExecutionRequest), Times.Once);
     }
 
     public void Dispose()

@@ -420,9 +420,9 @@ public class NativeProcess : IProcess
         return success;
     }
 
-    public string[] GetCommandLine()
+    public async Task<string[]> GetCommandLineAsync()
     {
-        return _commandLineProvider.GetCommandLine(this);
+        return await _commandLineProvider.GetCommandLineAsync(this);
     }
 
     public bool WaitForExit(uint millisecondsTimeout = uint.MaxValue)

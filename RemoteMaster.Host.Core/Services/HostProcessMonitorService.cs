@@ -20,7 +20,7 @@ public class HostProcessMonitorService : IHostedService
         _userInstanceService = userInstanceService;
         _logger = logger;
 
-        _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);
+        _timer = new Timer(MonitorHostInstanceAsync, null, Timeout.Infinite, 0);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -30,22 +30,20 @@ public class HostProcessMonitorService : IHostedService
         return Task.CompletedTask;
     }
 
-    private void MonitorHostInstance(object? state)
+    private async void MonitorHostInstanceAsync(object? state)
     {
-        if (_userInstanceService.IsRunning)
+        if (await _userInstanceService.IsRunningAsync())
         {
             return;
         }
 
         _logger.LogInformation("Host instance is not running. Starting it...");
 
-        _userInstanceService.Start();
+        await _userInstanceService.StartAsync();
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer.Dispose();
-
-        return Task.CompletedTask;
+        await _timer.DisposeAsync();
     }
 }

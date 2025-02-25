@@ -24,7 +24,7 @@ public interface ITokenService
     /// <param name="userId">The ID of the user whose tokens are to be revoked.</param>
     /// <param name="refreshToken">The refresh token to validate.</param>
     /// <returns>A result indicating whether the refresh token is valid.</returns>
-    Task<Result> IsRefreshTokenValid(string userId, string refreshToken);
+    Task<Result> IsRefreshTokenValidAsync(string userId, string refreshToken);
 
     /// <summary>
     /// Revokes all active refresh tokens for a user.
@@ -38,5 +38,5 @@ public interface ITokenService
     /// Cleans up expired and revoked refresh tokens from the database.
     /// </summary>
     /// <returns>A result indicating success or failure of the operation.</returns>
-    Task<Result> CleanUpExpiredRefreshTokens();
+    Task<Result> CleanUpExpiredRefreshTokensAsync();
 }

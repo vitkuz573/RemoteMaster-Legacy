@@ -13,7 +13,8 @@ namespace RemoteMaster.Host.Windows.Hubs;
 public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> logger) : Hub<IRegistryClient>
 {
     [Authorize(Policy = "GetRootKeysPolicy")]
-    public async Task GetRootKeys()
+    [HubMethodName("GetRootKeys")]
+    public async Task GetRootKeysAsync()
     {
         var rootKeys = registryService.GetRootKeys().Select(key => key.Name).ToList();
 
@@ -21,7 +22,8 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     }
 
     [Authorize(Policy = "GetRegistryValuePolicy")]
-    public async Task GetRegistryValue(RegistryHive hive, string keyPath, string valueName, object defaultValue)
+    [HubMethodName("GetRegistryValue")]
+    public async Task GetRegistryValueAsync(RegistryHive hive, string keyPath, string valueName, object defaultValue)
     {
         var value = registryService.GetValue(hive, keyPath, valueName, defaultValue);
 
@@ -29,7 +31,8 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     }
 
     [Authorize(Policy = "SetRegistryValuePolicy")]
-    public async Task SetRegistryValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)
+    [HubMethodName("SetRegistryValue")]
+    public async Task SetRegistryValueAsync(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)
     {
         try
         {
@@ -46,7 +49,8 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     }
 
     [Authorize(Policy = "GetSubKeyNamesPolicy")]
-    public async Task GetSubKeyNames(RegistryHive hive, string? keyPath, string parentKey)
+    [HubMethodName("GetSubKeyNames")]
+    public async Task GetSubKeyNamesAsync(RegistryHive hive, string? keyPath, string parentKey)
     {
         var subKeyNames = await registryService.GetSubKeyNamesAsync(hive, keyPath);
 
@@ -54,9 +58,10 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     }
 
     [Authorize(Policy = "GetAllRegistryValuesPolicy")]
-    public async Task GetAllRegistryValues(RegistryHive hive, string keyPath)
+    [HubMethodName("GetAllRegistryValues")]
+    public async Task GetAllRegistryValuesAsync(RegistryHive hive, string keyPath)
     {
-        var values = registryService.GetAllValues(hive, keyPath);
+        var values = registryService.GetAllValues(hive, keyPath).ToList();
 
         if (values.Any())
         {
@@ -71,7 +76,8 @@ public class RegistryHub(IRegistryService registryService, ILogger<RegistryHub> 
     }
 
     [Authorize(Policy = "ExportRegistryBranchPolicy")]
-    public async Task ExportRegistryBranch(RegistryHive hive, string? keyPath)
+    [HubMethodName("ExportRegistryBranch")]
+    public async Task ExportRegistryBranchAsync(RegistryHive hive, string? keyPath)
     {
         try
         {

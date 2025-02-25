@@ -23,9 +23,20 @@ public sealed class UserInstanceService : IUserInstanceService
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<UserInstanceService> _logger;
 
-    public bool IsRunning => _processService
-        .GetProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
-        .Any(p => p.HasArgument(Command));
+    public async Task<bool> IsRunningAsync()
+    {
+        var processes = _processService.GetProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
+
+        foreach (var process in processes)
+        {
+            if (await process.HasArgumentAsync(Command))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService, IFileSystem fileSystem, ILogger<UserInstanceService> logger)
     {
@@ -39,7 +50,7 @@ public sealed class UserInstanceService : IUserInstanceService
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
 
-    public void Start()
+    public Task StartAsync()
     {
         try
         {
@@ -51,15 +62,17 @@ public sealed class UserInstanceService : IUserInstanceService
         {
             _logger.LogError(ex, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
         }
+
+        return Task.CompletedTask;
     }
 
-    public void Stop()
+    public async Task StopAsync()
     {
         var processes = _processService.GetProcessesByName(_fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {
-            if (!process.HasArgument(Command))
+            if (!await process.HasArgumentAsync(Command))
             {
                 continue;
             }
@@ -77,16 +90,16 @@ public sealed class UserInstanceService : IUserInstanceService
         }
     }
 
-    public void Restart()
+    public async Task RestartAsync()
     {
-        Stop();
+        await StopAsync();
 
-        while (IsRunning)
+        while (await IsRunningAsync())
         {
-            Task.Delay(50).Wait();
+            await Task.Delay(50);
         }
 
-        Start();
+        await StartAsync();
     }
 
     private int StartNewInstance()
@@ -106,13 +119,13 @@ public sealed class UserInstanceService : IUserInstanceService
         return _instanceManagerService.StartNewInstance(null, Command, [], startInfo, options);
     }
 
-    private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
+    private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
         if (e.Reason != WTS_CONSOLE_CONNECT)
         {
             return;
         }
 
-        Restart();
+        await RestartAsync();
     }
 }

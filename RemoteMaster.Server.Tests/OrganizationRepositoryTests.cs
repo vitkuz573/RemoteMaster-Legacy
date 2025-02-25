@@ -58,7 +58,7 @@ public class OrganizationRepositoryTests
     public async Task GetByIdAsync_ReturnsNull_WhenOrganizationDoesNotExist()
     {
         // Act
-        var result = await _repository.GetByIdAsync(Guid.NewGuid());
+        var result = await _repository.GetByIdAsync(It.IsAny<Guid>());
 
         // Assert
         Assert.Null(result);
@@ -70,7 +70,7 @@ public class OrganizationRepositoryTests
         // Arrange
         var org1 = new Organization("Org 1", new Address("City1", "State1", new CountryCode("US")));
         var org2 = new Organization("Org 2", new Address("City2", "State2", new CountryCode("CA")));
-        _context.Organizations.AddRange(org1, org2);
+        await _context.Organizations.AddRangeAsync(org1, org2);
         await _context.SaveChangesAsync();
 
         // Act
@@ -173,7 +173,7 @@ public class OrganizationRepositoryTests
         // Arrange
         var org1 = new Organization("Test1", new Address("City1", "State1", new CountryCode("US")));
         var org2 = new Organization("Test2", new Address("City2", "State2", new CountryCode("CA")));
-        _context.Organizations.AddRange(org1, org2);
+        await _context.Organizations.AddRangeAsync(org1, org2);
         await _context.SaveChangesAsync();
 
         Expression<Func<Organization, bool>> predicate = o => o.Name.Contains("Test1");
@@ -192,7 +192,7 @@ public class OrganizationRepositoryTests
         // Arrange
         var org1 = new Organization("Org 1", new Address("City1", "State1", new CountryCode("US")));
         var org2 = new Organization("Org 2", new Address("City2", "State2", new CountryCode("CA")));
-        _context.Organizations.AddRange(org1, org2);
+        await _context.Organizations.AddRangeAsync(org1, org2);
         await _context.SaveChangesAsync();
 
         var ids = new List<Guid> { org1.Id, org2.Id };
@@ -270,7 +270,7 @@ public class OrganizationRepositoryTests
 
         unit1.AddHost("Comp1", ipAddress, macAddress);
 
-        _context.Organizations.AddRange(org1, org2);
+        await _context.Organizations.AddRangeAsync(org1, org2);
         await _context.SaveChangesAsync();
 
         var hostId = unit1.Hosts.First().Id;

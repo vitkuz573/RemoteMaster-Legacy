@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Linux.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Shared.Tests", "RemoteMaster.Shared.Tests\RemoteMaster.Shared.Tests.csproj", "{A9E6F7AB-AB77-4B7E-9BF1-DBB64E644572}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.SourceGenerators", "RemoteMaster.SourceGenerators\RemoteMaster.SourceGenerators.csproj", "{8954E7C4-88A6-463E-918C-F97DB5E74445}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -201,6 +203,22 @@ Global
 		{A9E6F7AB-AB77-4B7E-9BF1-DBB64E644572}.Release|x64.Build.0 = Release|Any CPU
 		{A9E6F7AB-AB77-4B7E-9BF1-DBB64E644572}.Release|x86.ActiveCfg = Release|Any CPU
 		{A9E6F7AB-AB77-4B7E-9BF1-DBB64E644572}.Release|x86.Build.0 = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|arm64.Build.0 = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|x64.Build.0 = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Debug|x86.Build.0 = Debug|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|arm64.ActiveCfg = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|arm64.Build.0 = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|x64.ActiveCfg = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|x64.Build.0 = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|x86.ActiveCfg = Release|Any CPU
+		{8954E7C4-88A6-463E-918C-F97DB5E74445}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -37,14 +37,14 @@ public class AppStateTests
     #region TryGetViewer Tests
 
     [Fact]
-    public void TryGetViewer_ViewerExists_ReturnsTrueAndViewer()
+    public async Task TryGetViewer_ViewerExists_ReturnsTrueAndViewer()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
         const string connectionId = "conn1";
         viewerMock.Setup(v => v.ConnectionId).Returns(connectionId);
 
-        _appState.TryAddViewer(viewerMock.Object);
+        await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Act
         var result = _appState.TryGetViewer(connectionId, out var retrievedViewer);
@@ -73,7 +73,7 @@ public class AppStateTests
     #region TryAddViewer Tests
 
     [Fact]
-    public void TryAddViewer_ValidViewer_AddsSuccessfully()
+    public async Task TryAddViewer_ValidViewer_AddsSuccessfully()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -83,14 +83,14 @@ public class AppStateTests
         var eventInvoked = false;
         IViewer? addedViewer = null;
 
-        _appState.ViewerAdded += (sender, viewer) =>
+        _appState.ViewerAdded += (_, viewer) =>
         {
             eventInvoked = true;
             addedViewer = viewer;
         };
 
         // Act
-        var result = _appState.TryAddViewer(viewerMock.Object);
+        var result = await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Assert
         Assert.True(result);
@@ -115,7 +115,7 @@ public class AppStateTests
     }
 
     [Fact]
-    public void TryAddViewer_DuplicateViewer_AddsFails()
+    public async Task TryAddViewer_DuplicateViewer_AddsFails()
     {
         // Arrange
         var viewerMock1 = new Mock<IViewer>();
@@ -126,14 +126,14 @@ public class AppStateTests
 
         var eventInvoked = false;
 
-        _appState.ViewerAdded += (sender, viewer) =>
+        _appState.ViewerAdded += (_, _) =>
         {
             eventInvoked = true;
         };
 
         // Act
-        var firstAddResult = _appState.TryAddViewer(viewerMock1.Object);
-        var secondAddResult = _appState.TryAddViewer(viewerMock2.Object);
+        var firstAddResult = await _appState.TryAddViewerAsync(viewerMock1.Object);
+        var secondAddResult = await _appState.TryAddViewerAsync(viewerMock2.Object);
 
         // Assert
         Assert.True(firstAddResult);
@@ -155,13 +155,13 @@ public class AppStateTests
     }
 
     [Fact]
-    public void TryAddViewer_NullViewer_ThrowsArgumentNullException()
+    public async Task TryAddViewer_NullViewer_ThrowsArgumentNullException()
     {
         // Arrange
         IViewer? nullViewer = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _appState.TryAddViewer(nullViewer!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _appState.TryAddViewerAsync(nullViewer!));
 
         // Verify that nothing was added or logged
         _controlClientMock.Verify(c => c.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Never);
@@ -180,7 +180,7 @@ public class AppStateTests
     #region TryRemoveViewer Tests
 
     [Fact]
-    public void TryRemoveViewer_ExistingViewer_RemovesSuccessfully()
+    public async Task TryRemoveViewer_ExistingViewer_RemovesSuccessfully()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -189,7 +189,7 @@ public class AppStateTests
         viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
         viewerMock.Setup(v => v.Dispose());
 
-        _appState.TryAddViewer(viewerMock.Object);
+        await _appState.TryAddViewerAsync(viewerMock.Object);
 
         var eventInvoked = false;
         IViewer? removedViewer = null;
@@ -201,7 +201,7 @@ public class AppStateTests
         };
 
         // Act
-        var result = _appState.TryRemoveViewer(connectionId);
+        var result = await _appState.TryRemoveViewerAsync(connectionId);
 
         // Assert
         Assert.True(result);
@@ -227,13 +227,13 @@ public class AppStateTests
     }
 
     [Fact]
-    public void TryRemoveViewer_NonExistingViewer_FailsToRemove()
+    public async Task TryRemoveViewer_NonExistingViewer_FailsToRemove()
     {
         // Arrange
         const string connectionId = "nonexistent";
 
         // Act
-        var result = _appState.TryRemoveViewer(connectionId);
+        var result = await _appState.TryRemoveViewerAsync(connectionId);
 
         // Assert
         Assert.False(result);
@@ -267,7 +267,7 @@ public class AppStateTests
     }
 
     [Fact]
-    public void GetAllViewers_WithViewers_ReturnsCorrectList()
+    public async Task GetAllViewers_WithViewers_ReturnsCorrectList()
     {
         // Arrange
         var viewerMock1 = new Mock<IViewer>();
@@ -277,8 +277,8 @@ public class AppStateTests
         viewerMock1.Setup(v => v.ConnectionId).Returns(connectionId1);
         viewerMock2.Setup(v => v.ConnectionId).Returns(connectionId2);
 
-        _appState.TryAddViewer(viewerMock1.Object);
-        _appState.TryAddViewer(viewerMock2.Object);
+        await _appState.TryAddViewerAsync(viewerMock1.Object);
+        await _appState.TryAddViewerAsync(viewerMock2.Object);
 
         // Act
         var viewers = _appState.GetAllViewers();
@@ -294,7 +294,7 @@ public class AppStateTests
     #region Events Tests
 
     [Fact]
-    public void ViewerAdded_EventIsTriggeredWhenViewerIsAdded()
+    public async Task ViewerAdded_EventIsTriggeredWhenViewerIsAdded()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -311,7 +311,7 @@ public class AppStateTests
         };
 
         // Act
-        var result = _appState.TryAddViewer(viewerMock.Object);
+        var result = await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Assert
         Assert.True(result);
@@ -320,7 +320,7 @@ public class AppStateTests
     }
 
     [Fact]
-    public void ViewerRemoved_EventIsTriggeredWhenViewerIsRemoved()
+    public async Task ViewerRemoved_EventIsTriggeredWhenViewerIsRemoved()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -338,10 +338,10 @@ public class AppStateTests
             removedViewer = viewer;
         };
 
-        _appState.TryAddViewer(viewerMock.Object);
+        await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Act
-        var result = _appState.TryRemoveViewer(connectionId);
+        var result = await _appState.TryRemoveViewerAsync(connectionId);
 
         // Assert
         Assert.True(result);
@@ -357,7 +357,7 @@ public class AppStateTests
     // Instead, they verify that adding/removing viewers triggers the appropriate SignalR calls.
 
     [Fact]
-    public void AddingViewer_NotifiesClients()
+    public async Task AddingViewer_NotifiesClients()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -371,7 +371,7 @@ public class AppStateTests
         viewerMock.Setup(v => v.AuthenticationType).Returns("Type1");
 
         // Act
-        var result = _appState.TryAddViewer(viewerMock.Object);
+        var result = await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Assert
         Assert.True(result);
@@ -388,7 +388,7 @@ public class AppStateTests
     }
 
     [Fact]
-    public void RemovingViewer_NotifiesClients()
+    public async Task RemovingViewer_NotifiesClients()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -403,10 +403,10 @@ public class AppStateTests
         viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
         viewerMock.Setup(v => v.Dispose());
 
-        _appState.TryAddViewer(viewerMock.Object);
+        await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Act
-        var result = _appState.TryRemoveViewer(connectionId);
+        var result = await _appState.TryRemoveViewerAsync(connectionId);
 
         // Assert
         Assert.True(result);
@@ -421,7 +421,7 @@ public class AppStateTests
     #region Logging Tests
 
     [Fact]
-    public void TryAddViewer_FailedToAdd_LogsError()
+    public async Task TryAddViewer_FailedToAdd_LogsError()
     {
         // Arrange
         var viewerMock1 = new Mock<IViewer>();
@@ -430,10 +430,10 @@ public class AppStateTests
         viewerMock1.Setup(v => v.ConnectionId).Returns(connectionId);
         viewerMock2.Setup(v => v.ConnectionId).Returns(connectionId);
 
-        _appState.TryAddViewer(viewerMock1.Object); // First add succeeds
+        await _appState.TryAddViewerAsync(viewerMock1.Object); // First add succeeds
 
         // Act
-        var secondAddResult = _appState.TryAddViewer(viewerMock2.Object); // Should fail
+        var secondAddResult = await _appState.TryAddViewerAsync(viewerMock2.Object); // Should fail
 
         // Assert
         Assert.False(secondAddResult);
@@ -450,7 +450,7 @@ public class AppStateTests
     }
 
     [Fact]
-    public void TryRemoveViewer_SuccessfulRemoval_LogsInformation()
+    public async Task TryRemoveViewer_SuccessfulRemoval_LogsInformation()
     {
         // Arrange
         var viewerMock = new Mock<IViewer>();
@@ -459,10 +459,10 @@ public class AppStateTests
         viewerMock.Setup(v => v.Context).Returns(new Mock<HubCallerContext>().Object);
         viewerMock.Setup(v => v.Dispose());
 
-        _appState.TryAddViewer(viewerMock.Object);
+        await _appState.TryAddViewerAsync(viewerMock.Object);
 
         // Act
-        var result = _appState.TryRemoveViewer(connectionId);
+        var result = await _appState.TryRemoveViewerAsync(connectionId);
 
         // Assert
         Assert.True(result);
@@ -479,13 +479,13 @@ public class AppStateTests
     }
 
     [Fact]
-    public void TryRemoveViewer_FailedRemoval_LogsError()
+    public async Task TryRemoveViewer_FailedRemoval_LogsError()
     {
         // Arrange
         const string connectionId = "nonexistent3";
 
         // Act
-        var result = _appState.TryRemoveViewer(connectionId);
+        var result = await _appState.TryRemoveViewerAsync(connectionId);
 
         // Assert
         Assert.False(result);

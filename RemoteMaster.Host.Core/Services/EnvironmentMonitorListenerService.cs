@@ -50,7 +50,7 @@ public class EnvironmentMonitorListenerService(IUserInstanceService userInstance
                     {
                         logger.LogInformation("Received restart command from environment monitor. Display: {Display}, XAuthority: {XAuthority}", message.Display, message.XAuthority);
 
-                        userInstanceService.Restart();
+                        await userInstanceService.RestartAsync();
                     }
                     else
                     {
@@ -73,11 +73,9 @@ public class EnvironmentMonitorListenerService(IUserInstanceService userInstance
         }
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _cts.Cancel();
-
-        return Task.CompletedTask;
+        await _cts.CancelAsync();
     }
 
     public async ValueTask DisposeAsync()

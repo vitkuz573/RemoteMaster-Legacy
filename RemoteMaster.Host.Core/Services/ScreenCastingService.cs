@@ -20,7 +20,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         Task.Run(async () => await StreamScreenDataAsync(viewer, viewer.CancellationTokenSource.Token), viewer.CancellationTokenSource.Token);
     }
 
-    private async Task SendDisplays(IViewer viewer)
+    private async Task SendDisplaysAsync(IViewer viewer)
     {
         var displays = screenCapturingService.GetDisplays();
 
@@ -29,7 +29,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
 
     private async Task StreamScreenDataAsync(IViewer viewer, CancellationToken cancellationToken)
     {
-        await SendDisplays(viewer);
+        await SendDisplaysAsync(viewer);
 
         try
         {

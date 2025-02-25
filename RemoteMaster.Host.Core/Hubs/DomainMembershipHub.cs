@@ -12,14 +12,16 @@ namespace RemoteMaster.Host.Core.Hubs;
 public class DomainMembershipHub(IDomainService domainService) : Hub<IDomainMembershipClient>
 {
     [Authorize(Policy = "JoinDomainPolicy")]
-    public void SendJoinToDomain(DomainJoinRequest domainJoinRequest)
+    [HubMethodName("SendJoinToDomain")]
+    public async Task SendJoinToDomainAsync(DomainJoinRequest domainJoinRequest)
     {
-        domainService.JoinToDomain(domainJoinRequest);
+        await domainService.JoinToDomainAsync(domainJoinRequest);
     }
 
     [Authorize(Policy = "UnjoinDomainPolicy")]
-    public void SendUnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
+    [HubMethodName("SendUnjoinFromDomain")]
+    public async Task SendUnjoinFromDomainAsync(DomainUnjoinRequest domainUnjoinRequest)
     {
-        domainService.UnjoinFromDomain(domainUnjoinRequest);
+        await domainService.UnjoinFromDomainAsync(domainUnjoinRequest);
     }
 }

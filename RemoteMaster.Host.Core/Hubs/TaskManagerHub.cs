@@ -11,7 +11,8 @@ namespace RemoteMaster.Host.Core.Hubs;
 public class TaskManagerHub(ITaskManagerService taskManagerService) : Hub<ITaskManagerClient>
 {
     [Authorize(Policy = "ViewProcessesPolicy")]
-    public async Task GetRunningProcesses()
+    [HubMethodName("GetRunningProcesses")]
+    public async Task GetRunningProcessesAsync()
     {
         var processes = taskManagerService.GetRunningProcesses();
 
@@ -19,11 +20,12 @@ public class TaskManagerHub(ITaskManagerService taskManagerService) : Hub<ITaskM
     }
 
     [Authorize(Policy = "KillProcessPolicy")]
-    public async Task KillProcess(int processId)
+    [HubMethodName("KillProcess")]
+    public async Task KillProcessAsync(int processId)
     {
         taskManagerService.KillProcess(processId);
 
-        await GetRunningProcesses();
+        await GetRunningProcessesAsync();
     }
 
     [Authorize(Policy = "StartProcessPolicy")]

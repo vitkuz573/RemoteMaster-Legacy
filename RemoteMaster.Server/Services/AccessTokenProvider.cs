@@ -22,7 +22,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
             if (accessTokenResult.IsSuccess && !string.IsNullOrEmpty(accessTokenResult.Value))
             {
-                var tokenValidResult = tokenValidationService.ValidateToken(accessTokenResult.Value);
+                var tokenValidResult = await tokenValidationService.ValidateTokenAsync(accessTokenResult.Value);
                 
                 if (tokenValidResult.IsSuccess)
                 {
@@ -34,16 +34,16 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
             
             if (refreshTokenResult.IsFailed || string.IsNullOrEmpty(refreshTokenResult.Value))
             {
-                await SafeLogout(userId);
+                await SafeLogoutAsync(userId);
                 
                 return Result.Fail("Refresh token not found");
             }
 
-            var refreshValidResult = await tokenService.IsRefreshTokenValid(userId, refreshTokenResult.Value);
+            var refreshValidResult = await tokenService.IsRefreshTokenValidAsync(userId, refreshTokenResult.Value);
             
             if (refreshValidResult.IsFailed)
             {
-                await SafeLogout(userId);
+                await SafeLogoutAsync(userId);
                 
                 return Result.Fail("Invalid refresh token");
             }
@@ -52,7 +52,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
            
             if (tokenDataResult.IsFailed)
             {
-                await SafeLogout(userId);
+                await SafeLogoutAsync(userId);
 
                 return Result.Fail("Token generation failed");
             }
@@ -64,7 +64,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
                 return Result.Ok(tokenDataResult.Value.AccessToken);
             }
 
-            await SafeLogout(userId);
+            await SafeLogoutAsync(userId);
 
             return Result.Fail("Token storage failed");
 
@@ -75,7 +75,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
         }
     }
 
-    private async Task SafeLogout(string userId)
+    private async Task SafeLogoutAsync(string userId)
     {
         await tokenStorageService.ClearTokensAsync(userId);
         navigationManager.NavigateTo("/Account/Logout", true);

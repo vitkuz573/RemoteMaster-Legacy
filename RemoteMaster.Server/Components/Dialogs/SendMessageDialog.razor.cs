@@ -38,7 +38,7 @@ public partial class SendMessageDialog
 
             var chatMessageDto = new ChatMessageDto(_userName, _message);
 
-            await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("SendMessage", chatMessageDto));
+            await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("SendMessage", chatMessageDto));
         }
         catch (Exception)
         {

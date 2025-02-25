@@ -88,7 +88,7 @@ public class OrganizationServiceTests
     public async Task AddOrUpdateOrganizationAsync_ShouldReturnError_WhenOrganizationNotFound()
     {
         // Arrange
-        var dto = new OrganizationDto(Guid.NewGuid(), "Nonexistent Org", new AddressDto("City", "State", "US"));
+        var dto = new OrganizationDto(It.IsAny<Guid>(), "Nonexistent Org", new AddressDto("City", "State", "US"));
         _applicationUnitOfWorkMock.Setup(uow => uow.Organizations.GetByIdAsync(dto.Id!.Value)).ReturnsAsync((Organization)null!);
 
         // Act

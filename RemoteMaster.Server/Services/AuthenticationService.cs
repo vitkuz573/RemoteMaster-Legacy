@@ -36,7 +36,7 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
             if (!userRoles.Any())
             {
-                await applicationUserService.AddSignInEntry(user, false);
+                await applicationUserService.AddSignInEntryAsync(user, false);
 
                 await eventNotificationService.SendNotificationAsync($"Login attempt for username `{username}` failed due to no roles assigned from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
@@ -54,7 +54,7 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
             {
                 logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
 
-                await applicationUserService.AddSignInEntry(user, false);
+                await applicationUserService.AddSignInEntryAsync(user, false);
 
                 await eventNotificationService.SendNotificationAsync($"Unauthorized RootAdministrator login attempt by `{username}` from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
@@ -73,7 +73,7 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
                 {
                     logger.LogInformation("RootAdministrator logged in from localhost. Redirecting to Admin page.");
 
-                    await applicationUserService.AddSignInEntry(user, true);
+                    await applicationUserService.AddSignInEntryAsync(user, true);
 
                     await eventNotificationService.SendNotificationAsync($"RootAdministrator `{username}` successfully logged in from localhost at `{DateTime.UtcNow.ToLocalTime()}`.");
 
@@ -110,7 +110,7 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager, Sig
 
                 await eventNotificationService.SendNotificationAsync($"User `{username}` logged in successfully from IP `{ipAddress}` at `{DateTime.UtcNow.ToLocalTime()}`.");
 
-                await applicationUserService.AddSignInEntry(user, true);
+                await applicationUserService.AddSignInEntryAsync(user, true);
 
                 await applicationUnitOfWork.CommitTransactionAsync();
 

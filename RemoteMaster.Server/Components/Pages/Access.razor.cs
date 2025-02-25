@@ -46,8 +46,8 @@ public partial class Access : IAsyncDisposable
     private int _frameRate;
     private int _imageQuality;
     private string _operatingSystem = string.Empty;
-    private Version _dotNetVersion = new Version();
-    private Version _hostVersion = new Version();
+    private Version _dotNetVersion = new();
+    private Version _hostVersion = new();
     private List<Display> _displays = [];
     private List<string> _codecs = [];
     private string _selectedDisplay = string.Empty;
@@ -189,7 +189,7 @@ public partial class Access : IAsyncDisposable
         return displayItems;
     }
 
-    private async Task TerminateHost()
+    private async Task TerminateHostAsync()
     {
         if (_connection == null)
         {
@@ -199,7 +199,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("TerminateHost"));
     }
 
-    private async Task LockWorkStation()
+    private async Task LockWorkStationAsync()
     {
         if (_connection == null)
         {
@@ -209,7 +209,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("LockWorkStation"));
     }
 
-    private async Task LogOffUser()
+    private async Task LogOffUserAsync()
     {
         if (_connection == null)
         {
@@ -219,7 +219,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("LogOffUser", true));
     }
 
-    private async Task SendCtrlAltDel()
+    private async Task SendCtrlAltDelAsync()
     {
         if (_connection == null)
         {
@@ -248,7 +248,7 @@ public partial class Access : IAsyncDisposable
         await connection.StopAsync();
     }
 
-    private async Task RebootHost()
+    private async Task RebootHostAsync()
     {
         if (_connection == null)
         {
@@ -265,7 +265,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("RebootHost", powerActionRequest));
     }
 
-    private async Task ShutdownHost()
+    private async Task ShutdownHostAsync()
     {
         if (_connection == null)
         {
@@ -282,7 +282,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest));
     }
 
-    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors, CertificateInfo certificateInfo)
+    private async Task<bool> ShowSslWarningDialogAsync(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors, CertificateInfo certificateInfo)
     {
         var parameters = new DialogParameters<SslWarningDialog>
         {
@@ -371,7 +371,7 @@ public partial class Access : IAsyncDisposable
                                     chain?.ChainElements.Select(e => e.Certificate.Subject).ToList() ?? []
                                 );
 
-                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors, certificateInfo)).Result;
+                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialogAsync(ipAddress, sslPolicyErrors, certificateInfo)).Result;
                             };
                         }
 
@@ -388,7 +388,7 @@ public partial class Access : IAsyncDisposable
                 .AddMessagePackProtocol(options => options.Configure())
                 .Build();
 
-            _connection.On<IEnumerable<Display>>("ReceiveDisplays", displays =>
+            _connection.On<IEnumerable<Display>>("ReceiveDisplays", async displays =>
             {
                 _displays = [.. displays];
 
@@ -399,19 +399,19 @@ public partial class Access : IAsyncDisposable
                     return;
                 }
 
-                OnChangeScreen(primaryDisplay.Name);
+                await OnChangeScreenAsync(primaryDisplay.Name);
             });
 
-            _connection.On<IEnumerable<string>>("ReceiveAvailableCodecs", codecs =>
+            _connection.On<IEnumerable<string>>("ReceiveAvailableCodecs", async codecs =>
             {
                 _codecs = [.. codecs];
 
-                OnChangeCodec(_codecs.FirstOrDefault());
+                await OnChangeCodecAsync(_codecs.FirstOrDefault());
             });
 
-            _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
-            _connection.On<string>("ReceiveAudioUpdate", HandleAudioUpdateBase64);
-            _connection.On<string>("ReceiveClipboard", HandleReceiveClipboard);
+            _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdateAsync);
+            _connection.On<string>("ReceiveAudioUpdate", HandleAudioUpdateBase64Async);
+            _connection.On<string>("ReceiveClipboard", HandleReceiveClipboardAsync);
             _connection.On<string>("ReceiveOperatingSystemVersion", operatingSystem => _operatingSystem = operatingSystem);
             _connection.On<Version>("ReceiveDotNetVersion", dotNetVersion => _dotNetVersion = dotNetVersion);
             _connection.On<Version>("ReceiveHostVersion", hostVersion => _hostVersion = hostVersion);
@@ -466,18 +466,18 @@ public partial class Access : IAsyncDisposable
 
             await TryStartConnectionAsync();
 
-            await SetImageQuality(25);
-            await SetFrameRate(60);
+            await SetImageQualityAsync(25);
+            await SetFrameRateAsync(60);
 
             switch (action)
             {
                 case "control":
-                    await ToggleIsCursorVisible(false);
-                    await ToggleInput(true);
+                    await ToggleIsCursorVisibleAsync(false);
+                    await ToggleInputAsync(true);
                     break;
                 case "view":
-                    await ToggleIsCursorVisible(true);
-                    await ToggleInput(false);
+                    await ToggleIsCursorVisibleAsync(true);
+                    await ToggleInputAsync(false);
                     break;
             }
         }
@@ -537,7 +537,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task HandleScreenUpdate(byte[] screenData)
+    private async Task HandleScreenUpdateAsync(byte[] screenData)
     {
         if (!_disposed && _firstRenderCompleted)
         {
@@ -549,7 +549,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task HandleAudioUpdateBase64(string base64Data)
+    private async Task HandleAudioUpdateBase64Async(string base64Data)
     {
         if (!_disposed && _firstRenderCompleted)
         {
@@ -559,7 +559,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task HandleReceiveClipboard(string text)
+    private async Task HandleReceiveClipboardAsync(string text)
     {
         if (!_disposed && _firstRenderCompleted)
         {
@@ -569,7 +569,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task OnLoad()
+    private async Task OnLoadAsync()
     {
         if (!_disposed && _firstRenderCompleted)
         {
@@ -581,7 +581,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task ToggleInput(bool value)
+    private async Task ToggleInputAsync(bool value)
     {
         if (_connection == null)
         {
@@ -593,7 +593,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value));
     }
 
-    private async Task ToggleUserInput(bool value)
+    private async Task ToggleUserInputAsync(bool value)
     {
         if (_connection == null)
         {
@@ -605,7 +605,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", !value));
     }
 
-    private async Task ToggleAudioStreaming(bool value)
+    private async Task ToggleAudioStreamingAsync(bool value)
     {
         if (_connection == null)
         {
@@ -628,7 +628,7 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task ToggleIsCursorVisible(bool value)
+    private async Task ToggleIsCursorVisibleAsync(bool value)
     {
         if (_connection == null)
         {
@@ -640,7 +640,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleIsCursorVisible", value));
     }
 
-    private async Task SetFrameRate(int frameRate)
+    private async Task SetFrameRateAsync(int frameRate)
     {
         if (_connection == null)
         {
@@ -652,7 +652,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetFrameRate", frameRate));
     }
 
-    private async Task SetImageQuality(int quality)
+    private async Task SetImageQualityAsync(int quality)
     {
         if (_connection == null)
         {
@@ -664,7 +664,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetImageQuality", quality));
     }
 
-    private async void OnChangeScreen(string display)
+    private async Task OnChangeScreenAsync(string display)
     {
         if (_connection == null)
         {
@@ -676,7 +676,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ChangeSelectedScreen", display));
     }
 
-    private async void OnChangeCodec(string? codec)
+    private async Task OnChangeCodecAsync(string? codec)
     {
         if (_connection == null)
         {
@@ -688,7 +688,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetCodec", codec));
     }
 
-    private async Task DisconnectViewer(string connectionId)
+    private async Task DisconnectViewerAsync(string connectionId)
     {
         var viewer = _viewers.FirstOrDefault(v => v.ConnectionId == connectionId) ?? throw new InvalidOperationException($"Viewer with Connection ID {connectionId} not found.");
         
@@ -718,7 +718,7 @@ public partial class Access : IAsyncDisposable
     
 
     [JSInvokable]
-    public async Task OnBeforeUnload()
+    public async Task OnBeforeUnloadAsync()
     {
         await DisposeAsync();
     }

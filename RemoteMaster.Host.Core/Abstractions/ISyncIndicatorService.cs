@@ -8,7 +8,7 @@ public interface ISyncIndicatorService
 {
     bool IsSyncRequired();
     
-    void SetSyncRequired();
+    Task SetSyncRequiredAsync();
     
     void ClearSyncIndicator();
 }

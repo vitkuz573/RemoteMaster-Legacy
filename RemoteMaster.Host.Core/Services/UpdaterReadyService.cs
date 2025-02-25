@@ -21,12 +21,12 @@ public class UpdaterReadyService(IHubContext<UpdaterHub, IUpdaterClient> hubCont
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _loopTask = Task.Run(() => ListenLoop(_cts.Token), cancellationToken);
+        _loopTask = Task.Run(() => ListenLoopAsync(_cts.Token), cancellationToken);
 
         return Task.CompletedTask;
     }
 
-    private async Task ListenLoop(CancellationToken token)
+    private async Task ListenLoopAsync(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {

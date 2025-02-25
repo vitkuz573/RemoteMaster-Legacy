@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IPowerService
 {
-    void Shutdown(PowerActionRequest powerActionRequest);
+    Task ShutdownAsync(PowerActionRequest powerActionRequest);
 
-    void Reboot(PowerActionRequest powerActionRequest);
+    Task RebootAsync(PowerActionRequest powerActionRequest);
 }

@@ -15,9 +15,9 @@ public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectory
 {
     private readonly ActiveDirectoryOptions _options = options.Value;
 
-    public Result EnsureCaCertificateExists()
+    public async Task<Result> EnsureCaCertificateExistsAsync()
     {
-        var caCertificateResult = GetCaCertificate(X509ContentType.Cert);
+        var caCertificateResult = await GetCaCertificateAsync(X509ContentType.Cert);
 
         if (caCertificateResult.IsFailed)
         {
@@ -31,7 +31,7 @@ public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectory
         return Result.Ok();
     }
 
-    public Result<X509Certificate2> GetCaCertificate(X509ContentType contentType)
+    public Task<Result<X509Certificate2>> GetCaCertificateAsync(X509ContentType contentType)
     {
         try
         {
@@ -52,14 +52,14 @@ public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectory
             {
                 logger.LogWarning("CA certificate not found in Active Directory.");
 
-                return Result.Fail("Certificate Authority not found in Active Directory.");
+                return Task.FromResult(Result.Fail<X509Certificate2>("Certificate Authority not found in Active Directory."));
             }
 
             if (!result.Properties.Contains("cACertificate") || result.Properties["cACertificate"].Count == 0)
             {
                 logger.LogWarning("Certificate attribute not found or empty for the given CA.");
 
-                return Result.Fail("Certificate attribute not found or empty.");
+                return Task.FromResult(Result.Fail<X509Certificate2>("Certificate attribute not found or empty."));
             }
 
             var rawData = (byte[])result.Properties["cACertificate"][0];
@@ -67,13 +67,13 @@ public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectory
 
             logger.LogInformation("Successfully retrieved CA certificate from Active Directory.");
 
-            return Result.Ok(certificate);
+            return Task.FromResult(Result.Ok(certificate));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occurred while retrieving the CA certificate from Active Directory.");
 
-            return Result.Fail(new ExceptionalError(ex));
+            return Task.FromResult(Result.Fail<X509Certificate2>(new ExceptionalError(ex)));
         }
     }
 }

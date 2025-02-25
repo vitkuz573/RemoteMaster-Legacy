@@ -24,10 +24,10 @@ public partial class PowerDialog
         switch (_selectedOption)
         {
             case "shutdown":
-                await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("ShutdownHost", powerActionRequest));
+                await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("ShutdownHost", powerActionRequest));
                 break;
             case "reboot":
-                await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("RebootHost", powerActionRequest));
+                await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("RebootHost", powerActionRequest));
                 break;
         }
 

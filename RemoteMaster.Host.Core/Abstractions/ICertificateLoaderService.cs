@@ -10,5 +10,5 @@ public interface ICertificateLoaderService
 {
     X509Certificate2? GetCurrentCertificate();
 
-    void LoadCertificate();
+    Task LoadCertificateAsync();
 }

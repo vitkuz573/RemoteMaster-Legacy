@@ -7,7 +7,7 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Aggregates.HostMoveRequestAggregate;
 
-public record HostMoveRequest : IAggregateRoot
+public class HostMoveRequest : IAggregateRoot
 {
     protected HostMoveRequest() { }
 

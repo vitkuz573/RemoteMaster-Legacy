@@ -17,5 +17,5 @@ public interface ICommandLineProvider
     /// <exception cref="ArgumentNullException">
     /// Thrown when the <paramref name="process"/> parameter is <c>null</c>.
     /// </exception>
-    string[] GetCommandLine(IProcess process);
+    Task<string[]> GetCommandLineAsync(IProcess process);
 }

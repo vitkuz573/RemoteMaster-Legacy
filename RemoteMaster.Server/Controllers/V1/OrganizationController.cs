@@ -22,7 +22,7 @@ public class OrganizationController(IOrganizationService organizationService) : 
     [ProducesResponseType(typeof(ApiResponse<AddressDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetOrganization([FromRoute, Required] string name)
+    public async Task<IActionResult> GetOrganizationAsync([FromRoute, Required] string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -38,7 +38,7 @@ public class OrganizationController(IOrganizationService organizationService) : 
             return BadRequest(errorResponse);
         }
 
-        var organization = await organizationService.GetOrganization(name);
+        var organization = await organizationService.GetOrganizationAsync(name);
 
         if (organization == null)
         {

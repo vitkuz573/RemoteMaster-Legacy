@@ -21,11 +21,11 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
 
             var hostService = serviceFactory.GetService("RCHost");
 
-            StopServiceWithRetry(hostService);
+            await StopServiceWithRetryAsync(hostService);
 
-            if (userInstanceService.IsRunning)
+            if (await userInstanceService.IsRunningAsync())
             {
-                userInstanceService.Stop();
+                await userInstanceService.StopAsync();
             }
 
             await fileService.WaitForFileReleaseAsync(_rootDirectory);
@@ -42,11 +42,11 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
                 return;
             }
 
-            await CopyFileWithRetry(sourceExePath, destinationExePath, true);
+            await CopyFileWithRetryAsync(sourceExePath, destinationExePath, true);
 
             await notifier.NotifyAsync("Emergency recovery completed successfully. Attempting to restart services...", MessageSeverity.Information);
 
-            await StartServiceWithRetry(hostService);
+            await StartServiceWithRetryAsync(hostService);
 
             await notifier.NotifyAsync("Services have been successfully restarted after emergency recovery.", MessageSeverity.Information);
         }
@@ -56,7 +56,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         }
     }
 
-    private async Task CopyFileWithRetry(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 5)
+    private async Task CopyFileWithRetryAsync(string sourceFile, string destinationFile, bool overwrite, int maxAttempts = 5)
     {
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -88,7 +88,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         throw new IOException($"Failed to copy file {sourceFile} to {destinationFile} after {maxAttempts} attempts.");
     }
 
-    private static void StopServiceWithRetry(IRunnable runnableService, int maxAttempts = 3)
+    private static async Task StopServiceWithRetryAsync(IRunnable runnableService, int maxAttempts = 3)
     {
         if (runnableService is not IService service)
         {
@@ -99,7 +99,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         {
             try
             {
-                service.Stop();
+                await service.StopAsync();
 
                 return;
             }
@@ -115,7 +115,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         }
     }
 
-    private async Task StartServiceWithRetry(IRunnable runnableService, int maxAttempts = 3)
+    private async Task StartServiceWithRetryAsync(IRunnable runnableService, int maxAttempts = 3)
     {
         if (runnableService is not IService service)
         {
@@ -126,7 +126,7 @@ public class RecoveryService(IChecksumValidator checksumValidator, IApplicationP
         {
             try
             {
-                service.Start();
+                await service.StartAsync();
 
                 await notifier.NotifyAsync($"{service.Name} service started successfully.", MessageSeverity.Information);
 

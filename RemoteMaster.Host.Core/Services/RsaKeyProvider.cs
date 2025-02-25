@@ -12,55 +12,60 @@ namespace RemoteMaster.Host.Core.Services;
 public class RsaKeyProvider(IFileSystem fileSystem, IApplicationPathProvider applicationPathProvider, ILogger<RsaKeyProvider> logger) : IRsaKeyProvider
 {
     private RSA? _rsa;
-    private readonly Lock _lock = new();
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public RSA? GetRsaPublicKey()
+    public async Task<RSA?> GetRsaPublicKeyAsync()
     {
         if (_rsa != null)
         {
             return _rsa;
         }
 
-        using (_lock.EnterScope())
+        await _semaphore.WaitAsync();
+
+        try
         {
             if (_rsa != null)
             {
                 return _rsa;
             }
 
-            try
+            var publicKeyPath = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "JWT", "public_key.der");
+
+            if (fileSystem.File.Exists(publicKeyPath))
             {
-                var publicKeyPath = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "JWT", "public_key.der");
+                var publicKey = await fileSystem.File.ReadAllBytesAsync(publicKeyPath);
 
-                if (fileSystem.File.Exists(publicKeyPath))
+                if (publicKey.Length == 0)
                 {
-                    var publicKey = fileSystem.File.ReadAllBytes(publicKeyPath);
+                    logger.LogError("Public key file is empty.");
 
-                    if (publicKey.Length == 0)
-                    {
-                        logger.LogError("Public key file is empty.");
-
-                        return null;
-                    }
-
-                    var rsa = RSA.Create();
-                    rsa.ImportRSAPublicKey(publicKey, out _);
-
-                    _rsa = rsa;
+                    return null;
                 }
-                else
-                {
-                    logger.LogWarning("Public key file not found at path: {PublicKeyPath}", publicKeyPath);
-                }
+
+                var rsa = RSA.Create();
+                rsa.ImportRSAPublicKey(publicKey, out _);
+
+                _rsa = rsa;
             }
-            catch (Exception ex)
+            else
             {
-                logger.LogError(ex, "Failed to load RSA public key.");
-
-                _rsa = null;
+                logger.LogWarning("Public key file not found at path: {PublicKeyPath}", publicKeyPath);
             }
 
             return _rsa;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to load RSA public key.");
+
+            _rsa = null;
+
+            return _rsa;
+        }
+        finally
+        {
+            _semaphore.Release();
         }
     }
 }

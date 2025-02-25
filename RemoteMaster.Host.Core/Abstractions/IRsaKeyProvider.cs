@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IRsaKeyProvider
 {
-    RSA? GetRsaPublicKey();
+    Task<RSA?> GetRsaPublicKeyAsync();
 }

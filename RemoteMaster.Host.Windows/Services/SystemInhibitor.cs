@@ -29,7 +29,7 @@ public unsafe class WindowsSystemInhibitor(ILogger<WindowsSystemInhibitor> logge
 
     private static readonly delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT> WndProc = &StaticWndProc;
 
-    public void Block(string reason)
+    public Task BlockAsync(string reason)
     {
         if (string.IsNullOrEmpty(reason))
         {
@@ -73,6 +73,8 @@ public unsafe class WindowsSystemInhibitor(ILogger<WindowsSystemInhibitor> logge
         _isSleepInhibited = true;
 
         logger.LogInformation("System block applied (sleep and shutdown): {Reason}", reason);
+
+        return Task.CompletedTask;
     }
 
     public void Unblock()

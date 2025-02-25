@@ -25,7 +25,7 @@ public class FileManagerServiceTests
     {
         // Arrange
         var path = _mockFileSystem.Path.GetTempPath();
-        var fileName = Guid.NewGuid().ToString();
+        var fileName = _mockFileSystem.Path.GetRandomFileName();
         var fileData = new byte[] { 1, 2, 3, 4, 5 };
 
         // Act
@@ -41,12 +41,12 @@ public class FileManagerServiceTests
     }
 
     [Fact]
-    public void DownloadFile_ReturnsMemoryStream()
+    public async Task DownloadFile_ReturnsMemoryStream()
     {
         // Arrange
-        var path = _mockFileSystem.Path.GetTempFileName();
+        var path = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetTempPath(), _mockFileSystem.Path.GetRandomFileName());
         var fileData = new byte[] { 1, 2, 3, 4, 5 };
-        _mockFileSystem.File.WriteAllBytes(path, fileData);
+        await _mockFileSystem.File.WriteAllBytesAsync(path, fileData);
 
         // Act
         var result = _fileManagerService.DownloadFile(path);
@@ -63,21 +63,21 @@ public class FileManagerServiceTests
         }
 
         // Cleanup
-        result.Dispose();
+        await result.DisposeAsync();
         _mockFileSystem.File.Delete(path);
     }
 
     [Fact]
-    public void GetFilesAndDirectories_ReturnsCorrectItems()
+    public async Task GetFilesAndDirectories_ReturnsCorrectItems()
     {
         // Arrange
-        var tempDir = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetTempPath(), _mockFileSystem.Path.GetRandomFileName());
         _mockFileSystem.Directory.CreateDirectory(tempDir);
 
-        var tempFile = _mockFileSystem.Path.Combine(tempDir, $"{Guid.NewGuid()}.txt");
-        _mockFileSystem.File.WriteAllText(tempFile, "Test file content");
+        var tempFile = _mockFileSystem.Path.Combine(tempDir, $"{_mockFileSystem.Path.GetRandomFileName()}.txt");
+        await _mockFileSystem.File.WriteAllTextAsync(tempFile, "Test file content");
 
-        var subDir = _mockFileSystem.Path.Combine(tempDir, Guid.NewGuid().ToString());
+        var subDir = _mockFileSystem.Path.Combine(tempDir, _mockFileSystem.Path.GetRandomFileName());
         _mockFileSystem.Directory.CreateDirectory(subDir);
 
         // Act

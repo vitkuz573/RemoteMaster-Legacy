@@ -20,9 +20,9 @@ public class CaController(ICertificateAuthorityService certificateAuthorityServi
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
-    public IActionResult GetCaCertificate()
+    public async Task<IActionResult> GetCaCertificateAsync()
     {
-        var caCertificateResult = certificateAuthorityService.GetCaCertificate(X509ContentType.Cert);
+        var caCertificateResult = await certificateAuthorityService.GetCaCertificateAsync(X509ContentType.Cert);
 
         if (caCertificateResult.IsSuccess)
         {

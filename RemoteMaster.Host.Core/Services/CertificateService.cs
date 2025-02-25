@@ -41,7 +41,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
                 throw new InvalidOperationException("Certificate processing failed.");
             }
 
-            await ProcessCertificate(certificate, rsaKeyPair);
+            await ProcessCertificateAsync(certificate, rsaKeyPair);
         }
         catch (Exception ex)
         {
@@ -165,7 +165,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
         logger.LogInformation("Finished removing existing certificates.");
     }
 
-    private async Task ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair)
+    private async Task ProcessCertificateAsync(byte[] certificateBytes, RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(certificateBytes);
         ArgumentNullException.ThrowIfNull(rsaKeyPair);
@@ -215,7 +215,7 @@ public class CertificateService(IApiService apiService, ISubjectService subjectS
                 logger.LogInformation("Certificate and private key saved successfully at {CertPath} and {KeyPath}.", certPath, keyPath);
             }
 
-            certificateLoaderService.LoadCertificate();
+            await certificateLoaderService.LoadCertificateAsync();
         }
         catch (Exception ex)
         {

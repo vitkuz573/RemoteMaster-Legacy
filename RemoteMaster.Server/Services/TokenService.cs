@@ -39,7 +39,7 @@ public class TokenService(IDbContextFactory<ApplicationDbContext> dbContextFacto
             return Result.Fail<TokenData>(claimsResult.Errors.Select(e => e.Message).ToArray());
         }
 
-        var accessTokenResult = tokenSigningService.GenerateAccessToken(claimsResult.Value);
+        var accessTokenResult = await tokenSigningService.GenerateAccessTokenAsync(claimsResult.Value);
 
         if (accessTokenResult.IsFailed)
         {
@@ -101,7 +101,7 @@ public class TokenService(IDbContextFactory<ApplicationDbContext> dbContextFacto
         return Result.Ok();
     }
 
-    public async Task<Result> CleanUpExpiredRefreshTokens()
+    public async Task<Result> CleanUpExpiredRefreshTokensAsync()
     {
         logger.LogDebug("Starting cleanup of expired and revoked refresh tokens.");
 
@@ -138,7 +138,7 @@ public class TokenService(IDbContextFactory<ApplicationDbContext> dbContextFacto
         return Result.Ok();
     }
 
-    public async Task<Result> IsRefreshTokenValid(string userId, string refreshToken)
+    public async Task<Result> IsRefreshTokenValidAsync(string userId, string refreshToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 

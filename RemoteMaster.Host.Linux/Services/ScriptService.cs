@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Linux.Services;
 
 public class ScriptService(IApplicationPathProvider applicationPathProvider, IFileSystem fileSystem, IShellScriptHandlerFactory shellScriptHandlerFactory, IProcessWrapperFactory processWrapperFactory, IHubContext<ControlHub, IControlClient> hubContext, ILogger<ScriptService> logger) : IScriptService
 {
-    public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
+    public async Task ExecuteAsync(ScriptExecutionRequest scriptExecutionRequest)
     {
         ArgumentNullException.ThrowIfNull(scriptExecutionRequest);
 
@@ -26,7 +26,7 @@ public class ScriptService(IApplicationPathProvider applicationPathProvider, IFi
 
         var publicDirectory = applicationPathProvider.DataDirectory;
 
-        var fileName = $"{Guid.NewGuid()}{scriptHandler.FileExtension}";
+        var fileName = $"{fileSystem.Path.GetRandomFileName()}{scriptHandler.FileExtension}";
         var tempFilePath = fileSystem.Path.Combine(publicDirectory, fileName);
 
         logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);

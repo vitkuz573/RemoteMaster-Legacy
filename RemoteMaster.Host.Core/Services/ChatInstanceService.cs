@@ -16,11 +16,22 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
-    public bool IsRunning => processService
-        .GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath))
-        .Any(p => p.HasArgument(Command));
+    public async Task<bool> IsRunningAsync()
+    {
+        var processes = processService.GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
-    public void Start()
+        foreach (var process in processes)
+        {
+            if (await process.HasArgumentAsync(Command))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Task StartAsync()
     {
         try
         {
@@ -32,15 +43,17 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
         {
             logger.LogError(ex, "Error starting new {Command} instance of the host. Executable path: {Path}", Command, _currentExecutablePath);
         }
+
+        return Task.CompletedTask;
     }
 
-    public void Stop()
+    public async Task StopAsync()
     {
         var processes = processService.GetProcessesByName(fileSystem.Path.GetFileNameWithoutExtension(_currentExecutablePath));
 
         foreach (var process in processes)
         {
-            if (!process.HasArgument(Command))
+            if (!await process.HasArgumentAsync(Command))
             {
                 continue;
             }
@@ -58,16 +71,16 @@ public class ChatInstanceService(IInstanceManagerService instanceManagerService,
         }
     }
 
-    public void Restart()
+    public async Task RestartAsync()
     {
-        Stop();
+        await StopAsync();
 
-        while (IsRunning)
+        while (await IsRunningAsync())
         {
-            Task.Delay(50).Wait();
+            await Task.Delay(50);
         }
 
-        Start();
+        await StartAsync();
     }
 
     private int StartNewInstance()

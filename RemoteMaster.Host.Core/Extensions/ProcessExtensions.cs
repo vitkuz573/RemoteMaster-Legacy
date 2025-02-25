@@ -8,11 +8,11 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ProcessExtensions
 {
-    public static bool HasArgument(this IProcess process, string argument)
+    public static async Task<bool> HasArgumentAsync(this IProcess process, string argument)
     {
         ArgumentNullException.ThrowIfNull(process);
 
-        var commandLine = process.GetCommandLine();
+        var commandLine = await process.GetCommandLineAsync();
 
         return commandLine.Contains(argument);
     }

@@ -32,13 +32,13 @@ public partial class FileManager : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private string? _currentPath = null;
+    private string? _currentPath;
     private IBrowserFile? _selectedFile;
     private bool _firstRenderCompleted;
     private bool _disposed;
 
     private List<FileSystemItem> _items = [];
-    private string _selectedItem;
+    private string? _selectedItem;
 
     private bool _isAccessDenied;
 
@@ -99,7 +99,7 @@ public partial class FileManager : IAsyncDisposable
         {
             await NavigateUp();
         }
-        else if (item.Type == FileSystemItemType.Drive || item.Type == FileSystemItemType.Directory)
+        else if (item.Type is FileSystemItemType.Drive or FileSystemItemType.Directory)
         {
             await ChangeDirectory(item.Name);
         }
@@ -228,14 +228,7 @@ public partial class FileManager : IAsyncDisposable
 
     private async Task ChangeDirectory(string directory)
     {
-        if (string.IsNullOrEmpty(_currentPath))
-        {
-            _currentPath = directory;
-        }
-        else
-        {
-            _currentPath = FileSystem.Path.Combine(_currentPath, directory);
-        }
+        _currentPath = string.IsNullOrEmpty(_currentPath) ? directory : FileSystem.Path.Combine(_currentPath, directory);
 
         await FetchFilesAndDirectories();
     }

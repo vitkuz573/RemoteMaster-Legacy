@@ -229,7 +229,7 @@ public partial class SignInJournal
         _showFilterHelp = false;
     }
 
-    private async Task ClearJournal()
+    private async Task ClearJournalAsync()
     {
         ApplicationUnitOfWork.ApplicationUsers.ClearSignInEntries();
         await ApplicationUnitOfWork.CommitAsync();

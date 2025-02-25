@@ -52,13 +52,13 @@ public class DependencyInstallerService(IProcessWrapperFactory processWrapperFac
 
             logger.LogInformation("Checking dependency: {DependencyName}", dependency.Name);
             
-            var isInstalled = await IsDependencyInstalled(dependency, cancellationToken);
+            var isInstalled = await IsDependencyInstalledAsync(dependency, cancellationToken);
 
             if (!isInstalled)
             {
                 logger.LogWarning("Dependency {DependencyName} is not installed. Attempting installation...", dependency.Name);
                 
-                var installedSuccessfully = await InstallDependency(dependency, cancellationToken);
+                var installedSuccessfully = await InstallDependencyAsync(dependency, cancellationToken);
 
                 if (installedSuccessfully)
                 {
@@ -88,7 +88,7 @@ public class DependencyInstallerService(IProcessWrapperFactory processWrapperFac
     /// <summary>
     /// Checks whether a dependency is installed by executing its check command.
     /// </summary>
-    private async Task<bool> IsDependencyInstalled(Dependency dependency, CancellationToken cancellationToken)
+    private async Task<bool> IsDependencyInstalledAsync(Dependency dependency, CancellationToken cancellationToken)
     {
         try
         {
@@ -133,7 +133,7 @@ public class DependencyInstallerService(IProcessWrapperFactory processWrapperFac
     /// <summary>
     /// Installs a dependency by executing its installation command.
     /// </summary>
-    private async Task<bool> InstallDependency(Dependency dependency, CancellationToken cancellationToken)
+    private async Task<bool> InstallDependencyAsync(Dependency dependency, CancellationToken cancellationToken)
     {
         try
         {

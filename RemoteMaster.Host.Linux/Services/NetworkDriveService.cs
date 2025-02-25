@@ -29,7 +29,7 @@ public class NetworkDriveService : INetworkDriveService
         }
     }
 
-    public bool MapNetworkDrive(string remotePath, string? username, string? password)
+    public async Task<bool> MapNetworkDriveAsync(string remotePath, string? username, string? password)
     {
         ArgumentNullException.ThrowIfNull(remotePath);
 
@@ -77,7 +77,7 @@ public class NetworkDriveService : INetworkDriveService
 
             if (process.ExitCode != 0)
             {
-                var error = process.StandardError.ReadToEnd();
+                var error = await process.StandardError.ReadToEndAsync();
 
                 _logger.LogError("Failed to map network drive with remote path {RemotePath}. Error: {Error}", remotePath, error);
 
@@ -96,7 +96,7 @@ public class NetworkDriveService : INetworkDriveService
         }
     }
 
-    public bool CancelNetworkDrive(string remotePath)
+    public async Task<bool> CancelNetworkDriveAsync(string remotePath)
     {
         ArgumentNullException.ThrowIfNull(remotePath);
         
@@ -121,7 +121,7 @@ public class NetworkDriveService : INetworkDriveService
 
             if (process.ExitCode != 0)
             {
-                var error = process.StandardError.ReadToEnd();
+                var error = await process.StandardError.ReadToEndAsync();
 
                 _logger.LogError("Failed to cancel network drive with remote path {RemotePath}. Error: {Error}", remotePath, error);
 

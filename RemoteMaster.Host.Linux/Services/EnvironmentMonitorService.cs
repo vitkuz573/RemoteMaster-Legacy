@@ -22,7 +22,7 @@ public class EnvironmentMonitorService(IEnvironmentProvider environmentProvider,
             var currentXAuthority = Environment.GetEnvironmentVariable("XAUTHORITY") ?? string.Empty;
 
             var expectedDisplay = await environmentProvider.GetDisplayAsync();
-            var expectedXAuthority = environmentProvider.GetXAuthority();
+            var expectedXAuthority = await environmentProvider.GetXAuthorityAsync();
 
             if (!string.Equals(currentDisplay, expectedDisplay, StringComparison.Ordinal) || !string.Equals(currentXAuthority, expectedXAuthority, StringComparison.Ordinal))
             {

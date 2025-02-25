@@ -21,72 +21,68 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
 
     protected abstract string? Description { get; }
 
-    public virtual bool IsInstalled
+    public async Task<bool> IsInstalledAsync()
     {
-        get
-        {
-            var unitFilePath = $"/etc/systemd/system/{Name}.service";
+        var unitFilePath = $"/etc/systemd/system/{Name}.service";
 
-            if (fileSystem.File.Exists(unitFilePath))
+        if (!fileSystem.File.Exists(unitFilePath))
+        {
+            logger.LogDebug("Unit file {UnitFilePath} does not exist.", unitFilePath);
+
+            return false;
+        }
+
+        return await IsServiceEnabledAsync();
+    }
+
+    public async virtual Task<bool> IsRunningAsync()
+    {
+        if (!await IsInstalledAsync())
+        {
+            return false;
+        }
+
+        try
+        {
+            var process = processWrapperFactory.Create();
+
+            var startInfo = new ProcessStartInfo
             {
-                return IsServiceEnabled();
+                FileName = "systemctl",
+                Arguments = $"is-active {Name}.service",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            process.Start(startInfo);
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var error = await process.StandardError.ReadToEndAsync();
+
+            process.WaitForExit();
+
+            if (process.ExitCode == 0 && output.Trim().Equals("active", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogDebug("{Name} service is active.", Name);
+                
+                return true;
             }
 
-            logger.LogDebug("Unit file {UnitFilePath} does not exist.", unitFilePath);
+            logger.LogDebug("{Name} service is not active: {Output} {Error}", Name, output, error);
+            
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to check if {Name} service is running.", Name);
 
             return false;
         }
     }
 
-    public virtual bool IsRunning
-    {
-        get
-        {
-            if (!IsInstalled)
-            {
-                return false;
-            }
-
-            try
-            {
-                var process = processWrapperFactory.Create();
-
-                process.Start(new ProcessStartInfo
-                {
-                    FileName = "systemctl",
-                    Arguments = $"is-active {Name}.service",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
-
-                var output = process.StandardOutput.ReadToEnd().Trim();
-                var error = process.StandardError.ReadToEnd().Trim();
-
-                process.WaitForExit();
-
-                if (process.ExitCode == 0 && output.Equals("active", StringComparison.OrdinalIgnoreCase))
-                {
-                    logger.LogDebug("{Name} service is active.", Name);
-
-                    return true;
-                }
-
-                logger.LogDebug("{Name} service is not active: {Output} {Error}", Name, output, error);
-               
-                return false;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to check if {Name} service is running.", Name);
-                
-                return false;
-            }
-        }
-    }
-
-    public virtual void Create()
+    public async virtual Task CreateAsync()
     {
         try
         {
@@ -97,15 +93,15 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
             
             logger.LogInformation("Systemd unit file created at {UnitFilePath}.", unitFilePath);
 
-            ExecuteDaemonCommand("daemon-reload");
+            await ExecuteDaemonCommandAsync("daemon-reload");
             
             logger.LogInformation("Systemd daemon reloaded.");
 
-            ExecuteDaemonCommand($"enable {Name}.service");
+            await ExecuteDaemonCommandAsync($"enable {Name}.service");
 
             logger.LogInformation("{Name} service enabled to start on boot.", Name);
 
-            ExecuteDaemonCommand($"start {Name}.service");
+            await ExecuteDaemonCommandAsync($"start {Name}.service");
 
             logger.LogInformation("{Name} service started successfully.", Name);
         }
@@ -115,15 +111,15 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
         }
     }
 
-    public virtual void Delete()
+    public async virtual Task DeleteAsync()
     {
         try
         {
-            ExecuteDaemonCommand($"stop {Name}.service");
+            await ExecuteDaemonCommandAsync($"stop {Name}.service");
             
             logger.LogInformation("{Name} service stopped.", Name);
 
-            ExecuteDaemonCommand($"disable {Name}.service");
+            await ExecuteDaemonCommandAsync($"disable {Name}.service");
             
             logger.LogInformation("{Name} service disabled from starting on boot.", Name);
 
@@ -140,7 +136,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
                 logger.LogWarning("Systemd unit file not found at {UnitFilePath}.", unitFilePath);
             }
 
-            ExecuteDaemonCommand("daemon-reload");
+            await ExecuteDaemonCommandAsync("daemon-reload");
             
             logger.LogInformation("Systemd daemon reloaded.");
         }
@@ -150,9 +146,9 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
         }
     }
 
-    public virtual void Start()
+    public async virtual Task StartAsync()
     {
-        if (IsRunning)
+        if (await IsRunningAsync())
         {
             logger.LogWarning("{Name} daemon is already running.", Name);
             
@@ -161,33 +157,31 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
 
         logger.LogInformation("Starting {Name} daemon...", Name);
         
-        ExecuteDaemonCommand($"start {Name}.service");
+        await ExecuteDaemonCommandAsync($"start {Name}.service");
         
         logger.LogInformation("{Name} daemon started.", Name);
     }
 
-    public virtual void Stop()
+    public async virtual Task StopAsync()
     {
-        if (!IsRunning)
+        if (!await IsRunningAsync())
         {
-            logger.LogWarning("{Name} daemon is not running.", Name);
-            
-            return;
+            logger.LogWarning("{Name} daemon is not running.", Name);   
         }
 
         logger.LogInformation("Stopping {Name} daemon...", Name);
         
-        ExecuteDaemonCommand($"stop {Name}.service");
+        await ExecuteDaemonCommandAsync($"stop {Name}.service");
         
         logger.LogInformation("{Name} daemon stopped.", Name);
     }
 
-    public virtual void Restart()
+    public async virtual Task RestartAsync()
     {
         logger.LogInformation("Restarting {Name} daemon...", Name);
         
-        Stop();
-        Start();
+        await StopAsync();
+        await StartAsync();
     }
 
     private string GenerateSystemdUnitFile()
@@ -210,7 +204,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
                 """;
     }
 
-    protected virtual void ExecuteDaemonCommand(string arguments)
+    protected async virtual Task ExecuteDaemonCommandAsync(string arguments)
     {
         var process = processWrapperFactory.Create();
 
@@ -224,8 +218,8 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
             CreateNoWindow = true
         });
 
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        var error = await process.StandardError.ReadToEndAsync();
 
         process.WaitForExit();
 
@@ -245,7 +239,7 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
         }
     }
 
-    private bool IsServiceEnabled()
+    private async Task<bool> IsServiceEnabledAsync()
     {
         try
         {
@@ -261,8 +255,8 @@ public abstract class AbstractDaemon(IFileSystem fileSystem, IProcessWrapperFact
                 CreateNoWindow = true
             });
 
-            var output = process.StandardOutput.ReadToEnd().Trim();
-            var error = process.StandardError.ReadToEnd().Trim();
+            var output = (await process.StandardOutput.ReadToEndAsync()).Trim();
+            var error = (await process.StandardError.ReadToEndAsync()).Trim();
 
             process.WaitForExit();
 

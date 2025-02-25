@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Services;
 public class HostCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline, ILogger<HostCommandService> logger) : IHostCommandService
 {
     /// <inheritdoc />
-    public async Task<Result> Execute(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action)
+    public async Task<Result> ExecuteAsync(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action)
     {
         try
         {

@@ -19,7 +19,7 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
-    public async Task<IActionResult> GetPublicKey()
+    public async Task<IActionResult> GetPublicKeyAsync()
     {
         try
         {

@@ -9,5 +9,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ITokenSigningService : IDisposable
 {
-    Result<string> GenerateAccessToken(List<Claim> claims);
+    Task<Result<string>> GenerateAccessTokenAsync(List<Claim> claims);
 }

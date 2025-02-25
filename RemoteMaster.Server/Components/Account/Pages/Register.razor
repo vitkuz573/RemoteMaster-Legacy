@@ -23,7 +23,7 @@
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register" class="mt-8 space-y-6">
             <DataAnnotationsValidator />
             <ValidationSummary class="mb-4 text-red-600" role="alert" />
-            <div class="rounded-md shadow-xs">
+            <div class="shadow-xs rounded-md">
                 <div>
                     <label for="username" class="sr-only">Username</label>
                     <InputText id="username" @bind-Value="Input.Username" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-hidden focus:ring-indigo-500 sm:text-sm" placeholder="Enter your username" />
@@ -31,18 +31,18 @@
                 </div>
                 <div>
                     <label for="password" class="sr-only">Password</label>
-                    <InputText id="password" type="password" @bind-Value="Input.Password" class="border-t-0 relative block w-full appearance-none rounded-none border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-hidden focus:ring-indigo-500 sm:text-sm" placeholder="Enter your password" />
+                    <InputText id="password" type="password" @bind-Value="Input.Password" class="relative block w-full appearance-none rounded-none border border-t-0 border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-hidden focus:ring-indigo-500 sm:text-sm" placeholder="Enter your password" />
                     <ValidationMessage For="() => Input.Password" class="text-red-600 mt-2" />
                 </div>
                 <div>
                     <label for="confirm-password" class="sr-only">Confirm Password</label>
-                    <InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="border-t-0 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-hidden focus:ring-indigo-500 sm:text-sm" placeholder="Confirm your password" />
+                    <InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="relative block w-full appearance-none rounded-none rounded-b-md border border-t-0 border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-hidden focus:ring-indigo-500 sm:text-sm" placeholder="Confirm your password" />
                     <ValidationMessage For="() => Input.ConfirmPassword" class="text-red-600 mt-2" />
                 </div>
                 <div class="mt-6">
                     <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span class="material-icons group-hover:text-indigo-400 text-indigo-500">
+                            <span class="material-icons text-indigo-500 group-hover:text-indigo-400">
                                 person_add
                             </span>
                         </span>

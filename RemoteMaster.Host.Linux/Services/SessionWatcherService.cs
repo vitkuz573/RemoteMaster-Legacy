@@ -28,7 +28,7 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
 
             _loginManager = _connection.CreateProxy<ILoginManager>("org.freedesktop.login1", "/org/freedesktop/login1");
 
-            _sessionNewSubscription = await _loginManager.WatchSessionNewAsync(args => OnSessionNew(args.sessionId, args.objectPath), OnError);
+            _sessionNewSubscription = await _loginManager.WatchSessionNewAsync(async args => await OnSessionNew(args.sessionId, args.objectPath), OnError);
             _sessionRemovedSubscription = await _loginManager.WatchSessionRemovedAsync(args => OnSessionRemoved(args.sessionId, args.objectPath), OnError);
 
             logger.LogInformation("[SessionWatcherService] Started and subscribed to session signals.");
@@ -48,7 +48,7 @@ public class SessionWatcherService(ISessionChangeEventService sessionChangeEvent
         return Task.CompletedTask;
     }
 
-    private async void OnSessionNew(string sessionId, ObjectPath objectPath)
+    private async Task OnSessionNew(string sessionId, ObjectPath objectPath)
     {
         logger.LogInformation($"[SessionWatcherService] New session detected: {sessionId}, ObjectPath: {objectPath}");
 

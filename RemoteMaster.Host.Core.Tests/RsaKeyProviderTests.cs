@@ -31,10 +31,10 @@ public class RsaKeyProviderTests
     #region Base Functionality
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnNull_WhenPublicKeyFileDoesNotExist()
+    public async Task GetRsaPublicKey_ShouldReturnNull_WhenPublicKeyFileDoesNotExist()
     {
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -42,7 +42,7 @@ public class RsaKeyProviderTests
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnValidKey_WhenPublicKeyFileExists()
+    public async Task GetRsaPublicKey_ShouldReturnValidKey_WhenPublicKeyFileExists()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -51,14 +51,14 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.NotNull(rsaKey);
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldCacheResult_AfterFirstCall()
+    public async Task GetRsaPublicKey_ShouldCacheResult_AfterFirstCall()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -67,8 +67,8 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
 
         // Act
-        var rsaKey1 = _provider.GetRsaPublicKey();
-        var rsaKey2 = _provider.GetRsaPublicKey();
+        var rsaKey1 = await _provider.GetRsaPublicKeyAsync();
+        var rsaKey2 = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Same(rsaKey1, rsaKey2);
@@ -79,15 +79,15 @@ public class RsaKeyProviderTests
     #region Error Handling
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsEmpty()
+    public async Task GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsEmpty()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
 
-        _mockFileSystem.AddFile(publicKeyPath, new MockFileData(Array.Empty<byte>()));
+        _mockFileSystem.AddFile(publicKeyPath, new MockFileData([]));
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -95,7 +95,7 @@ public class RsaKeyProviderTests
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsInvalid()
+    public async Task GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsInvalid()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -104,7 +104,7 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(invalidKeyBytes));
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -112,7 +112,7 @@ public class RsaKeyProviderTests
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsInaccessible()
+    public async Task GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsInaccessible()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -123,7 +123,7 @@ public class RsaKeyProviderTests
         });
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -131,7 +131,7 @@ public class RsaKeyProviderTests
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileContainsPrivateKey()
+    public async Task GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileContainsPrivateKey()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -140,7 +140,7 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(privateKeyBytes));
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -148,7 +148,7 @@ public class RsaKeyProviderTests
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsTooLarge()
+    public async Task GetRsaPublicKey_ShouldReturnNull_AndLogError_WhenFileIsTooLarge()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -157,7 +157,7 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(largeData));
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -169,10 +169,10 @@ public class RsaKeyProviderTests
     #region Path Handling
 
     [Fact]
-    public void GetRsaPublicKey_ShouldLogWarning_WhenPathDoesNotExist()
+    public async Task GetRsaPublicKey_ShouldLogWarning_WhenPathDoesNotExist()
     {
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Null(rsaKey);
@@ -184,7 +184,7 @@ public class RsaKeyProviderTests
     #region Edge Cases
 
     [Fact]
-    public void GetRsaPublicKey_ShouldHandleExtraDataInFile()
+    public async Task GetRsaPublicKey_ShouldHandleExtraDataInFile()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -193,14 +193,14 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
 
         // Act
-        var rsaKey = _provider.GetRsaPublicKey();
+        var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.NotNull(rsaKey);
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldWork_WhenCommonApplicationDataIsUnavailable()
+    public async Task GetRsaPublicKey_ShouldWork_WhenCommonApplicationDataIsUnavailable()
     {
         // Arrange
         // Temporarily unset the environment variable
@@ -213,7 +213,7 @@ public class RsaKeyProviderTests
         try
         {
             // Act
-            var rsaKey = _provider.GetRsaPublicKey();
+            var rsaKey = await _provider.GetRsaPublicKeyAsync();
 
             // Assert
             Assert.Null(rsaKey);
@@ -229,7 +229,7 @@ public class RsaKeyProviderTests
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldBeThreadSafe()
+    public async Task GetRsaPublicKey_ShouldBeThreadSafe()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -237,22 +237,24 @@ public class RsaKeyProviderTests
 
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(publicKeyBytes));
 
-        var results = new RSA[10];
+        var results = new RSA?[10];
+        var tasks = Enumerable.Range(0, 10).Select(async i =>
+        {
+            results[i] = await _provider.GetRsaPublicKeyAsync();
+        });
 
         // Act
-        Parallel.For(0, 10, i =>
-        {
-            results[i] = _provider.GetRsaPublicKey();
-        });
+        await Task.WhenAll(tasks);
 
         // Assert
         var firstResult = results[0];
+
         Assert.NotNull(firstResult);
         Assert.All(results, rsa => Assert.Same(firstResult, rsa));
     }
 
     [Fact]
-    public void GetRsaPublicKey_ShouldNotReloadKey_WhenFileChangesBetweenCalls()
+    public async Task GetRsaPublicKey_ShouldNotReloadKey_WhenFileChangesBetweenCalls()
     {
         // Arrange
         var publicKeyPath = _mockFileSystem.Path.Combine(_programDataPath, "RemoteMaster", "Host", "JWT", "public_key.der");
@@ -261,13 +263,13 @@ public class RsaKeyProviderTests
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(initialPublicKeyBytes));
 
         // Act
-        var rsaKey1 = _provider.GetRsaPublicKey();
+        var rsaKey1 = await _provider.GetRsaPublicKeyAsync();
 
         // Modify the file after first call
         var newPublicKeyBytes = GenerateValidRsaPublicKey();
         _mockFileSystem.AddFile(publicKeyPath, new MockFileData(newPublicKeyBytes));
 
-        var rsaKey2 = _provider.GetRsaPublicKey();
+        var rsaKey2 = await _provider.GetRsaPublicKeyAsync();
 
         // Assert
         Assert.Same(rsaKey1, rsaKey2);
@@ -289,7 +291,7 @@ public class RsaKeyProviderTests
         var publicKey = GenerateValidRsaPublicKey();
         var extraData = new byte[] { 0x00, 0xFF };
 
-        return publicKey.Concat(extraData).ToArray();
+        return [.. publicKey, .. extraData];
     }
 
     private static byte[] GeneratePrivateKey()

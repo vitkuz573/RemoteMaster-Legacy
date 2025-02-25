@@ -8,5 +8,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ITokenValidationService : IDisposable
 {
-    Result ValidateToken(string accessToken);
+    Task<Result> ValidateTokenAsync(string accessToken);
 }

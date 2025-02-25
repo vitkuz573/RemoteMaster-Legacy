@@ -8,5 +8,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IApplicationUserService
 {
-    Task AddSignInEntry(ApplicationUser user, bool isSuccessful);
+    Task AddSignInEntryAsync(ApplicationUser user, bool isSuccessful);
 }

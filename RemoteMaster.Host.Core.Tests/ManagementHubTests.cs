@@ -45,7 +45,7 @@ public class ManagementHubTests
         _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<string>())).ReturnsAsync(organizationAddress);
 
         // Act
-        await _managementHub.MoveHost(hostMoveRequest);
+        await _managementHub.MoveHostAsync(hostMoveRequest);
 
         // Assert
         _mockHostConfigurationService.Verify(h => h.SaveAsync(It.Is<HostConfiguration>(hc =>

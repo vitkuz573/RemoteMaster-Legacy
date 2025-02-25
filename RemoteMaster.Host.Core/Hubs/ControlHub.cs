@@ -64,7 +64,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
 
         if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
         {
-            await HandleThumbnailRequest(userName, role, ipAddress, authenticationType);
+            await HandleThumbnailRequestAsync(userName, role, ipAddress, authenticationType);
 
             return;
         }
@@ -117,7 +117,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
 
             try
             {
-                await HandleScreenCastRequest(userName, role, ipAddress, authenticationType);
+                await HandleScreenCastRequestAsync(userName, role, ipAddress, authenticationType);
                 
                 logger.LogInformation("Screencast started for user {UserName} with IP {IpAddress}.", userName, ipAddress);
             }
@@ -179,10 +179,10 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         return authenticationType ?? "Unknown";
     }
 
-    private async Task HandleThumbnailRequest(string userName, string role, IPAddress ipAddress, string authenticationType)
+    private async Task HandleThumbnailRequestAsync(string userName, string role, IPAddress ipAddress, string authenticationType)
     {
         var tempViewer = viewerFactory.Create(Context, "ThumbnailGroup", Context.ConnectionId, userName, role, ipAddress, authenticationType);
-        var added = appState.TryAddViewer(tempViewer);
+        var added = await appState.TryAddViewerAsync(tempViewer);
 
         if (!added)
         {
@@ -233,7 +233,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         }
         finally
         {
-            var removed = appState.TryRemoveViewer(tempViewer.ConnectionId);
+            var removed = await appState.TryRemoveViewerAsync(tempViewer.ConnectionId);
 
             if (!removed)
             {
@@ -244,10 +244,10 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         await Clients.Caller.ReceiveCloseConnection();
     }
 
-    private async Task HandleScreenCastRequest(string userName, string role, IPAddress ipAddress, string authenticationType)
+    private async Task HandleScreenCastRequestAsync(string userName, string role, IPAddress ipAddress, string authenticationType)
     {
         var viewer = viewerFactory.Create(Context, "Users", Context.ConnectionId, userName, role, ipAddress, authenticationType);
-        var added = appState.TryAddViewer(viewer);
+        var added = await appState.TryAddViewerAsync(viewer);
 
         if (!added)
         {
@@ -291,7 +291,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
             
             await Clients.Caller.ReceiveMessage(message);
             
-            appState.TryRemoveViewer(viewer.ConnectionId);
+            await appState.TryRemoveViewerAsync(viewer.ConnectionId);
             
             Context.Abort();
         }
@@ -299,11 +299,11 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        ExecuteActionForViewer(viewer =>
+        ExecuteActionForViewer(async viewer =>
         {
             logger.LogInformation("User {UserName} with role {Role} from IP {IpAddress} disconnected.", viewer.UserName, viewer.Role, viewer.IpAddress);
             
-            appState.TryRemoveViewer(viewer.ConnectionId);
+            await appState.TryRemoveViewerAsync(viewer.ConnectionId);
         });
 
         await base.OnDisconnectedAsync(exception);
@@ -318,7 +318,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
         {
             await Clients.Client(disconnectRequest.ConnectionId).ReceiveDisconnected(disconnectRequest.Reason);
             
-            appState.TryRemoveViewer(viewer.ConnectionId);
+            await appState.TryRemoveViewerAsync(viewer.ConnectionId);
         });
     }
 
@@ -395,15 +395,17 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
     }
 
     [Authorize(Policy = "RebootHostPolicy")]
-    public void RebootHost(PowerActionRequest powerActionRequest)
+    [HubMethodName("RebootHost")]
+    public async Task RebootHostAsync(PowerActionRequest powerActionRequest)
     {
-        powerService.Reboot(powerActionRequest);
+        await powerService.RebootAsync(powerActionRequest);
     }
 
     [Authorize(Policy = "ShutdownHostPolicy")]
-    public void ShutdownHost(PowerActionRequest powerActionRequest)
+    [HubMethodName("ShutdownHost")]
+    public async Task ShutdownHostAsync(PowerActionRequest powerActionRequest)
     {
-        powerService.Shutdown(powerActionRequest);
+        await powerService.ShutdownAsync(powerActionRequest);
     }
 
     [Authorize(Policy = "SetMonitorStatePolicy")]
@@ -415,7 +417,7 @@ public class ControlHub(IAppState appState, IApplicationVersionProvider applicat
     [Authorize(Policy = "ExecuteScriptPolicy")]
     public void ExecuteScript(ScriptExecutionRequest scriptExecutionRequest)
     {
-        scriptService.Execute(scriptExecutionRequest);
+        scriptService.ExecuteAsync(scriptExecutionRequest);
     }
 
     [Authorize(Policy = "LockWorkStationPolicy")]

@@ -6,11 +6,11 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IRunnable
 {
-    void Start();
+    Task StartAsync();
 
-    void Stop();
+    Task StopAsync();
 
-    void Restart();
+    Task RestartAsync();
 
-    bool IsRunning { get; }
+    Task<bool> IsRunningAsync();
 }

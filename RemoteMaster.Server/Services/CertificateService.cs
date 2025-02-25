@@ -24,13 +24,13 @@ public class CertificateService(IHostInformationService hostInformationService, 
     private readonly ActiveDirectoryOptions _options = options.Value;
 
     /// <inheritdoc />
-    public async Task<Result<X509Certificate2>> IssueCertificate(byte[] csrBytes)
+    public async Task<Result<X509Certificate2>> IssueCertificateAsync(byte[] csrBytes)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(csrBytes);
 
-            var caCertificateResult = certificateAuthorityService.GetCaCertificate(X509ContentType.Pfx);
+            var caCertificateResult = await certificateAuthorityService.GetCaCertificateAsync(X509ContentType.Pfx);
 
             if (!caCertificateResult.IsSuccess)
             {
@@ -47,7 +47,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
                 return _options.Method switch
                 {
-                    ActiveDirectoryMethod.WebEnrollment => await IssueCertificateUsingWebEnrollment(csrBytes),
+                    ActiveDirectoryMethod.WebEnrollment => await IssueCertificateUsingWebEnrollmentAsync(csrBytes),
                     ActiveDirectoryMethod.CertEnroll => IssueCertificateUsingCertEnroll(csrBytes),
                     _ => throw new InvalidOperationException("Unknown method.")
                 };
@@ -110,7 +110,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         }
     }
 
-    private async Task<Result<X509Certificate2>> IssueCertificateUsingWebEnrollment(byte[] csrBytes)
+    private async Task<Result<X509Certificate2>> IssueCertificateUsingWebEnrollmentAsync(byte[] csrBytes)
     {
         var baseUrl = $"http://{_options.Server}/certsrv/";
 

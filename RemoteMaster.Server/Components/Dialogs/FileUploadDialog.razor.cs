@@ -35,7 +35,7 @@ public partial class FileUploadDialog
             int bytesRead;
             var totalBytesRead = 0;
 
-            while ((bytesRead = await stream.ReadAsync(data, totalBytesRead, data.Length - totalBytesRead)) > 0)
+            while ((bytesRead = await stream.ReadAsync(data.AsMemory(totalBytesRead, data.Length - totalBytesRead))) > 0)
             {
                 totalBytesRead += bytesRead;
             }
@@ -47,7 +47,7 @@ public partial class FileUploadDialog
 
             fileDto = new FileUploadDto(file.Name, data, _destinationPath);
 
-            await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("UploadFile", fileDto));
+            await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("UploadFile", fileDto));
         }
 
         MudDialog.Close(DialogResult.Ok(true));

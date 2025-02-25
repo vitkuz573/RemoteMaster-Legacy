@@ -13,9 +13,7 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
     {
         var processes = Process.GetProcesses();
 
-        return processes
-            .Select(processWrapperFactory.Create)
-            .ToArray();
+        return [.. processes.Select(processWrapperFactory.Create)];
     }
 
     public IProcess GetCurrentProcess()
@@ -36,8 +34,6 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
     {
         var processes = Process.GetProcessesByName(processName);
 
-        return processes
-            .Select(processWrapperFactory.Create)
-            .ToArray();
+        return [.. processes.Select(processWrapperFactory.Create)];
     }
 }

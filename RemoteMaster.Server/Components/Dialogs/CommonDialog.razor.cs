@@ -70,7 +70,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
 
     private string? _accessToken;
 
-    protected async void Cancel()
+    protected async Task CancelAsync()
     {
         await DisposeAsync();
 
@@ -215,12 +215,13 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
         return connection;
     }
 
-    protected async Task RecheckConnection(HostDto host)
+    protected async Task RecheckConnectionAsync(HostDto host)
     {
         ArgumentNullException.ThrowIfNull(host);
 
         _loadingStates[host] = true;
         _checkingStates[host] = true;
+
         await InvokeAsync(StateHasChanged);
 
         if (Hosts.TryGetValue(host, out var existingConnection) && existingConnection != null)
@@ -258,7 +259,7 @@ public class CommonDialogBase : ComponentBase, IAsyncDisposable
         }
     }
 
-    protected async Task RemoveHost(HostDto host)
+    protected async Task RemoveHostAsync(HostDto host)
     {
         ArgumentNullException.ThrowIfNull(host);
 

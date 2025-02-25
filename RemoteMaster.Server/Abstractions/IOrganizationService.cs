@@ -12,9 +12,9 @@ public interface IOrganizationService
 {
     Task<IEnumerable<OrganizationDto>> GetAllOrganizationsAsync();
 
-    Task<OrganizationDto?> GetOrganization(string organizationName);
+    Task<OrganizationDto?> GetOrganizationAsync(string organizationName);
 
-    Task<OrganizationDto?> GetOrganizationById(Guid organizationId);
+    Task<OrganizationDto?> GetOrganizationByIdAsync(Guid organizationId);
 
     Task<string> AddOrUpdateOrganizationAsync(OrganizationDto dto);
 

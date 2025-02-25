@@ -53,19 +53,19 @@ public class SyncIndicatorServiceTests
     }
 
     [Fact]
-    public void SetSyncRequired_CreatesFileWithCorrectContent()
+    public async Task SetSyncRequired_CreatesFileWithCorrectContent()
     {
         // Act
-        _service.SetSyncRequired();
+        await _service.SetSyncRequiredAsync();
 
         // Assert
         var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
         Assert.True(_mockFileSystem.File.Exists(syncFilePath));
-        Assert.Equal("Sync required", _mockFileSystem.File.ReadAllText(syncFilePath));
+        Assert.Equal("Sync required", await _mockFileSystem.File.ReadAllTextAsync(syncFilePath));
     }
 
     [Fact]
-    public void SetSyncRequired_LogsError_WhenExceptionOccurs()
+    public async Task SetSyncRequired_LogsError_WhenExceptionOccurs()
     {
         // Arrange
         var syncFilePath = _mockFileSystem.Path.Combine(_mockFileSystem.Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
@@ -73,7 +73,7 @@ public class SyncIndicatorServiceTests
         _mockFileSystem.File.SetAttributes(syncFilePath, FileAttributes.ReadOnly);
 
         // Act
-        _service.SetSyncRequired();
+        await _service.SetSyncRequiredAsync();
 
         // Assert
         _mockLogger.VerifyLog(LogLevel.Error, "Failed to create sync indicator file.", Times.Once());

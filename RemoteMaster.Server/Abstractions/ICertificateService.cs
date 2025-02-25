@@ -17,5 +17,5 @@ public interface ICertificateService
     /// </summary>
     /// <param name="csrBytes">The CSR bytes.</param>
     /// <returns>A result containing the issued certificate or an error.</returns>
-    Task<Result<X509Certificate2>> IssueCertificate(byte[] csrBytes);
+    Task<Result<X509Certificate2>> IssueCertificateAsync(byte[] csrBytes);
 }

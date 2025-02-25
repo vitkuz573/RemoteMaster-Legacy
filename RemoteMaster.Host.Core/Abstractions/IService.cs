@@ -7,10 +7,10 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IService : IRunnable
 {
     string Name { get; }
-    
-    bool IsInstalled { get; }
+
+    Task<bool> IsInstalledAsync();
         
-    void Create();
+    Task CreateAsync();
     
-    void Delete();
+    Task DeleteAsync();
 }

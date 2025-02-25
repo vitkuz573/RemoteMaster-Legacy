@@ -24,7 +24,7 @@ public partial class OpenShellDialog
 
         try
         {
-            await HostCommandService.Execute(Hosts, async (host, _) =>
+            await HostCommandService.ExecuteAsync(Hosts, async (host, _) =>
             {
                 var sParameter = _selectedUser == "System" ? "-s" : "";
                 var command = _selectedShell switch

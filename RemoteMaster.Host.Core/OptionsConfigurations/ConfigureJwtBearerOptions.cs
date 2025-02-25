@@ -17,7 +17,7 @@ public class ConfigureJwtBearerOptions(IFileSystem fileSystem, IRsaKeyProvider r
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        var rsa = rsaKeyProvider.GetRsaPublicKey() ?? throw new InvalidOperationException("RSA public key is not available.");
+        var rsa = rsaKeyProvider.GetRsaPublicKeyAsync().GetAwaiter().GetResult() ?? throw new InvalidOperationException("RSA public key is not available.");
         var validateLifetime = !IsWinPe();
 
         options.TokenValidationParameters = new TokenValidationParameters

@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ICertificateAuthorityService
 {
-    Result EnsureCaCertificateExists();
-    
-    Result<X509Certificate2> GetCaCertificate(X509ContentType contentType);
+    Task<Result> EnsureCaCertificateExistsAsync();
+
+    Task<Result<X509Certificate2>> GetCaCertificateAsync(X509ContentType contentType);
 }

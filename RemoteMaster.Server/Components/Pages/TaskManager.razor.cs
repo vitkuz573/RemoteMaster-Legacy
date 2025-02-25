@@ -134,7 +134,7 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
-        var result = await ResiliencePipeline.ExecuteAsync(async cancellationToken =>
+        var result = await ResiliencePipeline.ExecuteAsync(async _ =>
         {
             if (_connection is not { State: HubConnectionState.Connected })
             {

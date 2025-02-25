@@ -123,9 +123,9 @@ public class DBusProcess(INativeProcessOptions processOptions, IProcessService p
         }
     }
 
-    public string[] GetCommandLine()
+    public Task<string[]> GetCommandLineAsync()
     {
-        return commandLineProvider.GetCommandLine(this);
+        return commandLineProvider.GetCommandLineAsync(this);
     }
 
     public bool WaitForExit(uint millisecondsTimeout = uint.MaxValue)

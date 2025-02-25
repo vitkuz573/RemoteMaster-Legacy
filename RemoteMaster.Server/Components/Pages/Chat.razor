@@ -16,7 +16,7 @@
         <h3 class="mb-6 text-center text-2xl font-semibold text-gray-800">Chat Room</h3>
         <div class="flex flex-col space-y-4">
             <div class="flex items-center space-x-2">
-                <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded-full border p-3 text-gray-700 transition focus:outline-hidden focus:ring-2 focus:ring-blue-500" @oninput="HandleInput" />
+                <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded-full border p-3 text-gray-700 transition focus:outline-hidden focus:ring-2 focus:ring-blue-500" @oninput="HandleInputAsync" />
                 <InputFile @ref="_fileInput" OnChange="HandleFileChange" style="display: none;" multiple />
                 <button @onclick="TriggerFileUpload" class="rounded-full bg-blue-500 p-3 text-white transition duration-200 hover:bg-blue-700">
                     <span class="material-icons">attach_file</span>
@@ -58,7 +58,7 @@
                 <ul>
                     @foreach (var chatMessage in _messages)
                     {
-                        <li class="flex items-start space-x-2 rounded-lg bg-gray-50 p-3 shadow-xs">
+                        <li class="shadow-xs flex items-start space-x-2 rounded-lg bg-gray-50 p-3">
                             <div class="shrink-0">
                                 <span class="inline-block flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-lg text-white">
                                     @chatMessage.User[0]

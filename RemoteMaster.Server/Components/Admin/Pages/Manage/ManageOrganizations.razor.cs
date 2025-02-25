@@ -44,10 +44,10 @@ public partial class ManageOrganizations
 
         _message = await OrganizationService.AddOrUpdateOrganizationAsync(dto);
 
-        await OnOrganizationSaved(_message);
+        await OnOrganizationSavedAsync(_message);
     }
 
-    private async Task OnOrganizationSaved(string message)
+    private async Task OnOrganizationSavedAsync(string message)
     {
         await LoadOrganizationsAsync();
 
@@ -62,7 +62,7 @@ public partial class ManageOrganizations
         _organizations = [.. await OrganizationService.GetAllOrganizationsAsync()];
     }
 
-    private async Task DeleteOrganization(string organizationName)
+    private async Task DeleteOrganizationAsync(string organizationName)
     {
         _message = await OrganizationService.DeleteOrganizationAsync(organizationName);
 
@@ -93,11 +93,11 @@ public partial class ManageOrganizations
         _confirmationDialog?.Show(parameters);
     }
 
-    private async Task OnConfirmDelete(bool confirmed)
+    private async Task OnConfirmDeleteAsync(bool confirmed)
     {
         if (confirmed && _organizationToDelete != null)
         {
-            await DeleteOrganization(_organizationToDelete);
+            await DeleteOrganizationAsync(_organizationToDelete);
             _organizationToDelete = null;
         }
     }

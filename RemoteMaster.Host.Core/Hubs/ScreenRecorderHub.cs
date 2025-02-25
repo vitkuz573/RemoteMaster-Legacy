@@ -12,13 +12,15 @@ namespace RemoteMaster.Host.Core.Hubs;
 public class ScreenRecorderHub(IScreenRecorderService screenRecorderService) : Hub<IScreenRecorderClient>
 {
     [Authorize(Policy = "StartScreenRecordingPolicy")]
-    public async Task SendStartScreenRecording(ScreenRecordingRequest screenRecordingRequest)
+    [HubMethodName("SendStartScreenRecording")]
+    public async Task SendStartScreenRecordingAsync(ScreenRecordingRequest screenRecordingRequest)
     {
         await screenRecorderService.StartRecordingAsync(screenRecordingRequest);
     }
 
     [Authorize(Policy = "StopScreenRecordingPolicy")]
-    public async Task SendStopScreenRecording()
+    [HubMethodName("SendStopScreenRecording")]
+    public async Task SendStopScreenRecordingAsync()
     {
         await screenRecorderService.StopRecordingAsync();
     }

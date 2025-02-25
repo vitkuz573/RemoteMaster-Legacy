@@ -12,9 +12,9 @@ public interface IAppState
 
     bool TryGetViewer(string connectionId, out IViewer? viewer);
 
-    bool TryAddViewer(IViewer viewer);
+    Task<bool> TryAddViewerAsync(IViewer viewer);
 
-    bool TryRemoveViewer(string connectionId);
+    Task<bool> TryRemoveViewerAsync(string connectionId);
 
     IReadOnlyList<IViewer> GetAllViewers();
 }

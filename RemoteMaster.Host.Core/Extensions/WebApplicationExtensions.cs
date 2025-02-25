@@ -14,7 +14,7 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class WebApplicationExtensions
 {
-    public static async Task ConfigureSerilog(this WebApplication app, string? server = null)
+    public static async Task ConfigureSerilogAsync(this WebApplication app, string? server = null)
     {
         ArgumentNullException.ThrowIfNull(app);
 

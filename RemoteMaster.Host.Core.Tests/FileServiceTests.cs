@@ -115,7 +115,7 @@ public class FileServiceTests
     #region CopyFile Tests
 
     [Fact]
-    public void CopyFile_ShouldCopyFile_WhenSourceFileExists()
+    public async Task CopyFile_ShouldCopyFile_WhenSourceFileExists()
     {
         const string sourceFile = "/source.txt";
         const string destFile = "/dest.txt";
@@ -124,7 +124,7 @@ public class FileServiceTests
         _fileService.CopyFile(sourceFile, destFile);
 
         Assert.True(_fileSystem.File.Exists(destFile));
-        Assert.Equal("Content", _fileSystem.File.ReadAllText(destFile));
+        Assert.Equal("Content", await _fileSystem.File.ReadAllTextAsync(destFile));
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class FileServiceTests
     #region CopyDirectory Tests
 
     [Fact]
-    public void CopyDirectory_ShouldCopyDirectoryRecursively_WhenSourceDirectoryExists()
+    public async Task CopyDirectory_ShouldCopyDirectoryRecursively_WhenSourceDirectoryExists()
     {
         const string sourceDir = "/sourceDir";
         const string destDir = "/destDir";
@@ -151,7 +151,7 @@ public class FileServiceTests
 
         Assert.True(_fileSystem.Directory.Exists(destDir));
         Assert.True(_fileSystem.File.Exists($"{destDir}/file.txt"));
-        Assert.Equal("Content", _fileSystem.File.ReadAllText($"{destDir}/file.txt"));
+        Assert.Equal("Content", await _fileSystem.File.ReadAllTextAsync($"{destDir}/file.txt"));
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class FileServiceTests
     #region Edge Cases
 
     [Fact]
-    public void CopyFile_ShouldOverwriteFile_WhenOverwriteIsTrue()
+    public async Task CopyFile_ShouldOverwriteFile_WhenOverwriteIsTrue()
     {
         const string sourceFile = "/source.txt";
         const string destFile = "/dest.txt";
@@ -176,11 +176,11 @@ public class FileServiceTests
 
         _fileService.CopyFile(sourceFile, destFile, overwrite: true);
 
-        Assert.Equal("New Content", _fileSystem.File.ReadAllText(destFile));
+        Assert.Equal("New Content", await _fileSystem.File.ReadAllTextAsync(destFile));
     }
 
     [Fact]
-    public void CopyFile_ShouldNotOverwriteFile_WhenOverwriteIsFalse()
+    public async Task CopyFile_ShouldNotOverwriteFile_WhenOverwriteIsFalse()
     {
         const string sourceFile = "/source.txt";
         const string destFile = "/dest.txt";
@@ -196,11 +196,11 @@ public class FileServiceTests
             // Expected exception since overwrite is false and file exists.
         }
 
-        Assert.Equal("Old Content", _fileSystem.File.ReadAllText(destFile));
+        Assert.Equal("Old Content", await _fileSystem.File.ReadAllTextAsync(destFile));
     }
 
     [Fact]
-    public void CopyDirectory_ShouldCopySubDirectoriesRecursively()
+    public async Task CopyDirectory_ShouldCopySubDirectoriesRecursively()
     {
         const string sourceDir = "/sourceDir";
         const string destDir = "/destDir";
@@ -214,7 +214,7 @@ public class FileServiceTests
         _fileService.CopyDirectory(sourceDir, destDir);
 
         Assert.True(_fileSystem.Directory.Exists($"{destDir}/subDir"));
-        Assert.Equal("Sub Content", _fileSystem.File.ReadAllText($"{destDir}/subDir/subFile.txt"));
+        Assert.Equal("Sub Content", await _fileSystem.File.ReadAllTextAsync($"{destDir}/subDir/subFile.txt"));
     }
 
     #endregion

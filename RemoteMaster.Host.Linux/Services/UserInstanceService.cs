@@ -37,15 +37,26 @@ public class UserInstanceService : IUserInstanceService
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
 
-    public bool IsRunning => _processService
-        .GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath))
-        .Any(p => p.HasArgument(Command));
+    public async Task<bool> IsRunningAsync()
+    {
+        var processes = _processService.GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath));
 
-    public void Start()
+        foreach (var process in processes)
+        {
+            if (await process.HasArgumentAsync(Command))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public async Task StartAsync()
     {
         try
         {
-            var processId = StartNewInstance().GetAwaiter().GetResult();
+            var processId = await StartNewInstanceAsync();
 
             _logger.LogInformation("Successfully started a new {Command} instance of the host.", Command);
         }
@@ -55,13 +66,13 @@ public class UserInstanceService : IUserInstanceService
         }
     }
 
-    public void Stop()
+    public async Task StopAsync()
     {
         var processes = _processService.GetProcessesByName(_fileSystem.Path.GetFileName(_currentExecutablePath));
 
         foreach (var process in processes)
         {
-            if (!process.HasArgument(Command))
+            if (!await process.HasArgumentAsync(Command))
             {
                 continue;
             }
@@ -79,19 +90,19 @@ public class UserInstanceService : IUserInstanceService
         }
     }
 
-    public void Restart()
+    public async Task RestartAsync()
     {
-        Stop();
+        await StopAsync();
 
-        while (IsRunning)
+        while (await IsRunningAsync())
         {
-            Task.Delay(50).Wait();
+            await Task.Delay(50);
         }
 
-        Start();
+        await StartAsync();
     }
 
-    private async Task<int> StartNewInstance()
+    private async Task<int> StartNewInstanceAsync()
     {
         var startInfo = new ProcessStartInfo
         {
@@ -99,13 +110,13 @@ public class UserInstanceService : IUserInstanceService
         };
 
         startInfo.Environment.Add("DISPLAY", await _environmentProvider.GetDisplayAsync());
-        startInfo.Environment.Add("XAUTHORITY", _environmentProvider.GetXAuthority());
+        startInfo.Environment.Add("XAUTHORITY", await _environmentProvider.GetXAuthorityAsync());
 
         return _instanceManagerService.StartNewInstance(null, Command, [], startInfo);
     }
 
-    private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
+    private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
-        Restart();
+        await RestartAsync();
     }
 }

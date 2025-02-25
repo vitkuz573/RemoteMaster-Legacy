@@ -6,9 +6,9 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface INetworkDriveService
 {
-    bool MapNetworkDrive(string remotePath, string? username, string? password);
+    Task<bool> MapNetworkDriveAsync(string remotePath, string? username, string? password);
 
-    bool CancelNetworkDrive(string remotePath);
+    Task<bool> CancelNetworkDriveAsync(string remotePath);
 
     string GetEffectivePath(string remotePath);
 }

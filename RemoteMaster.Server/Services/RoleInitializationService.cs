@@ -165,14 +165,14 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
 
         foreach (var role in _roles)
         {
-            await EnsureRoleExists(roleManager, role);
+            await EnsureRoleExistsAsync(roleManager, role);
         }
 
-        await EnsureClaimsExist(applicationUnitOfWork);
-        await AssignClaimsToRoles(roleManager);
+        await EnsureClaimsExistAsync(applicationUnitOfWork);
+        await AssignClaimsToRolesAsync(roleManager);
     }
 
-    private async Task EnsureRoleExists(RoleManager<IdentityRole> roleManager, string roleName)
+    private async Task EnsureRoleExistsAsync(RoleManager<IdentityRole> roleManager, string roleName)
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
@@ -193,7 +193,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
         }
     }
 
-    private async Task EnsureClaimsExist(IApplicationUnitOfWork applicationUnitOfWork)
+    private async Task EnsureClaimsExistAsync(IApplicationUnitOfWork applicationUnitOfWork)
     {
         var claims = _roleClaims.SelectMany(rc => rc.Value).Distinct().ToList();
 
@@ -214,7 +214,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider, ILogger
         }
     }
 
-    private async Task AssignClaimsToRoles(RoleManager<IdentityRole> roleManager)
+    private async Task AssignClaimsToRolesAsync(RoleManager<IdentityRole> roleManager)
     {
         foreach (var (roleName, claims) in _roleClaims)
         {

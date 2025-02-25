@@ -23,7 +23,7 @@ public class DomainService(IPowerService powerService, IFileSystem fileSystem, I
     /// Joins the machine to a domain.
     /// </summary>
     /// <param name="domainJoinRequest">The request to join a domain, containing the domain name and user credentials.</param>
-    public void JoinToDomain(DomainJoinRequest domainJoinRequest)
+    public async Task JoinToDomainAsync(DomainJoinRequest domainJoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainJoinRequest);
 
@@ -41,14 +41,14 @@ public class DomainService(IPowerService powerService, IFileSystem fileSystem, I
             ForceAppsClosed = true
         };
 
-        powerService.Reboot(powerActionRequest);
+        await powerService.RebootAsync(powerActionRequest);
     }
 
     /// <summary>
     /// Unjoins the machine from a domain.
     /// </summary>
     /// <param name="domainUnjoinRequest">The request to unjoin a domain, containing the user credentials.</param>
-    public void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
+    public async Task UnjoinFromDomainAsync(DomainUnjoinRequest domainUnjoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainUnjoinRequest);
 
@@ -120,6 +120,6 @@ public class DomainService(IPowerService powerService, IFileSystem fileSystem, I
             ForceAppsClosed = true
         };
 
-        powerService.Reboot(powerActionRequest);
+        await powerService.RebootAsync(powerActionRequest);
     }
 }

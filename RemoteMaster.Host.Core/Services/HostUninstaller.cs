@@ -45,7 +45,7 @@ public class HostUninstaller(IProcessService processService, IServiceFactory ser
             {
                 logger.LogInformation("Current process is not running from the application directory.");
 
-                await RemoveServicesAndResources();
+                await RemoveServicesAndResourcesAsync();
 
                 DeleteFiles(applicationDirectory);
 
@@ -72,14 +72,15 @@ public class HostUninstaller(IProcessService processService, IServiceFactory ser
         }
     }
 
-    private async Task RemoveServicesAndResources()
+    private async Task RemoveServicesAndResourcesAsync()
     {
         var hostService = serviceFactory.GetService("RCHost");
 
-        if (hostService.IsInstalled)
+        if (await hostService.IsInstalledAsync())
         {
-            hostService.Stop();
-            hostService.Delete();
+            await hostService.StopAsync();
+            await hostService.DeleteAsync();
+
             logger.LogInformation("{ServiceName} Service uninstalled successfully.", hostService.Name);
         }
         else
@@ -87,9 +88,9 @@ public class HostUninstaller(IProcessService processService, IServiceFactory ser
             logger.LogInformation("{ServiceName} Service is not installed.", hostService.Name);
         }
 
-        if (userInstanceService.IsRunning)
+        if (await userInstanceService.IsRunningAsync())
         {
-            userInstanceService.Stop();
+            await userInstanceService.StopAsync();
         }
 
         await hostLifecycleService.UnregisterAsync();

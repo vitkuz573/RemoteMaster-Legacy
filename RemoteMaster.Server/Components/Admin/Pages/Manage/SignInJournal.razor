@@ -36,16 +36,16 @@
         <table class="min-w-full border-collapse border border-gray-300 bg-white shadow-lg">
             <thead>
                 <tr class="bg-gray-200">
-                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("User")'>
+                    <th class="cursor-pointer border-b-2 border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("User")'>
                         User @GetSortIcon("User")
                     </th>
-                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("SignInTime")'>
+                    <th class="cursor-pointer border-b-2 border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("SignInTime")'>
                         Sign-In Time @GetSortIcon("SignInTime")
                     </th>
-                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("Success")'>
+                    <th class="cursor-pointer border-b-2 border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("Success")'>
                         Success @GetSortIcon("Success")
                     </th>
-                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("IpAddress")'>
+                    <th class="cursor-pointer border-b-2 border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("IpAddress")'>
                         IP Address @GetSortIcon("IpAddress")
                     </th>
                 </tr>
@@ -69,7 +69,7 @@
             <button class="rounded-sm bg-gray-300 px-4 py-2" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
         </div>
 
-        <button class="mt-4 rounded-sm bg-red-500 px-4 py-2 text-white" @onclick="ClearJournal">Clear Journal</button>
+        <button class="mt-4 rounded-sm bg-red-500 px-4 py-2 text-white" @onclick="ClearJournalAsync">Clear Journal</button>
     }
 
     @if (_showFilterHelp)

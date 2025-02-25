@@ -20,5 +20,5 @@ public interface IHostCommandService
     /// <param name="hosts">A dictionary of hosts and their corresponding SignalR connections.</param>
     /// <param name="action">The action to execute on each host.</param>
     /// <returns>A result indicating the success or failure of the operation.</returns>
-    Task<Result> Execute(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action);
+    Task<Result> ExecuteAsync(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action);
 }

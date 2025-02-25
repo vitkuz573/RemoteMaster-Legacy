@@ -18,12 +18,12 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
     {
         logger.LogInformation("Starting certificate renewal task service.");
         
-        _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+        _timer = new Timer(DoWorkAsync, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
         
         return Task.CompletedTask;
     }
 
-    private async void DoWork(object? state)
+    private async void DoWorkAsync(object? state)
     {
         using var scope = serviceScopeFactory.CreateScope();
         var applicationUnitOfWork = scope.ServiceProvider.GetRequiredService<IApplicationUnitOfWork>();

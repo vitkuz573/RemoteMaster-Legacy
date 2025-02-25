@@ -24,7 +24,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
 
         try
         {
-            await NotifyReadiness();
+            await NotifyReadinessAsync();
 
             if (waitForClientConnectionTimeout != 0)
             {
@@ -101,14 +101,14 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
                 return;
             }
 
-            if (!await CheckForUpdateVersion(allowDowngrade, force))
+            if (!await CheckForUpdateVersionAsync(allowDowngrade, force))
             {
                 await notifier.NotifyAsync("Update aborted due to version check.", MessageSeverity.Error);
 
                 return;
             }
 
-            if (!await IsUpdateNeeded(force))
+            if (!await IsUpdateNeededAsync(force))
             {
                 await notifier.NotifyAsync("No update required. Files are identical.", MessageSeverity.Information);
                 await notifier.NotifyAsync("If you wish to force an update regardless, you can use --force to override this check.", MessageSeverity.Information);
@@ -133,7 +133,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         }
     }
 
-    private static async Task NotifyReadiness()
+    private static async Task NotifyReadinessAsync()
     {
         await using var client = new NamedPipeClientStream(".", PipeNames.UpdaterReadyPipe, PipeDirection.Out, PipeOptions.Asynchronous);
         await client.ConnectAsync(5000);
@@ -148,10 +148,10 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
     {
         var hostService = serviceFactory.GetService("RCHost");
 
-        hostService.Stop();
+        await hostService.StopAsync();
 
-        chatInstanceService.Stop();
-        userInstanceService.Stop();
+        await chatInstanceService.StopAsync();
+        await userInstanceService.StopAsync();
 
         await fileService.WaitForFileReleaseAsync(_rootDirectory);
 
@@ -163,10 +163,10 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
             throw new InvalidOperationException("Failed to copy updates.");
         }
 
-        hostService.Start();
-        await EnsureServicesRunning([hostService, userInstanceService], TimeSpan.FromSeconds(5), 5);
+        await hostService.StartAsync();
 
-        await CleanupUpdateFolder();
+        await EnsureServicesRunningAsync([hostService, userInstanceService], TimeSpan.FromSeconds(5), 5);
+        await CleanupUpdateFolderAsync();
 
         await notifier.NotifyAsync("Update completed successfully.", MessageSeverity.Information);
     }
@@ -175,7 +175,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
     {
         await notifier.NotifyAsync($"Attempting to map network drive with remote path: {folderPath}", MessageSeverity.Information);
 
-        var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
+        var isMapped = await networkDriveService.MapNetworkDriveAsync(folderPath, username, password);
 
         if (!isMapped)
         {
@@ -193,7 +193,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
     {
         await notifier.NotifyAsync($"Attempting to unmap network drive with remote path: {folderPath}", MessageSeverity.Information);
 
-        var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
+        var isCancelled = await networkDriveService.CancelNetworkDriveAsync(folderPath);
 
         if (!isCancelled)
         {
@@ -205,7 +205,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         }
     }
 
-    private async Task CleanupUpdateFolder()
+    private async Task CleanupUpdateFolderAsync()
     {
         await notifier.NotifyAsync("Starting cleanup...", MessageSeverity.Information);
 
@@ -275,8 +275,10 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         return false;
     }
 
-    private async Task EnsureServicesRunning(IEnumerable<IRunnable> services, TimeSpan delay, int attempts)
+    private async Task EnsureServicesRunningAsync(IEnumerable<IRunnable> services, TimeSpan delay, int attempts)
     {
+        var servicesList = services.ToList();
+
         var allServicesRunning = false;
 
         for (var attempt = 1; attempt <= attempts; attempt++)
@@ -285,7 +287,16 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
 
             await Task.Delay(delay);
 
-            var nonRunningServices = services.Where(service => !service.IsRunning).ToList();
+            var statuses = await Task.WhenAll(servicesList.Select(async service => new
+            {
+                Service = service,
+                IsRunning = await service.IsRunningAsync()
+            }));
+
+            var nonRunningServices = statuses
+                .Where(x => !x.IsRunning)
+                .Select(x => x.Service)
+                .ToList();
 
             allServicesRunning = nonRunningServices.Count == 0;
 
@@ -307,7 +318,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         }
     }
 
-    private async Task<bool> IsUpdateNeeded(bool force)
+    private async Task<bool> IsUpdateNeededAsync(bool force)
     {
         if (force)
         {
@@ -344,7 +355,7 @@ public class HostUpdater(IRecoveryService recoveryService, IApplicationPathProvi
         return false;
     }
 
-    private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
+    private async Task<bool> CheckForUpdateVersionAsync(bool allowDowngrade, bool force)
     {
         var updateExecutablePath = fileSystem.Path.Combine(_updateDirectory, fileSystem.Path.GetFileName(Environment.ProcessPath!));
 

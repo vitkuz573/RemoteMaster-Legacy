@@ -16,7 +16,6 @@ public class CertificateRenewalTask : IAggregateRoot
 
     internal CertificateRenewalTask(Guid hostId, RenewalSchedule renewalSchedule)
     {
-        Id = Guid.NewGuid();
         HostId = hostId;
         RenewalSchedule = renewalSchedule;
         Status = CertificateRenewalStatus.Pending;

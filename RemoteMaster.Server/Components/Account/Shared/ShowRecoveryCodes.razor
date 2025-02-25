@@ -9,11 +9,11 @@
     </p>
 </div>
 <div class="mt-6 select-text">
-    <div class="rounded-md bg-gray-100 p-4 shadow-xs">
-        <div class="grid-cols-2 grid gap-4">
+    <div class="shadow-xs rounded-md bg-gray-100 p-4">
+        <div class="grid grid-cols-2 gap-4">
             @foreach (var recoveryCode in RecoveryCodes)
             {
-                <div class="rounded-md bg-white p-2 shadow-xs">
+                <div class="shadow-xs rounded-md bg-white p-2">
                     <code class="block text-center font-mono text-sm">@recoveryCode</code>
                 </div>
             }

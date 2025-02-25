@@ -25,19 +25,19 @@
 
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                <InputText @bind-Value="Input.Username" id="username" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="Input.Username" id="username" class="shadow-xs mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Username" class="text-red-500 mt-1" />
             </div>
 
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText type="password" @bind-Value="Input.Password" class="shadow-xs mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.Password" class="text-red-600 mt-1" />
             </div>
 
             <div>
                 <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="shadow-xs mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500" />
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-red-600 mt-1" />
             </div>
 

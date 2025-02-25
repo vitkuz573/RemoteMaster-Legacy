@@ -82,7 +82,7 @@ internal class Program
             Environment.Exit(exitCode);
         }
 
-        await app.ConfigureSerilog(server);
+        await app.ConfigureSerilogAsync(server);
 
         if (!app.Environment.IsDevelopment())
         {

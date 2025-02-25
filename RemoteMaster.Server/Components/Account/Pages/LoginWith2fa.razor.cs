@@ -38,7 +38,7 @@ public partial class LoginWith2fa
         if (!userRoles.Any())
         {
             _message = "Error: User does not belong to any roles.";
-            await ApplicationUserService.AddSignInEntry(_user, false);
+            await ApplicationUserService.AddSignInEntryAsync(_user, false);
             return;
         }
 
@@ -54,32 +54,32 @@ public partial class LoginWith2fa
 
                 if (storeTokensResult.IsSuccess)
                 {
-                    await ApplicationUserService.AddSignInEntry(_user, true);
+                    await ApplicationUserService.AddSignInEntryAsync(_user, true);
                     RedirectManager.RedirectTo(ReturnUrl);
                 }
                 else
                 {
                     _message = "Error: Failed to store tokens.";
-                    await ApplicationUserService.AddSignInEntry(_user, false);
+                    await ApplicationUserService.AddSignInEntryAsync(_user, false);
                 }
             }
             else
             {
                 _message = "Error: Failed to generate tokens.";
-                await ApplicationUserService.AddSignInEntry(_user, false);
+                await ApplicationUserService.AddSignInEntryAsync(_user, false);
             }
         }
         else if (result.IsLockedOut)
         {
             Logger.LogWarning("User with ID '{UserId}' account locked out.", userId);
             _message = "Error: Your account has been locked out.";
-            await ApplicationUserService.AddSignInEntry(_user, false);
+            await ApplicationUserService.AddSignInEntryAsync(_user, false);
         }
         else
         {
             Logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
             _message = "Error: Invalid authenticator code.";
-            await ApplicationUserService.AddSignInEntry(_user, false);
+            await ApplicationUserService.AddSignInEntryAsync(_user, false);
         }
     }
 

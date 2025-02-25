@@ -12,7 +12,8 @@ namespace RemoteMaster.Host.Core.Hubs;
 public class ManagementHub(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, ICertificateService certificateService) : Hub
 {
     [Authorize(Policy = "MoveHostPolicy")]
-    public async Task MoveHost(HostMoveRequestDto hostMoveRequest)
+    [HubMethodName("MoveHost")]
+    public async Task MoveHostAsync(HostMoveRequestDto hostMoveRequest)
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);
 

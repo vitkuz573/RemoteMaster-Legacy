@@ -17,19 +17,17 @@ public class ScreenRecorderService(IScreenCapturingService screenCapturingServic
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task _recordingTask = Task.CompletedTask;
 
-    public Task StartRecordingAsync(ScreenRecordingRequest screenRecordingRequest)
+    public async Task StartRecordingAsync(ScreenRecordingRequest screenRecordingRequest)
     {
         ArgumentNullException.ThrowIfNull(screenRecordingRequest);
 
         _cancellationTokenSource = new CancellationTokenSource();
-        _recordingTask = RecordVideo(screenRecordingRequest, _cancellationTokenSource.Token);
+        _recordingTask = RecordVideoAsync(screenRecordingRequest, _cancellationTokenSource.Token);
 
         if (screenRecordingRequest.Duration > 0)
         {
-            StopRecordingAfterDelay(screenRecordingRequest.Duration);
+            await StopRecordingAfterDelayAsync(screenRecordingRequest.Duration);
         }
-
-        return Task.CompletedTask;
     }
 
     public async Task StopRecordingAsync()
@@ -41,7 +39,7 @@ public class ScreenRecorderService(IScreenCapturingService screenCapturingServic
         _recordingTask = Task.CompletedTask;
     }
 
-    private async Task RecordVideo(ScreenRecordingRequest screenRecordingRequest, CancellationToken cancellationToken)
+    private async Task RecordVideoAsync(ScreenRecordingRequest screenRecordingRequest, CancellationToken cancellationToken)
     {
         var videoFramesSource = new RawVideoPipeSource(GenerateFrames(cancellationToken))
         {
@@ -74,9 +72,10 @@ public class ScreenRecorderService(IScreenCapturingService screenCapturingServic
         }
     }
 
-    private async void StopRecordingAfterDelay(uint durationInSeconds)
+    private async Task StopRecordingAfterDelayAsync(uint durationInSeconds)
     {
         await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
+
         await StopRecordingAsync();
     }
 }

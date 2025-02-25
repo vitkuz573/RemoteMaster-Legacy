@@ -88,11 +88,11 @@ public partial class ManageOrganizationalUnits
         };
     }
 
-    private async void ShowDeleteConfirmation(OrganizationalUnitDto organizationalUnit)
+    private async Task ShowDeleteConfirmationAsync(OrganizationalUnitDto organizationalUnit)
     {
         _organizationalUnitToDelete = organizationalUnit;
 
-        var organization = await OrganizationService.GetOrganizationById(organizationalUnit.OrganizationId);
+        var organization = await OrganizationService.GetOrganizationByIdAsync(organizationalUnit.OrganizationId);
 
         var parameters = new Dictionary<string, string>
         {

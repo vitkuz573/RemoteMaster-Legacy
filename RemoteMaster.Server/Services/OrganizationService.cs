@@ -32,7 +32,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         });
     }
 
-    public async Task<OrganizationDto?> GetOrganization(string organizationName)
+    public async Task<OrganizationDto?> GetOrganizationAsync(string organizationName)
     {
         var organization = (await applicationUnitOfWork.Organizations.FindAsync(o => o.Name == organizationName)).FirstOrDefault();
 
@@ -54,7 +54,7 @@ public class OrganizationService(IApplicationUnitOfWork applicationUnitOfWork) :
         return organizationDto;
     }
 
-    public async Task<OrganizationDto?> GetOrganizationById(Guid organizationId)
+    public async Task<OrganizationDto?> GetOrganizationByIdAsync(Guid organizationId)
     {
         var organization = await applicationUnitOfWork.Organizations.GetByIdAsync(organizationId);
 

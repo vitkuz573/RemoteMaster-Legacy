@@ -18,7 +18,7 @@ public class CertificateManagementService(ICertificateService certificateService
     {
         var hostConfiguration = await hostConfigurationService.LoadAsync();
 
-        if (!IsCertificateValid())
+        if (!await IsCertificateValidAsync())
         {
             var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
@@ -31,7 +31,7 @@ public class CertificateManagementService(ICertificateService certificateService
         return Task.CompletedTask;
     }
 
-    private bool IsCertificateValid()
+    private async Task<bool> IsCertificateValidAsync()
     {
         X509Certificate2? certificate = null;
 
@@ -63,7 +63,7 @@ public class CertificateManagementService(ICertificateService certificateService
                 return false;
             }
 
-            var keyPem = fileSystem.File.ReadAllText(keyPath);
+            var keyPem = await fileSystem.File.ReadAllTextAsync(keyPath);
 
             var loadedCertificate = X509CertificateLoader.LoadCertificateFromFile(certPath);
 

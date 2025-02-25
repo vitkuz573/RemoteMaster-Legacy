@@ -85,7 +85,7 @@
 
     <MudMainContent>
         <div class="flex h-full">
-            <div class="shrink-0 w-96">
+            <div class="w-96 shrink-0">
                 <MudTreeView Items="@_treeItems" T="object" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
                         <MudTreeViewItem Text="@context.Text" Value="@context.Value" Icon="@context.Icon">

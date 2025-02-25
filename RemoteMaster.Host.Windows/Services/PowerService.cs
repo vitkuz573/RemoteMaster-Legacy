@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class PowerService(ITokenPrivilegeService tokenPrivilegeService, ILogger<PowerService> logger) : IPowerService
 {
-    public void Reboot(PowerActionRequest powerActionRequest)
+    public Task RebootAsync(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
@@ -22,7 +22,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService, ILogger<
         {
             logger.LogError("Failed to adjust privileges for system reboot.");
 
-            return;
+            return Task.CompletedTask;
         }
 
         bool result;
@@ -43,9 +43,11 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService, ILogger<
         {
             logger.LogInformation("System reboot initiated successfully.");
         }
+
+        return Task.CompletedTask;
     }
 
-    public void Shutdown(PowerActionRequest powerActionRequest)
+    public Task ShutdownAsync(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
@@ -55,7 +57,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService, ILogger<
         {
             logger.LogError("Failed to adjust privileges for system shutdown.");
 
-            return;
+            return Task.CompletedTask;
         }
 
         bool result;
@@ -76,5 +78,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService, ILogger<
         {
             logger.LogInformation("System shutdown initiated successfully.");
         }
+
+        return Task.CompletedTask;
     }
 }

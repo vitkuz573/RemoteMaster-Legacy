@@ -23,7 +23,7 @@ public class RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions>
     private readonly JwtOptions _options = options.Value;
     private RSA? _signingRsa;
 
-    private RSA GetSigningRsa()
+    private async Task<RSA> GetSigningRsaAsync()
     {
         if (_signingRsa != null)
         {
@@ -33,7 +33,7 @@ public class RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions>
         try
         {
             var privateKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "private_key.der");
-            var privateKeyBytes = fileSystem.File.ReadAllBytes(privateKeyPath);
+            var privateKeyBytes = await fileSystem.File.ReadAllBytesAsync(privateKeyPath);
 
             _signingRsa = RSA.Create();
             _signingRsa.ImportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes(_options.KeyPassword), privateKeyBytes, out _);
@@ -57,7 +57,7 @@ public class RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions>
         return _signingRsa;
     }
 
-    public Result<string> GenerateAccessToken(List<Claim> claims)
+    public async Task<Result<string>> GenerateAccessTokenAsync(List<Claim> claims)
     {
         try
         {
@@ -68,7 +68,7 @@ public class RsaTokenSigningService(IFileSystem fileSystem, IOptions<JwtOptions>
                 Audience = Audience,
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(TokenLifetimeMinutes),
-                SigningCredentials = new SigningCredentials(new RsaSecurityKey(GetSigningRsa()), SecurityAlgorithms.RsaSha256)
+                SigningCredentials = new SigningCredentials(new RsaSecurityKey(await GetSigningRsaAsync()), SecurityAlgorithms.RsaSha256)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);

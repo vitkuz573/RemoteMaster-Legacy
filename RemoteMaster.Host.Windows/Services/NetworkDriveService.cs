@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NetworkDriveService(ILogger<NetworkDriveService> logger) : INetworkDriveService
 {
-    public bool MapNetworkDrive(string remotePath, string? username, string? password)
+    public Task<bool> MapNetworkDriveAsync(string remotePath, string? username, string? password)
     {
         logger.LogInformation("Attempting to map network drive with remote path: {RemotePath}", remotePath);
 
@@ -37,20 +37,20 @@ public class NetworkDriveService(ILogger<NetworkDriveService> logger) : INetwork
             {
                 logger.LogWarning("Network drive with remote path {RemotePath} is already assigned.", remotePath);
 
-                return true;
+                return Task.FromResult(true);
             }
 
             logger.LogError("Failed to map network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
 
-            return false;
+            return Task.FromResult(false);
         }
 
         logger.LogInformation("Successfully mapped network drive with remote path: {RemotePath}", remotePath);
 
-        return true;
+        return Task.FromResult(true);
     }
 
-    public bool CancelNetworkDrive(string remotePath)
+    public Task<bool> CancelNetworkDriveAsync(string remotePath)
     {
         logger.LogInformation("Attempting to cancel network drive with remote path: {RemotePath}", remotePath);
 
@@ -60,12 +60,12 @@ public class NetworkDriveService(ILogger<NetworkDriveService> logger) : INetwork
         {
             logger.LogError("Failed to cancel network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
 
-            return false;
+            return Task.FromResult(false);
         }
 
         logger.LogInformation("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
 
-        return true;
+        return Task.FromResult(true);
     }
 
     public string GetEffectivePath(string remotePath)

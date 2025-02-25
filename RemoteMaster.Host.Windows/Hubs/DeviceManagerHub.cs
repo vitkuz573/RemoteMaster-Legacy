@@ -13,7 +13,8 @@ namespace RemoteMaster.Host.Windows.Hubs;
 public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<IDeviceManagerClient>
 {
     [Authorize(Policy = "ViewDevicesPolicy")]
-    public async Task GetDevices()
+    [HubMethodName("GetDevices")]
+    public async Task GetDevicesAsync()
     {
         var devices = deviceManagerService.GetDevices();
 
@@ -21,7 +22,8 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
     }
 
     [Authorize(Policy = "DisableDevicePolicy")]
-    public async Task DisableDevice(string deviceInstanceId)
+    [HubMethodName("DisableDevice")]
+    public async Task DisableDeviceAsync(string deviceInstanceId)
     {
         var result = deviceManagerService.DisableDeviceByInstanceId(deviceInstanceId);
 
@@ -36,7 +38,8 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
     }
 
     [Authorize(Policy = "EnableDevicePolicy")]
-    public async Task EnableDevice(string deviceInstanceId)
+    [HubMethodName("EnableDevice")]
+    public async Task EnableDeviceAsync(string deviceInstanceId)
     {
         var result = deviceManagerService.EnableDeviceByInstanceId(deviceInstanceId);
 

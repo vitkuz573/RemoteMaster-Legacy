@@ -27,7 +27,7 @@
         <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post" class="mt-8 space-y-6">
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
             <input type="hidden" name="RememberMe" value="@RememberMe" />
-            <div class="space-y-6 rounded-md shadow-xs">
+            <div class="shadow-xs space-y-6 rounded-md">
                 <div>
                     <label for="two-factor-code" class="sr-only">Authenticator code</label>
                     <InputText id="two-factor-code" @bind-Value="Input.TwoFactorCode" class="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-hidden focus:ring-indigo-500 sm:text-sm" placeholder="Authenticator code" />
@@ -36,7 +36,7 @@
                 <div>
                     <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span class="material-icons group-hover:text-indigo-400 text-indigo-500">
+                            <span class="material-icons text-indigo-500 group-hover:text-indigo-400">
                                 lock
                             </span>
                         </span>

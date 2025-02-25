@@ -33,7 +33,8 @@ public class ServiceHub(IPsExecService psExecService, ICommandSender commandSend
     }
 
     [Authorize(Policy = "ExecuteScriptPolicy")]
-    public async Task SetPsExecRules(bool enable)
+    [HubMethodName("SetPsExecRules")]
+    public async Task SetPsExecRulesAsync(bool enable)
     {
         psExecService.Disable();
 
@@ -43,7 +44,8 @@ public class ServiceHub(IPsExecService psExecService, ICommandSender commandSend
         }
     }
 
-    public async Task SendCommandToService(string command)
+    [HubMethodName("SendCommandToService")]
+    public async Task SendCommandToServiceAsync(string command)
     {
         logger.LogInformation("Received command: {Command}", command);
 

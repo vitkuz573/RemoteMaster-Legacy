@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Threading;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -26,7 +27,7 @@ public class CertificateLoaderService : ICertificateLoaderService
         _applicationPathProvider = applicationPathProvider;
         _logger = logger;
 
-        LoadCertificate();
+        LoadCertificateAsync().GetAwaiter().GetResult();
     }
 
     public X509Certificate2? GetCurrentCertificate()
@@ -34,7 +35,7 @@ public class CertificateLoaderService : ICertificateLoaderService
         return _currentCertificate;
     }
 
-    public void LoadCertificate()
+    public async Task LoadCertificateAsync()
     {
         try
         {
@@ -44,7 +45,7 @@ public class CertificateLoaderService : ICertificateLoaderService
             }
             else
             {
-                LoadCertificateFromFile();
+                await LoadCertificateFromFileAsync();
             }
         }
         catch (Exception ex)
@@ -92,7 +93,7 @@ public class CertificateLoaderService : ICertificateLoaderService
         }
     }
 
-    private void LoadCertificateFromFile()
+    private async Task LoadCertificateFromFileAsync()
     {
         try
         {
@@ -113,7 +114,7 @@ public class CertificateLoaderService : ICertificateLoaderService
                 _logger.LogWarning("Private key file not found at {KeyPath}.", keyPath);
             }
 
-            var keyPem = _fileSystem.File.ReadAllText(keyPath);
+            var keyPem = await _fileSystem.File.ReadAllTextAsync(keyPath);
 
             var certificate = X509CertificateLoader.LoadCertificateFromFile(certPath);
 

@@ -28,7 +28,7 @@ public partial class DomainMembershipDialog
         var credential = new Credentials(_username, _password);
         var domainJoinRequest = new DomainJoinRequest(_domain, credential);
 
-        await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("SendJoinToDomain", domainJoinRequest));
+        await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("SendJoinToDomain", domainJoinRequest));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
@@ -38,7 +38,7 @@ public partial class DomainMembershipDialog
         var credential = new Credentials(_username, _password);
         var domainUnjoinRequest = new DomainUnjoinRequest(credential);
 
-        await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));
+        await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));
 
         MudDialog.Close(DialogResult.Ok(true));
     }

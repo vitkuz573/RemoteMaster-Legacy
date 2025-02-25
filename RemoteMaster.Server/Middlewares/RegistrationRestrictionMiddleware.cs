@@ -19,7 +19,7 @@ public class RegistrationRestrictionMiddleware(RequestDelegate next)
         var path = context.Request.Path.Value?.ToLower() ?? string.Empty;
         var isRegistrationRoute = path.StartsWith("/account/register");
 
-        if (isRegistrationRoute && await RootAdministratorExists(userManager, roleManager))
+        if (isRegistrationRoute && await RootAdministratorExistsAsync(userManager, roleManager))
         {
             context.Response.Redirect("/");
             
@@ -29,7 +29,7 @@ public class RegistrationRestrictionMiddleware(RequestDelegate next)
         await next(context);
     }
 
-    private static async Task<bool> RootAdministratorExists(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    private static async Task<bool> RootAdministratorExistsAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         var roleExists = await roleManager.RoleExistsAsync("RootAdministrator");
         

@@ -89,7 +89,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         throw new NotSupportedException($"Type {typeof(T)} is not supported for deserialization.");
     }
 
-    private async Task<T?> ProcessResponse<T>(HostConfiguration hostConfiguration, HttpResponseMessage response) where T : class
+    private async Task<T?> ProcessResponseAsync<T>(HostConfiguration hostConfiguration, HttpResponseMessage response) where T : class
     {
         await CheckDeprecatedVersionAsync(hostConfiguration, response);
 
@@ -129,7 +129,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
-    private async Task<bool> ProcessSimpleResponse(HostConfiguration hostConfiguration, HttpResponseMessage response)
+    private async Task<bool> ProcessSimpleResponseAsync(HostConfiguration hostConfiguration, HttpResponseMessage response)
     {
         await CheckDeprecatedVersionAsync(hostConfiguration, response);
 
@@ -166,7 +166,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.PostAsJsonAsync("/api/host", request, HostJsonSerializerContext.Default.HostRegisterRequest);
 
-        return await ProcessSimpleResponse(hostConfiguration, response);
+        return await ProcessSimpleResponseAsync(hostConfiguration, response);
     }
 
     public async Task<bool> UnregisterHostAsync()
@@ -182,7 +182,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.SendAsync(httpRequest);
 
-        return await ProcessSimpleResponse(hostConfiguration, response);
+        return await ProcessSimpleResponseAsync(hostConfiguration, response);
     }
 
     public async Task<bool> UpdateHostInformationAsync()
@@ -195,7 +195,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.PutAsJsonAsync("/api/host", request, HostJsonSerializerContext.Default.HostUpdateRequest);
 
-        return await ProcessSimpleResponse(hostConfiguration, response);
+        return await ProcessSimpleResponseAsync(hostConfiguration, response);
     }
 
     public async Task<bool> IsHostRegisteredAsync()
@@ -206,7 +206,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.GetAsync($"/api/host/{hostConfiguration.Host.MacAddress}/status");
 
-        return await ProcessSimpleResponse(hostConfiguration, response);
+        return await ProcessSimpleResponseAsync(hostConfiguration, response);
     }
 
     public async Task<byte[]?> GetJwtPublicKeyAsync()
@@ -217,7 +217,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.GetAsync("/api/jwt");
 
-        return await ProcessResponse<byte[]>(hostConfiguration, response);
+        return await ProcessResponseAsync<byte[]>(hostConfiguration, response);
     }
 
     public async Task<byte[]?> GetCaCertificateAsync()
@@ -228,7 +228,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.GetAsync("/api/ca");
 
-        return await ProcessResponse<byte[]>(hostConfiguration, response);
+        return await ProcessResponseAsync<byte[]>(hostConfiguration, response);
     }
 
     public async Task<byte[]?> IssueCertificateAsync(byte[] csrBytes)
@@ -239,7 +239,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.PostAsJsonAsync("/api/certificate", csrBytes, ApiJsonSerializerContext.Default.ByteArray);
 
-        return await ProcessResponse<byte[]>(hostConfiguration, response);
+        return await ProcessResponseAsync<byte[]>(hostConfiguration, response);
     }
 
     public async Task<HostMoveRequestDto?> GetHostMoveRequestAsync(PhysicalAddress macAddress)
@@ -257,7 +257,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             return null;
         }
 
-        return await ProcessResponse<HostMoveRequestDto>(hostConfiguration, response);
+        return await ProcessResponseAsync<HostMoveRequestDto>(hostConfiguration, response);
     }
 
     public async Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress)
@@ -271,7 +271,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/host/{macAddress}/moveRequest");
         var response = await client.SendAsync(request);
 
-        return await ProcessSimpleResponse(hostConfiguration, response);
+        return await ProcessSimpleResponseAsync(hostConfiguration, response);
     }
 
     private async Task AddNotificationAsync(HostConfiguration hostConfiguration, NotificationMessage message)
@@ -280,7 +280,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.PostAsJsonAsync("/api/notification", message, NotificationJsonSerializerContext.Default.NotificationMessage);
 
-        await ProcessSimpleResponse(hostConfiguration, response);
+        await ProcessSimpleResponseAsync(hostConfiguration, response);
     }
 
     public async Task<OrganizationDto?> GetOrganizationAsync(string name)
@@ -291,6 +291,6 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await client.GetAsync($"/api/organization/{name}");
 
-        return await ProcessResponse<OrganizationDto>(hostConfiguration, response);
+        return await ProcessResponseAsync<OrganizationDto>(hostConfiguration, response);
     }
 }

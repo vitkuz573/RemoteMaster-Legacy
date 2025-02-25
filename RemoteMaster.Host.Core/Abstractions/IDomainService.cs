@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IDomainService
 {
-    void JoinToDomain(DomainJoinRequest domainJoinRequest);
+    Task JoinToDomainAsync(DomainJoinRequest domainJoinRequest);
 
-    void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest);
+    Task UnjoinFromDomainAsync(DomainUnjoinRequest domainUnjoinRequest);
 }

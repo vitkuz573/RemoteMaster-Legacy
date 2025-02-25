@@ -198,7 +198,7 @@ public partial class Registry : IAsyncDisposable
             .AddMessagePackProtocol(options => options.Configure())
             .Build();
 
-        _connection.On<IEnumerable<string>>("ReceiveRootKeys", keys =>
+        _connection.On<IEnumerable<string>>("ReceiveRootKeys", async keys =>
         {
             _rootNodes.Clear();
 
@@ -207,7 +207,7 @@ public partial class Registry : IAsyncDisposable
                 _rootNodes.Add(new RegistryNode(rootKey.TrimEnd('\\')));
             }
 
-            InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
         });
 
         _connection.On<IEnumerable<string>, string>("ReceiveSubKeyNames", async (subKeyNames, parentKey) =>

@@ -14,7 +14,7 @@ public class DatabaseCleanerService : IHostedService
     public DatabaseCleanerService(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _timer = new Timer(MonitorDatabase, null, Timeout.Infinite, 0);
+        _timer = new Timer(MonitorDatabaseAsync, null, Timeout.Infinite, 0);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -24,18 +24,16 @@ public class DatabaseCleanerService : IHostedService
         return Task.CompletedTask;
     }
 
-    private async void MonitorDatabase(object? state)
+    private async void MonitorDatabaseAsync(object? state)
     {
         using var scope = _serviceProvider.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
-        await tokenService.CleanUpExpiredRefreshTokens();
+        await tokenService.CleanUpExpiredRefreshTokensAsync();
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer.Dispose();
-
-        return Task.CompletedTask;
+        await _timer.DisposeAsync();
     }
 }

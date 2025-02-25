@@ -47,13 +47,13 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
         }
     }
 
-    public Result EnsureCaCertificateExists()
+    public async Task<Result> EnsureCaCertificateExistsAsync()
     {
         _logger.LogDebug("Starting CA certificate check.");
 
         try
         {
-            var caCertResult = GetCaCertificate(X509ContentType.Pfx);
+            var caCertResult = await GetCaCertificateAsync(X509ContentType.Pfx);
 
             if (caCertResult.IsSuccess)
             {
@@ -68,7 +68,7 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
 
                 _logger.LogWarning("CA certificate for '{Name}' has expired. Reissuing.", _options.CommonName);
 
-                var generateResult = GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
+                var generateResult = await GenerateCertificateAsync(existingCert.GetRSAPrivateKey(), true);
 
                 return generateResult.IsFailed
                     ? Result.Fail("Failed to reissue the expired CA certificate.")
@@ -77,7 +77,7 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
 
             _logger.LogWarning("No valid CA certificate found. Generating new certificate for '{Name}'.", _options.CommonName);
 
-            var generateNewResult = GenerateCertificate(null, false);
+            var generateNewResult = await GenerateCertificateAsync(null, false);
 
             return generateNewResult.IsFailed
                 ? Result.Fail("Failed to generate new CA certificate.")
@@ -91,7 +91,7 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
         }
     }
 
-    private Result GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
+    private async Task<Result> GenerateCertificateAsync(RSA? externalRsaProvider, bool reuseKey)
     {
         _logger.LogDebug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
 
@@ -167,7 +167,7 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
 
                 var exportedCert = caCert.Export(X509ContentType.Pfx, _options.CertificatePassword);
                 
-                _fileSystem.File.WriteAllBytes(_certPath, exportedCert);
+                await _fileSystem.File.WriteAllBytesAsync(_certPath, exportedCert);
                 
                 _logger.LogInformation("CA certificate generated and saved to '{CertPath}'.", _certPath);
             }
@@ -219,7 +219,7 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
         }
     }
 
-    public Result<X509Certificate2> GetCaCertificate(X509ContentType contentType)
+    public async Task<Result<X509Certificate2>> GetCaCertificateAsync(X509ContentType contentType)
     {
         try
         {
@@ -249,7 +249,7 @@ public class InternalCertificateAuthorityService : ICertificateAuthorityService
 
             if (_fileSystem.File.Exists(_certPath))
             {
-                var cert = X509CertificateLoader.LoadPkcs12(_fileSystem.File.ReadAllBytes(_certPath), _options.CertificatePassword, X509KeyStorageFlags.MachineKeySet);
+                var cert = X509CertificateLoader.LoadPkcs12(await _fileSystem.File.ReadAllBytesAsync(_certPath), _options.CertificatePassword, X509KeyStorageFlags.MachineKeySet);
                 
                 return Result.Ok(cert);
             }

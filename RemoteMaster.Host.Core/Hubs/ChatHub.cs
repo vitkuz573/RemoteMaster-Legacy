@@ -36,13 +36,14 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
     }
 
     [Authorize(Policy = "SendMessagePolicy")]
-    public async Task SendMessage(ChatMessageDto chatMessageDto)
+    [HubMethodName("SendMessage")]
+    public async Task SendMessageAsync(ChatMessageDto chatMessageDto)
     {
         ArgumentNullException.ThrowIfNull(chatMessageDto);
 
-        if (!chatInstanceService.IsRunning)
+        if (!await chatInstanceService.IsRunningAsync())
         {
-            chatInstanceService.Start();
+            await chatInstanceService.StartAsync();
         }
 
         var id = Guid.NewGuid().ToString();
@@ -66,7 +67,8 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
     }
 
     [Authorize(Policy = "DeleteMessagePolicy")]
-    public async Task DeleteMessage(string id, string user)
+    [HubMethodName("DeleteMessage")]
+    public async Task DeleteMessageAsync(string id, string user)
     {
         var messagesList = Messages.ToList();
         var messageToRemove = messagesList.FirstOrDefault(m => m.Id == id && m.User == user);
@@ -85,12 +87,14 @@ public class ChatHub(IChatInstanceService chatInstanceService) : Hub<IChatClient
         }
     }
 
-    public async Task Typing(string user)
+    [HubMethodName("Typing")]
+    public async Task TypingAsync(string user)
     {
         await Clients.Others.UserTyping(user);
     }
 
-    public async Task StopTyping(string user)
+    [HubMethodName("StopTyping")]
+    public async Task StopTypingAsync(string user)
     {
         await Clients.Others.UserStopTyping(user);
     }

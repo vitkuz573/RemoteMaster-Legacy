@@ -13,7 +13,8 @@ namespace RemoteMaster.Host.Core.Hubs;
 public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileManagerService) : Hub<IFileManagerClient>
 {
     [Authorize(Policy = "UploadFilePolicy")]
-    public async Task UploadFile(FileUploadDto dto)
+    [HubMethodName("UploadFile")]
+    public async Task UploadFileAsync(FileUploadDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
@@ -21,7 +22,8 @@ public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileMana
     }
 
     [Authorize(Policy = "DownloadFilePolicy")]
-    public async Task DownloadFile(string path)
+    [HubMethodName("DownloadFile")]
+    public async Task DownloadFileAsync(string path)
     {
         using var stream = fileManagerService.DownloadFile(path) as MemoryStream ?? throw new InvalidOperationException("Expected a MemoryStream");
         var bytes = stream.ToArray();
@@ -30,7 +32,8 @@ public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileMana
     }
 
     [Authorize(Policy = "ViewFilesPolicy")]
-    public async Task GetFilesAndDirectories(string path)
+    [HubMethodName("GetFilesAndDirectories")]
+    public async Task GetFilesAndDirectoriesAsync(string path)
     {
         var items = fileManagerService.GetFilesAndDirectories(path);
 
@@ -38,7 +41,8 @@ public class FileManagerHub(IFileSystem fileSystem, IFileManagerService fileMana
     }
 
     [Authorize(Policy = "GetDrivesPolicy")]
-    public async Task GetAvailableDrives()
+    [HubMethodName("GetAvailableDrives")]
+    public async Task GetAvailableDrivesAsync()
     {
         var drives = await fileManagerService.GetAvailableDrivesAsync();
 

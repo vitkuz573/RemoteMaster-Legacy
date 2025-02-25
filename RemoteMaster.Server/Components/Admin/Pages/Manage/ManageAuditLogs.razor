@@ -16,11 +16,11 @@
         <div class="flex items-center space-x-4">
             <div>
                 <label for="actionTypeFilter" class="block text-sm font-medium text-gray-700">Action Type:</label>
-                <InputText id="actionTypeFilter" @bind-Value="FilterActionType" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-xs focus:outline-hidden" placeholder="Enter action type" />
+                <InputText id="actionTypeFilter" @bind-Value="FilterActionType" class="shadow-xs mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-hidden" placeholder="Enter action type" />
             </div>
             <div>
                 <label for="userNameFilter" class="block text-sm font-medium text-gray-700">User Name:</label>
-                <InputText id="userNameFilter" @bind-Value="FilterUserName" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-xs focus:outline-hidden" placeholder="Enter user name" />
+                <InputText id="userNameFilter" @bind-Value="FilterUserName" class="shadow-xs mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-hidden" placeholder="Enter user name" />
             </div>
             <button @onclick="ApplyFilters" class="mt-6 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-hidden md:mt-0">
                 Apply Filters
@@ -29,7 +29,7 @@
         <!-- Page Size Selector -->
         <div class="flex items-center space-x-2">
             <label for="pageSize" class="text-sm font-medium text-gray-700">Records per page:</label>
-            <InputSelect id="pageSize" @bind-Value="PageSize" class="mt-1 block rounded-md border border-gray-300 bg-white px-2 py-1 shadow-xs focus:outline-hidden">
+            <InputSelect id="pageSize" @bind-Value="PageSize" class="shadow-xs mt-1 block rounded-md border border-gray-300 bg-white px-2 py-1 focus:outline-hidden">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>

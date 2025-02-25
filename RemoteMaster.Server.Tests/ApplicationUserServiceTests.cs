@@ -48,7 +48,7 @@ public class ApplicationUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        await _applicationUserService.AddSignInEntry(user, true);
+        await _applicationUserService.AddSignInEntryAsync(user, true);
 
         // Assert
         _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), true, IPAddress.Loopback), Times.Once);
@@ -62,7 +62,7 @@ public class ApplicationUserServiceTests
         ApplicationUser user = null!;
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _applicationUserService.AddSignInEntry(user, true));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _applicationUserService.AddSignInEntryAsync(user, true));
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class ApplicationUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext)null!);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _applicationUserService.AddSignInEntry(user, true));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _applicationUserService.AddSignInEntryAsync(user, true));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class ApplicationUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        await _applicationUserService.AddSignInEntry(user, true);
+        await _applicationUserService.AddSignInEntryAsync(user, true);
 
         // Assert
         _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), true, IPAddress.None), Times.Once);
@@ -116,7 +116,7 @@ public class ApplicationUserServiceTests
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        await _applicationUserService.AddSignInEntry(user, false);
+        await _applicationUserService.AddSignInEntryAsync(user, false);
 
         // Assert
         _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), false, IPAddress.Parse("192.168.1.1")), Times.Once);

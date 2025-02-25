@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Services;
 
 public class ApplicationUserService(IApplicationUnitOfWork applicationUnitOfWork, IHttpContextAccessor httpContextAccessor) : IApplicationUserService
 {
-    public async Task AddSignInEntry(ApplicationUser user, bool isSuccessful)
+    public async Task AddSignInEntryAsync(ApplicationUser user, bool isSuccessful)
     {
         ArgumentNullException.ThrowIfNull(user);
 

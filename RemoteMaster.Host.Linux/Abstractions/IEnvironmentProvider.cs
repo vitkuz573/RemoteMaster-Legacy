@@ -8,5 +8,5 @@ public interface IEnvironmentProvider
 {
     Task<string> GetDisplayAsync();
 
-    string GetXAuthority();
+    Task<string> GetXAuthorityAsync();
 }

@@ -28,7 +28,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
     {
         try
         {
-            var dbusDisplay = await GetDisplayFromDBus();
+            var dbusDisplay = await GetDisplayFromDBusAsync();
 
             if (!string.IsNullOrWhiteSpace(dbusDisplay))
             {
@@ -40,10 +40,10 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
             logger.LogError("DBus display lookup failed: {Message}", ex.Message);
         }
 
-        return GetDisplayFallback();
+        return await GetDisplayFallbackAsync();
     }
 
-    private async Task<string> GetDisplayFromDBus()
+    private async Task<string> GetDisplayFromDBusAsync()
     {
         using var connection = new Connection(Address.System);
         await connection.ConnectAsync();
@@ -75,7 +75,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         return string.Empty;
     }
 
-    private string GetDisplayFallback()
+    private async Task<string> GetDisplayFallbackAsync()
     {
         var xorgProcesses = processService.GetProcessesByName("Xorg");
 
@@ -83,7 +83,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         {
             try
             {
-                var args = commandLineProvider.GetCommandLine(process);
+                var args = await commandLineProvider.GetCommandLineAsync(process);
    
                 var commandLine = string.Join(" ", args);
                 var displayMatch = DisplayRegex().Match(commandLine);
@@ -111,7 +111,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
                     {
                         using var stream = fileSystem.File.OpenRead(fdPath);
                         using var reader = new StreamReader(stream);
-                        var displayData = reader.ReadToEnd()?.Trim();
+                        var displayData = (await reader.ReadToEndAsync())?.Trim();
 
                         if (!string.IsNullOrWhiteSpace(displayData))
                         {
@@ -144,7 +144,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
     }
 
     /// <inheritdoc/>
-    public string GetXAuthority()
+    public async Task<string> GetXAuthorityAsync()
     {
         var xorgProcesses = processService.GetProcessesByName("Xorg");
 
@@ -152,7 +152,7 @@ public partial class EnvironmentProvider(IProcessService processService, IComman
         {
             try
             {
-                var args = commandLineProvider.GetCommandLine(process);
+                var args = await commandLineProvider.GetCommandLineAsync(process);
                 
                 var commandLine = string.Join(" ", args);
                 var authMatch = XAuthRegex().Match(commandLine);

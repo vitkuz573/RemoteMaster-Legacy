@@ -17,7 +17,7 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         return planService.GetPlanLimits(userPlan);
     }
 
-    public async Task<bool> CanAddOrganization()
+    public async Task<bool> CanAddOrganizationAsync()
     {
         var limits = GetCurrentPlanLimits();
         var organizations = await applicationUnitOfWork.Organizations.GetAllAsync();

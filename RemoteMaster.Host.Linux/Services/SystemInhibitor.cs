@@ -12,7 +12,7 @@ public class SystemInhibitor(ILoginManager loginManager, ILogger<SystemInhibitor
 {
     private IDisposable? _inhibitor;
 
-    public async void Block(string reason)
+    public async Task BlockAsync(string reason)
     {
         if (string.IsNullOrEmpty(reason))
         {

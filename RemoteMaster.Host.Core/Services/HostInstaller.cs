@@ -39,15 +39,15 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
 
             var hostService = serviceFactory.GetService("RCHost");
 
-            if (hostService.IsInstalled)
+            if (await hostService.IsInstalledAsync())
             {
-                hostService.Stop();
+                await hostService.StopAsync();
                 CopyToTargetPath(applicationDirectory);
             }
             else
             {
                 CopyToTargetPath(applicationDirectory);
-                hostService.Create();
+                await hostService.CreateAsync();
             }
 
             var registrationSucceeded = await hostLifecycleService.RegisterAsync(installRequest.Force);
@@ -60,12 +60,9 @@ public class HostInstaller(ICertificateService certificateService, IHostInformat
             }
 
             await certificateService.GetCaCertificateAsync();
-
             await certificateService.IssueCertificateAsync(hostConfiguration, organizationAddress);
-
             await hostConfigurationService.SaveAsync(hostConfiguration);
-
-            hostService.Start();
+            await hostService.StartAsync();
 
             logger.LogInformation("{ServiceName} installed and started successfully.", hostService.Name);
         }

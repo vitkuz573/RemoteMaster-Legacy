@@ -22,7 +22,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> RegisterHost([FromBody] HostRegisterRequest request)
+    public async Task<IActionResult> RegisterHostAsync([FromBody] HostRegisterRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -105,7 +105,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     [HttpGet("{macAddress}/status")]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> CheckHostRegistration([FromRoute, Required] PhysicalAddress macAddress)
+    public async Task<IActionResult> CheckHostRegistrationAsync([FromRoute, Required] PhysicalAddress macAddress)
     {
         var result = await registrationService.IsHostRegisteredAsync(macAddress);
 
@@ -131,7 +131,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     [HttpDelete]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
+    public async Task<IActionResult> UnregisterHostAsync([FromBody] HostUnregisterRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -171,7 +171,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     [HttpPut]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> UpdateHost([FromBody] HostUpdateRequest request)
+    public async Task<IActionResult> UpdateHostAsync([FromBody] HostUpdateRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -212,7 +212,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequestDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequestDto>), 404)]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequestDto>), 400)]
-    public async Task<IActionResult> GetHostMoveRequest([FromRoute, Required] PhysicalAddress macAddress)
+    public async Task<IActionResult> GetHostMoveRequestAsync([FromRoute, Required] PhysicalAddress macAddress)
     {
         var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
 
@@ -251,7 +251,7 @@ public class HostController(IHostRegistrationService registrationService, IHostM
     [HttpDelete("{macAddress}/moveRequest")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
-    public async Task<IActionResult> AcknowledgeMoveRequest([FromRoute, Required] PhysicalAddress macAddress)
+    public async Task<IActionResult> AcknowledgeMoveRequestAsync([FromRoute, Required] PhysicalAddress macAddress)
     {
         var result = await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
 

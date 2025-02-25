@@ -16,7 +16,8 @@ public class LogHub(IFileSystem fileSystem, IApplicationPathProvider application
     private readonly string _logDirectory = fileSystem.Path.Combine(applicationPathProvider.DataDirectory, "Logs");
 
     [Authorize(Policy = "ViewLogFilesPolicy")]
-    public async Task GetLogFiles()
+    [HubMethodName("GetLogFiles")]
+    public async Task GetLogFilesAsync()
     {
         if (!fileSystem.Directory.Exists(_logDirectory))
         {
@@ -28,13 +29,18 @@ public class LogHub(IFileSystem fileSystem, IApplicationPathProvider application
         }
 
         var logFiles = fileSystem.Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
-        var fileNames = logFiles.Select(fileSystem.Path.GetFileName).ToList();
+
+        var fileNames = logFiles
+            .Select(fileSystem.Path.GetFileName)
+            .OfType<string>()
+            .ToList();
 
         await Clients.Caller.ReceiveLogFiles(fileNames);
     }
 
     [Authorize(Policy = "ViewLogContentPolicy")]
-    public async Task GetLog(string fileName)
+    [HubMethodName("GetLog")]
+    public async Task GetLogAsync(string fileName)
     {
         var filePath = fileSystem.Path.Combine(_logDirectory, fileName);
 
@@ -65,7 +71,8 @@ public class LogHub(IFileSystem fileSystem, IApplicationPathProvider application
     }
 
     [Authorize(Policy = "FilterLogPolicy")]
-    public async Task GetFilteredLog(string fileName, string? level, DateTime? startDate, DateTime? endDate)
+    [HubMethodName("GetFilteredLog")]
+    public async Task GetFilteredLogAsync(string fileName, string? level, DateTime? startDate, DateTime? endDate)
     {
         var filePath = fileSystem.Path.Combine(_logDirectory, fileName);
 
@@ -115,7 +122,8 @@ public class LogHub(IFileSystem fileSystem, IApplicationPathProvider application
     }
 
     [Authorize(Policy = "DeleteLogsPolicy")]
-    public async Task DeleteAllLogs()
+    [HubMethodName("DeleteAllLogs")]
+    public async Task DeleteAllLogsAsync()
     {
         if (!fileSystem.Directory.Exists(_logDirectory))
         {

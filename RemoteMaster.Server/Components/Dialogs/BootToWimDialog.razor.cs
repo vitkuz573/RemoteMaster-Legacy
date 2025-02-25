@@ -53,7 +53,7 @@ public partial class BootToWimDialog
                 AsSystem = true
             };
 
-            await HostCommandService.Execute(Hosts, async (_, connection) => await connection!.InvokeAsync("ExecuteScript", scriptExecutionRequest));
+            await HostCommandService.ExecuteAsync(Hosts, async (_, connection) => await connection!.InvokeAsync("ExecuteScript", scriptExecutionRequest));
         }
         catch (Exception)
         {

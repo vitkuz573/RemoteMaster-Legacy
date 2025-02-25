@@ -32,7 +32,7 @@ public partial class Chat : IAsyncDisposable
     private HubConnection? _connection;
     private string _message = string.Empty;
     private string _replyToMessage = string.Empty;
-    private string? _replyToMessageId = null;
+    private string? _replyToMessageId;
     private readonly List<ChatMessageDto> _messages = [];
     private string _typingMessage = string.Empty;
     private ClaimsPrincipal? _user;
@@ -213,7 +213,7 @@ public partial class Chat : IAsyncDisposable
         return message != null ? string.Concat(message.Message.AsSpan(0, Math.Min(30, message.Message.Length)), "...") : string.Empty;
     }
 
-    private async void HandleInput(ChangeEventArgs e)
+    private async Task HandleInputAsync(ChangeEventArgs e)
     {
         if (_connection == null)
         {
@@ -253,13 +253,13 @@ public partial class Chat : IAsyncDisposable
         }
 
         _typingTimer?.Dispose();
-        _typingTimer = new Timer(_ =>
+        _typingTimer = new Timer(async _ =>
         {
-            SendStopTyping();
+            await SendStopTyping();
             
             return;
 
-            async void SendStopTyping()
+            async Task SendStopTyping()
             {
                 var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
 

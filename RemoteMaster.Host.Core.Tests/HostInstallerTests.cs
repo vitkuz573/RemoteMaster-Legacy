@@ -71,7 +71,7 @@ public class HostInstallerTests
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Returns(hostInformation);
 
         _mockServiceFactory.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
-        serviceMock.Setup(s => s.IsInstalled).Returns(false);
+        serviceMock.Setup(s => s.IsInstalledAsync()).ReturnsAsync(false);
 
         _mockHostLifecycleService.Setup(l => l.GetOrganizationAddressAsync(installRequest.Organization))
             .ReturnsAsync(organizationAddress);
@@ -89,8 +89,8 @@ public class HostInstallerTests
         await _installer.InstallAsync(installRequest);
 
         // Assert
-        serviceMock.Verify(s => s.Create(), Times.Once);
-        serviceMock.Verify(s => s.Start(), Times.Once);
+        serviceMock.Verify(s => s.CreateAsync(), Times.Once);
+        serviceMock.Verify(s => s.StartAsync(), Times.Once);
 
         _mockCertificateService.Verify(c => c.GetCaCertificateAsync(), Times.Once);
         _mockCertificateService.Verify(c => c.IssueCertificateAsync(It.IsAny<HostConfiguration>(), organizationAddress), Times.Once);
@@ -112,7 +112,7 @@ public class HostInstallerTests
 
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Returns(hostInformation);
         _mockServiceFactory.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
-        serviceMock.Setup(s => s.IsInstalled).Returns(false);
+        serviceMock.Setup(s => s.IsInstalledAsync()).ReturnsAsync(false);
 
         _mockHostLifecycleService.Setup(l => l.GetOrganizationAddressAsync(installRequest.Organization))
             .ReturnsAsync(organizationAddress);
@@ -124,8 +124,8 @@ public class HostInstallerTests
         await _installer.InstallAsync(installRequest);
 
         // Assert
-        serviceMock.Verify(s => s.Create(), Times.Once);
-        serviceMock.Verify(s => s.Start(), Times.Once);
+        serviceMock.Verify(s => s.CreateAsync(), Times.Once);
+        serviceMock.Verify(s => s.StartAsync(), Times.Once);
         _mockCertificateService.Verify(c => c.GetCaCertificateAsync(), Times.Once);
         _mockCertificateService.Verify(c => c.IssueCertificateAsync(It.IsAny<HostConfiguration>(), organizationAddress), Times.Once);
     }
@@ -142,7 +142,7 @@ public class HostInstallerTests
 
         _mockHostInformationService.Setup(h => h.GetHostInformation()).Returns(hostInformation);
 
-        serviceMock.Setup(s => s.IsInstalled).Returns(true);
+        serviceMock.Setup(s => s.IsInstalledAsync()).ReturnsAsync(true);
         _mockServiceFactory.Setup(f => f.GetService("RCHost")).Returns(serviceMock.Object);
 
         _mockHostConfigurationProvider.Setup(p => p.Current).Returns(hostConfiguration);
@@ -156,9 +156,9 @@ public class HostInstallerTests
         await _installer.InstallAsync(installRequest);
 
         // Assert
-        serviceMock.Verify(s => s.Stop(), Times.Once);
-        serviceMock.Verify(s => s.Create(), Times.Never);
-        serviceMock.Verify(s => s.Start(), Times.Once);
+        serviceMock.Verify(s => s.StopAsync(), Times.Once);
+        serviceMock.Verify(s => s.CreateAsync(), Times.Never);
+        serviceMock.Verify(s => s.StartAsync(), Times.Once);
     }
 
     #endregion

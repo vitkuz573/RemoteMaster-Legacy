@@ -30,7 +30,7 @@ public class UserInstanceServiceTests
     }
 
     [Fact]
-    public void Start_ShouldStartNewInstance()
+    public async Task Start_ShouldStartNewInstance()
     {
         // Arrange
         const int processId = 1234;
@@ -45,7 +45,7 @@ public class UserInstanceServiceTests
             .Returns(processId);
 
         // Act
-        _userInstanceService.Start();
+        await _userInstanceService.StartAsync();
 
         // Assert
         _instanceStarterServiceMock.Verify(
@@ -59,12 +59,12 @@ public class UserInstanceServiceTests
     }
 
     [Fact]
-    public void Stop_ShouldStopRunningInstances()
+    public async Task Stop_ShouldStopRunningInstances()
     {
         // Arrange
         var processMock = new Mock<IProcess>();
         processMock.Setup(p => p.Id).Returns(1234);
-        processMock.Setup(p => p.GetCommandLine()).Returns(["user"]);
+        processMock.Setup(p => p.GetCommandLineAsync()).ReturnsAsync(["user"]);
         var processes = new[] { processMock.Object };
 
         _processServiceMock
@@ -72,18 +72,18 @@ public class UserInstanceServiceTests
             .Returns(processes);
 
         // Act
-        _userInstanceService.Stop();
+        await _userInstanceService.StopAsync();
 
         // Assert
         processMock.Verify(p => p.Kill(), Times.Once);
     }
 
     [Fact]
-    public void IsRunning_ShouldReturnTrueIfUserInstanceIsRunning()
+    public async Task IsRunning_ShouldReturnTrueIfUserInstanceIsRunning()
     {
         // Arrange
         var processMock = new Mock<IProcess>();
-        processMock.Setup(p => p.GetCommandLine()).Returns(["user"]);
+        processMock.Setup(p => p.GetCommandLineAsync()).ReturnsAsync(["user"]);
         var processes = new[] { processMock.Object };
 
         _processServiceMock
@@ -91,14 +91,14 @@ public class UserInstanceServiceTests
             .Returns(processes);
 
         // Act
-        var isRunning = _userInstanceService.IsRunning;
+        var isRunning = await _userInstanceService.IsRunningAsync();
 
         // Assert
         Assert.True(isRunning);
     }
 
     [Fact]
-    public void IsRunning_ShouldReturnFalseIfNoUserInstanceIsRunning()
+    public async Task IsRunning_ShouldReturnFalseIfNoUserInstanceIsRunning()
     {
         // Arrange
         _processServiceMock
@@ -106,7 +106,7 @@ public class UserInstanceServiceTests
             .Returns([]);
 
         // Act
-        var isRunning = _userInstanceService.IsRunning;
+        var isRunning = await _userInstanceService.IsRunningAsync();
 
         // Assert
         Assert.False(isRunning);

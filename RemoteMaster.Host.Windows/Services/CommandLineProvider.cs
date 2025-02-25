@@ -15,7 +15,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class CommandLineProvider : ICommandLineProvider
 {
-    public string[] GetCommandLine(IProcess process)
+    public async Task<string[]> GetCommandLineAsync(IProcess process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
@@ -74,7 +74,7 @@ public class CommandLineProvider : ICommandLineProvider
                 var commandLine = Marshal.PtrToStringUni(commandLinePtr, unicodeString.Length / 2);
                 var parsedArgs = ParseCommandLine(commandLine);
 
-                return parsedArgs;
+                return await Task.FromResult(parsedArgs);
             }
 
             if (status == NTSTATUS.STATUS_BUFFER_OVERFLOW || status == NTSTATUS.STATUS_INFO_LENGTH_MISMATCH)

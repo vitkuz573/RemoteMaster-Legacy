@@ -13,7 +13,7 @@ public partial class ConnectDialog : CommonDialogBase
 
     protected async Task Connect()
     {
-        await HostCommandService.Execute(Hosts, async (host, _) => await OpenWindow($"/{host.IpAddress}/access?action={_selectedOption}"));
+        await HostCommandService.ExecuteAsync(Hosts, async (host, _) => await OpenWindow($"/{host.IpAddress}/access?action={_selectedOption}"));
 
         MudDialog.Close(DialogResult.Ok(true));
     }

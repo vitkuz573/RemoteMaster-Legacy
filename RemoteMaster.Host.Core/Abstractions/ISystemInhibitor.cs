@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ISystemInhibitor : IDisposable
 {
-    void Block(string reason);
+    Task BlockAsync(string reason);
 
     void Unblock();
 }
