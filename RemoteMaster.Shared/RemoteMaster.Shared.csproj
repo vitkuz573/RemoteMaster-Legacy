@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
