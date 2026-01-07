@@ -2,6 +2,11 @@
 
 [🇷🇺 Русская версия](#русская-версия) · [🇬🇧 English version](#english-version)
 
+RemoteMaster — кроссплатформенный комплекс удалённого управления для администраторов и support-команд.
+Веб-интерфейс и агенты для Windows/Linux: удалённые сессии, выполнение скриптов, инвентаризация и управление питанием.
+Сильные стороны: безопасность (JWT/сертификаты), устойчивые агенты и аудит действий.
+Технологии: .NET 9, ASP.NET Core, SignalR, EF Core, MudBlazor.
+
 ## Русская версия
 
 ### Содержание
@@ -33,6 +38,13 @@ RemoteMaster — это кроссплатформенный комплекс у
 - Уведомления (в том числе через Telegram) и мониторинг состояния инфраструктуры.
 
 Все компоненты ориентированы на .NET 9 и построены с учётом непрерывной доставки, автоматизированного тестирования и оптимизаций под конкретные платформы.
+
+### Что реализовано в решении
+- Серверная архитектура с REST/SignalR API, централизованной аутентификацией и авторизацией.
+- Агентские подсистемы Windows/Linux: захват экрана/аудио, ввод, системные операции и мониторинг окружения.
+- Удалённое выполнение сценариев и оркестрация операций с журналированием.
+- Управление сертификатами и токенами (JWT/PKI, интеграция с ADCS).
+- Инвентаризация, политики доступа и аудит действий операторов.
 
 ### Скриншоты
 #### Веб-интерфейс
@@ -188,6 +200,11 @@ RemoteMaster Legacy распространяется по лицензии **GNU
 
 ## English version
 
+RemoteMaster is a cross-platform remote management suite for admins and support teams.
+It pairs a web UI with Windows/Linux agents for remote sessions, script execution, and device inventory/power control.
+Highlights: security (JWT/certificates), resilient agents, and audit trails.
+Tech stack: .NET 9, ASP.NET Core, SignalR, EF Core, MudBlazor.
+
 ### Table of contents
 - [Overview](#overview)
 - [Screenshots](#screenshots)
@@ -215,6 +232,13 @@ RemoteMaster is a cross-platform remote management suite built for administrator
 - Device enrollment, policy enforcement, Wake-on-LAN orchestration, and asset inventory.
 - Centralized certificate lifecycle management, including Active Directory Certificate Services integration.
 - Push notifications (including Telegram) and infrastructure health monitoring.
+
+### What’s implemented in this solution
+- Server-side architecture with REST/SignalR APIs, centralized authentication, and authorization.
+- Windows/Linux agent subsystems: screen/audio capture, input, system operations, and environment monitoring.
+- Remote script execution and task orchestration with audit logging.
+- Certificate and token lifecycle management (JWT/PKI, ADCS integration).
+- Inventory, access policies, and operator activity auditing.
 
 ### Screenshots
 #### Web UI
