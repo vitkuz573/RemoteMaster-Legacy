@@ -6,6 +6,7 @@
 
 ### Содержание
 - [Обзор](#обзор)
+- [Скриншоты](#скриншоты)
 - [Ключевые возможности](#ключевые-возможности)
 - [Архитектура решения](#архитектура-решения)
 - [Стек технологий](#стек-технологий)
@@ -32,6 +33,22 @@ RemoteMaster — это кроссплатформенный комплекс у
 - Уведомления (в том числе через Telegram) и мониторинг состояния инфраструктуры.
 
 Все компоненты ориентированы на .NET 9 и построены с учётом непрерывной доставки, автоматизированного тестирования и оптимизаций под конкретные платформы.
+
+### Скриншоты
+#### Веб-интерфейс
+![Панель доступных хостов](docs/screenshots/hosts-dashboard.png)
+![Выполнение скриптов на хостах](docs/screenshots/script-executor.png)
+![Удалённая сессия с настройками потока](docs/screenshots/remote-session-settings.png)
+
+#### Административная панель
+![Организации](docs/screenshots/admin/admin-organizations.png)
+![Организационные подразделения](docs/screenshots/admin/admin-organizational-units.png)
+![Пользователи](docs/screenshots/admin/admin-users.png)
+![Права пользователей](docs/screenshots/admin/admin-user-rights.png)
+![Роли](docs/screenshots/admin/admin-roles.png)
+![Права ролей](docs/screenshots/admin/admin-role-claims.png)
+![Журнал аудита](docs/screenshots/admin/admin-audit-logs.png)
+![Журнал входов](docs/screenshots/admin/admin-signin-journal.png)
 
 ### Ключевые возможности
 **Управление парком устройств**
@@ -173,6 +190,7 @@ RemoteMaster Legacy распространяется по лицензии **GNU
 
 ### Table of contents
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Feature highlights](#feature-highlights)
 - [Solution architecture](#solution-architecture)
 - [Technology stack](#technology-stack)
@@ -197,6 +215,22 @@ RemoteMaster is a cross-platform remote management suite built for administrator
 - Device enrollment, policy enforcement, Wake-on-LAN orchestration, and asset inventory.
 - Centralized certificate lifecycle management, including Active Directory Certificate Services integration.
 - Push notifications (including Telegram) and infrastructure health monitoring.
+
+### Screenshots
+#### Web UI
+![Host inventory and control actions](docs/screenshots/hosts-dashboard.png)
+![Script execution workflow](docs/screenshots/script-executor.png)
+![Remote session settings panel](docs/screenshots/remote-session-settings.png)
+
+#### Admin panel
+![Organizations management](docs/screenshots/admin/admin-organizations.png)
+![Organizational units](docs/screenshots/admin/admin-organizational-units.png)
+![Users administration](docs/screenshots/admin/admin-users.png)
+![User rights configuration](docs/screenshots/admin/admin-user-rights.png)
+![Roles management](docs/screenshots/admin/admin-roles.png)
+![Role claims configuration](docs/screenshots/admin/admin-role-claims.png)
+![Audit log review](docs/screenshots/admin/admin-audit-logs.png)
+![Sign-in journal](docs/screenshots/admin/admin-signin-journal.png)
 
 Every component targets .NET 9 and is designed for continuous delivery, automated testing, and platform-specific optimizations.
 
